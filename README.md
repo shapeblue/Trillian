@@ -7,6 +7,9 @@
 ```bash
 ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=vsphere55-test mgmt=1 db=0 hvtype=v hv=2 esxi_template='ESXi 5.5 U3' vc_template='vCenter 5.5 U3' env_accounts=all pri=1 sec=1" -i localhost
 ansible-playbook deployvms.yml -i ./hosts_vsphere55-test
+
+ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=xs65pga mgmt=1 db=0 hvtype=x hv=2 xenserver_template='XenServer 6.5 SP1' env_accounts=all pri=1 sec=1" -i localhost
+ansible-playbook deployvms.yml -i ./hosts_xs65pga 
 ````
 
 The full list of variables are as follows:
