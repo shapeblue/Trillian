@@ -14,6 +14,9 @@ ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=xs65pga mgmt=1 
 ansible-playbook deployvms.yml -i ./hosts_xs65pga 
 ````
 
+Ultimately a wrapper will run these steps & then run specified Marvin tests against these environments
+Initially Jenkins post build tasks will run the individual
+
 The full list of variables are as follows:
 * env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only. Required for all playbook * runs and distinguishes the nested clouds from each other.
 * mgmt [optional]: Number of management servers to configure
