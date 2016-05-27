@@ -1,8 +1,10 @@
 # Trillian - Build Nested CloudStack Environments
 
-### Trillian makes use of ESXi's ability to virtualise the VT-x features allowing the creation of VT-x enabled virtualised hosts
+#### Trillian makes use a 'parent' CloudStack' environment which is used to build virtualised nested environments.
 
-### Trillian uses Ansible 2 to create environment configuration files and deploy those environments. The user can run 2 commandline statements and go from 0 to a running cloudstack environment with multiple hosts. 
+Trillian leverages ESXi's ability to virtualise the VT-x features allowing the creation of VT-x enabled virtualised hosts
+
+#### Trillian uses Ansible 2 to create environment configuration files and deploy those environments. The user can run 2 commandline statements and go from 0 to a running cloudstack environment with multiple hosts. 
 
 ```bash
 ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=vsphere55-test mgmt=1 db=0 hvtype=v hv=2 esxi_template='ESXi 5.5 U3' vc_template='vCenter 5.5 U3' env_accounts=all pri=1 sec=1" -i localhost
