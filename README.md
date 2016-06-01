@@ -15,7 +15,11 @@ ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=vsphere55-test 
 ansible-playbook deployvms.yml -i ./hosts_vsphere55-test
 
 ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=xs65pga mgmt=1 db=0 hvtype=x hv=2 xenserver_template='XenServer 6.5 SP1' env_accounts=all pri=1 sec=1" -i localhost
-ansible-playbook deployvms.yml -i ./hosts_xs65pga 
+ansible-playbook deployvms.yml -i ./hosts_xs65pga
+
+ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=kvmtest mgmt=1 db=0 hvtype=k hv=2 kvm_template='KVM CentOS 6.7' env_accounts=all pri=1 sec=1" -i localhost
+ansible-playbook deployvms.yml -i ./hosts_kvmtest
+
 ````
 
 Ultimately a wrapper will run these steps & then run specified Marvin tests against these environments
