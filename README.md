@@ -23,7 +23,7 @@ ansible-playbook deployvms.yml -i ./hosts_kvmtest
 ````
 
 Ultimately a wrapper will run these steps & then run specified Marvin tests against these environments
-Initially Jenkins post build tasks will run the individual
+Initially Jenkins post build tasks will run the individual steps.
 
 The full list of variables are as follows:
 * env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only. Required for all playbook * runs and distinguishes the nested clouds from each other.
