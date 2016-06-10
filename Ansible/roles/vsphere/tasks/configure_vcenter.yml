@@ -1,0 +1,71 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+#- include: ./vcenterfirewall.yml
+
+- name: replace vmware python module to fix cert checking
+  local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.py" force=yes mode=0644
+
+- name: remove compiled vmware.py code
+  local_action: file path="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.pyc" state=absent
+  
+- name: "wait for vCenter API Service to come up"
+  shell: "curl --silent -o /dev/null -w '%{http_code}' {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk"
+  register: result
+  until: result.stdout.find("301") != -1
+  retries: 60
+  delay: 10
+  delegate_to: localhost
+
+- name: Ensure Datacenter {{ vmware_datacenter_name }} exists
+  local_action: >
+        vmware_datacenter
+        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        datacenter_name="{{ vmware_datacenter_name }}" state=present validate_certs=false
+  delegate_to: localhost
+  ignore_errors: true
+
+- name: Ensure Cluster {{ vmware_cluster_name }} exists
+  local_action: >
+        vmware_cluster
+        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        datacenter_name="{{ vmware_datacenter_name }}"
+        cluster_name="{{ vmware_cluster_name }}"
+        enable_ha=False
+        enable_drs=False
+        enable_vsan=False
+        validate_certs=False
+  delegate_to: localhost
+  ignore_errors: true
+
+- name: add hosts to vCenter
+  local_action:
+        module: vmware_host
+        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+        username: "{{ vmware_vcsa_user }}"
+        password: "{{ vmware_vcsa_pass }}"
+        datacenter_name: "{{ vmware_datacenter_name }}"
+        cluster_name: "{{ vmware_cluster_name }}"
+        esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
+        esxi_username: "{{ vmware_esxi_username }}"
+        esxi_password: "{{ vmware_esxi_password }}"
+        state: present
+        validate_certs: false
+  with_items:
+  - "{{ groups['esxi_hosts'] }}"
+  delegate_to: localhost
+  ignore_errors: true

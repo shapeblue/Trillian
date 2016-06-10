@@ -1,0 +1,284 @@
+﻿#!/bin/bash
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+ZONETYPE="Advanced"
+SECGROUPS="False"
+ADVGUESTCIDRADDRESS="10.1.1.0/24"
+ZONENAME="AdvZone"
+DNS="8.8.8.8"
+INTDNS="10.0.1.2"
+LOCALSTORAGE="true"
+PRISTOR="nfs://10.0.1.30/acs/primary/acs46/esxi1"
+SECSTOR="nfs://10.0.1.30/acs/secondary/acs46"
+
+GUEST_VLANS="505-520"
+
+PUBLIC_VLAN="untagged"
+PUBLIC_GATEWAY="10.101.15.254"
+PUBLIC_MASK="255.255.240.0"
+PUBLIC_STARTIP="10.101.1.1"
+PUBLIC_ENDIP="10.101.1.10"
+
+POD1_GATEWAY="10.100.254.254"
+POD1_MASK="255.255.0.0"
+POD1_RES_STARTIP="10.100.10.10"
+POD1_RES_ENDIP="10.100.10.19"
+POD1_NAME="Pod1"
+
+ADDHOST="true" # true or false
+
+HYPERVISOR="vmware"  # OPTIONS: vmware XenServer KVM HyperV 
+XENSERVERIP="10.100.0.10"
+KVMHOSTIP="10.0.0.60"
+VCENTERIP="10.0.0.138"
+DCNAME="datacenter"
+VSPHERECLUSTERNAME="cluster1"
+VCUSERNAME="administrator@vsphere.local"
+VCPASSWORD="P@ssword123"
+
+
+
+
+cat << '_EOF_' > /tmp/zone.cfg
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+{
+	"zones": [{
+		"name": "$ZONENAME",
+		"guestcidraddress": "10.1.1.0/24",
+		"dns1": "$DNS",
+		"physical_networks": [{
+			"broadcastdomainrange": "Zone",
+			"vlan": "$GUEST_VLANS",
+			"name": "Sandbox-pnet",
+			"traffictypes": [{
+				"typ": "Guest"
+			}, {
+				"typ": "Management"
+			}, {
+				"typ": "Public"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": [
+				"VLAN"
+			]
+		}],
+		"vmwaredc": {
+			"username": "$VCUSERNAME",
+			"vcenter": "$VCENTERIP",
+			"password": "$VCPASSWORD",
+			"name": "$DCNAME"
+		},
+		"ipranges": [{
+			"startip": "$PUBLIC_STARTIP",
+			"endip": "$PUBLIC_ENDIP",
+			"netmask": "$PUBLIC_MASK",
+			"vlan": "$PUBLIC_VLAN",
+			"gateway": "$PUBLIC_GATEWAY"
+		}],
+		"networktype": "Advanced",
+		"pods": [{
+			"endip": "$POD1_RES_ENDIP",
+			"name": "$POD1_NAME",
+			"startip": "$POD1_RES_STARTIP",
+			"netmask": "$POD1_MASK",
+			"clusters": [{
+					"clustername": "$VSPHERECLUSTERNAME",
+					"hypervisor": "$HYPERVISOR",
+					"hosts": [{
+						"username": "root",
+						"url": "http://sim/c0/h0",
+						"password": "password"
+					}, {
+						"username": "root",
+						"url": "http://sim/c0/h1",
+						"password": "password"
+					}],
+					"clustertype": "CloudManaged",
+					"primaryStorages": [{
+						"url": "$PRISTOR",
+						"name": "PS1"
+					}]
+				}
+
+			],
+			"gateway": "$POD1_GATEWAY"
+		}],
+		"internaldns1": "$INTDNS",
+		"secondaryStorages": [{
+			"url": "$SECSTOR",
+			"provider": "NFS"
+		}]
+	}],
+	"dbSvr": {
+		"dbSvr": "10.11.1.206",
+		"passwd": "cloud",
+		"db": "cloud",
+		"port": 3306,
+		"user": "cloud"
+	},
+	"logger": {
+		"LogFolderPath": "/var/log"
+	},
+	"globalConfig": [{
+		"name": "account.cleanup.interval",
+		"value": 60
+	}, {
+		"name": "extract.url.cleanup.interval",
+		"value": 300
+	}, {
+		"name": "network.securitygroups.work.cleanup.interval",
+		"value": 120
+	}, {
+		"name": "task.cleanup.retry.interval",
+		"value": 600
+	}, {
+		"name": "vm.op.cleanup.interval",
+		"value": 600
+	}, {
+		"name": "vm.op.cleanup.wait",
+		"value": 600
+	}, {
+		"name": "vpc.cleanup.interval",
+		"value": 600
+	}, {
+		"name": "alert.wait",
+		"value": 300
+	}, {
+		"name": "backup.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "copy.volume.wait",
+		"value": 600
+	}, {
+		"name": "create.private.template.from.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "create.private.template.from.volume.wait",
+		"value": 600
+	}, {
+		"name": "create.volume.from.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "migratewait",
+		"value": 1200
+	}, {
+		"name": "primary.storage.download.wait",
+		"value": 900
+	}, {
+		"name": "storage.pool.max.waitseconds",
+		"value": 900
+	}, {
+		"name": "update.wait",
+		"value": 300
+	}, {
+		"name": "vm.op.cleanup.wait",
+		"value": 600
+	}, {
+		"name": "vm.tranisition.wait.interval",
+		"value": 300
+	}, {
+		"name": "vmsnapshot.create.wait",
+		"value": 900
+	}, {
+		"name": "xapiwait",
+		"value": 300
+	}, {
+		"name": "router.alerts.check.interval",
+		"value": 300
+	}, {
+		"name": "network.gc.wait",
+		"value": "60"
+	}, {
+		"name": "storage.cleanup.interval",
+		"value": "300"
+	}, {
+		"name": "vm.op.wait.interval",
+		"value": "5"
+	}, {
+		"name": "default.page.size",
+		"value": "10000"
+	}, {
+		"name": "network.gc.interval",
+		"value": "60"
+	}, {
+		"name": "instance.name",
+		"value": "QA"
+	}, {
+		"name": "workers",
+		"value": "10"
+	}, {
+		"name": "guest.domain.suffix",
+		"value": "sandbox.simulator"
+	}, {
+		"name": "expunge.delay",
+		"value": "60"
+	}, {
+		"name": "vm.allocation.algorithm",
+		"value": "random"
+	}, {
+		"name": "expunge.interval",
+		"value": "60"
+	}, {
+		"name": "expunge.workers",
+		"value": "3"
+	}, {
+		"name": "check.pod.cidrs",
+		"value": "true"
+	}, {
+		"name": "secstorage.allowed.internal.sites",
+		"value": "10.147.28.0/24"
+	}, {
+		"name": "direct.agent.load.size",
+		"value": "1000"
+	}, {
+		"name": "enable.dynamic.scale.vm",
+		"value": "true"
+	}],
+	"mgtSvr": [{
+		"mgtSvrIp": "10.11.1.206",
+		"port": 8096,
+		"user": "root",
+		"passwd": "password",
+		"hypervisor": "vmware"
+	}]
+}
+
+_EOF_

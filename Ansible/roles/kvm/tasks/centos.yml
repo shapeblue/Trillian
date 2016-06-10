@@ -1,0 +1,57 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: Ensure prerequisite libselinux-python installed
+  yum: name=libselinux-python state=installed
+
+- name: Ensure EPEL is available (centOS6)
+  yum: name="{{ epel6 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure EPEL is available (centOS7)
+  yum: name="{{ epel7 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "7"
+
+- name: Install basic utilities and tools
+  yum: name={{ item }} state=present
+  with_items:
+    - bind-utils
+    - bridge-utils
+    - ntp
+    - openssh-clients
+    - pciutils
+    - telnet
+    - tcpdump
+    - traceroute
+    - nano
+    - iftop
+  tags:
+    - common-utils
+    - packages
+
+- include: ./kvm_networking.yml
+
+- name: Ensure selinux python bindings are installed
+  yum: name=libselinux-python state=present
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive

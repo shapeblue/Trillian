@@ -1,0 +1,55 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+
+#- name: unmount local datastore 
+#  shell: esxcli storage filesystem unmount -l datastore1
+#  ignore_errors: true
+
+#- name: remount local datastore 
+#  shell: esxcli storage filesystem mount -l datastore1
+#  ignore_errors: true
+
+
+
+- name: enable jumbo frames for vSwitch0 (raw used for pre 6.0 compatibility)
+  raw: esxcli network vswitch standard set -m 9000 -v vSwitch0
+  ignore_errors: true
+
+- name: enable jumbo frames for VMKernel on vSwitch0 (raw used for pre 6.0 compatibility)
+  raw: esxcli network ip interface set -m 9000 -i vmk0
+  ignore_errors: true
+
+- name: enable vMotion on VMKernel
+  raw: vim-cmd hostsvc/vmotion/vnic_set vmk0
+  ignore_errors: true
+
+- name: Add vSwitch1 (raw used for pre 6.0 compatibility)
+  raw: esxcli network vswitch standard add --vswitch-name=vSwitch1 --ports=1024
+  ignore_errors: true
+
+- name: Add interface to vSwitch1 (raw used for pre 6.0 compatibility)
+  raw: esxcli network vswitch standard uplink add --uplink-name=vmnic1 --vswitch-name=vSwitch1
+  ignore_errors: true
+
+- name: enable promiscomous mode on public/guest traffic (raw used for pre 6.0 compatibility)
+  raw: esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change yes --allow-promiscuous yes --vswitch-name vSwitch1 
+  ignore_errors: true
+
+#- name: Reset Evaluation Timer for new deployment
+#  shell: "rm -r /etc/vmware/license.cfg && cp /etc/vmware/.#license.cfg /etc/vmware/license.cfg && /etc/init.d/vpxa restart"
+#  ignore_errors: true

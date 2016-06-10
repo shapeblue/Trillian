@@ -1,0 +1,78 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: wait for ssh
+  wait_for: port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+
+- name: now i'm connected, get facts
+  setup: 
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  yum: name=libselinux-python state=present
+  tags: services
+
+- name: Ensure mysql python are installed (Ansible requirement)
+  yum: name=MySQL-python state=present
+  tags: services
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+  
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+
+- name: Ensure mysql server is installed (centos/rhel6)
+  yum: name=mysql-server state=present
+  tags: services
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure mariadb server is installed (centos/rhel7)
+  yum: name=mariadb-server state=present
+  tags: services
+  when: ansible_distribution_major_version == "7"
+
+- name: Ridiculous fix for mysql permissions
+  file: path=/var/lib/mysql state=directory mode=0666
+
+- name: replace MySQL my.cnf using Template (centos/rhel6)
+  action: template src=my.cnf.j2 dest=/etc/my.cnf
+  when: ansible_distribution_major_version == "6"
+
+- name: replace MySQL my.cnf using Template (centos/rhel7)
+  action: template src=mariadb-my.cnf.j2 dest=/etc/my.cnf
+  when: ansible_distribution_major_version == "7"
+
+- name: Ensure MySQL service is started and set to start on boot (centos/rhel6)
+  service: name=mysqld state=restarted enabled=yes
+  tags: services
+  when: ansible_distribution_major_version == "6"
+  
+- name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
+  service: name=mariadb state=restarted enabled=yes
+  tags: services
+  when: ansible_distribution_major_version == "7"
+
+- include: ./secure_mysql.yml
+  
+- name: Ensure Firewall Rules are in place for MySQL
+  lineinfile: dest=/etc/sysconfig/iptables insertafter=":OUTPUT" line="-A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT"
+  when: ansible_distribution_major_version == "6"
+
+- name: restart iptables
+  service: name=iptables state=restarted
+  when: ansible_distribution_major_version == "6"

@@ -1,0 +1,181 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+################################################################################
+# Configuration generation playbook for building nested CloudStack clouds.
+#
+# Run against localhost to build Ansible configuration files for building:
+#   1) Ansible inventory file
+#   2) Ansible group variable file
+#
+# Run in interactive mode with:
+#     ansible-playbook generate-cloudconfig.yml
+#
+# Alternatively pass all variables with:
+#     ansible-playbook generate-cloudconfig.yml --extra-vars "varname1=variablevalue1 varname2='variable text 2'"
+# E.g.
+#     ansible-playbook generate-cloudconfig.yml -i localhost -e "env_name=NestedCloud1 mgmt=2 db=1 hvtype=k hv=5"
+#
+# Since this is Ansible all input variable can however be passed on the command line without further coding,
+# any variables passed will override any default variables specified elsewhere.
+#
+# Basic variables:
+#   env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
+#   env_version [mandatory]: Environment CloudStack version (cs45, cs46, custom, etc).
+#   mgmt [optional]: Number of management servers to configur e
+#   db [optional]: Number of database servers to configure
+#   hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
+#   hv [optional]: number of hypervisors. Please note if hypervisor type is VMware the assumption is made
+#                  that a single VC host is also required. This does not have to be specified anywhere.
+#   pri [mandatory]: number of primary storage pools.
+#   sec [mandatory]: number of secondary storage pools.
+#
+# Advanced variables [all optional]:
+#   management_network: name of the management network
+#   guest_public_network: name of the guest+public network
+#   management_vm_hypervisor: parent CloudStack cloud hypervisor (default VMware)
+#   build_project: project name to use for the nested cloudstack build (default <accountname>-NestedClouds)
+#   build_zone: parent cloud zone name
+#   build_keyboard: keyboard used for nested VMs (default UK)
+#   mgmtsrv_service_offering: parent cloud service offering used for the management server build
+#   mgmtsrv_template: parent cloud template used for the management server build
+#   dbsrv_service_offering: parent cloud service offering used for database server build
+#   dbsrv_template: parent cloud template used for database server build
+#   kvm_service_offering: parent cloud nested KVM instances service offering
+#   kvm_template: parent cloud nested KVM HV template
+#   xs_service_offering: parent cloud nested XenServer instances service offering
+#   xs_template: parent cloud nested XenServer HV template
+#   esxi_service_offering: parent cloud nested ESXi instances service offering
+#   esxi_template: parent cloud nested ESXi HV template
+#   vc_service_offering: parent cloud nested VC instances service offering
+#   vc_template: parent cloud nested VirtualCentre template
+#   baseurl_cloudstack: URL for CloudStack build repository
+#   env_db_name: environments database name
+#   env_db_ip: environments database IP address
+#   env_db_user: environments database username
+#   env_db_password: environments database password
+#   env_zonetype: basic or advanced (default)
+#   env_prihost: primary storage host fqdn or IP address
+#   env_sechost: secondary storage host fqdn or IP address
+#   env_zone_systemplate: URL to system template, overrides version variable
+#   build_marvin: whether or not to build a marvin vm for testing purposes (default is false)
+#
+################################################################################
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars_prompt:
+    - name: "env_name"
+      prompt: "Environment name"
+      private: no
+      when: env_name is undefined
+
+    - name: "env_version"
+      prompt: "CloudStack version (cs45 / cs46 / custom)"
+      private: no
+      default: "cs45"
+      when: env_version is undefined
+
+    - name: "env_accounts"
+      prompt: "Accounts to be added to project"
+      private: no
+      when: env_accounts is undefined
+
+    - name: "hvtype"
+      prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
+      private: no
+      when: hvtype is undefined
+
+    - name: "hv"
+      prompt: "Number of hypervisor hosts"
+      default: "2"
+      private: no
+      when: hv is undefined
+
+    - name: "pri"
+      prompt: "Number of primary storage pools"
+      default: "1"
+      private: no
+      when: pri is undefined
+
+  tasks:
+    - name: Check returned environment name
+      fail: msg="No environment name provided."
+      when: env_name is not defined or ( env_name is defined and env_name =="" )
+
+    - name: Check returned hypervisor type
+      fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
+      when: hvtype | lower not in [ "vmware", "v", "xenserver", "x", "kvm", "k" ]
+
+    - name: Sanitise environment name
+      set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
+
+    - name: Return sanitised environment name
+      debug: msg="Utilised environment name is {{ env_name_clean }}"
+
+    - name: Capture account name
+      shell: cs listAccounts
+      register: acct_retval
+
+    - name: Capture all accounts in domain
+      shell: cs listAccounts listall=true | jq -c -r '.account[]' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
+      register: allaccts_retval
+
+    - name: Debug accounts to be added to project
+      debug: msg="Adding these accounts {{ allaccts_retval.stdout }}"
+
+    - name: Register authenticating account
+      set_fact: env_user={{ (acct_retval.stdout|from_json ).account[0].name }}
+
+    #- name: Generate account tagged project name
+    #  set_fact: build_project="{{ (acct_retval.stdout|from_json ).account[0].name | capitalize }}-NestedClouds"
+    #  when: build_project is undefined
+
+    - name: Generate environment tagged project name
+      set_fact: build_project="{{ env_name_clean }}-NestedClouds"
+      when: build_project is undefined
+
+    - name: Generate commment for environments db
+      set_fact: env_comment="Account {{ (acct_retval.stdout|from_json ).account[0].name }} - Project {{ env_name_clean }}"
+
+    - name: Generate environment uuid
+      shell: uuidgen
+      register: env_uuid
+
+    - name: Return utilised project name
+      debug: msg="Utilised project name is {{ build_project }}"
+
+    - name: Check if inventory file exists
+      stat: path=./hosts_{{ env_name_clean }}
+      register: inv_exists
+
+    - name: Check if group vars file exists
+      stat: path=./group_vars/{{ env_name_clean }}
+      register: vars_exists
+
+    - name: Fail if environment already exists
+      fail: msg="Environment already exists, please remove or use different environment name."
+      when: inv_exists.stat.exists or vars_exists.stat.exists
+
+    - name: Copy inventory file
+      template: src=templates/nestedinventory.j2 dest="{{ inventory_dir }}/hosts_{{ env_name_clean }}"
+
+    - name: Build group_vars file
+      template: src=templates/nestedgroupvars.j2 dest="{{ inventory_dir }}/group_vars/{{ env_name_clean }}"
+
+    - debug: msg="You can now run{{":"}} ansible-playbook deployvms.yml -i ./hosts_{{ env_name_clean }}  "

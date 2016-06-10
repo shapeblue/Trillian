@@ -1,0 +1,68 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+####################################################################
+# Erase environment
+# extra var env_name require for silent run
+# ansible-playbook erase-env.yml -i localhost --extravars "env_name=envname"
+
+####################################################################
+# Setup variables
+#
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars_prompt:
+    - name: "env_name"
+      prompt: "Environment name"
+      private: no
+      when: env_name is undefined
+
+  tasks:
+
+    - name: Sanitise environment name
+      set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
+
+    - name: Generate environment tagged project name
+      set_fact: build_project="{{ env_name_clean }}-NestedClouds"
+
+    ####################################################################
+    # Remove project
+    #
+    - name: Delete project
+      local_action:
+        module: cs_project
+        name: "{{ build_project }}"
+        state: absent
+
+    ####################################################################
+    # Remove Environment IP range
+    #
+    - name: copy the environment delete script first
+      copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
+
+    - name: Run database environment handback script
+      shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }}"
+
+    - name: remove script
+      file: path="/tmp/{{ env_name_clean }}_enviroment_remove.sh" state=absent
+
+    - name: remove script
+      file: path="{{ inventory_dir }}/hosts_{{ env_name_clean }}" state=absent
+
+    - name: remove script
+      file: path="{{ inventory_dir }}/group_vars/{{ env_name_clean }}" state=absent

@@ -1,0 +1,78 @@
+﻿---
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: Ensure selinux python bindings are installed
+  yum: name=libselinux-python state=present
+
+- name: Ensure the Apache Cloudstack Repo file is configured
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+
+- name: Ensure CA Certs are available (centOS6)
+  yum: name=ca-certificates state=present
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure EPEL is available (centOS6)
+  yum: name="{{ epel6 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure EPEL is available (centOS7)
+  yum: name="{{ epel7 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "7"
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+
+- name: Ensure CloudStack packages are installed
+  yum: name=cloudstack-management state=present
+
+- name: Ensure MySQL Client is present (centos/rhel6)
+  yum: name=mysql state=present
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure MariaDB Client is present (centos/rhel7)
+  yum: name=mysql state=present
+  when: ansible_distribution_major_version == "7"
+
+- name: Ensure vhd-util is present
+  get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
+
+- name: Ensure CloudStack Usage Service is installed
+  yum: name=cloudstack-usage state=present
+
+- name: Ensure CloudStack Usage Service is started
+  service: name=cloudstack-usage state=started
+
+- include: ./setupdb.yml
+
+- name: copy cloudutil script to /usr/bin
+  copy: src=cloudutil dest=/usr/bin/ mode=0755
+
+- name: Ensure sshpass is installed (CentOS 7)
+  yum: name=sshpass state=present
+  when: ansible_distribution_major_version == "7"
+
+- name: Ensure sshpass is installed (CentOS 6)
+  yum: name=http://pkgs.repoforge.org/sshpass/sshpass-1.05-1.el6.rf.x86_64.rpm state=present
+  when: ansible_distribution_major_version == "6"
