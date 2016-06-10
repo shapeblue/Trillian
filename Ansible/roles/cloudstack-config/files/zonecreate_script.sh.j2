@@ -1,0 +1,395 @@
+#!/bin/bash
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+# create cloudstack zone
+
+
+#-i <network_id> -h <env_Database IP> -u <env_username> -p <env_password> -d <env_database name> -z <zonename> -v <hypervisor> -k <Vcenter IP or KVM host or Xenserver host> -n <Network Type> -c <comment>
+
+while getopts "i::h::u::p::d::z::v::k:n::c:" opt; do
+  case $opt in
+    i)
+      id=$OPTARG;
+      ;;
+    h)
+      HOST=$OPTARG;
+      ;;
+    u)
+      USERNAME=$OPTARG;
+      ;;
+    p)
+      PASSWORD=$OPTARG;
+      ;;
+    d)
+      db=$OPTARG;
+      ;;
+    z)
+      ZONENAME=$OPTARG;
+      ;;
+    v)
+      HYPERVISOR=$OPTARG;
+      ;;
+    k)
+       if [[ "$HYPERVISOR" == 'vmware' || "$HYPERVISOR" = "VMWare" ]]; then
+                VCENTERIP=$OPTARG
+        elif  [[ "$HYPERVISOR" == "xenserver"  || "$HYPERVISOR" == "Xenserver" ]]; then
+                XENSERVERIP=$OPTARG
+        else
+                set -f # disable glob
+                IFS=$',' # split on space characters
+                KVMHOSTIP=($OPTARG)  # use the split+glob operator
+                fi
+                unset IFS
+                ;;
+    n)
+      ZONETYPE=$OPTARG
+      ;;
+    c)
+      comment=$OPTARG
+      ;;
+   *)
+      echo "-i <ENV_id> -h <ENV_Database IP> -u <ENV_username> -p <ENV_password> -d <ENV_database name> -z <CLoudstack ZoneName and Environment Name> -v <Hypervisor> -k <Vcenter IP or KVM host or Xenserver host (First Host)> -n <zonetype> -c <any comment>" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+#Look at putting the Defaults into a file
+if [[ -z $HOST ]]; then
+         HOST="10.2.0.3"
+  fi
+if [[ -z $USERNAME ]]; then
+          USERNAME="root"
+   fi
+if [[ -z $PASSWORD ]]; then
+           PASSWORD="P@ssword123"
+    fi
+if [[ -z $db ]]; then
+            db="acstest"
+     fi
+
+#Create a zone name
+ENVNAME=$ZONENAME
+
+#MySQL Command
+mysqlcommand="mysql -h$HOST -u$USERNAME -p$PASSWORD -s -N -e"
+
+#Table Names
+envtbl="environment"
+podtbl="podnetworks"
+pubtbl="pubnetworks"
+pritbl="primarystorage"
+sectbl="secondarystorage"
+
+#Get ID
+if [[ -z $id ]]; then
+        id=`$mysqlcommand "SELECT idpod FROM $db.$podtbl WHERE inuse='FALSE' limit 1"`
+fi
+if [[ -z $id ]]; then
+        echo "There is no available network ID's , please re-uue a old ID"
+        exit 1
+fi
+
+#ZONETYPE="Advanced"
+SECGROUPS="False"
+ADVGUESTCIDRADDRESS="10.1.1.0/24"
+DNS="8.8.8.8"
+INTDNS="10.0.1.2"
+LOCALSTORAGE="true"
+
+#Variables for Storage
+#NFS propocal
+priprot=`$mysqlcommand "SELECT protocol FROM $db.$pritbl WHERE idpri=$id"`
+secprot=`$mysqlcommand "SELECT protocol FROM $db.$sectbl WHERE idsec=$id"`
+#NFS Host
+prihost=`$mysqlcommand "SELECT host FROM $db.$pritbl WHERE idpri=$id"`
+sechost=`$mysqlcommand "SELECT host FROM $db.$sectbl WHERE idsec=$id"`
+
+#NFS path Variables
+prinfspath="/acs/primary/$ENVNAME/pri1/"
+prinfspath2="/acs/primary/$ENVNAME/pri2/"
+secnfspath="/acs/secondary/$ENVNAME/sec/"
+
+#Connect to NFS Server to create directories
+sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $prihost "mkdir -p $prinfspath; mkdir -p $prinfspath2; mkdir -p $secnfspath";
+
+#Update NFS path to DB
+`$mysqlcommand "UPDATE $db.$pritbl SET path = '$prinfspath' WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET path = '$secnfspath' WHERE idsec = $id"`;
+
+enviro=`$mysqlcommand "SELECT environmentname FROM $db.$pritbl WHERE idpri=$id"`
+if [[ "$ENVNAME" == $enviro  ]]; then
+      echo -e "\e[92m ---->  Environment name already used  - $ENVNAME with network ID $id \e[0m"
+        exit 1
+     fi
+
+#Update tables to inuse
+`$mysqlcommand "UPDATE $db.$podtbl SET inuse = 'TRUE' WHERE idpod = $id"`;
+`$mysqlcommand "UPDATE $db.$pubtbl SET inuse = 'TRUE' WHERE idpub = $id"`;
+`$mysqlcommand "UPDATE $db.$pritbl SET inuse = 'TRUE' WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET inuse = 'TRUE' WHERE idsec = $id"`;
+
+#Update Timestamp
+`$mysqlcommand "UPDATE $db.$podtbl SET updated = NOW() WHERE idpod = $id"`;
+`$mysqlcommand "UPDATE $db.$pubtbl SET updated = NOW() WHERE idpub = $id"`;
+`$mysqlcommand "UPDATE $db.$pritbl SET updated = NOW() WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET updated = NOW() WHERE idsec = $id"`;
+
+#Added Comments
+`$mysqlcommand "UPDATE $db.$podtbl SET comment = '$comment' WHERE idpod = $id"`;
+`$mysqlcommand "UPDATE $db.$pubtbl SET comment = '$comment' WHERE idpub = $id"`;
+`$mysqlcommand "UPDATE $db.$pritbl SET comment = '$comment' WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET comment = '$comment' WHERE idsec = $id"`;
+
+#Added a Environment Name
+`$mysqlcommand "UPDATE $db.$podtbl SET environmentname = '$ENVNAME' WHERE idpod = $id"`;
+`$mysqlcommand "UPDATE $db.$pubtbl SET environmentname = '$ENVNAME' WHERE idpub = $id"`;
+`$mysqlcommand "UPDATE $db.$pritbl SET environmentname = '$ENVNAME' WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET environmentname = '$ENVNAME' WHERE idsec = $id"`;
+
+`$mysqlcommand "UPDATE $db.$podtbl SET removed = '' WHERE idpod = $id"`;
+`$mysqlcommand "UPDATE $db.$pubtbl SET removed = '' WHERE idpub = $id"`;
+`$mysqlcommand "UPDATE $db.$pritbl SET removed = '' WHERE idpri = $id"`;
+`$mysqlcommand "UPDATE $db.$sectbl SET removed = '' WHERE idsec = $id"`;
+
+#Primary Storage
+PRISTOR=$priprot://$prihost$prinfspath
+
+#Second ID for primarystorage
+PRISTOR2=$priprot://$prihost$prinfspath2
+
+#Secondary Storage
+SECSTOR=$secprot://$sechost$secnfspath
+
+GUEST_VLANS=`$mysqlcommand "SELECT vlans FROM $db.$podtbl WHERE idpod=$id"`
+
+#Public IP ranges
+PUBLIC_VLAN=`$mysqlcommand "SELECT vlan FROM $db.$pubtbl WHERE idpub=$id"`
+PUBLIC_GATEWAY=`$mysqlcommand "SELECT pubgw FROM $db.$pubtbl WHERE idpub=$id"`
+PUBLIC_MASK=`$mysqlcommand "SELECT pubmask FROM $db.$pubtbl WHERE idpub=$id"`
+PUBLIC_STARTIP=`$mysqlcommand "SELECT pubstartip FROM $db.$pubtbl WHERE idpub=$id"`
+PUBLIC_ENDIP=`$mysqlcommand "SELECT pubendip FROM $db.$pubtbl WHERE idpub=$id"`
+
+#POD IP Range
+POD1_GATEWAY=`$mysqlcommand "SELECT podgw FROM $db.$podtbl WHERE idpod=$id"`
+POD1_MASK=`$mysqlcommand "SELECT podmask FROM $db.$podtbl WHERE idpod=$id"`
+POD1_RES_STARTIP=`$mysqlcommand "SELECT podstartip FROM $db.$podtbl WHERE idpod=$id"`
+POD1_RES_ENDIP=`$mysqlcommand "SELECT podendip FROM $db.$podtbl WHERE idpod=$id"`
+POD1_NAME="Pod1"
+
+ADDHOST="true" # true or false
+
+DCNAME="SBCLOUD"
+VSPHERECLUSTERNAME="vSpherecluster1"
+VCUSERNAME="administrator@vsphere.local"
+VCPASSWORD="P@ssword123"
+
+tempdir="/mnt/secondary"
+template_app_path="/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt"
+
+if [[ "$HYPERVISOR" == 'vmware' || "$HYPERVISOR" = "VMWare" ]]; then
+      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
+    elif  [[ "$HYPERVISOR" == "xenserver"  || "$HYPERVISOR" == "Xenserver" ]]; then
+      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
+    elif  [[ "$HYPERVISOR" == "kvm"  || "$HYPERVISOR" == "KVM" ]]; then
+      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
+    else
+      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-hyperv.vhd.zip"
+    fi
+
+#----------------------------------------------------------------------------------------------------------
+
+
+if [ ! -e /usr/bin/cloudmonkey ]; then
+  echo "Cloudmonkey required, attempting install"
+  yum install -y python-setuptools
+  easy_install cloudmonkey
+fi
+
+#check for jq
+if [ ! -e /usr/bin/jq ]; then
+  echo "jq required, attempting install"
+
+  yum install -y jq
+fi
+
+echo -e "\e[92m ---->  Checking login\e[0m"
+
+ACCTCHECK=`cloudmonkey list accounts name=admin | grep admin`
+if [[ $ACCTCHECK == *"admin"* ]]; then
+  echo "Admin account found. Good to go"
+else
+  echo "couldn't login"
+  exit 1
+fi
+
+echo -e "\e[92m ---->  Checking for Zone\e[0m"
+ZONECHECK=`cloudmonkey list zones name=$ZONENAME`
+if [[ -z $ZONECHECK ]]; then
+  echo "Zone $ZONENAME does not exist. Good to go"
+else
+  echo "Zone $ZONENAME exists. Bailing out."
+  exit 1
+fi
+
+
+if [[ "$ZONETYPE" == "Advanced" ]]; then
+  echo -e "\e[92m ---->  Creating Zone - $ZONENAME\e[0m"
+  cloudmonkey create zone networktype='"Advanced"' securitygroupenabled=$SECGROUPS guestcidraddress=$ADVGUESTCIDRADDRESS name=$ZONENAME dns1=$DNS internaldns1=$INTDNS localstorageenabled=$LOCALSTORAGE
+  ZONEID=`cloudmonkey list zones name=$ZONENAME | jq '.zone[] | .id'`
+  echo -e "\e[92m ---->  Creating Physical Network (Mgmt)\e[0m"
+  cloudmonkey create physicalnetwork zoneid=$ZONEID name='"Physical Network Mgmt"' isolationmethods='"VLAN"'
+  echo -e "\e[92m ---->  Creating Physical Network (Public)\e[0m"
+  cloudmonkey create physicalnetwork zoneid=$ZONEID name='"Physical Network Public"' isolationmethods='"VLAN"'
+  echo -e "\e[92m ---->  Creating Physical Network (Guest)\e[0m"
+  cloudmonkey create physicalnetwork zoneid=$ZONEID name='"Physical Network Guest"' isolationmethods='"VLAN"'
+  PHYSNET_MGMT_ID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" | jq '.physicalnetwork[] | .id'`
+  PHYSNET_PUBLIC_ID=`cloudmonkey list physicalnetworks name="Physical Network Public" | jq '.physicalnetwork[] | .id'`
+  PHYSNET_GUEST_ID=`cloudmonkey list physicalnetworks name="Physical Network Guest" | jq '.physicalnetwork[] | .id'`
+  echo -e "\e[92m ---->  ZONEID = $ZONEID\e[0m"
+  echo -e "\e[92m ---->  PHYSNET_MGMT_ID = $PHYSNET_MGMT_ID\e[0m"
+  echo -e "\e[92m ---->  PHYSNET_PUBLIC_ID = $PHYSNET_PUBLIC_ID\e[0m"
+  echo -e "\e[92m ---->  PHYSNET_GUEST_ID = $PHYSNET_GUEST_ID\e[0m"
+  echo -e "\e[92m ---->  Adding Traffic Type - Public\e[0m"
+  cloudmonkey add traffictype physicalnetworkid=$PHYSNET_PUBLIC_ID traffictype='"Public"' xennetworklabel='"Network1"'  hypervnetworklabel='"GuestPub"' vmwarenetworklabel='"vSwitch1,,vmwaresvs"' kvmnetworklabel='"cloudbr1"'
+else
+  ZONEID=`cloudmonkey create zone networktype='"Basic"' securitygroupenabled=$SECGROUPS name=$ZONENAME dns1=$DNS internaldns1=$INTDNS localstorageenabled=$LOCALSTORAGE | jq '.zone | .id'`
+  cloudmonkey create physicalnetwork zoneid=$ZONEID name='"Physical Network"'
+  PHYSNET_MGMT_ID=`cloudmonkey list physicalnetworks name="Physical Network" | jq '.physicalnetwork[] | .id'`
+  echo -e "\e[92m ---->  ZONEID = $ZONEID\e[0m"
+  echo -e "\e[92m ---->  PHYSNETID = $PHYSNET_MGMT_ID\e[0m"
+  echo -e "\e[92m ---->  PHYSNET_GUEST_ID = $PHYSNET_MGMT_ID\e[0m"
+fi
+
+echo -e "\e[92m ---->  Adding Traffic Type (Mgmt)\e[0m"
+cloudmonkey add traffictype physicalnetworkid=$PHYSNET_MGMT_ID traffictype='"Management"' xennetworklabel='"Network0"' hypervnetworklabel='"Mgmt"' vmwarenetworklabel='"vSwitch0"' kvmnetworklabel='"cloudbr0"'
+echo -e "\e[92m ---->  Adding Traffic Type (Guest)\e[0m"
+cloudmonkey add traffictype physicalnetworkid=$PHYSNET_GUEST_ID traffictype='"Guest"' xennetworklabel='"Network1"' hypervnetworklabel='"GuestPub"' vmwarenetworklabel='"vSwitch1,,vmwaresvs"' kvmnetworklabel='"cloudbr1"'
+
+PHYSNET_STR=`cloudmonkey list physicalnetworks filter=id | jq '.physicalnetwork[] | .id'`
+PHYSNET_STR_ARRAY=(`echo $PHYSNET_STR | tr " " "\n"`)
+
+for (( i = 0; i < ${#PHYSNET_STR_ARRAY[@]}; i++ )); do echo -e "\e[92m ---->  Enabling Physical Network ${PHYSNET_STR_ARRAY[$i]}\e[0m"; cloudmonkey update physicalnetwork state='"Enabled"' id="${PHYSNET_STR_ARRAY[$i]}"; done
+
+if [[ "$ZONETYPE" == "Advanced" ]]; then
+
+  NETPROV_STR_ARRAY=(`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name!="SecurityGroupProvider") | .id' | tr " " "\n"`)
+  INTLB_STR_ARRAY=(`cloudmonkey list internalloadbalancerelements filter=name,id | jq '.internalloadbalancerelement[] | .id' | tr " " "\n"`)
+  VR_STR_ARRAY=(`cloudmonkey list virtualrouterelements filter=name,id | jq '.virtualrouterelement[] | .id' | tr " " "\n"`)
+
+  for (( i = 0; i < ${#VR_STR_ARRAY[@]}; i++ )); do echo -e "\e[92m ---->  Enabling virtualrouterelement ${VR_STR_ARRAY[$i]}\e[0m"; cloudmonkey configure virtualrouterelement enabled='"true"' id="${VR_STR_ARRAY[$i]}"; done
+  for (( i = 0; i < ${#INTLB_STR_ARRAY[@]}; i++ )); do echo -e "\e[92m ---->  Enabling internalloadbalancerelements ${INTLB_STR_ARRAY[$i]}\e[0m";cloudmonkey configure internalloadbalancerelement enabled='"true"' id="${INTLB_STR_ARRAY[$i]}"; done
+  for (( i = 0; i < ${#NETPROV_STR_ARRAY[@]}; i++ )); do echo -e "\e[92m ---->  Enabling networkserviceprovider ${NETPROV_STR_ARRAY[$i]}\e[0m";cloudmonkey update networkserviceprovider state='"Enabled"' id="${NETPROV_STR_ARRAY[$i]}"; done
+  echo -e "\e[92m ---->  Creating Public Range\e[0m"
+  cloudmonkey create vlaniprange zoneid=$ZONEID vlan="$PUBLIC_VLAN" gateway="$PUBLIC_GATEWAY" netmask="$PUBLIC_MASK" startip="$PUBLIC_STARTIP" endip="$PUBLIC_ENDIP" forvirtualnetwork='"true"'
+  echo -e "\e[92m ---->  Creating Guest VLAN Range\e[0m"
+  cloudmonkey update physicalnetwork id=$PHYSNET_GUEST_ID vlan=$GUEST_VLANS
+
+else
+
+  NSPID=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=$PHYSNET_MGMT_ID | jq '.networkserviceprovider[] | .id'`
+  VREID=`cloudmonkey list virtualrouterelements nspid=$NSPID | jq '.virtualrouterelement[] | .id'`
+  cloudmonkey configure virtualrouterelement enabled='"True"' id=$VREID
+  cloudmonkey update networkserviceprovider id=$NSPID state='"Enabled"'
+  NETOFFID=`cloudmonkey list networkofferings name="DefaultSharedNetworkOffering" displaytext="Offering for Shared networks" | jq '.networkserviceprovider[] | .id'`
+  cloudmonkey create network zoneid=$ZONEID name=defaultGuestNetwork displaytext=defaultGuestNetwork networkofferingid=$NETOFFID
+
+fi
+
+
+
+echo -e "\e[92m ---->  Creating 1st Pod\e[0m"
+cloudmonkey create pod zoneid=$ZONEID name="$POD1_NAME" gateway="$POD1_GATEWAY" netmask="$POD1_MASK" startip="$POD1_RES_STARTIP" endip="$POD1_RES_ENDIP"
+PODID=`cloudmonkey list pods name=$POD1_NAME filter=id | jq '.pod[] | .id'`
+echo -e "\e[92m ---->  POD ID = $PODID\e[0m"
+
+if [[ "$HYPERVISOR" == "vmware" ]]; then
+  echo -e "\e[92m ---->  Adding VMware DC\e[0m"
+  VMWDCNEEDSADDING=1
+  while [ $VMWDCNEEDSADDING = 1 ]; do
+    cloudmonkey add vmwaredc name=$DCNAME password=$VCPASSWORD username=$VCUSERNAME vcenter=$VCENTERIP zoneid=$ZONEID
+    VMWDC=`cloudmonkey list vmwaredcs zoneid=$ZONEID | grep $DCNAME`
+    if [[ $VMWDC == *"$DCNAME"* ]]; then
+      VMWDCNEEDSADDING=0
+    else
+      read -p "VMware DC could not be added please rectify and press Enter to continue" x
+    fi
+  done
+
+  echo -e "\e[92m ---->  Adding VMware Cluster\e[0m"
+  if [[ "$ADDHOST" == "true" ]]; then
+    cloudmonkey add cluster zoneid=$ZONEID hypervisor='"VMware"' clustertype='"ExternalManaged"' podid=$PODID url="http://$VCENTERIP/$DCNAME/$VSPHERECLUSTERNAME" clustername="$VSPHERECLUSTERNAME" vsmipaddress="$VCENTERIP" vsmpassword='"P@ssword123"' vsmusername='"vcadmin"'
+    CLUSTERID=`cloudmonkey list clusters clustername="$VSPHERECLUSTERNAME" | jq '.cluster[] | .id'`
+  fi
+elif [[ "$HYPERVISOR" == "hyperv" ]]; then
+  echo -e "\e[92m ---->  Adding Hyper-V Cluster\e[0m"
+    CLUSTERID=`cloudmonkey add cluster zoneid=$ZONEID hypervisor='"hyperv"' clustertype='"CloudManaged"' podid=$PODID clustername='"HypervCluster"' | jq '.cluster[] | .id'`
+  if [[ "$ADDHOST" == "true" ]];then
+    cloudmonkey add host zoneid=$ZONEID podid=$PODID clusterid=cloudmonkeyLUSTERID hypervisor='"hyperv"' password='"hyperv13!"' username='"hyperv"' url='"http://10.0.0.24"';
+  fi
+elif  [[ "$HYPERVISOR" == "xenserver" ]]; then
+  echo -e "\e[92m ---->  Adding XenServer Cluster\e[0m"
+  CLUSTERID=`cloudmonkey add cluster zoneid=$ZONEID hypervisor='"XenServer"' clustertype='"CloudManaged"' podid=$PODID clustername='"p1-c1"'  | jq '.cluster[] | .id'`
+  echo -e "\e[92m ---->  Adding XenServer Host\e[0m"
+  if [[ "$ADDHOST" == "true" ]]; then
+    cloudmonkey add host zoneid=$ZONEID podid=$PODID clusterid=$CLUSTERID hypervisor='"XenServer"' password="$PASSWORD" username="$USERNAME" url="http://$XENSERVERIP";
+  fi
+elif  [[ "$HYPERVISOR" == "kvm" ]]; then
+  echo -e "\e[92m ---->  Adding KVM Cluster\e[0m"
+  CLUSTERID=`cloudmonkey add cluster zoneid=$ZONEID hypervisor='"KVM"' clustertype='"CloudManaged"' podid=$PODID clustername='"p1-c1"'  | jq '.cluster[] | .id'`
+  echo -e "\e[92m ---->  Adding KVM Host\e[0m"
+  if [[ "$ADDHOST" == "true" ]]; then
+    for i in "${KVMHOSTIP[@]}"; do
+      echo -e "\e[92m ---->  KVMHOST - ${i}\e[0m"
+      cloudmonkey add host zoneid=$ZONEID podid=$PODID clusterid=$CLUSTERID hypervisor='"KVM"' password="$PASSWORD" username="$USERNAME" url="http://${i}";
+    done
+  fi
+fi
+sleep 30
+
+if [[ "$HYPERVISOR" == "hyperv" ]]; then
+  cloudmonkey create storagepool scope=cluster clusterid=$CLUSTERID name=Pri1 podid=$PODID zoneid=$ZONEID provider=smb url='"cifs://10.0.1.27/hypervPri/stor/Primary"' details[0].user=hyperv details[1].password=hyperv13! details[2].domain=angusnet.local
+  cloudmonkey add imagestore name=SecCIFSStorage provider=SMB zoneid=$ZONEID url='"cifs://10.0.1.27/hypervPri/stor/Secondary"' details[0].user=hyperv details[1].password=hyperv13! details[2].domain=angusnet.local
+else
+  echo -e "\e[92m ---->  Adding Primary Storage Pool\e[0m"
+  cloudmonkey create storagepool zoneid=$ZONEID podid=$PODID clusterid=$CLUSTERID name='"PrimaryStoragePool"' scope='"cluster"' url=$PRISTOR
+  echo -e "\e[92m ---->  Adding Second Primary Storage Pool\e[0m"
+  cloudmonkey create storagepool zoneid=$ZONEID podid=$PODID clusterid=$CLUSTERID name='"PrimaryStoragePool2"' scope='"cluster"' url=$PRISTOR2
+  echo -e "\e[92m ---->  Adding Secondary Storage Pool\e[0m"
+  cloudmonkey add imagestore name='"SecondaryStoragePool"' provider='"NFS"' zoneid=$ZONEID url=$SECSTOR
+fi
+
+echo -e "\e[92m ---->  Creating tmp directory for Secondary Storage  \e[0m"
+`mkdir $tempdir`
+
+echo -e "\e[92m ---->  Mounting tmp directory for template \e[0m"
+`mount.nfs $sechost:$secnfspath $tempdir`
+
+echo -e "\e[92m ---->  Adding template \e[0m"
+`$template_app_path -m $tempdir -u $template_url -h $HYPERVISOR -F`
+
+echo -e "\e[92m ---->  Unmounting tmp directory for template \e[0m"
+#unmount tempdir
+`umount $tempdir`
+
+echo -e "\e[92m ---->  Enabling Zone\e[0m"
+cloudmonkey update zone allocationstate='"Enabled"' id=$ZONEID
+echo -e "\e[92m ---->  You're Done. Good Luck\e[0m"

@@ -1,0 +1,153 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+# Environment vars
+management_network: "{{ management_network | default( def_management_network ) }}"
+guest_public_network: "{{ guest_public_network | default( def_guest_public_network ) }}"
+management_vm_hypervisor: "{{ management_vm_hypervisor | default( def_management_vm_hypervisor ) }}"
+build_project: "{{ build_project }}"
+build_zone: "{{ build_zone | default( def_build_zone ) }}"
+build_keyboard: "{{ build_keyboard | default( def_build_keyboard ) }}"
+
+# Environment database settings
+env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
+env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
+env_db_user: "{{ env_db_user | default( def_env_db_user ) }}"
+env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
+
+# Environment summary
+env_uuid: "{{ env_uuid.stdout }}"
+env_name_clean: "{{ env_name_clean | mandatory }}"
+env_version: "{{ env_version }}"
+env_comment: "{{ env_comment }}"
+env_user: "{{ env_user }}"
+{% if env_accounts | lower == "all" %}
+env_accounts: "{{ allaccts_retval.stdout }}"
+{% elif env_accounts == "" %}
+env_accounts: "{{ env_user }}"
+{% else %}
+env_accounts: "{{ env_accounts }}"
+{% endif %}
+env_zonetype:  "{{ env_zonetype | default( def_env_zonetype ) }}"
+{% if hvtype[0:1] | lower == "v" %}
+env_hv: "vmware"
+{% elif hvtype[0:1] | lower == "x" %}
+env_hv: "xenserver"
+{% elif hvtype[0:1] | lower == "k" %}
+env_hv: "kvm"
+{% else %}
+env_hv: "other"
+{% endif %}
+env_pripath: "{{ env_pripath | default( def_env_pripath ) }}"
+env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
+env_secpath: "{{ env_secpath | default( def_env_secpath ) }}"
+{% if pri | int > 0 %}
+env_pripools:
+{% for n in range(1,pri | int + 1) %}
+  - {{ env_name_clean }}-pri{{ n }}
+{% endfor %}
+{% endif %}
+{% if sec | int > 0 %}
+env_secpools:
+{% for n in range(1,sec | int + 1) %}
+  - {{ env_name_clean }}-sec{{ n }}
+{% endfor %}
+{% endif %}
+env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups ) }}"
+env_zone_guestcidr: "{{ env_zone_guestcidr | default( def_env_zone_guestcidr ) }}"
+env_zone_dns1: "{{ env_zone_dns1 | default( def_env_zone_dns1 ) }}"
+env_zone_dns2: "{{ env_zone_dns2 | default( def_env_zone_dns2 ) }}"
+env_zone_intdns1: "{{ env_zone_intdns1 | default( def_env_zone_intdns1 ) }}"
+env_zone_intdns2: "{{ env_zone_intdns2 | default( def_env_zone_intdns2 ) }}"
+env_zone_localstorage: "{{ localstorage | default( def_env_zone_localstorage ) }}"
+env_zone_podname: "{{ env_zone_podname | default( def_env_zone_podname ) }}"
+env_zone_clustername: "{{ env_zone_clustername | default( def_env_zone_clustername ) }}"
+env_zone_addhosts: "{{ env_zone_addhosts | default( def_env_zone_addhosts ) }}"
+{% if hvtype[0:1] | lower == "v" %}
+env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].vmware_url ) }}"
+{% elif hvtype[0:1] | lower == "x" %}
+env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].xs_url ) }}"
+{% elif hvtype[0:1] | lower == "k" %}
+env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }}"
+{% endif %}
+
+# Management server
+mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
+mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmtsrv_template ) }}"
+mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
+mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
+baseurl_cloudstack: "{{ baseurl_cloudstack | default( def_baseurl_cloudstack ) }}"
+baseurl_cloudstack7: "{{ baseurl_cloudstack7 | default( def_baseurl_cloudstack7 ) }}"
+baseurl_cloudstack_deb: "{{ baseurl_cloudstack_deb | default( def_baseurl_cloudstack_deb ) }}"
+
+# DB servers
+dbsrv_service_offering: "{{ dbsrv_service_offering | default( def_dbsrv_service_offering ) }}"
+dbsrv_template: "{{ dbsrv_template | default( def_dbsrv_template ) }}"
+dbsrv_username: "{{ dbsrv_username | default( def_dbsrv_username ) }}"
+dbsrv_password: "{{ dbsrv_password | default( def_dbsrv_password ) }}"
+mysql_cloud_password: "{{ mysql_cloud_password | default( def_mysql_cloud_password ) }}"
+mysql_root_password: "{{ mysql_root_password | default( def_mysql_root_password ) }}"
+mysql_replication_password: "{{ mysql_replication_password | default( def_mysql_replication_password ) }}"
+old_mysql_root_password: "{{ old_mysql_root_password | default( def_old_mysql_root_password ) }}"
+db_type: "{{ db_type | default( def_db_type ) }}"
+mysql_max_connections: "{{ mysql_max_connections | default( def_mysql_max_connections ) }}"
+mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_mysql_innodb_buffer_pool_size ) }}"
+
+# KVM
+kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
+kvm_template: "{{ kvm_template | default( def_kvm_template ) }}"
+kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
+kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
+kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
+kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
+kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
+
+# XS
+xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
+xs_template: "{{ xs_template | default( def_xs_template ) }}"
+xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
+xs_mgmt_network_label: "{{ xs_mgmt_network_label | default( def_xs_mgmt_network_label ) }}"
+xs_guest_network_nic: "{{ xs_guest_network_nic | default( def_xs_guest_network_nic ) }}"
+xs_guest_network_label: "{{ xs_guest_network_label | default( def_xs_guest_network_label ) }}"
+xs_public_network_nic: "{{ xs_public_network_nic | default( def_xs_public_network_nic ) }}"
+xs_public_network_label: "{{ xs_public_network_label | default( def_xs_public_network_label ) }}"
+xs_username: "{{ xs_username | default( def_xs_username ) }}"
+xs_password: "{{ xs_password | default( def_xs_password ) }}"
+
+# VMware
+vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
+vc_template: "{{ vc_template | default( def_vc_template ) }}"
+esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
+esxi_template: "{{ esxi_template | default( def_esxi_template ) }}"
+esxi_mgmt_network_label: "{{ esxi_mgmt_network_label | default( def_esxi_mgmt_network_label ) }}"
+esxi_guest_network_label: "{{ esxi_guest_network_label | default( def_esxi_guest_network_label ) }}"
+esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_public_network_label ) }}"
+
+# VMware datacentre configuration
+vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_user ) }}"
+vmware_vcsa_pass: "{{ vmware_vcsa_pass | default( def_vmware_vcsa_pass ) }}"
+vmware_datacenter_name: "{{ vmware_datacenter_name | default( def_vmware_datacenter_name ) }}"
+vmware_cluster_name: "{{ vmware_cluster_name | default( def_vmware_cluster_name ) }}"
+vmware_esxi_username: "{{ vmware_esxi_username | default( def_vmware_esxi_username ) }}"
+vmware_esxi_password: "{{ vmware_esxi_password | default( def_vmware_esxi_password ) }}"
+
+# Marvin server
+build_marvin: no
+marvin_service_offering: "{{ mgmtsrv_service_offering | default( def_marvin_service_offering ) }}"
+marvin_server_template: "{{ mgmtsrv_template | default( def_marvin_server_template ) }}"
+marvin_username: "{{ marvin_username | default( def_marvin_username ) }}"
+marvin_password: "{{ marvin_password | default( def_marvin_password ) }}"

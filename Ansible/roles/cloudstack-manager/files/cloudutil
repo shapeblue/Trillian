@@ -1,0 +1,207 @@
+#!/bin/bash
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+# copy to /usr/bin  ensure is executable
+# usage svmssh [System VM IP] [Sytem VM Name] or [VM Name(for VR)]
+# not designed for VMs with multiple Networks (yet)
+# (currently) designed to run from CloudStack Management server 
+# copyright P.Angus ShapeBlue 10/03/15
+
+# rpm -ivh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm 
+# yum install -y sshpass jq
+
+
+COMMAND=$1
+ARG=$2
+
+function vm_vr()
+{
+VMNAME=$1
+export TERM=vt100
+cloudmonkey set display json
+NETIDS=`cloudmonkey list virtualmachines listall=true name="$VMNAME" filter=name,nic | jq -r '.virtualmachine[] | .nic[] | .networkid'`
+NETID_STR_ARRAY=(`echo $NETIDS | tr " " "\n"`)
+ROUTERS=`cloudmonkey list routers listall=true filter=name,nic`
+echo -e "\e[92m ----> Returning Virtual Routers for Instance: \e[91m$VMNAME\e[0m"
+for (( i = 0; i < ${#NETID_STR_ARRAY[@]}; i++ )); do
+  VRNAME=`echo $ROUTERS | jq -r --arg JQVAR "${NETID_STR_ARRAY[$i]}" '.router[] | select(.nic[].networkid==$JQVAR)|.name'`
+  NETNAME=`cloudmonkey list networks id="${NETID_STR_ARRAY[$i]}" filter=name | jq -r ' .network[] | .name'`
+  VRIP=`cloudmonkey list routers listall=true filter=name,nic name=$VRNAME | jq -r '.router[] | .nic[] | select(.traffictype=="Control") | .ipaddress'`
+  echo -e "\n\e[92m ----> VR Name: \e[91m$VRNAME\e[92m\n    -  VR IPAddress: \e[91m$VRIP\e[92m\n    -  Network Name:\e[91m$NETNAME\e[92m\n    -  Network ID: \e[91m${NETID_STR_ARRAY[$i]}\e[0m\n"
+done
+}
+
+function valid_ip()
+{
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+function directsshto(){
+VRIP=$1
+ssh -i /var/cloudstack/management/.ssh/id_rsa -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP
+}
+
+function getVRdetails(){
+# returns json  "hostid": ,"hostname","hypervisor","name","ipaddress"
+VRNAME=$1
+export TERM=vt100
+HOSTDETAILS=`cloudmonkey list routers listall=true name=$VRNAME filter=name,hostname,hostid | jq '.router[]'`
+HOSTID=`echo $HOSTDETAILS | jq '.hostid'`
+HOSTIP=`cloudmonkey list hosts id=$HOSTID filter=ipaddress,hypervisor | jq '.host[]'`
+HOSTDETAILS=`echo "$HOSTDETAILS $HOSTIP" | jq -s add`
+echo $HOSTDETAILS
+}
+
+
+function getVRfromVM() {
+VMNAME=$1
+export TERM=vt100
+cloudmonkey set display json
+NETID=`cloudmonkey list virtualmachines listall=true name="$VMNAME" filter=name,nic | jq -r '.virtualmachine[] | .nic[] |.networkid'`
+VRNAME=`cloudmonkey list routers listall=true filter=name,nic | jq -r --arg JQVAR "$NETID" '.router[] | select(.nic[].networkid==$JQVAR)| .name'`
+echo $VRNAME
+}
+
+function getIPforVR() {
+VRNAME=$1
+export TERM=vt100
+VRIP=`cloudmonkey list routers listall="true" filter=name,nic name=$VRNAME | jq -r '.router[] | .nic[] | select(.traffictype=="Control") | .ipaddress'`
+echo $VRIP
+}
+
+function getSVMdetails(){
+# returns json  "hostid": ,"hostname","hypervisor","name","ipaddress","privateip","linklocalip"
+VRNAME=$1
+export TERM=vt100
+SVMDETAILSA=`cloudmonkey list systemvms name=$VRNAME filter=name,hostname,hostid,hypervisor,privateip,linklocalip | jq '.systemvm[]'`
+HOSTID=`echo $SVMDETAILSA | jq '.hostid'`
+HOSTIP=`cloudmonkey list hosts hostid=$HOSTID filter=ipaddress,hypervisor | jq '.host[]'`
+SVMDETAILS=`echo "$SVMDETAILSA $HOSTDETAILS $HOSTIP" | jq -s add`
+echo $SVMDETAILS
+}
+
+function svmlogin(){
+INPUT=$1
+export TERM=vt100
+cloudmonkey set display json
+if valid_ip $INPUT; then
+  VRIP=$INPUT
+    echo -e "\e[92m ----> An IP Address detected.\e[0m"
+else
+  echo -e "\e[92m ----> A host name detected. Determining type\e[0m"
+  if [[ "${INPUT:0:2}" == "r-" ]]; then
+    VRNAME=$INPUT
+    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Virtual Router. Getting IP Address\e[0m"
+    VRIP=`getIPforVR $VRNAME`  
+    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+    echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
+    VRDETAILS=`getVRdetails $VRNAME`
+    HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
+    HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
+    HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
+  elif [[ "${INPUT:0:2}" == "s-" ]]; then
+    VRNAME=$INPUT
+    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Secondary Storage VM. Getting Details\e[0m"
+    SVMDETAILS=`getSVMdetails $VRNAME`
+    if [[ $SVMDETAILS == *"linklocalip"* ]]; then
+       VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
+    else
+       VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
+    fi
+    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+    HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
+    HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
+    HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
+  elif [[ "${INPUT:0:2}" == "v-" ]]; then
+    VRNAME=$INPUT 
+    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Console Proxy VM. Getting Details\e[0m"
+    SVMDETAILS=`getSVMdetails $VRNAME`
+    if [[ $SVMDETAILS == *"linklocalip"* ]]; then
+       VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
+    else
+       VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
+    fi
+    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+    HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
+    HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
+    HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
+  else
+    echo -e "\e[92m ----> \e[91m$INPUT\e[92m appears to be a VM.  Finding VR\e[0m"
+    VRNAME=`getVRfromVM $INPUT`
+    echo -e "\e[92m ----> Virtual Router for \e[91m$INPUT\e[92m is \e[91m$VRNAME\e[92m.  Getting IP Address\e[0m"
+    VRIP=`getIPforVR $VRNAME`  
+    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+    echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
+    VRDETAILS=`getVRdetails $VRNAME`
+    HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
+    HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
+    HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
+  fi
+fi
+
+
+case $HYPERVISOR in
+  "VMware")
+    echo -e "\e[92m ----> Base hypervisor is \e[91mvSphere\e[92m so connecting directly\e[0m"
+    echo -e "\e[92m ----> Connecting to \e[91m$VRIP\e[0m" 
+    ssh -i /var/cloudstack/management/.ssh/id_rsa -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP
+    ;;
+  XenServer | KVM)
+    echo -e "\e[92m ----> Base hypervisor is\e[91m XenServer/KVM\e[92m so connecting via host\e[0m"
+    echo -e "\e[92m ----> Host is \e[91m$HOSTNAME, \e[92mIP address is \e[91m$HOSTIPADDRESS \e[0m"
+    echo -e "\e[92m ----> Enter root password for \e[91m$HOSTNAME: \e[0m"; read -s PASSWORD
+    sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "ssh -i /root/.ssh/id_rsa.cloud -p 3922 root@$VRIP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    ;;
+ *)
+    echo "Hypervisor \'$HYPERVISOR\' detected. Not sure what to do. Exiting"
+    ;;
+esac
+}
+
+case $COMMAND in
+  "ssh")
+    svmlogin $ARG
+  ;;
+  "tail")
+    tail -f /var/log/cloudstack/management/management-server.log
+  ;;
+  "start")
+    service cloudstack-management start
+  ;;
+  "stop")
+    service cloudstack-management stop
+  ;;
+  "restart")
+    service cloudstack-management restart
+  ;;
+  "vr")
+    vm_vr $ARG 
+  ;;
+esac
+

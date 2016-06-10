@@ -1,0 +1,83 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: Install basic utilities and tools
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - bind-utils
+    - bridge-utils
+    - openntp
+    - openssh-clients
+    - telnet
+    - tcpdump
+    - traceroute
+
+- name: Add specified repository into sources list.
+  apt_repository: repo='deb {{ baseurl_cloudstack_deb }} ./' state=present
+
+- apt_key: url=https://packages.shapeblue.com/release.asc state=present
+
+- name: Installs cloudstack-agent
+  apt: pkg=cloudstack-agent state=installed update_cache=true
+
+- name: Install the build dependencies for package "cloudstack-agent"
+  apt: pkg=cloudstack-agent state=build-dep
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  shell: sed -i -e '/#listen_tls \= 0/ c\listen_tls \= 0' /etc/libvirt/libvirtd.conf
+  shell: sed -i -e '/#listen_tcp \= 1/ c\listen_tcp \= 1' /etc/libvirt/libvirtd.conf
+  shell: sed -i -e '/#tcp_port \= \"16509\"/ c\tcp_port \= \"16509\"' /etc/libvirt/libvirtd.conf
+  shell: sed -i -e '/#auth_tcp \= \"sasl\"/ c\auth_tcp \= \"none\"' /etc/libvirt/libvirtd.conf
+  shell: sed -i -e '/#mdns_adv \= 1/ c\mdns_adv \= 0' /etc/libvirt/libvirtd.conf
+
+- name: Updated /etc/default/libvirt-bin
+  shell: sed -i -e '/libvirtd\_opts\=\"\-d\"/ c\libvirtd\_opts\=\"\-d\ \-l\"' /etc/default/libvirt-bin
+
+- name: update /etc/libvirt/qemu.conf
+  shell: sed -i -e '/\#vnc\_listen \= \"0\.0\.0\.0\"/ c\vnc\_listen \= \"0\.0\.0\.0\"' /etc/libvirt/qemu.conf
+
+- name: KVM libvirtd restarted
+  service: name=libvirt-bin state=restarted
+
+- name: Remove specified repository into sources list.
+  apt_repository: repo='deb {{ baseurl_cloudstack_deb }} ./' state=absent
+
+- name: Configure Firewall ssh
+  command: /sbin/iptables -I INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+  sudo: true
+
+- name: Configure Firewall 1798
+  command: /sbin/iptables -I INPUT -p tcp -m tcp --dport 1798 -j ACCEPT
+  sudo: true
+
+- name: Configure Firewall 16509
+  command: /sbin/iptables -I INPUT -p tcp -m tcp --dport 16509 -j ACCEPT
+  sudo: true
+
+- name: Configure Firewall vnc
+  command: /sbin/iptables -I INPUT -p tcp -m tcp --dport 5900:6100 -j ACCEPT
+  sudo: true
+
+- name: Configure Firewall libvirt
+  command: /sbin/iptables -I INPUT -p tcp -m tcp --dport 49152:49216 -j ACCEPT
+  sudo: true
+
+- name: remove history file
+  shell: /bin/rm -f ~root/.bash_history
+
+- name: clear history
+  shell: history -c

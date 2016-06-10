@@ -1,0 +1,106 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+[{{ env_name_clean }}:children]
+hypervisor_hosts
+local
+cloudstack_manager_hosts
+mysql_hosts
+vc_hosts
+storage_hosts
+marvin_host
+
+[hypervisor_hosts:children]
+xenserver_hosts
+kvm_hosts
+esxi_hosts
+
+[mysql_hosts:children]
+mysql_master_host
+mysql_slave_hosts
+
+[local]
+localhost ansible_connection=local
+
+[cloudstack_manager_hosts:children]
+primary_cs_manager
+secondary_cs_manager
+
+[primary_cs_manager]
+{% if mgmt | int > 0 %}
+{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ env_name_clean }}-mgmt1-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
+{% endif %}
+
+[secondary_cs_manager]
+{% if mgmt | int > 1 %}
+{% for n in range(2,mgmt | int + 1) %}
+{{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
+{% endfor %}
+{% endif %}
+
+[mysql_master_host]
+{% if db | int > 0 %}
+{{ env_name_clean }}-db1 ansible_ssh_host={{ env_name_clean }}-db1-ip ansible_ssh_pass={{ dbsrv_password | default( def_dbsrv_password ) }} serverid=1
+{% endif %}
+
+[mysql_slave_hosts]
+{% if db | int > 1 %}
+{% for n in range(2,db | int + 1) %}
+{{ env_name_clean }}-db{{ n }} ansible_ssh_host={{ env_name_clean }}-db{{ n }}-ip ansible_ssh_pass={{ dbsrv_password | default( def_dbsrv_password ) }} serverid={{ n }}
+{% endfor %}
+{% endif %}
+
+[vc_hosts]
+{% if hvtype[0:1] | lower == "v" %}
+{{ env_name_clean }}-vc1 ansible_ssh_host={{ env_name_clean }}-vc1-ip
+{% endif %}
+
+[esxi_hosts]
+{% if hvtype[0:1] | lower == "v" %}
+{% for n in range(1,hv | int + 1) %}
+{{ env_name_clean }}-esxi{{ n }} ansible_ssh_host={{ env_name_clean }}-esxi{{ n }}-ip ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }}
+{% endfor %}
+{% endif %}
+
+[xenserver_hosts]
+{% if hvtype[0:1] | lower == "x" %}
+{% for n in range(1,hv | int + 1) %}
+{{ env_name_clean }}-xs{{ n }} ansible_ssh_host={{ env_name_clean }}-xs{{ n }}-ip ansible_ssh_pass={{ xs_password | default( def_xs_password ) }}
+{% endfor %}
+{% endif %}
+
+[kvm_hosts]
+{% if hvtype[0:1] | lower == "k" %}
+{% for n in range(1,hv | int + 1) %}
+{{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }}
+{% endfor %}
+{% endif %}
+
+[marvin_host]
+{% if build_marvin %}
+{{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }}
+{% endif %}
+
+[storage_hosts:children]
+primary_storage_hosts
+secondary_storage_hosts
+
+[primary_storage_hosts]
+{{ env_prihost | default( def_env_prihost ) }} ansible_ssh_host={{ env_prihost | default( def_env_prihost ) }} ansible_ssh_pass={{ pri_password | default( def_pri_password ) }}
+
+[secondary_storage_hosts]
+{{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}

@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# create a JSON compatible Ansible 'Fact' of patches installed on a XenServer
+
+XENVERSION=`cat /etc/redhat-release | awk -F ' ' '{print $3}' | awk -F '-' '{print $1}'`
+VER=${XENVERSION//./_}
+# run xe command to return applied patch UUIDs
+#listAppliedPatches=`xe patch-list --minimal`
+THIS_HOST=`xe host-list --minimal name-label=$HOSTNAME`
+POOLMASTER=`xe pool-list params=master --minimal`
+
+if [[ "$POOLMASTER" == "$THIS_HOST" ]]; then
+  POOLHOSTTYPE="master"
+else
+  POOLHOSTTYPE="slave"
+fi
+
+
+listUploadedPatches=`xe patch-list --minimal`
+
+POOLNAME=`xe pool-list params=name-label --minimal`
+
+
+
+
+# ----------  Create JSON ------------------------
+
+# output opening section of JSON output
+echo '{
+	"ansible_facts": {'
+
+# output XenServer version
+echo "		\"ansible_xenserver_version\": \"$VER\","
+echo '		"ansible_xenserver_patches": {'
+
+if [ -n "$listUploadedPatches" ]; then
+# split comma separated list into an array
+UploadedPatches=${listUploadedPatches//,/$'\n'}
+
+	# loop through uploaded patches and output to a temp file
+	for uploaded_patch in $UploadedPatches
+	do
+		if [[ -n  `xe patch-list hosts=$THIS_HOST uuid=$uploaded_patch --minimal` ]]; then
+			echo "			\"`xe patch-param-get param-name=name-label uuid=$uploaded_patch`\": \"installed\"," >> /tmp/ansi_answ_file
+		else
+			echo "			\"`xe patch-param-get param-name=name-label uuid=$uploaded_patch`\": \"uploaded\"," >> /tmp/ansi_answ_file
+		fi
+	done
+
+	# remove training comma on last entry in file (then output contents)
+	sed '$s/.$//' /tmp/ansi_answ_file
+
+	# remove file
+	rm -f /tmp/ansi_answ_file
+
+fi
+
+# output closing part of JSON output
+echo "		},
+	\"ansible_host_uuid\": \"$THIS_HOST\",
+	\"ansible_host_type\": \"$POOLHOSTTYPE\",
+	\"ansible_pool_name\": \"$POOLNAME\"
+
+	}
+}"

@@ -1,0 +1,41 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: Get MySQL status
+  action: get_db_facts
+
+- name: cloudstack-setup-databases
+  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ ansible_eth0.ipv4.address }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_eth0.ipv4.address }}"
+  when: ("primary_cs_manager" in group_names) and ("{{ cloudbd_exists }}" == "no")
+
+- name: Refresh Mysql status
+  action: get_db_facts
+  
+#- name: Setup Secondary CloudStack Databases
+#  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_vip }}'"
+#  when: ("secondary_cs_manager" in group_names) and ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}")
+
+- name: Setup CloudStack Manager (centos/rhel6)
+  command: /usr/bin/cloudstack-setup-management
+#  when: ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}" and 
+  when: ansible_distribution_major_version == "6"
+
+
+- name: Setup CloudStack Manager (centos/rhel7)
+  command: /usr/bin/cloudstack-setup-management --tomcat7
+#  when: ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}" and 
+  when: ansible_distribution_major_version == "7"
+

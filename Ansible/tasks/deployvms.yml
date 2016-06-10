@@ -1,0 +1,442 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+####################################################################
+# Role carries out following:
+# - Creates the build project if not already present.
+# - For each inventory group (management, esxi hosts etc):
+#   - Builds servers based on details provided.
+#   - Updates the inventory file with the IP addresses provided by CloudStack.
+#   - Updates the in-memory inventory with the same IP addresses. This
+#     allows the playbook calling this role to immediately carry out additional
+#     tasks against the inventory.
+
+####################################################################
+# Create build project if it doesn't exist.
+#
+- name: Create project
+  local_action:
+    module: cs_project
+    name: "{{ build_project }}"
+    state: present
+  register: project_retval
+
+- name: Add accounts to project
+  shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
+  with_items:
+    - "{{ env_accounts.split(',') }}"
+
+- name: Tag project
+  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+  with_items:
+    - { tagno: 0, tagkey: 'env_name', tagval: "{{ env_name_clean }}" }
+    - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
+    - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
+
+####################################################################
+# First management server
+#
+- name: Build first management hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ mgmtsrv_service_offering }}"
+    template: "{{ mgmtsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['primary_cs_manager'] }}"
+  register: mgmtsrv1_retval
+
+- name: Update inventory file with first management server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: Update in memory inventory with first management server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="primary_cs_manager"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+####################################################################
+# Additional management servers
+#
+- name: Build additional management hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ mgmtsrv_service_offering }}"
+    template: "{{ mgmtsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['secondary_cs_manager'] }}"
+  register: mgmtsrvs_retval
+
+- name: Update inventory file with additional management server IP addresseses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional management server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="secondary_cs_manager"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+####################################################################
+# First DB server
+#
+- name: Build first DB server
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ dbsrv_service_offering }}"
+    template: "{{ dbsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['mysql_master_host'] }}"
+  register: dbsrv1_retval
+
+- name: Update inventory file with first DB server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{dbsrv1_retval.results}}"
+
+- name: Update in memory inventory with first DB server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="mysql_master_host"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{dbsrv1_retval.results}}"
+
+####################################################################
+# Additional DB servers
+#
+- name: Build additional DB servers
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ dbsrv_service_offering }}"
+    template: "{{ dbsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['mysql_slave_hosts'] }}"
+  register: dbsrvs_retval
+
+- name: Update inventory file with additional DB server IP addresseses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{dbsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional DB server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="mysql_slave_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{dbsrvs_retval.results}}"
+
+####################################################################
+# KVM hosts
+#
+- name: build KVM hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ kvm_service_offering }}"
+    template: "{{ kvm_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: present
+  with_items:
+    - "{{ groups['kvm_hosts'] }}"
+  register: kvm_retval
+
+- name: Update inventory file with KVM host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{kvm_retval.results}}"
+
+- name: Update in memory inventory with KVM host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="kvm_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{kvm_retval.results}}"
+
+####################################################################
+# XenServer hosts
+#
+- name: build XenServer hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ xs_service_offering }}"
+    template: "{{ xs_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: present
+  with_items:
+    - "{{ groups['xenserver_hosts'] }}"
+  register: xs_retval
+
+- name: Update inventory file with XenServer host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{xs_retval.results}}"
+
+- name: Update in memory inventory with XS host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="xenserver_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{xs_retval.results}}"
+
+####################################################################
+# VMware ESXi hosts
+#
+- name: build ESXi hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ esxi_service_offering }}"
+    template: "{{ esxi_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: present
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  register: esxi_retval
+
+- name: Update inventory file with ESXi host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{esxi_retval.results}}"
+
+- name: Update in memory inventory with ESXi host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="esxi_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{esxi_retval.results}}"
+
+####################################################################
+# VMware VC hosts
+#
+- name: build VC hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ vc_service_offering }}"
+    template: "{{ vc_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['vc_hosts'] }}"
+  register: vc_retval
+
+- name: Update inventory file with VC host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{vc_retval.results}}"
+
+####################################################################
+# Marvin Server
+#
+- name: Build Marvin server
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ marvin_service_offering }}"
+    template: "{{ marvin_server_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+  with_items:
+    - "{{ groups['marvin_host'] }}"
+  register: marvin_retval
+
+- debug: msg="Marvin IP is {{ item.default_ip }}"
+  with_items: "{{marvin_retval.results}}"
+
+- name: Update inventory file with Marvin server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{marvin_retval.results}}"
+
+- name: Update in memory inventory with Marvin server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="marvin_host"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{marvin_retval.results}}"
+
+
+####################################################################
+# Work out lists of hosts to be used in zone create script
+#
+- name: Determine primary hypervisor
+  set_fact:
+    iplistgroup: |
+      {%- if env_hv == "vmware" -%}
+      vc_hosts
+      {%- elif env_hv  == "xenserver" -%}
+      xenserver_hosts
+      {%- elif env_hv  == "kvm" -%}
+      kvm_hosts
+      {%- endif -%}
+
+- name: List hypervisor host IP addresses
+  set_fact:
+    iplist: |
+      {%- for item in groups[ iplistgroup | trim ] -%}
+        {{ hostvars[item]['ansible_ssh_host'] }}
+        {%- if not loop.last -%},{%- else -%}{%- endif -%}
+      {%- endfor -%}
+
+- name: Update group vars file with HV host IP addresses
+  lineinfile:
+    dest="group_vars/{{ env_name_clean }}"
+    insertafter="^env_hv.*$"
+    line='env_hviplist{{ ":" }} \"{{ iplist | trim }}\"'
+
+
+####################################################################
+# Report updates
+#
+- name: Report updated hosts in in-memory and host file inventory
+  debug: msg="{{ item }} ansible_ssh_host={{ hostvars[item]['ansible_ssh_host'] | default( '<undefined>' ) }}"
+  with_items:
+    - "{{ groups[ env_name_clean ] }}"

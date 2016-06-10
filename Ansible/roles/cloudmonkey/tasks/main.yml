@@ -1,0 +1,45 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: install setup tools
+  yum: name=python-setuptools state=present
+
+- name: Ensure EPEL is available (centOS6) 
+  yum: name="{{ epel6 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure EPEL is available (centOS7) 
+  yum: name="{{ epel7 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "7"
+
+- name: install setup tools and jq
+  yum: name={{ item }} state=present
+  with_items:
+  - python-setuptools 
+  - jq
+
+- name: ensure cm config is removed
+  file: path=/root/.cloudmonkey/config state=absent
+
+- name: install cloudmonkey
+  shell: easy_install cloudmonkey
+
+- name: base configuration
+  shell: cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json
+ 
