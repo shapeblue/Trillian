@@ -11,15 +11,13 @@ Trillian leverages ESXi's ability to virtualise the VT-x features allowing the c
 
 
 ```bash
-ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=vsphere55-test mgmt=1 db=0 hvtype=v hv=2 esxi_template='ESXi 5.5 U3' vc_template='vCenter 5.5 U3' env_accounts=all pri=1 sec=1" -i localhost
-ansible-playbook deployvms.yml -i ./hosts_vsphere55-test
+ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=xs62test mgmt_os=6 env_version=cs45 env_accounts=all hvtype=x hv=2 pri=2 xs_template='XenServer 6.2 SP1'" -i localhost
+ansible-playbook deployvms.yml -i ./hosts_xs62test
+ansible-playbook destroyvms.yml -i ./hosts_xs62test -e "expunge=true removeproject=true removeconfig=true"
 
-ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=xs65pga mgmt=1 db=0 hvtype=x hv=2 xenserver_template='XenServer 6.5 SP1' env_accounts=all pri=1 sec=1" -i localhost
-ansible-playbook deployvms.yml -i ./hosts_xs65pga
+generate-config "env_name=kvmtest-pga mgmt_os=6 env_version=cs45 env_accounts=all hvtype=k hv=2 pri=2"
 
-ansible-playbook generate-cloudconfig.yml --extra-vars "env_name=kvmtest mgmt=1 db=0 hvtype=k hv=2 kvm_template='KVM CentOS 6.7' env_accounts=all pri=1 sec=1" -i localhost
-ansible-playbook deployvms.yml -i ./hosts_kvmtest
-
+generate-config "env_name=esxi55test mgmt_os=7 env_version=cs45 env_accounts=all hvtype=v hv=2 pri=2 vc_template='vCenter55u3' esxi_template='ESXi 5.5 U3'"
 ````
 
 Ultimately a wrapper will run these steps & then run specified Marvin tests against these environments
@@ -27,10 +25,15 @@ Initially Jenkins post build tasks will run the individual steps.
 
 The full list of variables are as follows:
 * env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only. Required for all playbook * runs and distinguishes the nested clouds from each other.
-* mgmt [optional]: Number of management servers to configure
-* db [optional]: Number of database servers to configure
+* env_version [mandatory]: Environment CloudStack version (cs45, cs46, custom, etc)- see group_vars/all for options
 * hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
-* hv [optional]: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
+* mgmt_os [mandatory]: Management server OS (centos, centos7, ubuntu, custom)
+* pri [mandatory]: number of primary storage pools.
+
+Optional:
+* mgmt: Number of management servers to configure (default = 1)
+* db: Number of independent MySQL servers configure (default = 0 ie MySQL on mgmt server)
+* hv: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
 * management_network: name of the management network
 * guest_public_network: name of the guest+public network
 * management_vm_hypervisor: parent CloudStack cloud hypervisor (default VMware)
@@ -50,10 +53,7 @@ The full list of variables are as follows:
 * vc_service_offering: parent cloud nested VC instances service offering
 * vc_template: parent cloud nested VirtualCentre template
 * baseurl_cloudstack: URL for CloudStack build repository
-* env_db_name: environments database name
-* env_db_ip: environments database IP address
-* env_db_user: environments database username
-* env_db_password: environments database password
 * env_id: override value to re-use a specific environment in the env database
 * env_zonetype: basic or advanced (default)
-
+* env_zone_systemplate: URL to system template, overrides version variable
+* build_marvin: whether or not to build a marvin vm for testing purposes (default is false)
