@@ -14,8 +14,9 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Ensure prerequisite libselinux-python installed
-  yum: name=libselinux-python state=installed
+
+- name: install setup tools
+  yum: name=python-setuptools state=present
 
 - name: Ensure EPEL is available (centOS6)
   yum: name="{{ epel6 }}" state=present
@@ -27,31 +28,17 @@
   ignore_errors: true
   when: ansible_distribution_major_version == "7"
 
-- name: Install basic utilities and tools
+- name: install setup tools and jq
   yum: name={{ item }} state=present
   with_items:
-    - bind-utils
-    - bridge-utils
-    - ntp
-    - openssh-clients
-    - pciutils
-    - telnet
-    - tcpdump
-    - traceroute
-    - nano
-    - iftop
-  tags:
-    - common-utils
-    - packages
+  - python-setuptools
+  - jq
 
-- include: ./kvm_networking.yml
+- name: ensure cm config is removed
+  file: path=/root/.cloudmonkey/config state=absent
 
-- name: Ensure selinux python bindings are installed
-  yum: name=libselinux-python state=present
+- name: install cloudmonkey
+  shell: easy_install cloudmonkey
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+- name: base configuration
+  shell: cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json

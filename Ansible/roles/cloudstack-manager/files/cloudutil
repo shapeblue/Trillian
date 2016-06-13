@@ -14,13 +14,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-# copy to /usr/bin  ensure is executable
-# usage svmssh [System VM IP] [Sytem VM Name] or [VM Name(for VR)]
-# not designed for VMs with multiple Networks (yet)
-# (currently) designed to run from CloudStack Management server 
-# copyright P.Angus ShapeBlue 10/03/15
-
 # rpm -ivh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm 
 # yum install -y sshpass jq
 

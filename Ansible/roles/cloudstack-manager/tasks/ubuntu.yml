@@ -1,4 +1,4 @@
----
+﻿---
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,3 +14,36 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: Ensure NTP packages are installed
+  apt: pkg=openntpd state=present update_cache=true
+
+- name: Add specified repository into sources list.
+  apt_repository: repo='deb "{{ baseurl_cloudstack }}" ./' state=present
+
+- apt_key: url=https://packages.shapeblue.com/release.asc state=present
+
+- name: Ensure CloudStack packages are installed
+  apt: pkg=cloudstack-management state=present update_cache=true
+
+- name: Ensure MySQL Client is present
+  apt: pkg=mysql-client state=present
+
+- name: Ensure MariaDB Client is present
+  apt: pkg=mysql-client state=present
+
+- name: Ensure vhd-util is present
+  get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
+
+- name: Ensure CloudStack Usage Service is installed
+  apt: pkg=cloudstack-usage state=present update_cache=true
+
+- include: ./setupdb.yml
+
+- name: Ensure CloudStack Usage Service is started
+  service: name=cloudstack-usage state=started
+
+- name: copy cloudutil script to /usr/bin
+  copy: src=cloudutil dest=/usr/bin/ mode=0755
+
+- name: Ensure sshpass is installed
+  apt: name=sshpass state=present update_cache=true

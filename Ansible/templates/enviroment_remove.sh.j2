@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 #Copyright 2016 ShapeBlue
 #
@@ -15,7 +15,7 @@
 #limitations under the License.
 
 
-while getopts "e:h::u::p::d::" opt; do
+while getopts "e:h::u::p::d::n:m:r:s:" opt; do
   case $opt in
     e)
       ENVNAME=$OPTARG;
@@ -32,8 +32,20 @@ while getopts "e:h::u::p::d::" opt; do
     d)
       db=$OPTARG;
       ;;
+    n)
+      prihost=$OPTARG;
+      ;;
+    m)
+      sechost=$OPTARG;
+      ;;
+    r)
+      prinfspath=$OPTARG;
+      ;;
+    s)
+      secnfspath=$OPTARG;
+      ;;
    *)
-      echo "-e <ENV_name> -h <ENV_Database IP> -u <ENV_username> -p <ENV_password> -d <ENV_database name>" >&2
+      echo "-e <ENV_name> -h <ENV_Database IP> -u <ENV_username> -p <ENV_password> -d <ENV_database name> -n <primary nfs host ip> -m <secondary nfs host ip> -r <primary nfs path> -s <Secondary NFS Path>" >&2
       exit 1
       ;;
     :)
@@ -63,41 +75,26 @@ mysqlcommand="mysql -h$HOST -u$USERNAME -p$PASSWORD -s -N -e"
 #Table Names
 podtbl="podnetworks"
 pubtbl="pubnetworks"
-pritbl="primarystorage"
-sectbl="secondarystorage"
 
-
-#MYSQL LOCK Tables
-$mysqlcommand "LOCK TABLE $db.$podtbl WRITE";
-$mysqlcommand "LOCK TABLE $db.$pubtbl WRITE";
-$mysqlcommand "LOCK TABLE $db.$pritbl WRITE";
-$mysqlcommand "LOCK TABLE $db.$sectbl WRITE";
-
-
+#NFS Host
+#prihost=`$mysqlcommand "SELECT host FROM $db.$pritbl WHERE environmentname = '$ENVNAME'"`
+#sechost=`$mysqlcommand "SELECT host FROM $db.$sectbl WHERE environmentname = '$ENVNAME'"`
 
 `$mysqlcommand "UPDATE $db.$podtbl SET inuse = 'FALSE' WHERE environmentname = '$ENVNAME'"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET inuse = 'FALSE' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET inuse = 'FALSE' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET inuse = 'FALSE' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET inuse = 'FALSE' WHERE environmentname = '$ENVNAME'"`;
 
 #Update Timestamp
 `$mysqlcommand "UPDATE $db.$podtbl SET removed = NOW() WHERE environmentname = '$ENVNAME'"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET removed = NOW() WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET removed = NOW() WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET removed = NOW() WHERE environmentname = '$ENVNAME'"`;
 
 #Added Comments
 `$mysqlcommand "UPDATE $db.$podtbl SET comment = '' WHERE environmentname = '$ENVNAME'"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET comment = '' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET comment = '' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET comment = '' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET comment = '' WHERE environmentname = '$ENVNAME'"`;
 
 #Added a Environment Name
 `$mysqlcommand "UPDATE $db.$podtbl SET environmentname = '' WHERE environmentname = '$ENVNAME'"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET environmentname = '' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET environmentname = '' WHERE environmentname = '$ENVNAME'"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET environmentname = '' WHERE environmentname = '$ENVNAME'"`;
 
-$mysqlcommand "UNLOCK TABLES";
+#Connect to NFS Server to create directories
+sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $prihost "rm -rf $prinfspath/$ENVNAME/pri1; rm -rf $prinfspath/$ENVNAME/pri2";
+sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $sechost "rm -rf $secnfspath/$ENVNAME/sec";

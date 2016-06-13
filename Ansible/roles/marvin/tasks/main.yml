@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -18,7 +18,7 @@
 - debug: msg="Connecting to Marvin host {{ ansible_ssh_host }}"
 
 - name: wait for ssh
-  wait_for: port=22 host="{{ ansible_ssh_host }}" timeout=600 connect_timeout=5
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
 
 - name: Now I'm connected, get facts
   setup:
@@ -55,7 +55,7 @@
 - name: Install pip
   easy_install: name=pip
 
-- name: Update pip and setuptools 
+- name: Update pip and setuptools
   pip: name={{ item }} extra_args='--upgrade'
   with_items:
   - pip
@@ -75,7 +75,7 @@
 - name: unpack Marvin files
   unarchive: src=/tmp/dist.zip dest=/tmp copy=no
 
-- name: 
+- name:
   shell: mv /tmp/dist/Marvin-*.tar.gz /tmp/dist/Marvin.tar.gz
 
 - name: Install Marvin
@@ -83,5 +83,3 @@
 
 - name: Install nose
   easy_install: name=nose
-
-

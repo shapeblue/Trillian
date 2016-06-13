@@ -1,4 +1,5 @@
 ﻿---
+
 #Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
-
 
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
@@ -44,6 +44,9 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
+  yum: name=lvm2 state=latest
+
 - name: Ensure CloudStack packages are installed
   yum: name=cloudstack-management state=present
 
@@ -61,9 +64,6 @@
 - name: Ensure CloudStack Usage Service is installed
   yum: name=cloudstack-usage state=present
 
-- name: Ensure CloudStack Usage Service is started
-  service: name=cloudstack-usage state=started
-
 - include: ./setupdb.yml
 
 - name: copy cloudutil script to /usr/bin
@@ -76,3 +76,6 @@
 - name: Ensure sshpass is installed (CentOS 6)
   yum: name=http://pkgs.repoforge.org/sshpass/sshpass-1.05-1.el6.rf.x86_64.rpm state=present
   when: ansible_distribution_major_version == "6"
+
+- name: Ensure CloudStack Usage Service is started
+  service: name=cloudstack-usage state=started

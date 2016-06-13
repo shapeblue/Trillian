@@ -27,7 +27,7 @@ def_sec_password: "P@ssword123"
 def_dbsrv_username: "root"
 def_dbsrv_password: "P@ssword123"
 def_mysql_root_password: "P@ssword123"
-def_mysql_cloud_password: "Password!23"
+def_mysql_cloud_password: 'Password!23'
 def_mysql_replication_password: repL!Cation
 def_old_mysql_root_password: ""
 def_marvin_username: "root"
@@ -55,12 +55,11 @@ epel7: http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.r
 epel6: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 vhdutil_url: http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
 
-# Nested Cloud defaults
-
+# Defaults for generate-config:
+mgmt: 1
 db: 0
 sec: 1
 build_marvin: no
-mgmt: 1
 
 # Environment database settings
 def_env_db_name: "acstest"
@@ -87,24 +86,33 @@ def_env_zone_addhosts: "true"
 # Management server
 def_mgmtsrv_service_offering: "Mgmt Server"
 def_mgmtsrv_template: "CentOS 6.7 Minimal"
-def_baseurl_cloudstack: "http://10.2.0.4/shapeblue/cloudstack/upstream/centos/4.5/"
-def_baseurl_cloudstack7: "http://10.2.0.4/shapeblue/cloudstack/upstream/centos7/4.5/"
-def_baseurl_cloudstack_deb: "http://10.2.0.4/shapeblue/cloudstack/upstream/debian/4.5/"
+def_baseurl_cloudstack: "http://10.2.0.4/shapeblue/cloudstack/upstream/"
 
 # System templates
 def_system_templates:
-   cs45:
-       kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
-       xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
-       vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
-   cs46:
-       kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
-       xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
-       vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
-   custom:
-       kvm_url: "KVMCustomURL"
-       xs_url: "XSCustomURL"
-       vmware_url: "VMwareCustomURL"
+  cs45:
+    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
+    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
+    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
+  cs46:
+    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+  custom:
+    kvm_url: "KVMCustomURL"
+    xs_url: "XSCustomURL"
+    vmware_url: "VMwareCustomURL"
+
+# Default management VM templates based on management server OS choice
+def_mgmt_templates:
+  centos:
+    mgmtsrv_template: "CentOS 6.7 Minimal"
+  centos7:
+    mgmtsrv_template: "CentOS 7 (Minimal)"
+  debian:
+    mgmtsrv_template: "Ubuntu Server 14.04"
+  custom:
+    mgmtsrv_template: "CustomTemplateName"
 
 # DB servers
 def_dbsrv_service_offering: "Mgmt Server"

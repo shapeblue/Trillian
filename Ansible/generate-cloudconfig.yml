@@ -35,9 +35,11 @@
 # Basic variables:
 #   env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
 #   env_version [mandatory]: Environment CloudStack version (cs45, cs46, custom, etc).
+#   mgmt_os [mandatory]: Management server OS (centos, centos7, ubuntu, custom)
 #   mgmt [optional]: Number of management servers to configur e
 #   db [optional]: Number of database servers to configure
 #   hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
+#   kvm_os [mandatory]: KVM OS (centos, centos7, ubuntu, na)
 #   hv [optional]: number of hypervisors. Please note if hypervisor type is VMware the assumption is made
 #                  that a single VC host is also required. This does not have to be specified anywhere.
 #   pri [mandatory]: number of primary storage pools.
@@ -91,6 +93,12 @@
       default: "cs45"
       when: env_version is undefined
 
+    - name: "mgmt_os"
+      prompt: "Management OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u)"
+      private: no
+      default: "6"
+      when: mgmt_os is undefined
+
     - name: "env_accounts"
       prompt: "Accounts to be added to project"
       private: no
@@ -100,6 +108,12 @@
       prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
       private: no
       when: hvtype is undefined
+
+    - name: "kvm_os"
+      prompt: "KVM OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u) / Not Applicable (na)"
+      private: no
+      default: "na"
+      when: kvm_os is undefined
 
     - name: "hv"
       prompt: "Number of hypervisor hosts"
@@ -135,9 +149,6 @@
     - name: Capture all accounts in domain
       shell: cs listAccounts listall=true | jq -c -r '.account[]' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
       register: allaccts_retval
-
-    - name: Debug accounts to be added to project
-      debug: msg="Adding these accounts {{ allaccts_retval.stdout }}"
 
     - name: Register authenticating account
       set_fact: env_user={{ (acct_retval.stdout|from_json ).account[0].name }}

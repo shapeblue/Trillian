@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -13,7 +13,6 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
-
 
 - name: Create secondary storage mount
   file: path={{ tmp_nfs_path }} state=directory
