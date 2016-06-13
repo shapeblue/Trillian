@@ -53,13 +53,14 @@
     # Remove Environment IP range
     #
     - name: copy the environment delete script first
-      copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
+      copy: src=templates/enviroment_remove.sh.j2 dest="/tmp/enviroment_remove_{{ env_name_clean }}.sh" mode=0777
 
     - name: Run database environment handback script
-      shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }}"
+      shell: "/tmp/enviroment_remove_{{ env_name_clean }}.sh -e '{{ env_name_clean }}' -n '{{ def_env_prihost }}' -m '{{ def_env_prihost }}' -r '{{ def_env_pripath }}{{ env_name_clean }}' -s '{{ def_env_secpath }}{{ env_name_clean }}'"
+      ignore_errors: yes
 
     - name: remove script
-      file: path="/tmp/{{ env_name_clean }}_enviroment_remove.sh" state=absent
+      file: path="/tmp/enviroment_remove_{{ env_name_clean }}.sh" state=absent
 
     - name: remove script
       file: path="{{ inventory_dir }}/hosts_{{ env_name_clean }}" state=absent

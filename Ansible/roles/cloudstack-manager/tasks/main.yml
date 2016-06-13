@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,12 +14,11 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
 - name: wait for ssh
-  wait_for: port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
 
 - name: now i'm connected, get facts
-  setup: 
+  setup:
 
 # Planning on moving this to the MySQL role
 - name: Ensure MySQL fact module has current user/password [password needs securing]

@@ -1,4 +1,3 @@
----
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,15 +13,28 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+auto lo
+iface lo inet loopback
 
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+# The primary network interface
+auto eth0
+iface eth0 inet manual
 
-- name: Now I'm connected, get facts
-  setup:
+auto eth1
+iface eth1 inet manual
 
-- include: ./centos.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+# Public network
+auto {{ kvm_mgmt_network_label }}
+iface {{ kvm_mgmt_network_label }} inet dhcp
+    bridge_ports eth0
+    bridge_fd 5
+    bridge_stp off
+    bridge_maxwait 1
 
-- include: ./ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
+# Private network
+auto {{ kvm_guest_network_label }}
+iface {{ kvm_guest_network_label }} inet  dhcp
+    bridge_ports eth1
+    bridge_fd 5
+    bridge_stp off
+    bridge_maxwait 1

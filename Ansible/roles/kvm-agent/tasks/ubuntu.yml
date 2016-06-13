@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -16,7 +16,7 @@
 
 
 - name: Add specified repository into sources list.
-  apt_repository: repo='deb "{{ baseurl_cloudstack_deb }}" ./' state=present
+  apt_repository: repo='deb "{{ baseurl_kvm }}" ./' state=present
 
 #- apt_key: url=https://packages.shapeblue.com/release.asc state=present
 

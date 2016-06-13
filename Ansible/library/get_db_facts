@@ -16,7 +16,6 @@
 
 
 
-
 rm -f /tmp/ansi_mgmt_ip_file
 master_status=`mysql -pP@ssword123 -e \ "show master status;"`
 master_file=`echo $master_status | awk -F ' ' '{print $5}'`

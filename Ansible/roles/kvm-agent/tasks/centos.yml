@@ -1,4 +1,5 @@
-﻿
+---
+
 #Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,6 @@
 #limitations under the License.
 
 
-
----
 - name: Ensure the Apache Cloudstack Repo file is configured (CentOS 6)
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
   when: ansible_distribution_major_version == "6"

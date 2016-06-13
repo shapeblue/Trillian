@@ -15,31 +15,8 @@
 #limitations under the License.
 
 
-- name: install setup tools
-  yum: name=python-setuptools state=present
+- include: ./centos.yml
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 
-- name: Ensure EPEL is available (centOS6) 
-  yum: name="{{ epel6 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "6"
-
-- name: Ensure EPEL is available (centOS7) 
-  yum: name="{{ epel7 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "7"
-
-- name: install setup tools and jq
-  yum: name={{ item }} state=present
-  with_items:
-  - python-setuptools 
-  - jq
-
-- name: ensure cm config is removed
-  file: path=/root/.cloudmonkey/config state=absent
-
-- name: install cloudmonkey
-  shell: easy_install cloudmonkey
-
-- name: base configuration
-  shell: cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json
- 
+- include: ./ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'

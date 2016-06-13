@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -83,4 +83,4 @@
   copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
 
 - name: Environment remove script
-  shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }}"
+  shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }} -n {{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }} -m {{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }} -r '{{ env_pripath }}' -s '{{ env_secpath }}'"

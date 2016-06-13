@@ -18,9 +18,9 @@
 # create cloudstack zone
 
 
-#-i <network_id> -h <env_Database IP> -u <env_username> -p <env_password> -d <env_database name> -z <zonename> -v <hypervisor> -k <Vcenter IP or KVM host or Xenserver host> -n <Network Type> -c <comment>
+#-i <network_id> -h <env_Database IP> -u <env_username> -p <env_password> -d <env_database name> -z <zonename> -v <hypervisor> -k <Vcenter IP or KVM host or Xenserver host> -n <Network Type> -t <template URL> -c <comment>
 
-while getopts "i::h::u::p::d::z::v::k:n::c:" opt; do
+while getopts "i::h::u::p::d::z::v::k:n:t:a:b:o:r:s:c:" opt; do
   case $opt in
     i)
       id=$OPTARG;
@@ -47,7 +47,10 @@ while getopts "i::h::u::p::d::z::v::k:n::c:" opt; do
        if [[ "$HYPERVISOR" == 'vmware' || "$HYPERVISOR" = "VMWare" ]]; then
                 VCENTERIP=$OPTARG
         elif  [[ "$HYPERVISOR" == "xenserver"  || "$HYPERVISOR" == "Xenserver" ]]; then
-                XENSERVERIP=$OPTARG
+          set -f # disable glob
+          IFS=$',' # split on space characters
+          XENSERVERIP=($OPTARG)
+          unset IFS
         else
                 set -f # disable glob
                 IFS=$',' # split on space characters
@@ -58,11 +61,30 @@ while getopts "i::h::u::p::d::z::v::k:n::c:" opt; do
     n)
       ZONETYPE=$OPTARG
       ;;
+    t)
+      template_url=$OPTARG #env_zone_systemplate
+      ;;
+    a)
+      prihost=$OPTARG
+     ;;
+    b)
+      sechost=$OPTARG
+      ;;
+    o)
+      priprot=$OPTARG
+      secprot=$OPTARG
+      ;;
+    r)
+      prinfsrootpath=$OPTARG
+      ;;
+    s)
+      secnfsrootpath=$OPTARG
+      ;;
     c)
       comment=$OPTARG
       ;;
    *)
-      echo "-i <ENV_id> -h <ENV_Database IP> -u <ENV_username> -p <ENV_password> -d <ENV_database name> -z <CLoudstack ZoneName and Environment Name> -v <Hypervisor> -k <Vcenter IP or KVM host or Xenserver host (First Host)> -n <zonetype> -c <any comment>" >&2
+      echo "-i <ENV_id> -h <ENV_Database IP> -u <ENV_username> -p <ENV_password> -d <ENV_database name> -z <CLoudstack ZoneName and Environment Name> -v <Hypervisor> -k <Vcenter IP or KVM host or Xenserver host (First Host)> -n <zonetype> -a  <primary nfs host> -b <secondary nfs host> -o <nfs protocal> -c <any comment>" >&2
       exit 1
       ;;
     :)
@@ -71,6 +93,8 @@ while getopts "i::h::u::p::d::z::v::k:n::c:" opt; do
       ;;
   esac
 done
+
+echo $id; echo $HOST;  echo $USERNAME;  echo $PASSWORD;  echo $db;  echo $ZONENAME;  echo $HYPERVISOR;  echo $ZONETYPE;  echo $template_url; echo $prihost; echo $sechost; echo $priprot;  echo $comment
 
 #Look at putting the Defaults into a file
 if [[ -z $HOST ]]; then
@@ -96,8 +120,6 @@ mysqlcommand="mysql -h$HOST -u$USERNAME -p$PASSWORD -s -N -e"
 envtbl="environment"
 podtbl="podnetworks"
 pubtbl="pubnetworks"
-pritbl="primarystorage"
-sectbl="secondarystorage"
 
 #Get ID
 if [[ -z $id ]]; then
@@ -116,26 +138,16 @@ INTDNS="10.0.1.2"
 LOCALSTORAGE="true"
 
 #Variables for Storage
-#NFS propocal
-priprot=`$mysqlcommand "SELECT protocol FROM $db.$pritbl WHERE idpri=$id"`
-secprot=`$mysqlcommand "SELECT protocol FROM $db.$sectbl WHERE idsec=$id"`
-#NFS Host
-prihost=`$mysqlcommand "SELECT host FROM $db.$pritbl WHERE idpri=$id"`
-sechost=`$mysqlcommand "SELECT host FROM $db.$sectbl WHERE idsec=$id"`
-
 #NFS path Variables
-prinfspath="/acs/primary/$ENVNAME/pri1/"
-prinfspath2="/acs/primary/$ENVNAME/pri2/"
-secnfspath="/acs/secondary/$ENVNAME/sec/"
+prinfspath="$prinfsrootpath$ENVNAME/pri1/"
+prinfspath2="$prinfsrootpath$ENVNAME/pri2/"
+secnfspath="$secnfsrootpath$ENVNAME/sec/"
 
 #Connect to NFS Server to create directories
-sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $prihost "mkdir -p $prinfspath; mkdir -p $prinfspath2; mkdir -p $secnfspath";
+sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $prihost "mkdir -p $prinfspath; mkdir -p $prinfspath2";
+sshpass -p $PASSWORD ssh -oStrictHostKeyChecking=no -l $USERNAME $sechost "mkdir -p $secnfspath";
 
-#Update NFS path to DB
-`$mysqlcommand "UPDATE $db.$pritbl SET path = '$prinfspath' WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET path = '$secnfspath' WHERE idsec = $id"`;
-
-enviro=`$mysqlcommand "SELECT environmentname FROM $db.$pritbl WHERE idpri=$id"`
+enviro=`$mysqlcommand "SELECT environmentname FROM $db.$podtbl WHERE idpod=$id"`
 if [[ "$ENVNAME" == $enviro  ]]; then
       echo -e "\e[92m ---->  Environment name already used  - $ENVNAME with network ID $id \e[0m"
         exit 1
@@ -144,31 +156,21 @@ if [[ "$ENVNAME" == $enviro  ]]; then
 #Update tables to inuse
 `$mysqlcommand "UPDATE $db.$podtbl SET inuse = 'TRUE' WHERE idpod = $id"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET inuse = 'TRUE' WHERE idpub = $id"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET inuse = 'TRUE' WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET inuse = 'TRUE' WHERE idsec = $id"`;
 
 #Update Timestamp
 `$mysqlcommand "UPDATE $db.$podtbl SET updated = NOW() WHERE idpod = $id"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET updated = NOW() WHERE idpub = $id"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET updated = NOW() WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET updated = NOW() WHERE idsec = $id"`;
 
 #Added Comments
 `$mysqlcommand "UPDATE $db.$podtbl SET comment = '$comment' WHERE idpod = $id"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET comment = '$comment' WHERE idpub = $id"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET comment = '$comment' WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET comment = '$comment' WHERE idsec = $id"`;
 
 #Added a Environment Name
 `$mysqlcommand "UPDATE $db.$podtbl SET environmentname = '$ENVNAME' WHERE idpod = $id"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET environmentname = '$ENVNAME' WHERE idpub = $id"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET environmentname = '$ENVNAME' WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET environmentname = '$ENVNAME' WHERE idsec = $id"`;
 
 `$mysqlcommand "UPDATE $db.$podtbl SET removed = '' WHERE idpod = $id"`;
 `$mysqlcommand "UPDATE $db.$pubtbl SET removed = '' WHERE idpub = $id"`;
-`$mysqlcommand "UPDATE $db.$pritbl SET removed = '' WHERE idpri = $id"`;
-`$mysqlcommand "UPDATE $db.$sectbl SET removed = '' WHERE idsec = $id"`;
 
 #Primary Storage
 PRISTOR=$priprot://$prihost$prinfspath
@@ -205,31 +207,7 @@ VCPASSWORD="P@ssword123"
 tempdir="/mnt/secondary"
 template_app_path="/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt"
 
-if [[ "$HYPERVISOR" == 'vmware' || "$HYPERVISOR" = "VMWare" ]]; then
-      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
-    elif  [[ "$HYPERVISOR" == "xenserver"  || "$HYPERVISOR" == "Xenserver" ]]; then
-      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
-    elif  [[ "$HYPERVISOR" == "kvm"  || "$HYPERVISOR" == "KVM" ]]; then
-      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
-    else
-      template_url="http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-hyperv.vhd.zip"
-    fi
-
 #----------------------------------------------------------------------------------------------------------
-
-
-if [ ! -e /usr/bin/cloudmonkey ]; then
-  echo "Cloudmonkey required, attempting install"
-  yum install -y python-setuptools
-  easy_install cloudmonkey
-fi
-
-#check for jq
-if [ ! -e /usr/bin/jq ]; then
-  echo "jq required, attempting install"
-
-  yum install -y jq
-fi
 
 echo -e "\e[92m ---->  Checking login\e[0m"
 

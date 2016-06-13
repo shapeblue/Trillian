@@ -15,7 +15,6 @@
 #limitations under the License.
 
 
-
 cat << "EOF"  > /etc/rc.d/init.d/firstnestedboot.sh
 #!/bin/bash
 

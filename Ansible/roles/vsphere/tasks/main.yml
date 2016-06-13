@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -24,14 +24,14 @@
 #  shell: esxcli storage filesystem mount -l datastore1
 #  ignore_errors: true
 
-
-
 - name: enable jumbo frames for vSwitch0 (raw used for pre 6.0 compatibility)
   raw: esxcli network vswitch standard set -m 9000 -v vSwitch0
   ignore_errors: true
 
+
+
 - name: enable jumbo frames for VMKernel on vSwitch0 (raw used for pre 6.0 compatibility)
-  raw: esxcli network ip interface set -m 9000 -i vmk0
+  raw: esxcli network ip interface set -m 4500 -i vmk0
   ignore_errors: true
 
 - name: enable vMotion on VMKernel
@@ -46,8 +46,12 @@
   raw: esxcli network vswitch standard uplink add --uplink-name=vmnic1 --vswitch-name=vSwitch1
   ignore_errors: true
 
+- name: make nic active (raw used for pre 6.0 compatibility)
+  raw: esxcli network vswitch standard portgroup policy failover set- -active-uplinks=vmnic1
+  ignore_errors: true
+
 - name: enable promiscomous mode on public/guest traffic (raw used for pre 6.0 compatibility)
-  raw: esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change yes --allow-promiscuous yes --vswitch-name vSwitch1 
+  raw: esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change yes --allow-promiscuous yes --vswitch-name vSwitch1
   ignore_errors: true
 
 #- name: Reset Evaluation Timer for new deployment

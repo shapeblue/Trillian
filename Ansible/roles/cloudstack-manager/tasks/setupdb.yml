@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -16,13 +16,23 @@
 
 - name: Get MySQL status
   action: get_db_facts
+  tags:
+    - setup_db
+
+- debug: msg="{{ env_numversion }}"
+  tags:
+    - setup_db
 
 - name: cloudstack-setup-databases
-  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ ansible_eth0.ipv4.address }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_eth0.ipv4.address }}"
+  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_ssh_host }}"
   when: ("primary_cs_manager" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  tags:
+    - setup_db
 
 - name: Refresh Mysql status
   action: get_db_facts
+  tags:
+    - setup_db
   
 #- name: Setup Secondary CloudStack Databases
 #  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_vip }}'"
@@ -30,12 +40,24 @@
 
 - name: Setup CloudStack Manager (centos/rhel6)
   command: /usr/bin/cloudstack-setup-management
-#  when: ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}" and 
   when: ansible_distribution_major_version == "6"
+  tags:
+    - setup_mgmt
 
-
-- name: Setup CloudStack Manager (centos/rhel7)
+- name: Setup CloudStack Manager (centos/rhel7 ACS >= 4.6)
   command: /usr/bin/cloudstack-setup-management --tomcat7
-#  when: ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}" and 
-  when: ansible_distribution_major_version == "7"
+  when: (ansible_distribution_major_version == "7") and ( env_numversion|float >= 4.6) 
+  tags:
+    - setup_mgmt
 
+- name: Setup CloudStack Manager (centos/rhel7) ACS < 4.6
+  command: /usr/bin/cloudstack-setup-management
+  when: (ansible_distribution_major_version == "7") and ( env_numversion|float  < 4.6)
+  tags:
+    - setup_mgmt
+
+- name: Setup CloudStack Manager (Ubuntu)
+  command: /usr/bin/cloudstack-setup-management
+  when: ansible_distribution == "Ubuntu"
+  tags:
+    - setup_mgmt

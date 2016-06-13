@@ -1,0 +1,94 @@
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+[client]
+port            = 3306
+socket          = /var/run/mysqld/mysqld.sock
+
+[mysqld_safe]
+socket          = /var/run/mysqld/mysqld.sock
+nice            = 0
+
+[mysqld]
+user            = mysql
+pid-file        = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+port            = 3306
+basedir         = /usr
+datadir         = /var/lib/mysql
+tmpdir          = /tmp
+lc-messages-dir = /usr/share/mysql
+
+skip_name_resolve
+
+innodb_rollback_on_timeout=1
+innodb_lock_wait_timeout=600
+max_connections={{ mysql_max_connections }}
+log-bin=mysql-bin
+binlog-format = 'ROW'
+bind-address = 0.0.0.0
+
+innodb_buffer_pool_size={{ mysql_innodb_buffer_pool_size }}
+innodb_file_per_table=1
+innodb_additional_mem_pool_size=20M
+innodb_log_buffer_size=16MB
+innodb_flush_log_at_trx_commit=2
+
+min_examined_row_limit=100
+sort_buffer_size=2M
+tmp_table_size=32M
+
+max_heap_table_size=64M
+
+sync_binlog=1
+
+key_buffer=16M
+max_allowed_packet = 16M
+thread_stack=192K
+thread_cache_size=8
+
+query_cache_size=32M
+
+log_error = /var/log/mysql/error.log
+log_warnings=2
+
+slow_query_log_file=slow.log
+slow_query_log=0
+log_queries_not_using_indexes=1
+long_query_time=0.5
+
+{% if '{{ db_type }}' == 'mysql-masterslave' %}
+server-id={{ hostvars[inventory_hostname]['serverid'] }}
+{% endif %}
+
+log_bin=/var/log/mysql/mysql-bin.log
+expire_logs_days=5
+max_binlog_size=128M
+
+symbolic-links=0
+
+
+[mysqldump]
+quick
+quote-names
+max_allowed_packet      = 16M
+
+[mysql]
+#no-auto-rehash # faster start of mysql but no tab completition
+
+[isamchk]
+key_buffer              = 16M
+
+!includedir /etc/mysql/conf.d/
