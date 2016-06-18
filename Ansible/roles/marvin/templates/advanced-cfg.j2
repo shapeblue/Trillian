@@ -46,7 +46,7 @@
 {% if env_hypervisor == "vmware" %}
 		"vmwaredc": {
 			"username": "{{ vmware_vcsa_user }}",
-			"vcenter": "{{ hostvars.groups[vc_host][0].ssh_hostname }}",
+			"vcenter": "{{ hostvars(groups[vc_hosts][0]).ssh_hostname }}",
 			"password": "{{ vmware_vcsa_pass }}",
 			"name": "{{ vmware_datacenter_name }}"
 		},
@@ -68,37 +68,31 @@
 					"clustername": "{{ env_zone_clustername }}",
 					"hypervisor": "{{ env_hypervisor }}",
 {% if env_hypervisor == "kvm" %}
-					"hosts": [{
+					"hosts": [
+{% for host in groups['kvm_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
 {% elif env_hypervisor == "xenserver" %}
-					"hosts": [{
+					"hosts": [
+{% for host in groups['xenserver_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
 {% elif env_hypervisor == "vmware" %}
 					"hosts": [{
+{% for host in groups['vmware_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
 {% endif %}
 					"primaryStorages": [{
@@ -117,8 +111,9 @@
 		}]
 	}],
 	"dbSvr": {
-		"dbSvr": "10.11.1.206",
-		"passwd": "cloud",
+{% if db | int == 0 %}		"dbSvr": "{{ hostvars(groups[primary_cs_manager][0]).ssh_hostname }}",{% endif %}
+{% if db | int > 0 %}		"dbSvr": "{{ hostvars(groups[mysql_master_host][0]).ssh_hostname }}",{% endif %}
+		"passwd": "{{ mysql_cloud_password }}",
 		"db": "cloud",
 		"port": 3306,
 		"user": "cloud"
@@ -242,11 +237,11 @@
 		"value": "true"
 	}],
 	"mgtSvr": [{
-		"mgtSvrIp": "{{ hostvars.groups[cs_primary_mgmt][0].ssh_hostname }}",
+		"mgtSvrIp": "{{ hostvars(groups[primary_cs_manager][0]).ssh_hostname }}",
 		"port": 8096,
-		"user": "root",
-		"passwd": "password",
-		"hypervisor": "vmware"
+		"user": "{{ mgmtsrv_username }}",
+		"passwd": "{{ mgmtsrv_password }}",
+		"hypervisor": "{{ env_hypervisor }}"
 	}]
 }
 
