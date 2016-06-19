@@ -112,14 +112,6 @@ mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 baseurl_cloudstack: "{{ baseurl_cloudstack | default( def_baseurl_cloudstack ) }}{{ osversion }}/{{ numversion }}/"
 
-{% if hvtype[0:1] | lower == "v" %}
-env_hypervisor: vmware
-{% elif hvtype[0:1] | lower == "x" %}
-env_hypervisor: xenserver
-{% elif hvtype[0:1] | lower == "k" %}
-env_hypervisor: kvm
-{% endif %}
-
 
 # DB servers
 dbsrv_service_offering: "{{ dbsrv_service_offering | default( def_dbsrv_service_offering ) }}"

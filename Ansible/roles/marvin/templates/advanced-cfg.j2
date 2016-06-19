@@ -15,20 +15,36 @@
 
 {
 	"zones": [{
-		"name": "{{ build_zone }}",
-		"guestcidraddress": "10.1.1.0/24",
+		"name": "{{ env_name_clean }}",
+		"guestcidraddress": "{{ env_zone_guestcidr }}",
 		"dns1": "{{ env_zone_dns1 }}",
 		"physical_networks": [{
 			"broadcastdomainrange": "Zone",
-			"vlan": "$GUEST_VLANS",
-			"name": "Sandbox-pnet",
+			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
 				"typ": "Guest"
 			}, {
-				"typ": "Management"
-			}, {
 				"typ": "Public"
 			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": [
+				"VLAN"
+			]
+		},{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Mgmt",
+			"traffictypes": [{
+				"typ": "Management"
+			},],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
 				"name": "VirtualRouter"
@@ -67,7 +83,7 @@
 			"clusters": [{
 					"clustername": "{{ env_zone_clustername }}",
 					"hypervisor": "{{ env_hypervisor }}",
-{% if env_hypervisor == "kvm" %}
+{% if env_hv == "kvm" %}
 					"hosts": [
 {% for host in groups['kvm_hosts'] %}            {
 						"username": "root",
@@ -76,7 +92,7 @@
 					}{% if not loop.last %},{% endif %}{% endfor %}
 					],
 					"clustertype": "CloudManaged",
-{% elif env_hypervisor == "xenserver" %}
+{% elif env_hv == "xenserver" %}
 					"hosts": [
 {% for host in groups['xenserver_hosts'] %}            {
 						"username": "root",
@@ -85,7 +101,7 @@
 					}{% if not loop.last %},{% endif %}{% endfor %}
 					],
 					"clustertype": "CloudManaged",
-{% elif env_hypervisor == "vmware" %}
+{% elif env_hv == "vmware" %}
 					"hosts": [{
 {% for host in groups['vmware_hosts'] %}            {
 						"username": "root",
@@ -96,8 +112,10 @@
 					"clustertype": "CloudManaged",
 {% endif %}
 					"primaryStorages": [{
-						"url": "$PRISTOR",
-						"name": "PS1"
+{% for pripool in env_pripools %}
+						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
+						"name": "{{ pripool }}"
+{% endfor %}
 					}]
 				}
 
@@ -106,8 +124,11 @@
 		}],
 		"internaldns1": "{{ env_zone_intdns1 }}",
 		"secondaryStorages": [{
-			"url": "$SECSTOR",
+{% for secpool in env_secpools %}
+			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
+			"name": "{{ secpool }}"
 			"provider": "NFS"
+{% endfor %}
 		}]
 	}],
 	"dbSvr": {
@@ -228,7 +249,7 @@
 		"value": "true"
 	}, {
 		"name": "secstorage.allowed.internal.sites",
-		"value": "10.147.28.0/24"
+		"value": "10.0.0.0/8"
 	}, {
 		"name": "direct.agent.load.size",
 		"value": "1000"
@@ -244,5 +265,3 @@
 		"hypervisor": "{{ env_hypervisor }}"
 	}]
 }
-
-_EOF_
