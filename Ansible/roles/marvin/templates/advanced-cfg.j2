@@ -15,17 +15,25 @@
 
 {
 	"zones": [{
-		"name": "{{ build_zone }}",
-		"guestcidraddress": "10.1.1.0/24",
+		"name": "{{ env_name_clean }}",
+		"guestcidraddress": "{{ env_zone_guestcidr }}",
 		"dns1": "{{ env_zone_dns1 }}",
 		"physical_networks": [{
 			"broadcastdomainrange": "Zone",
-			"vlan": "$GUEST_VLANS",
-			"name": "Sandbox-pnet",
+			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
-				"typ": "Guest"
+				"typ": "Guest",
+				"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
 			}, {
-				"typ": "Management"
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
 			}, {
 				"typ": "Public"
 			}],
@@ -39,14 +47,29 @@
 				"broadcastdomainrange": "ZONE",
 				"name": "InternalLbVm"
 			}],
-			"isolationmethods": [
-				"VLAN"
-			]
+			"isolationmethods": "VLAN"
+		},{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Mgmt",
+			"traffictypes": [{
+				"typ": "Management"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
 		}],
-{% if env_hypervisor == "vmware" %}
+{% if env_hv == "vmware" %}
 		"vmwaredc": {
 			"username": "{{ vmware_vcsa_user }}",
-			"vcenter": "{{ hostvars.groups[vc_host][0].ssh_hostname }}",
+			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ssh_hostname'] }}",
 			"password": "{{ vmware_vcsa_pass }}",
 			"name": "{{ vmware_datacenter_name }}"
 		},
@@ -66,44 +89,40 @@
 			"netmask": "$POD1_MASK",
 			"clusters": [{
 					"clustername": "{{ env_zone_clustername }}",
-					"hypervisor": "{{ env_hypervisor }}",
-{% if env_hypervisor == "kvm" %}
-					"hosts": [{
+					"hypervisor": "{{ env_hv }}",
+{% if env_hv == "kvm" %}
+					"hosts": [
+{% for host in groups['kvm_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
-{% elif env_hypervisor == "xenserver" %}
-					"hosts": [{
+{% elif env_hv == "xenserver" %}
+					"hosts": [
+{% for host in groups['xenserver_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
-{% elif env_hypervisor == "vmware" %}
+{% elif env_hv == "vmware" %}
 					"hosts": [{
+{% for host in groups['vmware_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
 {% endif %}
 					"primaryStorages": [{
-						"url": "$PRISTOR",
-						"name": "PS1"
+{% for pripool in env_pripools %}
+						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
+						"name": "{{ pripool }}"
+{% endfor %}
 					}]
 				}
 
@@ -112,13 +131,18 @@
 		}],
 		"internaldns1": "{{ env_zone_intdns1 }}",
 		"secondaryStorages": [{
-			"url": "$SECSTOR",
+{% for secpool in env_secpools %}
+			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
+			"name": "{{ secpool }}",
 			"provider": "NFS"
+{% endfor %}
 		}]
 	}],
 	"dbSvr": {
-		"dbSvr": "10.11.1.206",
-		"passwd": "cloud",
+{% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
+{% if num_db_hosts != "0" %}	"dbSvr": "{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}",{% endif %}
+		
+		"passwd": "{{ mysql_cloud_password }}",
 		"db": "cloud",
 		"port": 3306,
 		"user": "cloud"
@@ -233,7 +257,7 @@
 		"value": "true"
 	}, {
 		"name": "secstorage.allowed.internal.sites",
-		"value": "10.147.28.0/24"
+		"value": "10.0.0.0/8"
 	}, {
 		"name": "direct.agent.load.size",
 		"value": "1000"
@@ -242,12 +266,10 @@
 		"value": "true"
 	}],
 	"mgtSvr": [{
-		"mgtSvrIp": "{{ hostvars.groups[cs_primary_mgmt][0].ssh_hostname }}",
+		"mgtSvrIp": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",
 		"port": 8096,
 		"user": "root",
-		"passwd": "password",
-		"hypervisor": "vmware"
+		"passwd": "{{ mgmtsrv_password }}",
+		"hypervisor": "{{ env_hv }}"
 	}]
 }
-
-_EOF_

@@ -27,7 +27,7 @@
 ####################################################################
 
 - name: determine number of db hosts
-  set_fact: num_db_hosts="{{ groups['marvin_host'] | length }}"
+  set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
 # Create build project if it doesn't exist.
 #
