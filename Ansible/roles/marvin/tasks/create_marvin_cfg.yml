@@ -1,6 +1,6 @@
 ---
 
 - name: create mavin cfg file
-  template: src=advanced-cfg.j2 dest="/tmp/{{ env_name_clean }}-advanced-cfg"
+  template: src="{{ inventory_dir }}/roles/marvin/templates/advanced-cfg.j2" dest="/tmp/{{ env_name_clean }}-advanced-cfg"
   tags:
     - marvin

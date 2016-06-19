@@ -364,6 +364,10 @@ echo -e "\e[92m ---->  Mounting tmp directory for template \e[0m"
 echo -e "\e[92m ---->  Adding template \e[0m"
 `$template_app_path -m $tempdir -u $template_url -h $HYPERVISOR -F`
 
+if [[ "$HYPERVISOR" == "vmware" ]]; then
+  chown root:root -r $tempdir/template/tmpl/1/8/*
+fi
+
 echo -e "\e[92m ---->  Unmounting tmp directory for template \e[0m"
 #unmount tempdir
 `umount $tempdir`

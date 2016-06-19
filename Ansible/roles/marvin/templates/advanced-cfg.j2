@@ -22,7 +22,18 @@
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
-				"typ": "Guest"
+				"typ": "Guest",
+				"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
 			}, {
 				"typ": "Public"
 			}],
@@ -36,15 +47,13 @@
 				"broadcastdomainrange": "ZONE",
 				"name": "InternalLbVm"
 			}],
-			"isolationmethods": [
-				"VLAN"
-			]
+			"isolationmethods": "VLAN"
 		},{
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Mgmt",
 			"traffictypes": [{
 				"typ": "Management"
-			},],
+			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
 				"name": "VirtualRouter"
@@ -55,14 +64,12 @@
 				"broadcastdomainrange": "ZONE",
 				"name": "InternalLbVm"
 			}],
-			"isolationmethods": [
-				"VLAN"
-			]
+			"isolationmethods": "VLAN"
 		}],
-{% if env_hypervisor == "vmware" %}
+{% if env_hv == "vmware" %}
 		"vmwaredc": {
 			"username": "{{ vmware_vcsa_user }}",
-			"vcenter": "{{ hostvars(groups[vc_hosts][0]).ssh_hostname }}",
+			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ssh_hostname'] }}",
 			"password": "{{ vmware_vcsa_pass }}",
 			"name": "{{ vmware_datacenter_name }}"
 		},
@@ -82,7 +89,7 @@
 			"netmask": "$POD1_MASK",
 			"clusters": [{
 					"clustername": "{{ env_zone_clustername }}",
-					"hypervisor": "{{ env_hypervisor }}",
+					"hypervisor": "{{ env_hv }}",
 {% if env_hv == "kvm" %}
 					"hosts": [
 {% for host in groups['kvm_hosts'] %}            {
@@ -126,14 +133,15 @@
 		"secondaryStorages": [{
 {% for secpool in env_secpools %}
 			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
-			"name": "{{ secpool }}"
+			"name": "{{ secpool }}",
 			"provider": "NFS"
 {% endfor %}
 		}]
 	}],
 	"dbSvr": {
-{% if db | int == 0 %}		"dbSvr": "{{ hostvars(groups[primary_cs_manager][0]).ssh_hostname }}",{% endif %}
-{% if db | int > 0 %}		"dbSvr": "{{ hostvars(groups[mysql_master_host][0]).ssh_hostname }}",{% endif %}
+{% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
+{% if num_db_hosts != "0" %}	"dbSvr": "{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}",{% endif %}
+		
 		"passwd": "{{ mysql_cloud_password }}",
 		"db": "cloud",
 		"port": 3306,
@@ -258,10 +266,10 @@
 		"value": "true"
 	}],
 	"mgtSvr": [{
-		"mgtSvrIp": "{{ hostvars(groups[primary_cs_manager][0]).ssh_hostname }}",
+		"mgtSvrIp": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",
 		"port": 8096,
-		"user": "{{ mgmtsrv_username }}",
+		"user": "root",
 		"passwd": "{{ mgmtsrv_password }}",
-		"hypervisor": "{{ env_hypervisor }}"
+		"hypervisor": "{{ env_hv }}"
 	}]
 }

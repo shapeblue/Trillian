@@ -76,6 +76,9 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  vars:
+    num_marv_hosts: "{{ groups['marvin_host'] | length }}"
+    num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   tasks:
     - include: ./roles/marvin/tasks/create_marvin_cfg.yml
       when: "num_marv_hosts | int != 0"
