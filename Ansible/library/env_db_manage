@@ -1,0 +1,246 @@
+#!/bin/bash
+##############################################################
+# Queries the environments database and returns network
+# details. Returns existing network details if known, otherwise
+# requests new environment details.
+# Usage:
+# envfacts.sh <req|rel> <env_db_ip> <env_db_user> <env_db_password> <env_database name> <env_uuid> <env_name_clean> <env_comment>
+cat $1 > /tmp/args
+
+#####################################################################################
+# Vars
+#
+
+STR_ARRAY=(`cat $1 | tr " " "\n"`)
+
+
+#DBHOST={{ env_db_ip }}
+#DBUSER={{ env_db_user }}
+#DBPASS={{ env_db_password }}
+#DBNAME={{ env_db_name }}
+#ENV_UUID={{ env_uuid }}
+#ENV_NAME={{ env_name_clean }}
+#ENV_COMMENT='{{ env_comment }}'
+DBHOST=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBUSER=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBPASS=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBNAME=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBNAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_UUID=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_UUID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_NAME=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_NAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_COMMENT="not available just now"
+ENV_ACTION=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_ACTION"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+
+MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+ENVTBL="environments";
+PODTBL="podnetworks";
+PUBTBL="pubnetworks";
+PRITBL="primarystorage";
+SECTBL="secondarystorage";
+
+################################################################################
+# QueryID:
+# Check if the nested cloud instance has already been added to the environments
+# table and not removed. Query is based on the nested cloud instance uuid in the group vars.
+# The returned envid is always unique for the lifespan of the nested cloud.
+#
+function QueryID()
+{
+  local id
+
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  if [ -z ${id} ];
+  then
+    envid="notfound";
+  else
+    envid=${id}
+  fi
+}
+
+################################################################################
+# RequestID:
+# Adds the nested cloud instance to the environments table and returns the unique
+# env_id for assigning resources in the public and pod network tables.
+#
+function RequestID()
+{
+  local id
+  # No locking required, simple insert
+  ${MYSQLCOMMAND} "INSERT INTO ${DBNAME}.${ENVTBL} (name, envuuid, comment, created) VALUES ('${ENV_NAME}', '${ENV_UUID}', '${ENV_COMMENT}', now())";
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  envid=${id}
+}
+
+################################################################################
+# ReleaseID:
+# Marks the nested group envinronment as removed.
+#
+function ReleaseID()
+{
+  local id
+
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  if ! [ -z ${id} ];
+  then
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${ENVTBL} set removed=now() where envuuid='${ENV_UUID}' and removed is null";
+  fi
+}
+
+################################################################################
+# RequestPodNet:
+# Checks if a pod network has already been assigned to the nested cloud.
+# If none assigned then new one is assigned if there are available resources.
+#
+function RequestPodNet()
+{
+  local podnetid
+  local podnetdetails
+
+  # Check if pod network has already been assigned
+  podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
+  if [ -z ${podnetid} ];
+  then # no existing found, request new
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=null WHERE inuse='FALSE' limit 1";
+    # Check if update made
+    podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE envid='${envid}' and inuse='TRUE'"`
+    if [ -z ${podnetid} ];
+    then #no free pod network blocks
+      ReleaseNetworks;
+      ReturnFail "No free pod network blocks.";
+      exit;
+    fi
+  fi
+  podnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${PODTBL} WHERE idpod = '${podnetid}'" | sed -e "s/\t/|/g"`
+  env_podstartip=`echo ${podnetdetails} | awk -F'|' '{print $2}'`
+  env_podendip=`echo ${podnetdetails} | awk -F'|' '{print $3}'`
+  env_podmask=`echo ${podnetdetails} | awk -F'|' '{print $4}'`
+  env_podgw=`echo ${podnetdetails} | awk -F'|' '{print $5}'`
+  env_podvlans=`echo ${podnetdetails} | awk -F'|' '{print $7}'`
+}
+
+################################################################################
+# ReleaseNetworks:
+# Releases pod and public networks on nested cloud destroy.
+#
+function ReleaseNetworks()
+{
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=null, updated=now(), removed=now() WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=null, updated=now(), removed=now() WHERE envid='${envid}'";
+}
+
+################################################################################
+# RequestPubNet:
+# Checks if a public network has already been assigned to the nested cloud.
+# If none assigned then new one is assigned if there are available resources.
+#
+function RequestPubNet()
+{
+  local pubnetid
+  local pubnetdetails
+
+  # Check if pub network has already been assigned
+  pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
+  if [ -z ${pubnetid} ];
+  then #no existing found, request new
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=null WHERE inuse='FALSE' limit 1";
+    # Check if update made
+    pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
+    if [ -z ${pubnetid} ];
+    then #no free public networks
+      ReleaseNetworks;
+      ReturnFail "No free public network blocks.";
+      exit;
+    fi
+  fi
+  pubnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${PUBTBL} WHERE idpub = '${pubnetid}'" | sed -e "s/\t/|/g"`
+  env_pubstartip=`echo ${pubnetdetails} | awk -F'|' '{print $2}'`
+  env_pubendip=`echo ${pubnetdetails} | awk -F'|' '{print $3}'`
+  env_pubmask=`echo ${pubnetdetails} | awk -F'|' '{print $4}'`
+  env_pubgw=`echo ${pubnetdetails} | awk -F'|' '{print $5}'`
+  env_pubvlan=`echo ${pubnetdetails} | awk -F'|' '{print $7}'`
+}
+
+################################################################################
+# ReturnFact:
+# Return parsed environment info
+#
+function ReturnFact()
+{
+cat << EOF
+{
+"ansible_facts": {
+  "env_id": "${envid}",
+  "env_podstartip": "${env_podstartip}",
+  "env_podendip": "${env_podendip}",
+  "env_podmask": "${env_podmask}",
+  "env_podgw": "${env_podgw}",
+  "env_podvlans": "${env_podvlans}",
+  "env_pubstartip": "${env_pubstartip}",
+  "env_pubendip": "${env_pubendip}",
+  "env_pubmask": "${env_pubmask}",
+  "env_pubgw": "${env_pubgw}",
+  "env_pubvlan": "${env_pubvlan}"
+ },
+"env_return": "success",
+"env_retmsg": "Networks successfully reserved."
+}
+EOF
+}
+
+################################################################################
+# ReturnFail:
+# Returns error message as fact
+#
+function ReturnFail()
+{
+cat << EOF
+{
+  "env_return": "error",
+  "env_retmsg": "$1"
+}
+EOF
+}
+
+################################################################################
+# ReturnSuccess:
+# Returns generic success message as fact
+#
+function ReturnSuccess()
+{
+cat << EOF
+{
+  "env_return": "success",
+  "env_retmsg": "$1"
+}
+EOF
+}
+
+################################################################################
+# Main script
+#
+case "$ENV_ACTION" in
+	     req)
+       QueryID;
+       if [ ${envid} == "notfound" ];
+       then
+          RequestID;
+       fi
+       RequestPodNet;
+       RequestPubNet;
+       ReturnFact;
+       ;;
+
+       rel)
+       QueryID;
+       if [ ${envid} != "notfound" ];
+       then
+         ReleaseNetworks;
+         ReleaseID;
+       fi
+       ReturnSuccess "Environment ${ENV_NAME} (${ENV_UUID}) and all networks removed from database.";
+       ;;
+
+       *)
+       ReturnFail "Unknown input action $1 - valid options are req|rel.";
+       ;;
+esac
+exit

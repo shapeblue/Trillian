@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,76 +13,29 @@
 #limitations under the License.
 
 
-ZONETYPE="Advanced"
-SECGROUPS="False"
-ADVGUESTCIDRADDRESS="10.1.1.0/24"
-ZONENAME="AdvZone"
-DNS="8.8.8.8"
-INTDNS="10.0.1.2"
-LOCALSTORAGE="true"
-PRISTOR="nfs://10.0.1.30/acs/primary/acs46/esxi1"
-SECSTOR="nfs://10.0.1.30/acs/secondary/acs46"
-
-GUEST_VLANS="505-520"
-
-PUBLIC_VLAN="untagged"
-PUBLIC_GATEWAY="10.101.15.254"
-PUBLIC_MASK="255.255.240.0"
-PUBLIC_STARTIP="10.101.1.1"
-PUBLIC_ENDIP="10.101.1.10"
-
-POD1_GATEWAY="10.100.254.254"
-POD1_MASK="255.255.0.0"
-POD1_RES_STARTIP="10.100.10.10"
-POD1_RES_ENDIP="10.100.10.19"
-POD1_NAME="Pod1"
-
-ADDHOST="true" # true or false
-
-HYPERVISOR="vmware"  # OPTIONS: vmware XenServer KVM HyperV 
-XENSERVERIP="10.100.0.10"
-KVMHOSTIP="10.0.0.60"
-VCENTERIP="10.0.0.138"
-DCNAME="datacenter"
-VSPHERECLUSTERNAME="cluster1"
-VCUSERNAME="administrator@vsphere.local"
-VCPASSWORD="P@ssword123"
-
-
-
-
-cat << '_EOF_' > /tmp/zone.cfg
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
 {
 	"zones": [{
-		"name": "$ZONENAME",
-		"guestcidraddress": "10.1.1.0/24",
-		"dns1": "$DNS",
+		"name": "{{ env_name_clean }}",
+		"guestcidraddress": "{{ env_zone_guestcidr }}",
+		"dns1": "{{ env_zone_dns1 }}",
 		"physical_networks": [{
 			"broadcastdomainrange": "Zone",
-			"vlan": "$GUEST_VLANS",
-			"name": "Sandbox-pnet",
+			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
-				"typ": "Guest"
+				"type": "Guest",
+				"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
 			}, {
-				"typ": "Management"
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
 			}, {
-				"typ": "Public"
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
+			}, {
+				"type": "Public"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -96,60 +47,102 @@ cat << '_EOF_' > /tmp/zone.cfg
 				"broadcastdomainrange": "ZONE",
 				"name": "InternalLbVm"
 			}],
-			"isolationmethods": [
-				"VLAN"
-			]
+			"isolationmethods": "VLAN"
+		},{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Mgmt",
+			"traffictypes": [{
+				"type": "Management"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
 		}],
+{% if env_hv == "vmware" %}
 		"vmwaredc": {
-			"username": "$VCUSERNAME",
-			"vcenter": "$VCENTERIP",
-			"password": "$VCPASSWORD",
-			"name": "$DCNAME"
+			"username": "{{ vmware_vcsa_user }}",
+			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ssh_hostname'] }}",
+			"password": "{{ vmware_vcsa_pass }}",
+			"name": "{{ vmware_datacenter_name }}"
 		},
+{% endif %}
 		"ipranges": [{
-			"startip": "$PUBLIC_STARTIP",
-			"endip": "$PUBLIC_ENDIP",
-			"netmask": "$PUBLIC_MASK",
-			"vlan": "$PUBLIC_VLAN",
-			"gateway": "$PUBLIC_GATEWAY"
+			"startip": "{{ env_pubstartip }}",
+			"endip": "{{ env_pubendip }}",
+			"netmask": "{{ env_pubmask }}",
+			"vlan": "{{ env_pubvlan }}",
+			"gateway": "{{ env_pubgw }}"
 		}],
 		"networktype": "Advanced",
 		"pods": [{
-			"endip": "$POD1_RES_ENDIP",
-			"name": "$POD1_NAME",
-			"startip": "$POD1_RES_STARTIP",
-			"netmask": "$POD1_MASK",
+			"endip": "{{ env_podstartip }}",
+			"name": "{{env_zone_podname}}",
+			"startip": "{{ env_podstartip }}",
+			"netmask": "{{ env_podmask }}",
 			"clusters": [{
-					"clustername": "$VSPHERECLUSTERNAME",
-					"hypervisor": "$HYPERVISOR",
-					"hosts": [{
+					"clustername": "{{ env_zone_clustername }}",
+					"hypervisor": "{{ env_hv }}",
+{% if env_hv == "kvm" %}
+					"hosts": [
+{% for host in groups['kvm_hosts'] %}            {
 						"username": "root",
-						"url": "http://sim/c0/h0",
-						"password": "password"
-					}, {
-						"username": "root",
-						"url": "http://sim/c0/h1",
-						"password": "password"
-					}],
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
 					"clustertype": "CloudManaged",
+{% elif env_hv == "xenserver" %}
+					"hosts": [
+{% for host in groups['xenserver_hosts'] %}            {
+						"username": "root",
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
+					"clustertype": "CloudManaged",
+{% elif env_hv == "vmware" %}
+					"hosts": [{
+{% for host in groups['vmware_hosts'] %}            {
+						"username": "root",
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
+					"clustertype": "CloudManaged",
+{% endif %}
 					"primaryStorages": [{
-						"url": "$PRISTOR",
-						"name": "PS1"
+{% for pripool in env_pripools %}
+						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
+						"name": "{{ pripool }}"
+{% endfor %}
 					}]
 				}
 
 			],
-			"gateway": "$POD1_GATEWAY"
+			"gateway": "{{ env_podgw }}"
 		}],
-		"internaldns1": "$INTDNS",
+		"internaldns1": "{{ env_zone_intdns1 }}",
 		"secondaryStorages": [{
-			"url": "$SECSTOR",
+{% for secpool in env_secpools %}
+			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
+			"name": "{{ secpool }}",
 			"provider": "NFS"
+{% endfor %}
 		}]
 	}],
 	"dbSvr": {
-		"dbSvr": "10.11.1.206",
-		"passwd": "cloud",
+{% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
+{% if num_db_hosts != "0" %}	"dbSvr": "{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}",{% endif %}
+		
+		"passwd": "{{ mysql_cloud_password }}",
 		"db": "cloud",
 		"port": 3306,
 		"user": "cloud"
@@ -264,7 +257,7 @@ cat << '_EOF_' > /tmp/zone.cfg
 		"value": "true"
 	}, {
 		"name": "secstorage.allowed.internal.sites",
-		"value": "10.147.28.0/24"
+		"value": "10.0.0.0/8"
 	}, {
 		"name": "direct.agent.load.size",
 		"value": "1000"
@@ -273,12 +266,10 @@ cat << '_EOF_' > /tmp/zone.cfg
 		"value": "true"
 	}],
 	"mgtSvr": [{
-		"mgtSvrIp": "10.11.1.206",
+		"mgtSvrIp": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",
 		"port": 8096,
 		"user": "root",
-		"passwd": "password",
-		"hypervisor": "vmware"
+		"passwd": "{{ mgmtsrv_password }}",
+		"hypervisor": "{{ env_hv }}"
 	}]
 }
-
-_EOF_

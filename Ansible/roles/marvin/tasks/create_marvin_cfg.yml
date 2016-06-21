@@ -1,0 +1,16 @@
+---
+
+- name: request and return environment
+  action: env_db_manage DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+  register: envfacts
+  tags:
+    - marvin
+
+- debug: msg={{envfacts}}
+  tags:
+    - marvin
+
+- name: create mavin cfg file
+  template: src="{{ inventory_dir }}/roles/marvin/templates/advanced-cfg.j2" dest="/tmp/{{ env_name_clean }}-advanced-cfg"
+  tags:
+    - marvin
