@@ -22,7 +22,7 @@
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
-				"typ": "Guest",
+				"type": "Guest",
 				"providers": [{
 				"broadcastdomainrange": "ZONE",
 				"name": "VirtualRouter"
@@ -35,7 +35,7 @@
 			}],
 			"isolationmethods": "VLAN"
 			}, {
-				"typ": "Public"
+				"type": "Public"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -52,7 +52,7 @@
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Mgmt",
 			"traffictypes": [{
-				"typ": "Management"
+				"type": "Management"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -75,18 +75,18 @@
 		},
 {% endif %}
 		"ipranges": [{
-			"startip": "$PUBLIC_STARTIP",
-			"endip": "$PUBLIC_ENDIP",
-			"netmask": "$PUBLIC_MASK",
-			"vlan": "$PUBLIC_VLAN",
-			"gateway": "$PUBLIC_GATEWAY"
+			"startip": "{{ env_pubstartip }}",
+			"endip": "{{ env_pubendip }}",
+			"netmask": "{{ env_pubmask }}",
+			"vlan": "{{ env_pubvlan }}",
+			"gateway": "{{ env_pubgw }}"
 		}],
 		"networktype": "Advanced",
 		"pods": [{
-			"endip": "$POD1_RES_ENDIP",
-			"name": "$POD1_NAME",
-			"startip": "$POD1_RES_STARTIP",
-			"netmask": "$POD1_MASK",
+			"endip": "{{ env_podstartip }}",
+			"name": "{{env_zone_podname}}",
+			"startip": "{{ env_podstartip }}",
+			"netmask": "{{ env_podmask }}",
 			"clusters": [{
 					"clustername": "{{ env_zone_clustername }}",
 					"hypervisor": "{{ env_hv }}",
@@ -127,7 +127,7 @@
 				}
 
 			],
-			"gateway": "$POD1_GATEWAY"
+			"gateway": "{{ env_podgw }}"
 		}],
 		"internaldns1": "{{ env_zone_intdns1 }}",
 		"secondaryStorages": [{
