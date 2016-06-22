@@ -67,12 +67,6 @@ def_sysvms_up_reties: 100
 
 # Environment database settings
 def_env_db_name: "acstest"
-def_env_db_ip: "10.2.0.3"
-
-# Environment summary
-def_env_zonetype:  "Advanced"
-def_env_prihost: "10.0.1.30"
-def_env_sechost: "10.0.1.30"
 def_env_db_ip: "ENVDBIP"
 
 # Environment summary
