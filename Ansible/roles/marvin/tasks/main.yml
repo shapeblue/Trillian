@@ -63,7 +63,7 @@
   - libffi-devel
   - openssh-askpass
   - jq
-  - mysql-community-client
+  - mariadb
   tags:
     - marvin
 
