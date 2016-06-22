@@ -5,30 +5,19 @@
 # requests new environment details.
 # Usage:
 # envfacts.sh <req|rel> <env_db_ip> <env_db_user> <env_db_password> <env_database name> <env_uuid> <env_name_clean> <env_comment>
-cat $1 > /tmp/args
-
 #####################################################################################
 # Vars
 #
+ARGS="(`cat $1`)"
 
-STR_ARRAY=(`cat $1 | tr " " "\n"`)
-
-
-#DBHOST={{ env_db_ip }}
-#DBUSER={{ env_db_user }}
-#DBPASS={{ env_db_password }}
-#DBNAME={{ env_db_name }}
-#ENV_UUID={{ env_uuid }}
-#ENV_NAME={{ env_name_clean }}
-#ENV_COMMENT='{{ env_comment }}'
-DBHOST=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBUSER=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBPASS=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBNAME=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="DBNAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-ENV_UUID=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_UUID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-ENV_NAME=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_NAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBNAME=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBNAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_UUID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_UUID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_NAME=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_NAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 ENV_COMMENT="not available just now"
-ENV_ACTION=`cat /tmp/args | tr " " "\n"| awk -F= '$1=="ENV_ACTION"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_ACTION=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_ACTION"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 
 MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
 ENVTBL="environments";
