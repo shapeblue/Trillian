@@ -16,15 +16,29 @@
 
 
 - debug: msg="Connecting to Marvin host {{ ansible_ssh_host }}"
+  tags:
+    - marvin
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  tags:
+    - marvin
 
-- name: Now I'm connected, get facts
-  setup:
+#- name: Now I'm connected, get facts
+#  setup:
+#  tags:
+#    - marvin
 
 - name: Install Dev Tools Group
   yum: name="@Development tools" state=installed
+  tags:
+    - marvin
+
+- name: Ensure EPEL is available (centOS7)
+  yum: name="{{ epel7 }}" state=present
+  ignore_errors: true
+  tags:
+    - marvin
 
 - name: Install Other Dependancies
   yum: name={{ item }} state=installed
@@ -48,18 +62,28 @@
   - libxslt-devel
   - libffi-devel
   - openssh-askpass
+  - jq
+  - mysql-community-client
+  tags:
+    - marvin
 
 - name: Install mysql-connector-python
   yum: name=mysql-connector-python state=installed
+  tags:
+    - marvin
 
 - name: Install pip
   easy_install: name=pip
+  tags:
+    - marvin
 
 - name: Update pip and setuptools
   pip: name={{ item }} extra_args='--upgrade'
   with_items:
   - pip
   - setuptools
+  tags:
+    - marvin
 
 - name: install pip security components
   pip: name={{ item }}
@@ -68,18 +92,41 @@
   - pyopenssl
   - pyasn1
   - wget
+  tags:
+    - marvin
 
 - name: Get Marvin files
   get_url: url='https://builds.apache.org/job/cloudstack-marvin/lastSuccessfulBuild/artifact/tools/marvin/dist/*zip*/dist.zip' dest=/tmp
+  tags:
+    - marvin
 
 - name: unpack Marvin files
   unarchive: src=/tmp/dist.zip dest=/tmp copy=no
+  tags:
+    - marvin
 
 - name:
   shell: mv /tmp/dist/Marvin-*.tar.gz /tmp/dist/Marvin.tar.gz
+  tags:
+    - marvin
 
 - name: Install Marvin
   pip: name='file:///tmp/dist/Marvin.tar.gz'
+  tags:
+    - marvin
 
 - name: Install nose
   easy_install: name=nose
+  tags:
+    - marvin
+
+- name: request and return environment
+  action: env_db_manage DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+  tags:
+    - marvin
+
+- name: create mavin cfg file
+  template: src="{{ inventory_dir }}/roles/marvin/templates/advanced-cfg.j2" dest="/tmp/{{ env_name_clean }}-advanced-cfg"
+  tags:
+    - marvin
+

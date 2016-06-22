@@ -1,4 +1,4 @@
----
+﻿---
 
 #Copyright 2016 ShapeBlue
 #
@@ -51,7 +51,7 @@ def_build_keyboard: "uk"
 
 # Global URLs - not copied to granular group_vars
 current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
-epel7: http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm
+epel7: http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm
 epel6: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 vhdutil_url: http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
 
@@ -60,10 +60,13 @@ mgmt: 1
 db: 0
 sec: 1
 build_marvin: no
+wait_till_setup: no
+def_api_retries=25
+def_sysvms_running_reties=100
+def_sysvms_up_reties=100
 
 # Environment database settings
 def_env_db_name: "acstest"
-<<<<<<< HEAD
 def_env_db_ip: "10.2.0.3"
 
 # Environment summary

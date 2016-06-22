@@ -74,6 +74,7 @@
 #   env_sechost: secondary storage host fqdn or IP address
 #   env_zone_systemplate: URL to system template, overrides version variable
 #   build_marvin: whether or not to build a marvin vm for testing purposes (default is false)
+#   wait_till_setup: only return once system VMs are running. (default is false)
 #
 ################################################################################
 

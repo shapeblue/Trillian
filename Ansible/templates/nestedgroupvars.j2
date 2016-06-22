@@ -104,6 +104,7 @@ env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[
 {% elif hvtype[0:1] | lower == "k" %}
 env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }}"
 {% endif %}
+wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
