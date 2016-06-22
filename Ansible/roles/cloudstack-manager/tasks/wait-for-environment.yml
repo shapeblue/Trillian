@@ -1,0 +1,43 @@
+---
+
+- debug: msg="Mgmt UI on {{ inventory_hostname['ansible_ssh_host'] }}{{:}}8080/client "
+
+- name: test for API on 8080
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 25
+  tags:
+    - waitforenv
+
+- name: get wait for state of system VMs to be Running
+  shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="consoleproxy")|.state'
+  register: result
+  until: result.stdout.find("Running") != -1
+  retries: 100
+  tags:
+    - waitforenv
+
+- name: get wait for state of system VMs to be Running
+  shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="secondarystoragevm")|.state'
+  register: result
+  until: result.stdout.find("Running") != -1
+  retries: 100
+  tags:
+    - waitforenv
+
+- name: get wait for state of system VMs to be Up
+  shell: cloudmonkey list hosts type=ConsoleProxy | jq '.host[] | .state'
+  register: result
+  until: result.stdout.find("Up") != -1
+  retries: 100
+  tags:
+    - waitforenv
+
+- name: get wait for state of system VMs to be Up
+  shell: cloudmonkey list hosts type=SecondaryStorageVM | jq '.host[] | .state'
+  register: result
+  until: result.stdout.find("Up") != -1
+  retries: 100
+  tags:
+    - waitforenv

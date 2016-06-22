@@ -28,12 +28,6 @@
     - cloudstack-manager
     - cloudmonkey
 
-- hosts: marvin_host
-  gather_facts: no
-  vars:
-    num_marv_hosts: "{{ groups['marvin_host'] | length }}"
-  roles:
-    - { role: marvin, when: num_marv_hosts | int != 0  }
 
 - hosts: xenserver_hosts
   gather_facts: no
@@ -73,12 +67,15 @@
   roles:
     - cloudstack-config
 
-- hosts: localhost
-  connection: local
+- hosts: marvin_host
   gather_facts: no
   vars:
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
+  roles:
+    - { role: marvin, when: num_marv_hosts | int != 0  }
+
+- hosts: primary_cs_manager
   tasks:
-    - include: ./roles/marvin/tasks/create_marvin_cfg.yml
-      when: "num_marv_hosts | int != 0"
+    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
+      when: wait_till_setup
