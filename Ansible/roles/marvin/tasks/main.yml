@@ -24,13 +24,19 @@
   tags:
     - marvin
 
-- name: Now I'm connected, get facts
-  setup:
-  tags:
-    - marvin
+#- name: Now I'm connected, get facts
+#  setup:
+#  tags:
+#    - marvin
 
 - name: Install Dev Tools Group
   yum: name="@Development tools" state=installed
+  tags:
+    - marvin
+
+- name: Ensure EPEL is available (centOS7)
+  yum: name="{{ epel7 }}" state=present
+  ignore_errors: true
   tags:
     - marvin
 
@@ -56,6 +62,8 @@
   - libxslt-devel
   - libffi-devel
   - openssh-askpass
+  - jq
+  - mysql-community-client
   tags:
     - marvin
 
