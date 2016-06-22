@@ -61,9 +61,9 @@ db: 0
 sec: 1
 build_marvin: no
 wait_till_setup: no
-def_api_retries=25
-def_sysvms_running_reties=100
-def_sysvms_up_reties=100
+def_api_retries: 25
+def_sysvms_running_reties: 100
+def_sysvms_up_reties: 100
 
 # Environment database settings
 def_env_db_name: "acstest"
