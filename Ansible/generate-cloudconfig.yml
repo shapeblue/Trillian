@@ -169,7 +169,7 @@
       when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
 
     - name: Set kvm_os to na when KVM not hypervisor
-      set_fact: kvm_os="na"
+      set_fact: kvm_os="custom"
       when: ( hvtype | lower not in [ "kvm", "k" ] ) 
 
     - name: ensure vmware_ver is specified when hypervisor is v
