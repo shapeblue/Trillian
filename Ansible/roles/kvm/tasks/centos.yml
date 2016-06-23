@@ -50,8 +50,8 @@
     - nano
     - iftop
   tags:
-    - kvm
-    - kvm-agent
+    - common-utils
+    - packages
 
 - include: ./kvm_networking.yml
   tags:
@@ -73,6 +73,31 @@
 
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure the Apache Cloudstack Repo file is configured
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure CloudStack packages are installed
+  yum: name=cloudstack-agent state=present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Bugfix libvirt cpu issue on ACS 4.5 (CLOUDSTACK-8443)
+  shell: sed -i -e '/cgroup\_controllers/d' /usr/lib64/python2.7/site-packages/cloudutils/serviceConfig.py
+  when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: KVM libvirtd restarted
+  service: name=libvirtd state=restarted
   tags:
     - kvm
     - kvm-agent

@@ -16,49 +16,79 @@
 
 
 - name: Install basic utilities and tools
-  apt: pkg={{ item }} state=installed
+  apt: pkg={{ item }} state=installed update_cache=yes
   with_items:
-    - bridge-utils
     - openntpd
     - openssh-client
     - telnet
     - tcpdump
     - traceroute
+    - iptables-persistent
+    - qemu-kvm
 
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
 
 - apt_key: url=https://packages.shapeblue.com/release.asc state=present
 
+- name: Added network instances file
+  template: src=interfaces.j2 dest="/etc/network/interfaces"
+
+- name: UFW firerule 22
+  shell: "ufw allow proto tcp from any to any port 22"
+
+- name: UFW firerule 1798
+  shell: "ufw allow proto tcp from any to any port 1798"
+
+- name: UFW firerule 16509
+  shell: "ufw allow proto tcp from any to any port 16509"
+
+- name: UFW firerule vnc
+  shell: ufw allow proto tcp from any to any port 5900:6100
+
+- name: UFW firerule 49152
+  shell: ufw allow proto tcp from any to any port 49152:49216
+
 - name: Installs cloudstack-agent
   apt: pkg=cloudstack-agent state=installed update_cache=true
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  shell: sed -i -e '/#listen_tls \= 0/ c\listen_tls \= 0' /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp="#listen_tls = 0" line="listen_tls = 0"
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  shell: sed -i -e '/#listen_tcp \= 1/ c\listen_tcp \= 1' /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#listen_tcp = 1' line='listen_tcp = 1'
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  shell: sed -i -e '/#tcp_port \= \"16509\"/ c\tcp_port \= \"16509\"' /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#tcp_port= "16509"' line='tcp_port = "16509"'
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  shell: sed -i -e '/#auth_tcp \= \"sasl\"/ c\auth_tcp \= \"none\"' /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#auth_tcp = "sasl"' line='auth_tcp = "none"'
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  shell: sed -i -e '/#mdns_adv \= 1/ c\mdns_adv \= 0' /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#mdns_adv = 1' line='mdns_adv = 0'
 
 - name: Updated /etc/default/libvirt-bin
-  shell: sed -i -e '/libvirtd\_opts\=\"\-d\"/ c\libvirtd\_opts\=\"\-d\ \-l\"' /etc/default/libvirt-bin
+  lineinfile: dest=/etc/default/libvirt-bin regexp='libvirtd_opts="-d"' line='libvirtd_opts="-d -l"'
 
 - name: update /etc/libvirt/qemu.conf
-  shell: sed -i -e '/\#vnc\_listen \= \"0\.0\.0\.0\"/ c\vnc\_listen \= \"0\.0\.0\.0\"' /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
 
-- name: Added network instances file
-  template: src=interfaces.j2 dest="/etc/network/interfaces"
+- name: Synlink to disable
+  file: src=/etc/apparmor.d/usr.sbin.libvirtd dest=/etc/apparmor.d/disable/usr.sbin.libvirtd state=link
 
-- name: KVM libvirtd restarted
-  service: name=libvirt-bin state=restarted
+- name: Synlink to disable
+  file: src=/etc/apparmor.d/usr.lib.libvirt.virt-aa-helper dest=/etc/apparmor.d/disable/usr.lib.libvirt.virt-aa-helper state=link
 
-- name: KVM network restart
-  service: name=networking state=restarted
+- name: Apparmor parser libvirt
+  shell: apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
+  ignore_errors: yes
+
+- name: Apparmor parser libvirt helper
+  shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
+  ignore_errors: yes
+
+- name: restart machine (Ubuntu networking restart bug #1301015)
+  command: shutdown -r now "Ansible updates triggered"
+  async: 0
+  poll: 0
+  ignore_errors: true

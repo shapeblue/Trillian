@@ -130,7 +130,6 @@ mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_
 
 # KVM
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
-kvm_template: "{{ kvm_template | default( def_kvm_template ) }}"
 {% if kvm_os[0:1] | lower == "6" %}
 {% set kvmosversion = "centos" %}
 {% elif kvm_os[0:1] | lower == "7" %}
@@ -138,12 +137,13 @@ kvm_template: "{{ kvm_template | default( def_kvm_template ) }}"
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% else %}
-{% set kvmosversion = "notapplicable" %}
+{% set kvmosversion = "custom" %}
 {% endif %}
-{% if kvmosversion != "notapplicable" %}
+{% if kvmosversion != "custom" %}
 baseurl_kvm: "{{ baseurl_cloudstack | default( def_baseurl_cloudstack ) }}{{ kvmosversion }}/{{ numversion }}/"
 {% endif %}
 kvm_os: "{{ kvmosversion }}"
+kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_template ) }}"
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
@@ -152,7 +152,7 @@ kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 
 # XS
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
-xs_template: "{{ xs_template | default( def_xs_template ) }}"
+xs_template: "{{ xs_template | default( def_xs_templates[xs_ver].xs_template ) }}"
 xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
 xs_mgmt_network_label: "{{ xs_mgmt_network_label | default( def_xs_mgmt_network_label ) }}"
 xs_guest_network_nic: "{{ xs_guest_network_nic | default( def_xs_guest_network_nic ) }}"
@@ -163,10 +163,10 @@ xs_username: "{{ xs_username | default( def_xs_username ) }}"
 xs_password: "{{ xs_password | default( def_xs_password ) }}"
 
 # VMware
-vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
-vc_template: "{{ vc_template | default( def_vc_template ) }}"
+esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
+vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
-esxi_template: "{{ esxi_template | default( def_esxi_template ) }}"
+vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
 esxi_mgmt_network_label: "{{ esxi_mgmt_network_label | default( def_esxi_mgmt_network_label ) }}"
 esxi_guest_network_label: "{{ esxi_guest_network_label | default( def_esxi_guest_network_label ) }}"
 esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_public_network_label ) }}"

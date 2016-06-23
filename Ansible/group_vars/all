@@ -89,7 +89,7 @@ def_env_zone_addhosts: "true"
 
 # Management server
 def_mgmtsrv_service_offering: "Mgmt Server"
-def_mgmtsrv_template: "CentOS 6.7 Minimal"
+def_mgmtsrv_template: "CentOS 6.8 Minimal"
 def_baseurl_cloudstack: "http://YOURREPOIPHERE/shapeblue/cloudstack/upstream/"
 
 # System templates
@@ -120,7 +120,7 @@ def_mgmt_templates:
 
 # DB servers
 def_dbsrv_service_offering: "Mgmt Server"
-def_dbsrv_template: "CentOS 6.7 Minimal"
+def_dbsrv_template: "CentOS 6.8 Minimal"
 def_envs_dbhost: "ENVDBIP"
 def_db_type: "mysql"
 def_mysql_max_connections: 700
@@ -128,14 +128,30 @@ def_mysql_innodb_buffer_pool_size: 256M
 
 # KVM
 def_kvm_service_offering: "Nested Hypervisor"
-def_kvm_template: "KVM CentOS 6.7"
+def_kvm_templates:
+  centos:
+    kvm_template: "CentOS 6.8 Minimal"
+  centos7:
+    kvm_template: "CentOS 7 (Minimal)"
+  debian:
+    kvm_template: "Ubuntu Server 14.04"
+  custom:
+    kvm_template: "CustomTemplateName"
 def_kvm_mgmt_network_label: "cloudbr0"
 def_kvm_guest_network_label: "cloudbr1"
 def_kvm_public_network_label: "cloudbr1"
 
 # XS
 def_xs_service_offering: "Nested Hypervisor"
-def_xs_template: "XenServer 6.5 SP1"
+def_xenserver_templates:
+  xs62sp1:
+    xs_template: "XenServer 6.2 SP1"
+  xs65sp1:
+    xs_template: "XenServer 6.5 SP1"
+  xs70:
+    xs_template: "XenServer 6.2 SP1" ## need XS 7 template
+  custom:
+    xs_template: "CustomTemplateName"
 def_xs_mgmt_network_nic: "eth0"
 def_xs_mgmt_network_label: "Network0"
 def_xs_guest_network_nic: "eth1"
@@ -144,10 +160,21 @@ def_xs_public_network_nic: "eth1"
 def_xs_public_network_label: "Network1"
 
 # VMware
+def_vmware_templates:
+  55u3:
+    esxi_template: "ESXi 5.5 U3"
+    vc_template: "vCenter55u3"
+  60u2:
+    esxi_template: "ESXi 6.0 U2"
+    vc_template: "vCenter60u2"
+  51u:
+    esxi_template: "ESXi 5.1 U1"
+    vc_template: "vCenter55u3" #fixme
+  custom:
+    vmware_template: "CustomTemplateName"
+    vc_template: "CustomTemplateName"
 def_vc_service_offering: "VC server"
-def_vc_template: "vCenter55u3"
 def_esxi_service_offering: "Nested Hypervisor"
-def_esxi_template: "ESXi 5.5 U3"
 def_esxi_mgmt_network_label: "vSwitch0"
 def_esxi_guest_network_label: "vSwitch1"
 def_esxi_public_network_label: "vSwitch1"

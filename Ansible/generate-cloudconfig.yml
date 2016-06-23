@@ -110,12 +110,6 @@
       private: no
       when: hvtype is undefined
 
-    - name: "kvm_os"
-      prompt: "KVM OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u) / Not Applicable (na)"
-      private: no
-      default: "na"
-      when: kvm_os is undefined
-
     - name: "hv"
       prompt: "Number of hypervisor hosts"
       default: "2"
@@ -161,6 +155,30 @@
     - name: Generate environment tagged project name
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined
+
+    - name: Ensure xs_ver is specified when hypervisor is x
+      fail: msg="xs_ver required when hypervisor is XenServer (x)"
+      when: ( hvtype | lower in [ "xen", "x", "xenserver", xs ] ) and ( xen_ver is undefined )
+
+    - name: Set xs_ver to na when XenServer not hypervisor
+      set_fact: xs_ver="custom"
+      when: ( hvtype | lower not in [ "xen", "x", "xs", "xenserver" ] ) 
+
+    - name: Ensure KVM OS is specified when hypervisor is k
+      fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
+      when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
+
+    - name: Set kvm_os to na when KVM not hypervisor
+      set_fact: kvm_os="na"
+      when: ( hvtype | lower not in [ "kvm", "k" ] ) 
+
+    - name: ensure vmware_ver is specified when hypervisor is v
+      fail: msg="VMware version (vmware_ver) required when nypervisor is VMware (v)"
+      when: hvtype | lower in [ "vmware", "v" ] and  ( vmware_ver is undefined )
+
+    - name: Set vmware_ver to custom when VMware not hypervisor
+      set_fact: vmware_ver="custom"
+      when: ( hvtype | lower not in [ "vmware", "v" ] ) 
 
     - name: Generate commment for environments db
       set_fact: env_comment="Account {{ (acct_retval.stdout|from_json ).account[0].name }} - Project {{ env_name_clean }}"
