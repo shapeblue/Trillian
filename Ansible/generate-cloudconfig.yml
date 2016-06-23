@@ -34,18 +34,37 @@
 #
 # Basic variables:
 #   env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
-#   env_version [mandatory]: Environment CloudStack version (cs45, cs46, custom, etc).
-#   mgmt_os [mandatory]: Management server OS (centos, centos7, ubuntu, custom)
-#   mgmt [optional]: Number of management servers to configur e
-#   db [optional]: Number of database servers to configure
+#   env_version [mandatory]: Environment CloudStack version (cs45, cs46, cs49, custom, etc).
+#   mgmt_os [mandatory]: Management server OS (6, 7, u, custom)
+#   
 #   hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
-#   kvm_os [mandatory]: KVM OS (centos, centos7, ubuntu, na)
-#   hv [optional]: number of hypervisors. Please note if hypervisor type is VMware the assumption is made
-#                  that a single VC host is also required. This does not have to be specified anywhere.
+#   hv: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
+#                  
 #   pri [mandatory]: number of primary storage pools.
-#   sec [mandatory]: number of secondary storage pools.
+#   
+# Required depending on Hypervisor
+# kvm_os:
+# -	6 = centos6.8
+# -	7 = centos7.1
+# -	u = ubuntu14.04
+# xs_ver:
+# -	xs62sp1
+# -	xs65sp1
+# vmware_ver:
+# -	55u3
+# -	60u1
+#
+# When not used they will default to 'custom' to avoid template issues
+#
+# If you specify KVM as hypervisor  (hvtype=k) you must specify the kvm_os OR set it to custom and set the template to use (kvm_template) in the extra vars (kvm_template="Ubuntu Server 14.04")
+# The same applies to the other hypervisor types. For custom VMware you would need to specify both the vCenter and ESXi templates#
+#
+#
 #
 # Advanced variables [all optional]:
+#   mgmt: Number of management servers to configure (default is 1)
+#   sec: number of secondary storage pools. (default is 1)
+#   db: Number of database servers to configure (default is 0 - db is on mgmt host)
 #   management_network: name of the management network
 #   guest_public_network: name of the guest+public network
 #   management_vm_hypervisor: parent CloudStack cloud hypervisor (default VMware)
@@ -73,9 +92,19 @@
 #   env_prihost: primary storage host fqdn or IP address
 #   env_sechost: secondary storage host fqdn or IP address
 #   env_zone_systemplate: URL to system template, overrides version variable
-#   build_marvin: whether or not to build a marvin vm for testing purposes (default is false)
-#   wait_till_setup: only return once system VMs are running. (default is false)
+#   build_marvin: whether or not to build a marvin vm for testing purposes (default is no)
+#   wait_till_setup: only return once system VMs are running. (default is no)
 #
+##
+
+#
+#
+# Some example --extra-args:
+#
+# "env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=yes mgmt_os=6"
+# "env_name=cs49-vmw55-pga env_version=cs49 mgmt_os=6 hvtype=v vmware_ver=55u3 hv=2 pri=2 env_accounts=all build_marvin=yes wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/"
+# "env_name=cs49-kvm6-pga env_version=cs49 mgmt_os=6 env_accounts=all hvtype=k kvm_os=6 hv=2 pri=2 env_accounts=all build_marvin=yes wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/"
+
 ################################################################################
 
 - hosts: localhost
@@ -169,7 +198,7 @@
       when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
 
     - name: Set kvm_os to na when KVM not hypervisor
-      set_fact: kvm_os="na"
+      set_fact: kvm_os="custom"
       when: ( hvtype | lower not in [ "kvm", "k" ] ) 
 
     - name: ensure vmware_ver is specified when hypervisor is v
