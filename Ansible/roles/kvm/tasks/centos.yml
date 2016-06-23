@@ -16,16 +16,25 @@
 
 - name: Ensure prerequisite libselinux-python installed
   yum: name=libselinux-python state=installed
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Ensure EPEL is available (centOS6)
   yum: name="{{ epel6 }}" state=present
   ignore_errors: true
   when: ansible_distribution_major_version == "6"
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Ensure EPEL is available (centOS7)
   yum: name="{{ epel7 }}" state=present
   ignore_errors: true
   when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Install basic utilities and tools
   yum: name={{ item }} state=present
@@ -41,17 +50,29 @@
     - nano
     - iftop
   tags:
-    - common-utils
-    - packages
+    - kvm
+    - kvm-agent
 
 - include: ./kvm_networking.yml
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
+  tags:
+    - kvm
+    - kvm-agent

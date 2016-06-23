@@ -44,7 +44,6 @@
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
   roles:
     - { role: kvm, when: num_kvm_hosts | int != 0 }
-    - { role: kvm-agent, when: num_kvm_hosts | int != 0 }
 
 - hosts: esxi_hosts
   gather_facts: no

@@ -70,7 +70,7 @@ def_env_db_name: "acstest"
 def_env_db_ip: "ENVDBIP"
 
 # Environment summary
-def_env_zonetype:  "Advanced"
+def_env_zonetype: "Advanced"
 def_env_prihost: "YOURNFSIPHERE"
 def_env_sechost: "YOURNFSIPHERE"
 def_env_pripath: "/acs/primary/"
@@ -110,7 +110,7 @@ def_system_templates:
 # Default management VM templates based on management server OS choice
 def_mgmt_templates:
   centos:
-    mgmtsrv_template: "CentOS 6.7 Minimal"
+    mgmtsrv_template: "CentOS 6.8 Minimal"
   centos7:
     mgmtsrv_template: "CentOS 7 (Minimal)"
   debian:
