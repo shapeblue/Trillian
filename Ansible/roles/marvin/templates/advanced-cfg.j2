@@ -1,4 +1,4 @@
-#Copyright 2016 ShapeBlue
+﻿#Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@
 {% if env_hv == "vmware" %}
 		"vmwaredc": {
 			"username": "{{ vmware_vcsa_user }}",
-			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ssh_hostname'] }}",
+			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}",
 			"password": "{{ vmware_vcsa_pass }}",
 			"name": "{{ vmware_datacenter_name }}"
 		},
@@ -110,7 +110,7 @@
 					"clustertype": "CloudManaged",
 {% elif env_hv == "vmware" %}
 					"hosts": [{
-{% for host in groups['vmware_hosts'] %}            {
+{% for host in groups['esxi_hosts'] %}            {
 						"username": "root",
 						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
 						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
