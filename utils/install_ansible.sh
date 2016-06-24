@@ -28,3 +28,11 @@ echo "ansible-playbook $INVDIR/generate-cloudconfig.yml -i $INVDIR/localhost --e
 echo "ansible-playbook $INVDIR/erase-env.yml -i $INVDIR/localhost --extra-vars \"env_name=\$1\"" > /usr/bin/erase-env && chmod 0755 /usr/bin/erase-env
 sed -i "/^library  /c\library        = /usr/share/ansible:$INVDIR/library" $INVDIR/ansible.cfg
 
+echo '!/bin/bash
+
+EXTRAVARS=$1
+ansible-playbook ./generate-cloudconfig.yml -i ./localhost --extra-vars "$EXTRAVARS"
+ENVNAME=`echo ${EXTRAVARS%$env_name=*} | head -n1 | cut -d " " -f1|cut -d "=" -f 2`
+ansible-playbook ./deployvms.yml -i ./hosts_"$ENVNAME"
+' > /usr/bin/build-env
+chmod 0755 /usr/bin/build-env

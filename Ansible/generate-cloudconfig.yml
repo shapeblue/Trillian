@@ -187,7 +187,7 @@
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
-      when: ( hvtype | lower in [ "xen", "x", "xenserver", xs ] ) and ( xen_ver is undefined )
+      when: ( hvtype | lower in [ "xen", "x", "xenserver", "xs" ] ) and ( xen_ver is undefined )
 
     - name: Set xs_ver to na when XenServer not hypervisor
       set_fact: xs_ver="custom"
