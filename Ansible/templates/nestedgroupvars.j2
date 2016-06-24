@@ -152,7 +152,7 @@ kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 
 # XS
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
-xs_template: "{{ xs_template | default( def_xs_templates[xs_ver].xs_template ) }}"
+xs_template: "{{ xs_template | default( def_xenserver_templates[xs_ver].xs_template ) }}"
 xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
 xs_mgmt_network_label: "{{ xs_mgmt_network_label | default( def_xs_mgmt_network_label ) }}"
 xs_guest_network_nic: "{{ xs_guest_network_nic | default( def_xs_guest_network_nic ) }}"

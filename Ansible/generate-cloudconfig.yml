@@ -209,6 +209,8 @@
       set_fact: vmware_ver="custom"
       when: ( hvtype | lower not in [ "vmware", "v" ] ) 
 
+    - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
+
     - name: Generate commment for environments db
       set_fact: env_comment="Account {{ (acct_retval.stdout|from_json ).account[0].name }} - Project {{ env_name_clean }}"
 
