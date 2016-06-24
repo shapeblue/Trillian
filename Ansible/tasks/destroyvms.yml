@@ -20,15 +20,15 @@
 #
 
 - name: allow env to be removed purely from env_name
-  set_fact: force=no
-  when: force is undefined
+  set_fact: forced=no
+  when: forced is undefined
 
 ####################################################################
 # Remove servers
 #
 - name: Set remove action
   set_fact: vm_state="expunged"
-  when: expunge is defined
+  when: expunge is defined or force
 
 - name: remove  hosts
   local_action:
@@ -43,7 +43,7 @@
     - "{{ groups['mysql_hosts'] }}"
     - "{{ groups['cloudstack_manager_hosts'] }}"
   register: remove_retval
-  when: force = no
+  when: forced
 
 - name: Update inventory file - remove server IP addresses
   replace:
@@ -52,14 +52,14 @@
     replace='{{ item.name }}-ip'
     backup=no
   with_items: "{{remove_retval.results}}"
-  when: force = no
+  when: forced
 
 - name: Remove HV IP list from group vars
   lineinfile:
     dest="group_vars/{{ env_name_clean }}"
     regexp="^env_hviplist.*$"
     state=absent
-  when: force = no
+  when: forced == 'no'
 
 ####################################################################
 # Remove environment files
@@ -81,14 +81,14 @@
     module: cs_project
     name: "{{ build_project }}"
     state: absent
-  when: removeproject is defined or when force
+  when: removeproject is defined or forced
 
 ####################################################################
 # Remove Environment IP range
 #
-- name: copy the environment delete script first
-  copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
 
 - name: Environment remove script
   shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }} -n {{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }} -m {{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }} -r '{{ env_pripath }}' -s '{{ env_secpath }}'"
-  when:
+
+- name: copy the environment delete script first
+  copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
