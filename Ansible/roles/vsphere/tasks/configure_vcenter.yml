@@ -19,12 +19,14 @@
 
 - name: replace vmware python module to fix cert checking
   local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.py" force=yes mode=0644
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' 
   tags:
     - vc_config
 
 
 - name: remove compiled vmware.py code
   local_action: file path="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.pyc" state=absent
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - vc_config
 
