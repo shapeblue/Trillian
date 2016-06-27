@@ -24,15 +24,13 @@
 #  shell: esxcli storage filesystem mount -l datastore1
 #  ignore_errors: true
 
-- name: enable jumbo frames for vSwitch0 (raw used for pre 6.0 compatibility)
-  raw: esxcli network vswitch standard set -m 9000 -v vSwitch0
-  ignore_errors: true
+#- name: enable jumbo frames for vSwitch0 (raw used for pre 6.0 compatibility)
+#  raw: esxcli network vswitch standard set -m 9000 -v vSwitch0
+#  ignore_errors: true
 
-
-
-- name: enable jumbo frames for VMKernel on vSwitch0 (raw used for pre 6.0 compatibility)
-  raw: esxcli network ip interface set -m 4500 -i vmk0
-  ignore_errors: true
+#- name: enable jumbo frames for VMKernel on vSwitch0 (raw used for pre 6.0 compatibility)
+#  raw: esxcli network ip interface set -m 1500 -i vmk0
+#  ignore_errors: true
 
 - name: enable vMotion on VMKernel
   raw: vim-cmd hostsvc/vmotion/vnic_set vmk0

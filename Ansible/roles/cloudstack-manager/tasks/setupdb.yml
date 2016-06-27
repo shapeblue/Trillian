@@ -38,6 +38,8 @@
 #  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_vip }}'"
 #  when: ("secondary_cs_manager" in group_names) and ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}")
 
+- include: ./preconfig_globalsettings.yml 
+
 - name: Setup CloudStack Manager (centos/rhel6)
   command: /usr/bin/cloudstack-setup-management
   when: ansible_distribution_major_version == "6"

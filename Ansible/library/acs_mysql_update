@@ -1,0 +1,21 @@
+#!/bin/bash
+
+ARGS="(`cat $1`)"
+
+DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBNAME=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBNAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MySQL_STATEMENT=\(\)#\1#'| cut -d "'" -f 2`
+
+MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+
+RESPONSE=`$MYSQLCOMMAND "$MYSQL_STATEMENT"
+
+cat << EOF
+{
+"ansible_facts": {
+  "reponse": "$RESPONSE"
+ }
+}
+EOF
