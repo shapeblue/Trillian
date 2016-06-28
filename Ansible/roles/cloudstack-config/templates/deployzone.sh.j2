@@ -79,11 +79,6 @@ then
   NetProvArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name!="SecurityGroupProvider") | .id' | tr " " "\n"`;
   IntLBArrayAdv=`cloudmonkey list internalloadbalancerelements filter=name,id | jq '.internalloadbalancerelement[] | .id' | tr " " "\n"`;
   VRArrayAdv=`cloudmonkey list virtualrouterelements filter=name,id | jq '.virtualrouterelement[] | .id' | tr " " "\n"`;
-  for i in ${NetProvArrayAdv};
-  do
-    WriteOutput "Enabling networkserviceprovider ${i}";
-    cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
-  done
   for i in ${IntLBArrayAdv};
   do
     WriteOutput "Enabling internalloadbalancerelements ${i}";
@@ -93,6 +88,11 @@ then
   do
     WriteOutput "Enabling virtualrouterelement ${i}";
     cloudmonkey configure virtualrouterelement enabled='true' id=${i} | tee -i -a ${DEPLOYLOG};
+  done
+  for i in ${NetProvArrayAdv};
+  do
+    WriteOutput "Enabling networkserviceprovider ${i}";
+    cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
   done
   WriteOutput "Creating public range.";
   cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
