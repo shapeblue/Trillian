@@ -167,10 +167,10 @@ cat << EOF
   "env_pubendip": "${env_pubendip}",
   "env_pubmask": "${env_pubmask}",
   "env_pubgw": "${env_pubgw}",
-  "env_pubvlan": "${env_pubvlan}"
- },
-"env_return": "success",
-"env_retmsg": "Networks successfully reserved."
+  "env_pubvlan": "${env_pubvlan}",
+  "env_return": "success",
+  "env_retmsg": "Networks successfully reserved."
+ }
 }
 EOF
 }
@@ -183,8 +183,10 @@ function ReturnFail()
 {
 cat << EOF
 {
+"ansible_facts": {
   "env_return": "error",
   "env_retmsg": "$1"
+}
 }
 EOF
 }
@@ -197,8 +199,10 @@ function ReturnSuccess()
 {
 cat << EOF
 {
+"ansible_facts": {
   "env_return": "success",
   "env_retmsg": "$1"
+}
 }
 EOF
 }

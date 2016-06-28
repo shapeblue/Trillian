@@ -1,0 +1,14 @@
+---
+- name: Create secondary storage mount
+  file: path=/mnt/secstoragetmp state=directory
+
+- name: Mount NFS storage template
+  mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=mounted opts=nolock
+
+- name: Install System VM templates
+  command: /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp -u {{ env_zone_systemplate }} -h {{ env_hv }}
+  ignore_errors: true
+  changed_when: false
+
+- name: Un-mount NFS storage 1 template
+  mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=unmounted

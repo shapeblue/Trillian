@@ -19,14 +19,34 @@
 
 - name: now i'm connected, get facts
   setup:
+  tags:
+    - "global_settings"
 
 # Planning on moving this to the MySQL role
 - name: Ensure MySQL fact module has current user/password [password needs securing]
   template: src="{{ inventory_dir }}/roles/mysql/templates/get_db_facts.j2" dest="{{ inventory_dir }}/library/get_db_facts" mode=0644
   delegate_to: localhost
+  tags:
+    - "global_settings"
+
 
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  tags:
+    - "global_settings"
+
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+  tags:
+    - "global_settings"
+
+- name: "wait for ACS Management Service to come up before appying additional global settings"
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 48
+
+
+- include: ./preconfig_globalsettings.yml 
+

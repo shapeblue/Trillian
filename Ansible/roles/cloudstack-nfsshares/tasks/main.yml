@@ -1,0 +1,26 @@
+---
+- name: Add primary storage shares
+  include: ./addshares.yml
+  vars:
+    nfs_rootpath: "{{ env_pripath }}"
+    nfs_subfolders: "{{ env_pripools }}"
+  when: ( storage_action == "addprimary" ) and ( "primary_storage_hosts" in group_names )
+
+- name: Add secondary storage shares
+  include: ./addshares.yml
+  vars:
+    nfs_rootpath: "{{ env_secpath }}"
+    nfs_subfolders: "{{ env_secpools }}"
+  when: ( storage_action == "addsecondary" ) and ( "secondary_storage_hosts" in group_names )
+
+- name: Remove primary storage
+  include: ./removeshares.yml
+  vars:
+    nfs_rootpath: "{{ env_pripath }}"
+  when: ( storage_action == "removeprimary" ) and ( "primary_storage_hosts" in group_names )
+
+- name: Remove secondary storage
+  include: ./removeshares.yml
+  vars:
+    nfs_rootpath: "{{ env_secpath }}"
+  when: ( storage_action == "removesecondary" ) and ( "secondary_storage_hosts" in group_names )

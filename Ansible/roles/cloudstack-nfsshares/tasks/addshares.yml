@@ -1,0 +1,36 @@
+---
+- name: Report action
+  debug: msg="Storage action {{storage_action}}, folder {{ nfs_rootpath }}{{ env_name_clean }}."
+
+- name: Check if environments folder exists
+  stat: path="{{ nfs_rootpath }}{{ env_name_clean }}"
+  register: pathretval
+
+- name: Report environment path found
+  debug: msg="Storage path {{ nfs_rootpath }}{{ env_name_clean }} found{{":"}} {{ pathretval.stat.exists }}"
+
+- name: Check if fingerprint file exists
+  stat: path="{{ nfs_rootpath }}{{ env_name_clean }}/{{ env_uuid }}"
+  register: fprintretval
+
+- name: Report fingerprint file
+  debug: msg="Fingerprint file {{ nfs_rootpath }}{{ env_name_clean }}/{{ env_uuid }} found{{":"}} {{ fprintretval.stat.exists }}"
+
+- name: Fail if folder exists but is not owned by this environment
+  fail: msg="Folder {{ nfs_rootpath }}{{ env_name_clean }} exists but is owned by a different environment."
+  when: ( pathretval.stat.exists | trim  == "True" ) and ( fprintretval.stat.exists | trim =="False"  )
+
+- block:
+
+  - name: Create environments folder if this doesn't exist
+    file: state=directory path={{ nfs_rootpath }}{{ env_name_clean }} mode=0755
+
+  - name: Create fingerprint file
+    file: path={{ nfs_rootpath }}{{ env_name_clean }}/{{ env_uuid }} state=touch
+
+  when: pathretval.stat.exists | trim  == "False"
+
+- name: Create subfolders
+  file: state=directory path={{ nfs_rootpath }}{{ env_name_clean }}/{{ item }} mode=0755
+  with_items:
+    - "{{ nfs_subfolders }}"

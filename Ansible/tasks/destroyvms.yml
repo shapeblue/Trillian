@@ -61,17 +61,6 @@
     state=absent
   when: forced == 'no'
 
-####################################################################
-# Remove environment files
-#
-- name: Delete inventory files
-  file:
-    path="{{ item }}"
-    state="absent"
-  with_items:
-    - "hosts_{{ env_name_clean }}"
-    - "group_vars/{{ env_name_clean }}"
-  when: removeconfig is defined
 
 ####################################################################
 # Remove project
@@ -87,8 +76,20 @@
 # Remove Environment IP range
 #
 
-- name: Environment remove script
-  shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }} -n {{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }} -m {{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }} -r '{{ env_pripath }}' -s '{{ env_secpath }}'"
+#- name: Environment remove script
+#  shell: "/tmp/{{ env_name_clean }}_enviroment_remove.sh -e {{ env_name_clean }} -n {{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }} -m {{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }} -r '{{ env_pripath }}' -s '{{ env_secpath }}'"
 
-- name: copy the environment delete script first
-  copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
+#- name: copy the environment delete script first
+#  copy: src=templates/enviroment_remove.sh.j2 dest=/tmp/{{ env_name_clean }}_enviroment_remove.sh mode=0744
+####################################################################
+
+# Remove environment files
+#
+- name: Delete inventory files
+  file:
+    path="{{ item }}"
+    state="absent"
+  with_items:
+    - "hosts_{{ env_name_clean }}"
+    - "group_vars/{{ env_name_clean }}"
+  when: removeconfig is defined

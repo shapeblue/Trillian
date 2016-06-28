@@ -14,12 +14,42 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Request and return environment details
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+
+    - name: Check for environments db failure
+      fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
+      when: env_return != "success"
+
+    - name: Update group vars file with environmemt details for reference
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        insertafter="^env_hv.*$"
+        line='{{ item }}'
+      with_items:
+        - "env_pubvlan: \"{{ env_pubvlan }}\""
+        - "env_pubgw: \"{{ env_pubgw }}\""
+        - "env_pubmask: \"{{ env_pubmask }}\""
+        - "env_pubendip: \"{{ env_pubendip }}\""
+        - "env_pubstartip: \"{{ env_pubstartip }}\""
+        - "env_podvlans: \"{{ env_podvlans }}\""
+        - "env_podgw: \"{{ env_podgw }}\""
+        - "env_podmask: \"{{ env_podmask }}\""
+        - "env_podendip: \"{{ env_podendip }}\""
+        - "env_podstartip: \"{{ env_podstartip }}\""
+
+    - name: Build VMs
+      include: ./tasks/deployvms.yml
 
 - hosts: localhost
   connection: local
   gather_facts: no
   tasks:
-    - include: ./tasks/deployvms.yml
+    - include: ./tasks/add_dvfilter.yml
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -28,14 +58,12 @@
     - cloudstack-manager
     - cloudmonkey
 
-
 - hosts: xenserver_hosts
   gather_facts: no
   vars:
     num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
-
 
 - hosts: kvm_hosts
   gather_facts: no
@@ -62,6 +90,16 @@
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
       when: "num_esxi_hosts | int != 0"
 
+- hosts: primary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'addprimary' }
+
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
+
 - hosts: primary_cs_manager
   roles:
     - cloudstack-config
@@ -78,3 +116,15 @@
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
       when: wait_till_setup
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Report all built hosts
+      debug: msg="{{ item }} ansible_ssh_host={{ hostvars[item]['ansible_ssh_host'] | default( '<undefined>' ) }}"
+      with_items:
+        - "{{ groups[ env_name_clean ] }}"
+
+    - name: Report CloudStack URL
+      debug: msg="Nested cloud now available on http{{ "://" }}{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}{{ ":" }}8080/client"

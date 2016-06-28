@@ -1,76 +1,25 @@
-﻿---
+---
+- name: Seed secondary storage
+  include: ./seedstorage.yml
 
-#Copyright 2016 ShapeBlue
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-
-
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
-
-- name: Get facts once connected
-  setup:
-
-- name: Determine primary hypervisor
-  set_fact:
-    iplistgroup: |
-      {%- if env_hv == "vmware" -%}
-      vc_hosts
-      {%- elif env_hv  == "xenserver" -%}
-      xenserver_hosts
-      {%- elif env_hv  == "kvm" -%}
-      kvm_hosts
-      {%- endif -%}
-
-- name: List hypervisor host IP addresses
-  set_fact:
-    iplist: |
-      {%- for item in groups[ iplistgroup | trim ] -%}
-        {{ hostvars[item]['ansible_ssh_host'] }}
-        {%- if not loop.last -%},{%- else -%}{%- endif -%}
-      {%- endfor -%}
-
-- name: Set in memory env_hviplist
-  set_fact: env_hviplist="{{ iplist | trim }}"
+- name: Request and return environment details
+  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
 
 - name: copy the zone create script first
-  copy: src="files/zonecreate_script.sh.j2" dest="/tmp/{{ env_name_clean }}_zone_create.sh" mode=0744
-  tags:
-    - create_zone
+  template: src="../templates/deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
 
 - name: "wait for ACS Management Service to come up"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
-  retries: 24
-  tags:
-    - create_zone
-
-- name: write commands to temp file
-  shell: echo "\"/tmp/{{ env_name_clean }}_zone_create.sh -h {{ env_db_ip }} -u {{ env_db_user }} -p {{ env_db_password }} -d {{ env_db_name }} -z {{ env_name_clean }} -v {{ env_hv }} -k '{{ env_hviplist }}' -n {{ env_zonetype }} -t '{{ env_zone_systemplate }}' -a '{{ env_prihost }}' -b '{{ env_sechost }}' -o {{ env_priprot }} -r '{{ env_pripath }}' -s '{{ env_secpath }}' -c '{{ env_comment }}' > '/tmp/{{ env_name_clean }}_zone_create.log'"\" > /tmp/{{ env_name_clean }}_zone_create.sh 
-  delegate_to: localhost
-  tags:
-    - create_zone
+  retries: 36
 
 - name: Zone create script
-  command: "/tmp/{{ env_name_clean }}_zone_create.sh -h {{ env_db_ip }} -u {{ env_db_user }} -p {{ env_db_password }} -d {{ env_db_name }} -z {{ env_name_clean }} -v {{ env_hv }} -k '{{ env_hviplist }}' -n {{ env_zonetype }} -t '{{ env_zone_systemplate }}' -a '{{ env_prihost }}' -b '{{ env_sechost }}' -o {{ env_priprot }} -r '{{ env_pripath }}' -s '{{ env_secpath }}' -c '{{ env_comment }}'"
-  tags:
-    - create_zone
-
+  shell: /tmp/deployzone.sh
 
 - name: Ensure log directory exists
   local_action: file path="/tmp/trillian_logs" state=directory mode=0755
+  ignore_errors: true
 
 - name: Retrieve log file
-  fetch: src="/tmp/{{ env_name_clean }}_zone_create.log" dest="/tmp/trillian/"
-
+  fetch: src="/tmp/{{ env_name_clean }}-deployzone.log" dest="/tmp/trillian_logs/"

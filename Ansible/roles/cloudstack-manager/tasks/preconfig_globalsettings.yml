@@ -5,5 +5,10 @@
   with_items:
   - "UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
   - "UPDATE cloud.configuration SET value='false' WHERE name='vmware.create.full.clone';"
+  tags:
+    - "global_settings"
+
+- name: restart mgmt service
+  shell: "service cloudstack-management stop && service cloudstack-management stop && service cloudstack-management start"
 
 #### needs fixing to use any dbhost

@@ -46,6 +46,8 @@
   tags:
     - vc_config
 
+
+
 - name: "wait for vCenter API Service to come up"
   shell: "curl --silent -o /dev/null -w '%{http_code}' {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk"
   register: result

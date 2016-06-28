@@ -2,20 +2,18 @@
 
 ARGS="(`cat $1`)"
 
+echo $ARGS > /tmp/args
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBNAME=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBNAME"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MySQL_STATEMENT=\(\)#\1#'| cut -d "'" -f 2`
+DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//' | tr -d "'"`
+MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MYSQL_STATEMENT=\(\)#\1#' | tr -d ')'| sed "s/'\"'\"'/'/g"| tr -d '"' | sed "s/^'//" | sed -e 's/[[:space:]]*$//' | sed s'/.$//'`
+echo $MYSQL_STATEMENT > /tmp/mysql
+mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ "$MYSQL_STATEMENT"
 
-MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+echo "mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ \"$MYSQL_STATEMENT\"" > /tmp/theargs
 
-RESPONSE=`$MYSQLCOMMAND "$MYSQL_STATEMENT"
-
-cat << EOF
-{
+echo '{
 "ansible_facts": {
-  "reponse": "$RESPONSE"
+  "reponse": "Attempted"
  }
-}
-EOF
+}'

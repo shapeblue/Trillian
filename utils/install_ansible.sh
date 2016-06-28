@@ -21,6 +21,7 @@ yum install -y mysql
 yum install -y python-crypto sshpass ansible
 easy_install pip
 pip install pyvmomi
+pip install pysphere
 pip install cs
 
 INVDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../Ansible && pwd )"

@@ -1,6 +1,6 @@
 ---
 
-- debug: msg="Mgmt UI on {{ inventory_hostname['ansible_ssh_host'] }}{{:}}8080/client "
+- debug: msg="Mgmt UI on {{ inventory_hostname['ansible_ssh_host'] }}{{":"}}8080/client "
 
 - name: test for API on 8080
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"

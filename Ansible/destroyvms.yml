@@ -1,22 +1,45 @@
 ---
 
-#Copyright 2016 ShapeBlue
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-
-
 - hosts: localhost
   connection: local
   gather_facts: no
   tasks:
     - include: ./tasks/destroyvms.yml
+
+- hosts: primary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary' }
+
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'removesecondary' }
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Release environment details
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=rel
+
+    - name: Check for environments db failure
+      fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
+      when: env_return != "success"
+
+    - name: Update group vars file - remove environmemt details
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        regexp='{{ item }}'
+        state=absent
+      with_items:
+        - "^env_pubvlan.*$"
+        - "^env_pubgw.*$"
+        - "^env_pubmask.*$"
+        - "^env_pubendip.*$"
+        - "^env_pubstartip.*$"
+        - "^env_podvlans.*$"
+        - "^env_podgw.*$"
+        - "^env_podmask.*$"
+        - "^env_podendip.*$"
+        - "^env_podstartip.*$"

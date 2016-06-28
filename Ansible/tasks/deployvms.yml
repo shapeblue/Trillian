@@ -263,6 +263,22 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{kvm_retval.results}}"
 
+- name: Update inventory file with ESXi host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{kvm_retval.results}}"
+
+- name: Update in memory inventory with ESXi host instance names
+  add_host:
+    name={{ item.name }}
+    groups="kvm_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{kvm_retval.results}}"
+
+
 ####################################################################
 # XenServer hosts
 #
@@ -302,6 +318,22 @@
     groups="xenserver_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{xs_retval.results}}"
+
+- name: Update inventory file with ESXi host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{xs_retval.results}}"
+
+- name: Update in memory inventory with ESXi host instance names
+  add_host:
+    name={{ item.name }}
+    groups="xenserver_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{xs_retval.results}}"
+
 
 ####################################################################
 # VMware ESXi hosts
@@ -343,6 +375,22 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{esxi_retval.results}}"
 
+- name: Update inventory file with ESXi host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{esxi_retval.results}}"
+
+- name: Update in memory inventory with ESXi host instance names
+  add_host:
+    name={{ item.name }}
+    groups="esxi_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{esxi_retval.results}}"
+
+
 ####################################################################
 # VMware VC hosts
 #
@@ -381,6 +429,7 @@
     groups="vc_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{vc_retval.results}}"
+
 
 ####################################################################
 # Marvin Server
