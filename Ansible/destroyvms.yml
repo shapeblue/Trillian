@@ -43,3 +43,12 @@
         - "^env_podmask.*$"
         - "^env_podendip.*$"
         - "^env_podstartip.*$"
+
+    - name: Delete inventory files
+      file:
+        path="{{ item }}"
+        state="absent"
+      with_items:
+        - "hosts_{{ env_name_clean }}"
+        - "group_vars/{{ env_name_clean }}"
+      when: removeconfig is defined
