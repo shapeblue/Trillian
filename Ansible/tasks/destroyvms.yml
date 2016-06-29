@@ -68,7 +68,7 @@
     module: cs_project
     name: "{{ build_project }}"
     state: absent
-  when: removeproject is defined or forced
+  when: removeproject is defined
 
 ####################################################################
 
