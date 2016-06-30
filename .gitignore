@@ -1,0 +1,6 @@
+cloudstack.ini
+*.retry
+*.pyc
+Ansible/group_vars/*
+!Ansible/group_vars/all.sample
+Ansible/hosts_*
