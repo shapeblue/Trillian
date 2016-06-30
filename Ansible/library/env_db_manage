@@ -36,7 +36,7 @@ function QueryID()
 {
   local id
 
-  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is NULL"`
   if [ -z ${id} ];
   then
     envid="notfound";
@@ -55,7 +55,7 @@ function RequestID()
   local id
   # No locking required, simple insert
   ${MYSQLCOMMAND} "INSERT INTO ${DBNAME}.${ENVTBL} (name, envuuid, comment, created) VALUES ('${ENV_NAME}', '${ENV_UUID}', '${ENV_COMMENT}', now())";
-  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is NULL"`
   envid=${id}
 }
 
@@ -67,10 +67,10 @@ function ReleaseID()
 {
   local id
 
-  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is null"`
+  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is NULL"`
   if ! [ -z ${id} ];
   then
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${ENVTBL} set removed=now() where envuuid='${ENV_UUID}' and removed is null";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${ENVTBL} set removed=now() where envuuid='${ENV_UUID}' and removed is NULL";
   fi
 }
 
@@ -88,7 +88,7 @@ function RequestPodNet()
   podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
   if [ -z ${podnetid} ];
   then # no existing found, request new
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=null WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL WHERE inuse='FALSE' limit 1";
     # Check if update made
     podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     if [ -z ${podnetid} ];
@@ -112,8 +112,8 @@ function RequestPodNet()
 #
 function ReleaseNetworks()
 {
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=null, updated=now(), removed=now() WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=null, updated=now(), removed=now() WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now() WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now() WHERE envid='${envid}'";
 }
 
 ################################################################################
@@ -130,7 +130,7 @@ function RequestPubNet()
   pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
   if [ -z ${pubnetid} ];
   then #no existing found, request new
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=null WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL WHERE inuse='FALSE' limit 1";
     # Check if update made
     pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     if [ -z ${pubnetid} ];
