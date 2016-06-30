@@ -13,28 +13,31 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
+# Copyright (C) ShapeBlue Ltd - All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential
+# Released by ShapeBlue <info@shapeblue.com>, April 2014
 
 - name: Ensure prerequisite libselinux-python installed
   yum: name=libselinux-python state=installed
   tags:
     - kvm
-    - kvm-agent
 
-- name: Ensure EPEL is available (centOS6)
-  yum: name="{{ epel6 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "6"
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
   tags:
     - kvm
-    - kvm-agent
-
-- name: Ensure EPEL is available (centOS7)
-  yum: name="{{ epel7 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "7"
+  
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
   tags:
     - kvm
-    - kvm-agent
+
+- name: Ensure EPEL is available
+  yum: name="{{ current_epel }}" state=present
+  tags:
+    - kvm
 
 - name: Install basic utilities and tools
   yum: name={{ item }} state=present
@@ -50,32 +53,9 @@
     - nano
     - iftop
   tags:
-    - common-utils
-    - packages
+    - kvm
 
 - include: ./kvm_networking.yml
-  tags:
-    - kvm
-    - kvm-agent
-
-- name: Ensure selinux python bindings are installed
-  yum: name=libselinux-python state=present
-  tags:
-    - kvm
-    - kvm-agent
-
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-  tags:
-    - kvm
-    - kvm-agent
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
-  tags:
-    - kvm
-    - kvm-agent
 
 - name: Ensure the Apache Cloudstack Repo file is configured
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
@@ -89,9 +69,51 @@
     - kvm
     - kvm-agent
 
+- name: Update libvirtd.conf - listen_tls
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
+  with_items:
+    - { regexp: "^listen_tls", line: "listen_tls = 0" }
+    - { regexp: "^listen_tcp", line: "listen_tcp = 1" }
+    - { regexp: "^tcp_port", line: "tcp_port = \"16509\"" }
+    - { regexp: "^auth_tcp", line: "auth_tcp = \"none\"" }
+    - { regexp: "^mdns_adv", line: "mdns_adv = 0" }
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp=^LIBVIRTD_ARGS line='LIBVIRTD_ARGS="--listen"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Update /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp=^vnc_listen line='vnc_listen = "0.0.0.0"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
 - name: Bugfix libvirt cpu issue on ACS 4.5 (CLOUDSTACK-8443)
   shell: sed -i -e '/cgroup\_controllers/d' /usr/lib64/python2.7/site-packages/cloudutils/serviceConfig.py
   when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Add iptables rules
+  shell: "iptables -I INPUT -p tcp -m tcp --dport {{ item }} -j ACCEPT"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900:6100"
+    - "49152:49216"
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: IPtables save config
+  shell: "iptables-save > /etc/sysconfig/iptables"
   tags:
     - kvm
     - kvm-agent
