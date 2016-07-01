@@ -13,15 +13,20 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
+ARGS="(`cat $1`)"
+
+DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 
 
 rm -f /tmp/ansi_mgmt_ip_file
-master_status=`mysql -pP@ssword123 -e \ "show master status;"`
+master_status=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "show master status;"`
 master_file=`echo $master_status | awk -F ' ' '{print $5}'`
 master_pos=`echo $master_status | awk -F ' ' '{print $6}'`
-clouddb_test=`mysql -pP@ssword123 -e \ "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'cloud';"`
+clouddb_test=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'cloud';"`
 if [[ -n $clouddb_test ]]; then
-	registered_mgmt_servers=`mysql -pP@ssword123 -e \ "SELECT service_ip FROM cloud.mshost where removed is null;" | grep -vE service_ip`
+	registered_mgmt_servers=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT service_ip FROM cloud.mshost where removed is null;" | grep -vE service_ip`
 else
 	registered_mgmt_servers=""
 fi

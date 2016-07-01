@@ -14,8 +14,16 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: determine number of db hosts
+  set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+
+- name: set mysql_master_ip
+  set_fact: mysql_master_ip="{{ (num_db_hosts == 0) | ternary("hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host']","hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host']") }}"
+
+- debug: msg="MySQL Master IP is {{ mysql_master_ip }}"
+
 - name: Get MySQL status
-  action: get_db_facts
+  get_db_facts: DBHOST="{{ mysql_master_ip }}" DBUSER="root" DBPASSWORD="{{ mysql_root_password }}"
   tags:
     - setup_db
 
@@ -30,7 +38,7 @@
     - setup_db
 
 - name: Refresh Mysql status
-  action: get_db_facts
+  get_db_facts: DBHOST="{{ mysql_master_ip }}" DBUSER="root" DBPASSWORD="{{ mysql_root_password }}"
   tags:
     - setup_db
   

@@ -1,7 +1,7 @@
 ---
 
 - name: preset some global settings
-  acs_mysql_update: DBHOST=localhost DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT={{ item }}
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT={{ item }}
   with_items:
   - "UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
   - "UPDATE cloud.configuration SET value='false' WHERE name='vmware.create.full.clone';"

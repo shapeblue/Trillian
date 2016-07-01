@@ -89,23 +89,6 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{mgmtsrv1_retval.results}}"
 
-- name: Update inventory file with first management server IP addresses for mysql if no db hosts
-  replace:
-    dest="hosts_{{ env_name_clean }}"
-    regexp='mysql_ip_placeholder'
-    replace='{{ item.default_ip }}'
-    backup=no
-  with_items: "{{mgmtsrv1_retval.results}}"
-  when: (num_db_hosts | int == 0)
-
-- name: Update in memory inventory with first management server IP addresses for mysql if no db hosts
-  add_host:
-    name={{ item.name }}
-    groups="primary_cs_manager"
-    mysql_master_ip={{ item.default_ip }}
-  with_items: "{{mgmtsrv1_retval.results}}"
-
-
 ####################################################################
 # Additional management servers
 #
