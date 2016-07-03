@@ -21,13 +21,11 @@
 - name: now i'm connected, get facts
   setup:
 
-# Planning on moving this to the MySQL role
-- name: Ensure MySQL fact module has current user/password [password needs securing]
-  template: src="{{ inventory_dir }}/roles/mysql/templates/get_db_facts.j2" dest="{{ inventory_dir }}/library/get_db_facts" mode=0644
-  delegate_to: localhost
-
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+
+- include: ./mysql_replication.yml
+  when: num_db_hosts > 1
