@@ -1,6 +1,0 @@
----
-
-- hosts: localhost
-  gather_facts: no
-  tasks:
-  - include: ./tasks/add_dvfilter.yml
