@@ -16,46 +16,50 @@
 
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+  delegate_to: "{{ groups['mysql_master_host'][0] }}"
+
+- debug: msg="{{ hostvars[groups['mysql_master_host'][0]]['num_db_hosts'] }}"
+  delegate_to: "{{ groups['mysql_master_host'][0] }}"
 
 - name: set mysql_master_ip
-  set_fact: mysql_master_ip="{{ (num_db_hosts == 0) | ternary("hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host']","hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host']") }}"
+  set_fact: mysql_master_ip={{ (hostvars[groups['mysql_master_host'][0]]['num_db_hosts'] | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
+  delegate_to: "{{ groups['mysql_master_host'][0] }}"
+
+- debug: msg="Master MYSQLIP is {{ mysql_master_ip }}"
+  delegate_to: "{{ groups['mysql_master_host'][0] }}"
 
 - name: get master status
   get_db_facts: DBHOST="{{ mysql_master_ip }}" DBUSER="root" DBPASSWORD="{{ mysql_root_password }}"
-  delegate_to: "{{ item }}"
-  with_items:
-    - "{{ groups['mysql_master_host'] }}"
+#  delegate_to: "{{ groups['mysql_master_host'][0] }}"
 
 - name: stop slave replication
   mysql_replication: mode=stopslave login_user=root login_password={{ mysql_root_password }}
-  when: ("mysql_slave_host" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}" == "no")
   
-- name: Grant slave access privileges
-  mysql_user: login_user=root login_password={{ mysql_root_password }} user=replication_user host={{ groups['mysql_slave_host'][0] }} password={{ mysql_replication_password }} priv=*.*:"REPLICATION SLAVE" state=present
-  delegate_to: "{{ item }}"
-  with_items:
-    - "{{ groups['mysql_master_host'] }}"
+- name: Grant access privileges on Master to Slaves
+  mysql_user: login_user="root" login_password="{{ mysql_root_password }}" user="replication_user" host="{{ hostvars[item]['ansible_ssh_host'] }}" password="{{ mysql_replication_password }}" priv="*.*:REPLICATION SLAVE" state=present
+  when: ("mysql_master_host" in group_names)
+  with_items: 
+    - "{{ groups['mysql_slave_hosts'] }}"
 
 - name: Setup Replication on slave using gathered information
-  mysql_replication: mode=changemaster master_host={{ groups['mysql_master_host'][0] }} master_log_file={{ master_file }} master_log_pos={{ master_pos }} master_user=replication_user master_password={{ mysql_replication_password }} login_user=root login_password={{ mysql_root_password }}
-  delegate_to: "{{ item }}"
-  with_items:
-    - "{{ groups['mysql_slave_host'] }}"
-  when: ("{{ cloudbd_exists }}"  == "no")
+  mysql_replication: mode=changemaster master_host={{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }} master_log_file={{ master_file }} master_log_pos={{ master_pos }} master_user=replication_user master_password={{ mysql_replication_password }} login_user=root login_password={{ mysql_root_password }}
+  when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}"  == "no")
   
 - name: Start Slave
   mysql_replication: mode=startslave login_user=root login_password={{ mysql_root_password }}
-  delegate_to: "{{ item }}"
-  with_items:
-    - "{{ groups['mysql_slave_host'] }}"
-  when: ("{{ cloudbd_exists }}"  == "no")
+  when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}"  == "no")
   
 - name: Show Master Status
   mysql_replication: mode=getmaster login_user=root login_password={{ mysql_root_password }}
-  when: ("mysql_slave_host" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  when: ("mysql_master_host" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  register: masterstatus
+
+- debug: msg="Master status is {{ masterstatus }}"
 
 - name: Show Slave Status
   mysql_replication: mode=getslave login_user=root login_password={{ mysql_root_password }}
-  when: ("mysql_slave_host" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}" == "no")
+  register: slavestatus
 
-
+- debug: msg="Slave status is {{ slavestatus }}"
