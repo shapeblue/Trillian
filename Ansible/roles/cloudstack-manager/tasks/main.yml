@@ -22,19 +22,10 @@
   tags:
     - "global_settings"
 
-# Planning on moving this to the MySQL role
-- name: Ensure MySQL fact module has current user/password [password needs securing]
-  template: src="{{ inventory_dir }}/roles/mysql/templates/get_db_facts.j2" dest="{{ inventory_dir }}/library/get_db_facts" mode=0644
-  delegate_to: localhost
-  tags:
-    - "global_settings"
-
-
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - "global_settings"
-
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'

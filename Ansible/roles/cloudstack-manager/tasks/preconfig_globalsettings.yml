@@ -1,7 +1,14 @@
 ---
 
+- name: determine number of db hosts
+  set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+
+- name: set mysql_master_ip
+  set_fact: mysql_master_ip={{ (num_db_hosts | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
+
+
 - name: preset some global settings
-  acs_mysql_update: DBHOST=localhost DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT={{ item }}
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT={{ item }}
   with_items:
   - "UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
   - "UPDATE cloud.configuration SET value='false' WHERE name='vmware.create.full.clone';"

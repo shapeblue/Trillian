@@ -15,11 +15,9 @@
 
 
 [mysqld]
-{% if '{{ db_type }}' == 'mysql-masterslave' %}
+{% if inventory_hostname in groups["mysql_hosts"] %}
 server-id={{ hostvars[inventory_hostname]['serverid'] }}
 {% endif %}
-
-
 datadir=/var/lib/mysql
 max_connections={{ mysql_max_connections }}
 skip_name_resolve

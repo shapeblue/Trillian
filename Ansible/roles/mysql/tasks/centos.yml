@@ -19,6 +19,8 @@
 
 - name: now i'm connected, get facts
   setup:
+  tags:
+    - mysqlconf
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   yum: name=libselinux-python state=present
@@ -51,6 +53,8 @@
 - name: replace MySQL my.cnf using Template (centos/rhel6)
   action: template src=my.cnf.j2 dest=/etc/my.cnf
   when: ansible_distribution_major_version == "6"
+  tags:
+    - mysqlconf
 
 - name: replace MySQL my.cnf using Template (centos/rhel7)
   action: template src=mariadb-my.cnf.j2 dest=/etc/my.cnf

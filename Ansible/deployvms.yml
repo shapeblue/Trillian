@@ -51,10 +51,19 @@
   tasks:
     - include: ./tasks/add_dvfilter.yml
 
+- hosts: mysql_hosts
+  gather_facts: no
+  vars:
+    num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
+  roles:
+    - { role: mysql, when: num_db_hosts | int != 0 }
+
 - hosts: cloudstack_manager_hosts
   gather_facts: no
+  vars:
+    num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - mysql
+    - { role: mysql, when: num_db_hosts | int == 0 }
     - cloudstack-manager
     - cloudmonkey
 

@@ -30,7 +30,7 @@
   set_fact: vm_state="expunged"
   when: expunge is defined
 
-- name: remove  hosts
+- name: Destroy hosts in project {{ env_name_clean }}
   local_action:
     module: cs_instance
     name: "{{ item }}"
