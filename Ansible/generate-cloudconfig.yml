@@ -181,11 +181,11 @@
 
     - name: Check that xs_ver is recognised
       fail: msg="xs_ver {{ xs_ver }} is not recognised"
-      when: xs_ver not in def_system_templates
+      when: xs_ver not in def_xenserver_templates
 
     - name: Check that vmware_ver is recognised
       fail: msg="vmware_ver {{ vmware_ver }} is not recognised"
-      when: vmware_ver not in def_system_templates
+      when: vmware_ver not in def_vmware_templates
 
 ## KVM check required - a bit more complicated
 
