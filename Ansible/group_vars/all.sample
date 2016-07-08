@@ -1,0 +1,193 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+################################################################################
+# Sensitive / Vault vars - move to vault in secure environments
+def_env_db_user: "root"
+def_env_db_password: "YOURPASSWORDHERE"
+def_mgmtsrv_username: "root"
+def_mgmtsrv_password: "YOURPASSWORDHERE"
+def_pri_username: "root"
+def_pri_password: "YOURPASSWORDHERE"
+def_sec_username: "root"
+def_sec_password: "YOURPASSWORDHERE"
+def_dbsrv_username: "root"
+def_dbsrv_password: "YOURPASSWORDHERE"
+def_mysql_root_password: "YOURPASSWORDHERE"
+def_mysql_cloud_password: 'YOURPASSWORDHERE'
+def_mysql_replication_password: YOURPASSWORDHERE
+def_old_mysql_root_password: ""
+def_marvin_username: "root"
+def_marvin_password: "YOURPASSWORDHERE"
+def_kvm_username: "root"
+def_kvm_password: "YOURPASSWORDHERE"
+def_xs_username: "root"
+def_xs_password: "YOURPASSWORDHERE"
+def_vmware_vcsa_user: "Administrator@vsphere.local"
+def_vmware_vcsa_pass: "YOURPASSWORDHERE"
+def_vmware_esxi_username: "root"
+def_vmware_esxi_password: "YOURPASSWORDHERE"
+
+################################################################################
+# Environment vars
+def_management_network: "Shared Mgmt Network"
+def_guest_public_network: "Nested Trunked Network"
+def_management_vm_hypervisor: "VMware"
+def_build_zone: "SBC2Zone1"
+def_build_keyboard: "uk"
+parent_vcenter_dc: "SBCloud2-SW19"
+
+# Global URLs - not copied to granular group_vars
+current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+epel7: http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm
+epel6: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+vhdutil_url: http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
+
+# Defaults for generate-config:
+mgmt: 1
+db: 0
+sec: 1
+build_marvin: no
+wait_till_setup: no
+def_api_retries: 25
+def_sysvms_running_reties: 100
+def_sysvms_up_reties: 100
+destroy_forced: no
+def_env_uuid: unknown
+
+# Environment database settings
+def_env_db_name: "acstest"
+def_env_db_ip: "ENVDBIP"
+
+# Environment summary
+def_env_zonetype: "Advanced"
+def_env_prihost: "YOURNFSIPHERE"
+def_env_sechost: "YOURNFSIPHERE"
+def_env_pripath: "/acs/primary/"
+def_env_priprot: "NFS"
+def_env_secpath: "/acs/secondary/"
+def_env_zone_secgroups: "false"
+def_env_zone_guestcidr: "10.1.1.0/24"
+def_env_zone_dns1: "8.8.8.8"
+def_env_zone_dns2: "8.8.4.4"
+def_env_zone_intdns1: "8.8.8.8"
+def_env_zone_intdns2: "8.8.4.4"
+def_env_zone_localstorage: "false"
+def_env_zone_podname: "Pod1"
+def_env_zone_clustername: "p1-c1"
+def_env_zone_addhosts: "true"
+
+# Management server
+def_mgmtsrv_service_offering: "Mgmt Server"
+def_mgmtsrv_template: "CentOS 6.8 Minimal"
+def_baseurl_cloudstack: "http://YOURREPOIPHERE/shapeblue/cloudstack/upstream/"
+
+# System templates
+def_system_templates:
+  cs45:
+    kvm_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
+    xs_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
+    vmware_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
+  cs46:
+    kvm_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://YOURREPOIPHERE/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+  custom:
+    kvm_url: "KVMCustomURL"
+    xs_url: "XSCustomURL"
+    vmware_url: "VMwareCustomURL"
+
+# Default management VM templates based on management server OS choice
+def_mgmt_templates:
+  centos:
+    mgmtsrv_template: "CentOS 6.8 Minimal"
+  centos7:
+    mgmtsrv_template: "CentOS 7 (Minimal)"
+  debian:
+    mgmtsrv_template: "Ubuntu Server 14.04"
+  custom:
+    mgmtsrv_template: "CustomTemplateName"
+
+# DB servers
+def_dbsrv_service_offering: "Mgmt Server"
+def_dbsrv_template: "CentOS 6.8 Minimal"
+def_envs_dbhost: "ENVDBIP"
+def_db_type: "mysql"
+def_mysql_max_connections: 700
+def_mysql_innodb_buffer_pool_size: 256M
+
+# KVM
+def_kvm_service_offering: "Nested Hypervisor"
+def_kvm_templates:
+  centos:
+    kvm_template: "CentOS 6.8 Minimal"
+  centos7:
+    kvm_template: "CentOS 7 (Minimal)"
+  debian:
+    kvm_template: "Ubuntu Server 14.04"
+  custom:
+    kvm_template: "CustomTemplateName"
+def_kvm_mgmt_network_label: "cloudbr0"
+def_kvm_guest_network_label: "cloudbr1"
+def_kvm_public_network_label: "cloudbr1"
+
+# XS
+def_xs_service_offering: "Nested Hypervisor"
+def_xenserver_templates:
+  xs62sp1:
+    xs_template: "XenServer 6.2 SP1"
+  xs65sp1:
+    xs_template: "XenServer 6.5 SP1"
+  xs70:
+    xs_template: "XenServer 6.2 SP1" ## need XS 7 template
+  custom:
+    xs_template: "CustomTemplateName"
+def_xs_mgmt_network_nic: "eth0"
+def_xs_mgmt_network_label: "Network0"
+def_xs_guest_network_nic: "eth1"
+def_xs_guest_network_label: "Network1"
+def_xs_public_network_nic: "eth1"
+def_xs_public_network_label: "Network1"
+
+# VMware
+def_vmware_templates:
+  55u3:
+    esxi_template: "ESXi 5.5 U3"
+    vc_template: "vCenter55u3"
+  60u2:
+    esxi_template: "ESXi 6.0 U2"
+    vc_template: "vCenter60u2"
+  51u:
+    esxi_template: "ESXi 5.1 U1"
+    vc_template: "vCenter55u3" #fixme
+  custom:
+    vmware_template: "CustomTemplateName"
+    vc_template: "CustomTemplateName"
+def_vc_service_offering: "VC server"
+def_esxi_service_offering: "Nested Hypervisor"
+def_esxi_mgmt_network_label: "vSwitch0"
+def_esxi_guest_network_label: "vSwitch1"
+def_esxi_public_network_label: "vSwitch1"
+
+# VMware datacentre configuration
+def_vmware_datacenter_name: "SBCLOUD"
+def_vmware_cluster_name: "vSphereCluster1"
+
+# Marvin server
+def_marvin_service_offering: "Mgmt Server"
+def_marvin_server_template: "CentOS 7 (Minimal)"
+def_marvin_tests_source: "github"
+def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
