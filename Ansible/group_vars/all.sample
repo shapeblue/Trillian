@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -48,6 +48,7 @@ def_guest_public_network: "Nested Trunked Network"
 def_management_vm_hypervisor: "VMware"
 def_build_zone: "SBC2Zone1"
 def_build_keyboard: "uk"
+parent_vcenter_dc: "SBCloud2-SW19"
 
 # Global URLs - not copied to granular group_vars
 current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
@@ -64,6 +65,8 @@ wait_till_setup: no
 def_api_retries: 25
 def_sysvms_running_reties: 100
 def_sysvms_up_reties: 100
+destroy_forced: no
+def_env_uuid: unknown
 
 # Environment database settings
 def_env_db_name: "acstest"
@@ -186,3 +189,5 @@ def_vmware_cluster_name: "vSphereCluster1"
 # Marvin server
 def_marvin_service_offering: "Mgmt Server"
 def_marvin_server_template: "CentOS 7 (Minimal)"
+def_marvin_tests_source: "github"
+def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
