@@ -3,23 +3,41 @@
   include: ./seedstorage.yml
 
 - name: Request and return environment details
-  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ACTION=retrieve
+  register: env_ranges
+  tags:
+    - buildzone
+  
+- debug: msg="{{ env_ranges }}"
+  tags:
+    - buildzone
 
 - name: Copy Cloudmonkey zone create script to mgmt server
   template: src="../templates/deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
+  tags:
+    - buildzone
 
 - name: "wait for ACS Management Service to come up"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
   retries: 36
+  tags:
+    - buildzone
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh
+  tags:
+    - buildzone
 
 - name: Ensure local log directory exists
   local_action: file path="/tmp/trillian_logs" state=directory mode=0755
   ignore_errors: true
+  tags:
+    - buildzone
 
 - name: Retrieve log file from mgmt server
   fetch: src="/tmp/{{ env_name_clean }}-deployzone.log" dest="/tmp/trillian_logs/"
+  tags:
+    - buildzone
+

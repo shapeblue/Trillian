@@ -179,6 +179,16 @@
       fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
       when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
 
+    - name: Check that xs_ver is recognised
+      fail: msg="xs_ver {{ xs_ver }} is not recognised"
+      when: xs_ver not in def_system_templates
+
+    - name: Check that vmware_ver is recognised
+      fail: msg="vmware_ver {{ vmware_ver }} is not recognised"
+      when: vmware_ver not in def_system_templates
+
+## KVM check required - a bit more complicated
+
     - name: Check if inventory file exists
       stat: path=./hosts_{{ env_name_clean }}
       register: inv_exists
@@ -191,14 +201,20 @@
       fail: msg="Environment already exists, please remove or use different environment name."
       when: inv_exists.stat.exists or vars_exists.stat.exists
 
-# now do stuff
-
-
     - name: Sanitise environment name
       set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
 
-    - name: Return sanitised environment name
-      debug: msg="Utilised environment name is {{ env_name_clean }}"
+    - name: Check Environment DB
+      env_db_manage: DBHOST={{ def_env_db_ip }} DBUSER={{ def_env_db_user }} DBPASS={{ def_env_db_password }} DBNAME={{ def_env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=check
+      register: dbcheck
+
+    - name: Fail if environment name exists
+      fail: msg="{{ env_retmsg }}"
+      when: env_return == "error"
+
+    - debug: msg="{{ dbcheck }}"
+
+# now do stuff
 
     - name: Capture account name
       shell: cs listAccounts

@@ -1,0 +1,11 @@
+---
+
+- name: Fail if env_name_clean is blank
+  fail: msg="env_name_clean is blank - bailing as this is VERY DANGEROUS."
+  when: {{ env_name_clean }} | length = 0
+
+- name: Delete environments folder
+  file: state=absent path={{ def_env_pripath }}{{ env_name_clean }}
+
+- name: Delete environments folder
+  file: state=absent path={{ def_env_secpath }}{{ env_name_clean }}
