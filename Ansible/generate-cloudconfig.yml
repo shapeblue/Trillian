@@ -179,6 +179,20 @@
       fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
       when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
 
+    - name: Set xs_ver to custom when XenServer not hypervisor
+      set_fact: xs_ver="custom"
+      when: ( hvtype | lower not in [ "xen", "x", "xs", "xenserver" ] ) 
+
+    - name: Set kvm_os to custom when KVM not hypervisor
+      set_fact: kvm_os="custom"
+      when: ( hvtype | lower not in [ "kvm", "k" ] ) 
+
+    - name: Set vmware_ver to custom when VMware not hypervisor
+      set_fact: vmware_ver="custom"
+      when: ( hvtype | lower not in [ "vmware", "v" ] ) 
+
+    - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
+
     - name: Check that xs_ver is recognised
       fail: msg="xs_ver {{ xs_ver }} is not recognised"
       when: xs_ver not in def_xenserver_templates
