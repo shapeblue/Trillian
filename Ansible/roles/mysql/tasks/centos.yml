@@ -73,9 +73,9 @@
 - include: ./secure_mysql.yml
 
 - name: Ensure Firewall Rules are in place for MySQL
-  lineinfile: dest=/etc/sysconfig/iptables insertafter=":OUTPUT" line="-A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT"
+  shell: "iptables -I INPUT -p tcp -m tcp --dport 3306 -j ACCEPT"
   when: ansible_distribution_major_version == "6"
 
-- name: restart iptables
-  service: name=iptables state=restarted
+- name: IPtables save config
+  shell: "iptables-save > /etc/sysconfig/iptables"
   when: ansible_distribution_major_version == "6"
