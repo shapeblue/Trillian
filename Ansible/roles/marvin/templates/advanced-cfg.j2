@@ -1,4 +1,4 @@
-﻿#Copyright 2016 ShapeBlue
+#Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -118,12 +118,12 @@
 					],
 					"clustertype": "CloudManaged",
 {% endif %}
-					"primaryStorages": [{
-{% for pripool in env_pripools %}
+					"primaryStorages": [
+{% for pripool in env_pripools %}			{
 						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
-						"name": "{{ pripool }}"
+						"name": "{{ pripool }}"}{% if not loop.last %},{% endif %}
 {% endfor %}
-					}]
+					]
 				}
 
 			],

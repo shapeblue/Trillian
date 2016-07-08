@@ -77,5 +77,13 @@
   yum: name=http://pkgs.repoforge.org/sshpass/sshpass-1.05-1.el6.rf.x86_64.rpm state=present
   when: ansible_distribution_major_version == "6"
 
+- name: Open 8096 when Marvin is required
+  shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT"
+  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+
+- name: IPtables save config
+  shell: "iptables-save > /etc/sysconfig/iptables"
+  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+
 - name: Ensure CloudStack Usage Service is started
   service: name=cloudstack-usage state=started
