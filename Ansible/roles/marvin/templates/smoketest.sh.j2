@@ -14,4 +14,4 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg  -w  {% if marvin_tests_source == "github" %}/tmp/cloudstack_source/test/integration/smoke {% endif %} --hypervisor={{ env_hv }} -a tags=advanced,required_hardware=true
+nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg  {% if marvin_tests_source == "github" %}/tmp/cloudstack_source/test/integration/smoke/* {% endif %} --hypervisor={{ env_hv }} -a tags=advanced

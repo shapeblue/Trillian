@@ -21,7 +21,7 @@
     - name: Request and return environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
 
-    - name: Check for environments db failure
+    - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
       when: env_return != "success"
 
