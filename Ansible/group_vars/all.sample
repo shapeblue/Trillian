@@ -74,7 +74,7 @@ destroy_forced: no
 def_env_uuid: unknown
 
 # Environment database settings
-def_env_db_name: "acstest"
+def_env_db_name: "trillian_envs"
 def_env_db_ip: "ENVDBIP"
 
 # Environment summary
@@ -202,7 +202,7 @@ def_marvin_images_location: "http://10.2.0.4/marvin/"
 global_settings:
   - {name: "vmware.create.full.clone", value: "FALSE", condition: "all"}
   - {name: "secstorage.allowed.internal.sites", value: "10.0.0.0/8", condition: "all"}
-  - {name: "integration.api.port", value: "8096", condition: "marvin"} 
+  - {name: "integration.api.port", value: "8096", condition: "marvin"}
   - {name: "account.cleanup.interval", value: "60", condition: "marvin"}
   - {name: "extract.url.cleanup.interval", value: "300", condition: "marvin"}
   - {name: "network.securitygroups.work.cleanup.interval", value: "120", condition: "marvin"}
@@ -235,5 +235,3 @@ global_settings:
   - {name: "xapiwait", value: "300", condition: "marvin"}
   - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
   - {name: "storage.cleanup.delay", value: "300", condition: "marvin"}
-
-

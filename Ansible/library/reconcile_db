@@ -1,9 +1,9 @@
 #!/bin/bash
 
-DBHOST=10.2.0.3
+DBHOST=<DBHOST>
 DBUSER=root
-DBPASS="P@ssword123"
-DBNAME="acstest"
+DBPASS="<DBPASS>"
+DBNAME="trillian_envs"
 ENVTBL="environments"
 PODTBL="podnetworks"
 PUBTBL="pubnetworks"
@@ -41,7 +41,7 @@ echo " -- These rows will be maked as available"
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid not in ($all_active_ids)";
 else
 echo ""
-echo " -- No DB rows need marking as AVAILABLE"  
+echo " -- No DB rows need marking as AVAILABLE"
 
 fi
 for project in $projectnames; do
