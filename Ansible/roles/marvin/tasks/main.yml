@@ -166,14 +166,20 @@
     - marvin_cfg
 
 - debug: msg="reporting directories {{ dir_contents }}"
+  tags:
+    - marvin
+    - marvin_cfg
 
 - name: remove extraneous directories
   file: path=/tmp/marvin/{{ item }} state=absent
   with_items: contents.stdout_lines
   when: item != "test" and ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
 
 - name: create smoketest file
-  template: src="{{ inventory_dir }}/roles/marvin/templates/smoketests.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
+  template: src="smoketests.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg

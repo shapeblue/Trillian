@@ -20,17 +20,17 @@ echo "Starting tests at $now
 
 " > /tmp/combined_results.txt
 {% if marvin_tests_source == "github" %}
+
+NUMTESTS=`find /tmp/marvin/test/integration/smoke -name test_*.py | wc -l`
+counter=1
 for file in /tmp/marvin/test/integration/smoke/test_*; do
+{% if use_hipchat  %}hipchat --action sendNotification --room "SB Lab" --message "Starting testfile $file in {{ env_name_clean }} ($counter of $NUMTESTS)"{% endif %}
+
 nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+counter=$((counter+1))
 done
+{% if use_hipchat %}hipchat --action sendNotification --room "SB Lab" --message "Smoketests for {{ env_name_clean }} completed" --colour "green"{% endif %}
 
-
-for dir in /tmp/MarvinLogs/; do
-  echo "$dir" >> /tmp/combined_results.txt
-  cat results.txt >> /tmp/combined_results.txt
-  echo ""
-  echo ""
-done
 
 {% endif %}
 
