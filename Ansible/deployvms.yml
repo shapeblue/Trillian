@@ -18,10 +18,18 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Check groupvars/all file version
+      fail: msg="groupvars/all file version is too low.  Please update to latest"
+      when:  ("{{ all-file_version|int }}" < 3 )
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
     - name: Request and return environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
 
-    - name: Check for environments db failure
+    - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
       when: env_return != "success"
 
@@ -61,6 +69,7 @@
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   vars:
+    num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
     - { role: mysql, when: num_db_hosts | int == 0 }
@@ -120,6 +129,7 @@
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
     - { role: marvin, when: num_marv_hosts | int != 0  }
+    - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
 
 - hosts: primary_cs_manager
   tasks:

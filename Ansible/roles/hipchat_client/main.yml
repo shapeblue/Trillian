@@ -1,0 +1,17 @@
+---
+
+- name: install java
+  yum: name: java-1.8.0-openjdk.x86_64 state=present
+
+#- name: retrieve hipchat cli client dist
+#  get_url: url="{{ marvin_cli_client_location }}" dest="/tmp/hipchapcli.zip"
+
+- name: unpack files
+  unarchive: src="{{ marvin_cli_client_location }}" dest=/tmp/hipchatcli/
+
+- name: configure client  
+  template: src="hipchat.sh.j2" dest="/tmp/hipchatcli/hipchat.sh" mode=0744
+
+- name: create symlink to improve compatibility
+  file: path=/usr/bin/hipchat src="/tmp/hipchatcli/hipchat.sh" state=link
+
