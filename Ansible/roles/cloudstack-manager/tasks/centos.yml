@@ -68,7 +68,7 @@
   yum: name=cloudstack-usage state=present
 
 - name: rename CloudStack title in browser
-  shell: sed -i "/document.title =/ c\        document.title = _l('label.app.name') - {{ env_name_clean }};" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js
+  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js
   tags:
     - "rename_browser"
 
