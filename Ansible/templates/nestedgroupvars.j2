@@ -105,6 +105,7 @@ env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[
 env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }}"
 {% endif %}
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
+build_marvin: {{ build_marvin | default (def_build_marvin) }}
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
@@ -186,3 +187,4 @@ marvin_username: "{{ marvin_username | default( def_marvin_username ) }}"
 marvin_password: "{{ marvin_password | default( def_marvin_password ) }}"
 marvin_tests_source: "{{ marvin_tests_source | default ( def_marvin_tests_source) }}"
 marvin_tests_github_source: "{{ marvin_tests_github_source | default ( def_marvin_tests_github_source ) }}"
+marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images_location ) }}"

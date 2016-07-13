@@ -64,6 +64,7 @@
   - jq
   - mariadb
   - git
+  - screen
   tags:
     - marvin
     - marvin_install
@@ -137,21 +138,42 @@
     - marvin
     - marvin_cfg
 
-- name: copy test_data.py file
-  template: src=test_data.py.j2 dest=/tmp/test_data.py
+- name: replace test_data.py in /usr/lib/python2.7/site-packages/marvin/config/
+  template: src=test_data.py.j2 dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: remove compiled version
+  file: path="/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc" state=absent
   tags:
     - marvin
     - marvin_cfg
 
 - name: clone master repo
-  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/cloudstack_source
+  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
 
+- name: determine extraneous directories
+  shell: ls -1 /tmp/marvin
+  register: dir_contents
+  when: ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- debug: msg="reporting directories {{ dir_contents }}"
+
+- name: remove extraneous directories
+  file: path=/tmp/marvin/{{ item }} state=absent
+  with_items: contents.stdout_lines
+  when: item != "test" and ("{{ marvin_tests_source }}" == "github")
+
 - name: create smoketest file
-  template: src="{{ inventory_dir }}/roles/marvin/templates/smoketest.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
+  template: src="{{ inventory_dir }}/roles/marvin/templates/smoketests.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg

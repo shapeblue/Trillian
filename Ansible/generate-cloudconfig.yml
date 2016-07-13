@@ -110,6 +110,14 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  tasks:
+    - name: Check groupvars/all file version
+      fail: msg="groupvars/all file version is too low.  Please update to latest"
+      when:  ("{{ all-file_version|int }}" < 2 )
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
 
   vars_prompt:
     - name: "env_name"
@@ -249,6 +257,11 @@
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined
 
+    - name: Set build_marvin flag
+      set_fact: build_marvin="{{ def_build_marvin }}"
+      when: build_marvin is undefined
+
+
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="custom"
       when: ( hvtype | lower not in [ "xen", "x", "xs", "xenserver" ] ) 
@@ -272,7 +285,6 @@
 
     - name: Return utilised project name
       debug: msg="Utilised project name is {{ build_project }}"
-
 
     - name: Copy inventory file
       template: src=templates/nestedinventory.j2 dest="{{ inventory_dir }}/hosts_{{ env_name_clean }}"

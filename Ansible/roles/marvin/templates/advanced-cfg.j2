@@ -133,7 +133,7 @@
 		"user": "cloud"
 	},
 	"logger": {
-		"LogFolderPath": "/var/log"
+		"LogFolderPath": "/tmp/"
 	},
 	"globalConfig": [{
 		"name": "account.cleanup.interval",
@@ -255,6 +255,9 @@
 		"port": 8096,
 		"user": "root",
 		"passwd": "{{ mgmtsrv_password }}",
-		"hypervisor": "{{ env_hv }}"
+		"hypervisor": "{{ env_hv }}",
+                "useHttps": "False",
+                "certCAPath":  "NA",
+                "certPath":  "NA"
 	}]
 }

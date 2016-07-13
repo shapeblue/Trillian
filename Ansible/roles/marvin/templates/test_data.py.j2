@@ -21,18 +21,18 @@ test_data = {
         "regionname": "Region2",
         "regionendpoint": "http://region2:8080/client"
     },
-    "zone": "NA",
-    "hypervisor": "XenServer",
+    "zone": "{{ env_name_clean }}",
+    "hypervisor": "{{ env_hv }} ",
     "deleteDC": True,
     "vdomain": {
         "name": "domain"
     },
     "domain": {"name": "domain"},
     "email": "test@test.com",
-    "gateway": "172.1.1.1",
-    "netmask": "255.255.255.0",
-    "startip": "172.1.1.10",
-    "endip": "172.1.1.20",
+    "gateway": "10.2.254.254",
+    "netmask": "255.255.0.0",
+    "startip": "10.2.250.0",
+    "endip": "10.2.250.254",
     "regionid": "1",
     "vlan": "10",
     "isportable": "true",
@@ -772,7 +772,7 @@ test_data = {
     "iso": {
         "displaytext": "Test ISO",
         "name": "ISO",
-        "url": "http://people.apache.org/~tsp/dummy.iso",
+        "url": "{{ marvin_images_location }}/dummy.iso",
         "bootable": False,
         "ispublic": False,
         "ostype": "Other (64-bit)",
@@ -780,7 +780,7 @@ test_data = {
     "iso1": {
         "displaytext": "Test ISO 1",
         "name": "ISO 1",
-        "url": "http://people.apache.org/~tsp/dummy.iso",
+        "url": "{{ marvin_images_location }}/dummy.iso",
         "isextractable": True,
         "isfeatured": True,
         "ispublic": True,
@@ -789,7 +789,7 @@ test_data = {
     "iso2": {
         "displaytext": "Test ISO 2",
         "name": "ISO 2",
-        "url": "http://people.apache.org/~tsp/dummy.iso",
+        "url": "{{ marvin_images_location }}/dummy.iso",
         "isextractable": True,
         "isfeatured": True,
         "ispublic": True,
@@ -801,20 +801,30 @@ test_data = {
     "isextractable": True,
     "bootable": True,
     "passwordenabled": True,
-
     "template": {
+{% if env_hv == "kvm" %}
+        "displaytext": "kvm",
+        "name": "kvm",
+        "passwordenabled": False,
+        "ostype": "CentOS 5.5 (64-bit)"
+{% elif env_hv == "xenserver" %}
         "displaytext": "xs",
         "name": "xs",
         "passwordenabled": False,
         "ostype": "CentOS 5.6 (64-bit)"
-
+{% elif env_hv == "vmware" %}
+        "displaytext": "vmware",
+        "name": "vmware",
+        "passwordenabled": False,
+        "ostype": "CentOS 5.3 (64-bit)"
+{% endif %}
     },
     "CentOS6.3template": {
         "displaytext": "Centos",
         "name": "Centos",
         "passwordenabled": False,
         "ostype": "CentOS 6.3 (64-bit)",
-        "url": "http://people.apache.org/~sanjeev/centos63.ova",
+        "url": "{{ marvin_images_location }}/centos63.ova",
         "format": "OVA",
         "ispublic": "true"
     },
@@ -832,7 +842,7 @@ test_data = {
         "displaytext": "Windows 7 (64-bit)",
         "name": "Windows 7 (64-bit)",
         "passwordenabled": False,
-        "url": "http://people.apache.org/~sanjeev/windows7.vhd",
+        "url": "{{ marvin_images_location }}/windows7.vhd",
         "format": "VHD",
         "ostype": "Windows 7 (64-bit)",
         "ispublic": "true",
@@ -864,7 +874,7 @@ test_data = {
         "displaytext": "win2012",
         "name": "win2012",
         "passwordenabled": False,
-        "url": "http://people.apache.org/~sanjeev/new-test-win.ova",
+        "url": "{{ marvin_images_location }}/WindowsServer2012.ova",
         "format": "OVA",
         "ostype": "Windows 8 (64-bit)",
     },
@@ -872,7 +882,7 @@ test_data = {
         "displaytext": "Rhel60",
         "name": "Rhel60",
         "passwordenabled": False,
-        "url": "http://people.apache.org/~sanjeev/Rhel6-64bit.ova",
+        "url": "{{ marvin_images_location }}/Rhel6-64bit.ova",
         "format": "OVA",
         "ostype": "Red Hat Enterprise Linux 6.0 (64-bit)"
     },
@@ -880,7 +890,7 @@ test_data = {
         "displaytext": "xs",
         "name": "xs",
         "passwordenabled": False,
-        "url": "http://people.apache.org/~sanjeev/ttylinux_pv.vhd.bz2",
+        "url": "{{ marvin_images_location }}/ttylinux_pv.vhd.bz2",
         "format": "VHD"
     },
     "security_group": {"name": "custom_Sec_Grp"},
@@ -935,8 +945,8 @@ test_data = {
         "full": "4090-4095"
     },
     "nfs": {
-        "url": "nfs://nfs/export/automation/1/testprimary",
-        "name": "Primary XEN"
+        "url": "{{ env_priprot }}:/{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri1",
+        "name": "Marvin Primary Pool"
     },
     "iscsi": {
         "url":
@@ -1092,7 +1102,7 @@ test_data = {
                               "displaytext": "RHEL7 (64-bit)",
                               "name": "RHEL 7 Insta1",
                               "passwordenabled": False,
-                              "url": "http://people.apache.org/~sanjeev/RHEL764bitwithtools.vhd",
+                              "url": "{{ marvin_images_location }}/RHEL764bitwithtools.vhd",
                               "format": "VHD" ,
                               "ostype": "RHEL 7 (64-bit)",
                               "ispublic": "true",
@@ -1575,17 +1585,17 @@ test_data = {
     "browser_upload_volume":{
           "VHD": {
         "diskname": "XenUploadVol",
-        "url": "http://people.apache.org/~sanjeev/rajani-thin-volume.vhd",
+        "url": "{{ marvin_images_location }}/rajani-thin-volume.vhd",
         "checksum": "09b08b6abb1b903fca7711d3ac8d6598",
                 },
           "OVA": {
         "diskname": "VMwareUploadVol",
-        "url": "http://people.apache.org/~sanjeev/CentOS5.5(64bit)-vmware-autoscale.ova",
+        "url": "{{ marvin_images_location }}/CentOS5.5(64bit)-vmware-autoscale.ova",
         "checksum": "da997b697feaa2f1f6e0d4785b0cece2",
                 },
           "QCOW2": {
         "diskname": "KVMUploadVol",
-        "url": "http://people.apache.org/~sanjeev/rajani-thin-volume.qcow2",
+        "url": "{{ marvin_images_location }}/rajani-thin-volume.qcow2",
         "checksum": "02de0576dd3a61ab59c03fd795fc86ac",
                 },
     'browser_resized_disk_offering': {
@@ -1598,7 +1608,7 @@ test_data = {
           "VHD": {
         "templatename": "XenUploadtemplate",
         "displaytext": "XenUploadtemplate",
-        "url": "http://people.apache.org/~sanjeev/centos56-x86_64.vhd.bz2",
+        "url": "{{ marvin_images_location }}/centos56-x86_64.vhd.bz2",
         "hypervisor":"XenServer",
         "checksum": "09b08b6abb1b903fca7711d3ac8d6598",
         "ostypeid":"74affaea-c658-11e4-ad38-a6d1374244b4"
@@ -1606,7 +1616,7 @@ test_data = {
           "OVA": {
         "templatename": "VMwareUploadtemplate",
         "displaytext": "VMwareUploadtemplate",
-        "url": "http://people.apache.org/~sanjeev/CentOS5.3-x86_64.ova",
+        "url": "{{ marvin_images_location }}/CentOS5.3-x86_64.ova",
         "checksum": "02de0576dd3a61ab59c03fd795fc86ac",
         "hypervisor":"VMware",
         "ostypeid":"74affaea-c658-11e4-ad38-a6d1374244b4"
@@ -1614,7 +1624,7 @@ test_data = {
           "QCOW2": {
         "templatename": "KVMUploadtemplate",
         "displaytext": "VMwareUploadtemplate",
-        "url": "http://people.apache.org/~sanjeev/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2",
+        "url": "{{ marvin_images_location }}/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2",
         "checksum": "da997b697feaa2f1f6e0d4785b0cece2",
         "hypervisor":"KVM",
         "ostypeid":"2e02e376-cdf3-11e4-beb3-8aa6272b57ef"
@@ -1680,7 +1690,7 @@ test_data = {
             "upload_volume": {
                 "diskname": "UploadVol",
                 "format": "VHD",
-                "url": "http://download.cloud.com/releases/2.0.0/UbuntuServer-10-04-64bit.vhd.bz2",
+                "url": "{{ marvin_images_location }}/UbuntuServer-10-04-64bit.vhd.bz2",
                 "checksum": "",
             },
             "bootableIso":
@@ -1689,7 +1699,7 @@ test_data = {
                     "name": "testISO",
                     "bootable": True,
                     "ispublic": False,
-                    "url": "http://people.apache.org/~sanjeev/CentOS-6.3-x86_64-bin-DVD1.iso",
+                    "url": "{{ marvin_images_location }}/CentOS-6.3-x86_64-bin-DVD1.iso",
                     "ostype": 'CentOS 6.3 (64-bit)',
                     "mode": 'HTTP_DOWNLOAD'
         },
@@ -1704,7 +1714,7 @@ test_data = {
             "isextractable": True,
             "mode": "HTTP_DOWNLOAD",
             "templatefilter": "self",
-            "url": "http://people.apache.org/~sanjeev/systemvm64template-2014-09-30-4.3-vmware.ova",
+            "url": "{{ marvin_images_location }}/systemvm64template-2014-09-30-4.3-vmware.ova",
             "hypervisor": "vmware",
             "format": "OVA",
             "nicadapter": "vmxnet3",

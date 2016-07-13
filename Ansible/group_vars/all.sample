@@ -42,6 +42,11 @@ def_vmware_esxi_username: "root"
 def_vmware_esxi_password: "YOURPASSWORDHERE"
 
 ################################################################################
+# version of this file is checked when running generate or deploy
+# if the vars in this file are updated/added then version will be increased.
+
+all-file_version: 1
+
 # Environment vars
 def_management_network: "Shared Mgmt Network"
 def_guest_public_network: "Nested Trunked Network"
@@ -191,3 +196,44 @@ def_marvin_service_offering: "Mgmt Server"
 def_marvin_server_template: "CentOS 7 (Minimal)"
 def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
+def_marvin_images_location: "http://10.2.0.4/marvin/"
+
+# global variables
+global_settings:
+  - {name: "vmware.create.full.clone", value: "FALSE", condition: "all"}
+  - {name: "secstorage.allowed.internal.sites", value: "10.0.0.0/8", condition: "all"}
+  - {name: "integration.api.port", value: "8096", condition: "marvin"} 
+  - {name: "account.cleanup.interval", value: "60", condition: "marvin"}
+  - {name: "extract.url.cleanup.interval", value: "300", condition: "marvin"}
+  - {name: "network.securitygroups.work.cleanup.interval", value: "120", condition: "marvin"}
+  - {name: "storage.cleanup.enabled", value: "TRUE", condition: "marvin"}
+  - {name: "storage.cleanup.interval", value: "300", condition: "marvin"}
+  - {name: "storage.template.cleanup.enabled", value: "TRUE", condition: "marvin"}
+  - {name: "task.cleanup.retry.interval", value: "600", condition: "marvin"}
+  - {name: "vm.op.cleanup.interval", value: "600", condition: "marvin"}
+  - {name: "vm.op.cleanup.wait", value: "600", condition: "marvin"}
+  - {name: "vpc.cleanup.interval", value: "600", condition: "marvin"}
+  - {name: "expunge.delay", value: "300", condition: "marvin"}
+  - {name: "expunge.interval", value: "300", condition: "marvin"}
+  - {name: "expunge.workers", value: "2", condition: "marvin"}
+  - {name: "alert.wait", value: "300", condition: "marvin"}
+  - {name: "backup.snapshot.wait", value: "600", condition: "marvin"}
+  - {name: "copy.volume.wait", value: "600", condition: "marvin"}
+  - {name: "create.private.template.from.snapshot.wait", value: "600", condition: "marvin"}
+  - {name: "create.private.template.from.volume.wait", value: "600", condition: "marvin"}
+  - {name: "create.volume.from.snapshot.wait", value: "600", condition: "marvin"}
+  - {name: "migratewait", value: "1200", condition: "marvin"}
+  - {name: "network.gc.wait", value: "600", condition: "marvin"}
+  - {name: "primary.storage.download.wait", value: "900", condition: "marvin"}
+  - {name: "storage.pool.max.waitseconds", value: "900", condition: "marvin"}
+  - {name: "update.wait", value: "300", condition: "marvin"}
+  - {name: "vm.op.cleanup.wait", value: "600", condition: "marvin"}
+  - {name: "vm.op.wait.interval", value: "60", condition: "marvin"}
+  - {name: "vm.tranisition.wait.interval", value: "300", condition: "marvin"}
+  - {name: "vmsnapshot.create.wait", value: "900", condition: "marvin"}
+  - {name: "wait", value: "3600", condition: "marvin"}
+  - {name: "xapiwait", value: "300", condition: "marvin"}
+  - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
+  - {name: "storage.cleanup.delay", value: "300", condition: "marvin"}
+
+

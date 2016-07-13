@@ -34,3 +34,9 @@
   file: state=directory path={{ nfs_rootpath }}{{ env_name_clean }}/{{ item }} mode=0755
   with_items:
     - "{{ nfs_subfolders }}"
+
+- name: Create subfolders
+  file: state=directory path={{ env_pripath }}{{ env_name_clean }}/{{ item }} mode=0755
+  with_items:
+    - "marvin_pri1"
+  when: build_marvin
