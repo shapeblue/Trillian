@@ -4,7 +4,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - include: ./tasks/destroyvms.yml
+    - include: ./tasks/removeproject.yml
 
 - hosts: primary_storage_hosts
   gather_facts: no
@@ -22,10 +22,31 @@
   tasks:
     - name: Release environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=rel
+      when: not destroy_forced
+
+    - name: Release environment details
+      env_db_manage: DBHOST={{ def_env_db_ip }} DBUSER={{ def_env_db_user }} DBPASS={{ def_env_db_password }} DBNAME={{ def_env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=forced_rel
+      when: destroy_forced
 
     - name: Check for environments db failure
       fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
       when: env_return != "success"
+
+    - name: Update inventory file - remove server IP addresses
+      replace:
+        dest="hosts_{{ env_name_clean }}"
+        regexp='{{ item.default_ip }}'
+        replace='{{ item.name }}-ip'
+        backup=no
+      with_items: "{{remove_retval.results}}"
+      when: not destroy_forced
+    
+    - name: Remove HV IP list from group vars
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        regexp="^env_hviplist.*$"
+        state=absent
+      when: not destroy_forced
 
     - name: Update group vars file - remove environmemt details
       lineinfile:
@@ -43,6 +64,7 @@
         - "^env_podmask.*$"
         - "^env_podendip.*$"
         - "^env_podstartip.*$"
+      when: not destroy_forced
 
     - name: Delete inventory files
       file:
@@ -51,4 +73,4 @@
       with_items:
         - "hosts_{{ env_name_clean }}"
         - "group_vars/{{ env_name_clean }}"
-      when: removeconfig is defined
+      when: removeconfig is defined or destroy_forced

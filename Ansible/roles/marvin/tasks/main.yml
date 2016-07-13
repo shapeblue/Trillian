@@ -18,27 +18,26 @@
 - debug: msg="Connecting to Marvin host {{ ansible_ssh_host }}"
   tags:
     - marvin
+    - marvin_cfg
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
   tags:
     - marvin
-
-#- name: Now I'm connected, get facts
-#  setup:
-#  tags:
-#    - marvin
+    - marvin_cfg
 
 - name: Install Dev Tools Group
   yum: name="@Development tools" state=installed
   tags:
     - marvin
+    - marvin_cfg
 
 - name: Ensure EPEL is available (centOS7)
   yum: name="{{ epel7 }}" state=present
   ignore_errors: true
   tags:
     - marvin
+    - marvin_install
 
 - name: Install Other Dependancies
   yum: name={{ item }} state=installed
@@ -64,18 +63,23 @@
   - openssh-askpass
   - jq
   - mariadb
+  - git
+  - screen
   tags:
     - marvin
+    - marvin_install
 
 - name: Install mysql-connector-python
   yum: name=mysql-connector-python state=installed
   tags:
     - marvin
+    - marvin_install
 
 - name: Install pip
   easy_install: name=pip
   tags:
     - marvin
+    - marvin_install
 
 - name: Update pip and setuptools
   pip: name={{ item }} extra_args='--upgrade'
@@ -84,6 +88,7 @@
   - setuptools
   tags:
     - marvin
+    - marvin_install
 
 - name: install pip security components
   pip: name={{ item }}
@@ -94,6 +99,7 @@
   - wget
   tags:
     - marvin
+    - marvin_install
 
 - name: Get Marvin files
   get_url: url='https://builds.apache.org/job/cloudstack-marvin/lastSuccessfulBuild/artifact/tools/marvin/dist/*zip*/dist.zip' dest=/tmp
@@ -120,12 +126,55 @@
   tags:
     - marvin
 
-- name: request and return environment
-  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+- name: retrieve environment data
+  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ACTION=retrieve
   tags:
     - marvin
+    - marvin_cfg
 
 - name: create mavin cfg file
   template: src="{{ inventory_dir }}/roles/marvin/templates/advanced-cfg.j2" dest="/tmp/{{ env_name_clean }}-advanced-cfg"
   tags:
     - marvin
+    - marvin_cfg
+
+- name: replace test_data.py in /usr/lib/python2.7/site-packages/marvin/config/
+  template: src=test_data.py.j2 dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: remove compiled version
+  file: path="/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc" state=absent
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: clone master repo
+  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1
+  when: ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: determine extraneous directories
+  shell: ls -1 /tmp/marvin
+  register: dir_contents
+  when: ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- debug: msg="reporting directories {{ dir_contents }}"
+
+- name: remove extraneous directories
+  file: path=/tmp/marvin/{{ item }} state=absent
+  with_items: contents.stdout_lines
+  when: item != "test" and ("{{ marvin_tests_source }}" == "github")
+
+- name: create smoketest file
+  template: src="{{ inventory_dir }}/roles/marvin/templates/smoketests.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+

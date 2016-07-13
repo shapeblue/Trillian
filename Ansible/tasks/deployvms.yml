@@ -438,9 +438,6 @@
     - "{{ groups['marvin_host'] }}"
   register: marvin_retval
 
-- debug: msg="Marvin IP is {{ item.default_ip }}"
-  with_items: "{{marvin_retval.results}}"
-
 - name: Update inventory file with Marvin server IP addresses
   replace:
     dest="hosts_{{ env_name_clean }}"

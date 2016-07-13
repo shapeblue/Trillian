@@ -74,11 +74,15 @@ def_api_retries: 25
 def_sysvms_running_reties: 100
 def_sysvms_up_reties: 100
 destroy_forced: no
-def_env_uuid: "unknown"
 
 # Environment database settings
 def_env_db_name: "acstest"
 def_env_db_ip: "10.2.0.3"
+
+# Environment database settings
+def_env_db_name: "trillian_envs"
+def_env_db_ip: "ENVDBIP"
+def_env_uuid: unknown
 
 # Environment summary
 def_env_zonetype: "Advanced"
@@ -215,15 +219,17 @@ def_marvin_service_offering: "Mgmt Server"
 def_marvin_server_template: "CentOS 7 (Minimal)"
 def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
-def_marvin_images_location: "http://10.2.0.4/marvin"
+def_marvin_images_location: "http://<IP_OF_LOCAL_images>/marvin"
 
 # hipchat integration:
 
 def_use_hipchat: yes
-def_hipchat_server: https://shapeblue.hipchat.com
-def_hipchat_token: vijdMFXRCoQ9jZGLwgr6IHzkXKjs9KVESemmCY3n
+def_hipchat_server: ADDRESS_OF_HIPCHAT_SERVER
+def_hipchat_token: HIPCHAT_TOKEN
 def_hipchat_cli_client_location: "https://bobswift.atlassian.net/wiki/download/attachments/16285777/atlassian-cli-5.4.0-distribution.zip?version=1&modificationDate=1464662416465&api=v2"
 def_hipchat_cli_client_version: "atlassian-cli-5.4.0"
+
+
 
 # global variables
 global_settings:
@@ -262,4 +268,3 @@ global_settings:
   - {name: "xapiwait", value: "300", condition: "marvin"}
   - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
   - {name: "storage.cleanup.delay", value: "300", condition: "marvin"}
-

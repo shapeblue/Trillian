@@ -1,0 +1,54 @@
+#!/bin/bash
+
+DBHOST=<DBHOST>
+DBUSER=root
+DBPASS="<DBPASS>"
+DBNAME="trillian_envs"
+ENVTBL="environments"
+PODTBL="podnetworks"
+PUBTBL="pubnetworks"
+
+projectnames=`cloudmonkey list projects | jq '.project[] | .name' | grep -i nestedclouds`
+echo " -- The following projects are in the Lab:
+$projectnames"
+#DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+#DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+#DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//' | tr -d "'"`
+MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+
+active_ids=""
+for project in $projectnames; do
+  env_name=`echo $project | sed 's\-NestedClouds\\\'`
+  activeid=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE name='${env_name}' and removed is NULL"`
+  if [[ -n $activeid ]]; then
+    active_ids="$active_ids, ${activeid:3}"
+  fi
+done
+
+all_active_ids=`echo "${active_ids:2}"`
+echo " -- The following are the IDs of projects not in the LAB but in the DB $all_active_ids"
+
+
+if [[ -n $all_active_ids ]]; then
+echo ""
+echo " -- These rows will be maked as available"
+  ${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${ENVTBL} WHERE id not in ($all_active_ids) AND removed IS NULL"
+  ${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${PODTBL} WHERE envid not in ($all_active_ids)"
+  ${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${PUBTBL} WHERE envid not in ($all_active_ids)"
+
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${ENVTBL} set removed=now() WHERE id not in ($all_active_ids) AND removed IS NULL";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid not in ($all_active_ids)";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid not in ($all_active_ids)";
+else
+echo ""
+echo " -- No DB rows need marking as AVAILABLE"
+
+fi
+for project in $projectnames; do
+  activeid=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE name='${env_name}'"`
+  if [[ -n $activeid ]]; then
+    echo " -- updating id in DB with projects in use in LAB"
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', updated=now(), removed=NULL, comment='reconciled', environmentname='${project}' WHERE envid='${activeid}'";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', updated=now(), removed=NULL, comment='reconciled', environmentname='${project}' WHERE envid='${activeid}'";
+  fi
+done

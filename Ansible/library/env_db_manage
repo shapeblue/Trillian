@@ -26,6 +26,39 @@ PUBTBL="pubnetworks";
 PRITBL="primarystorage";
 SECTBL="secondarystorage";
 
+
+################################################################################
+# checkNameExisting:
+# Check envname currently being used
+
+#
+function checkNameExisting()
+{
+
+if [[ -z ${ENV_UUID} ]]; then
+  env_name_count=`${MYSQLCOMMAND} "SELECT COUNT(*) FROM ${DBNAME}.${ENVTBL} WHERE name='${ENV_NAME}' and removed is NULL"`
+else
+  env_name_count=`${MYSQLCOMMAND} "SELECT COUNT(*) FROM ${DBNAME}.${ENVTBL} WHERE name='${ENV_NAME}' and removed is NULL and envuuid != '${ENV_UUID}'"`
+fi
+}
+
+################################################################################
+
+################################################################################
+# countEnvAvailable
+# Check that there is capacity in the DB
+
+#
+function countEnvAvailable()
+{
+  COUNTPODENVS=`${MYSQLCOMMAND} "SELECT COUNT(*) FROM ${DBNAME}.${PODTBL} WHERE inuse='FALSE' and removed IS NOT NULL"`
+  COUNTPUBLICENVS=`${MYSQLCOMMAND} "SELECT COUNT(*) FROM ${DBNAME}.${PUBTBL} WHERE inuse='FALSE' and removed IS NOT NULL"`
+}
+
+################################################################################
+
+
+
 ################################################################################
 # QueryID:
 # Check if the nested cloud instance has already been added to the environments
@@ -88,7 +121,7 @@ function RequestPodNet()
   podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
   if [ -z ${podnetid} ];
   then # no existing found, request new
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     if [ -z ${podnetid} ];
@@ -112,8 +145,8 @@ function RequestPodNet()
 #
 function ReleaseNetworks()
 {
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now() WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now() WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
 }
 
 ################################################################################
@@ -130,7 +163,7 @@ function RequestPubNet()
   pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
   if [ -z ${pubnetid} ];
   then #no existing found, request new
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     if [ -z ${pubnetid} ];
@@ -208,19 +241,62 @@ EOF
 }
 
 ################################################################################
+
+function returnAvailableCount()
+{
+
+if [[ $COUNTPODENVS -gt 0 ]] && [[ $COUNTPUBLICENVS -gt 0 ]] && [[ ${env_name_count} -eq 0 ]]; then
+echo "
+{
+\"ansible_facts\": {
+  \"env_return\": \"success\",
+  \"env_retmsg\": \"env_name not in use and environment ranges are currently available\","
+else
+echo "
+{
+\"ansible_facts\": {
+  \"env_return\": \"warning\",
+  \"env_retmsg\": \"WARNING !! There are currently not enough environments in the DB to create this environment right now.\","
+fi
+echo "  \"available_env_pods_count\": \"$COUNTPODENVS\",
+  \"available_env_pubips_count\": \"$COUNTPUBLICENVS\"
+  }
+}"
+}
+
+
+################################################################################
+
 # Main script
 #
 case "$ENV_ACTION" in
-	     req)
-       QueryID;
-       if [ ${envid} == "notfound" ];
-       then
-          RequestID;
-       fi
-       RequestPodNet;
-       RequestPubNet;
-       ReturnFact;
+	req)
+	  checkNameExisting;
+          if [[ ${env_name_count} -gt 0 ]];
+          then
+            ReturnFail "The environment ${ENV_NAME} is currently in use with a different UUID ($ENV_UUID). Please rename this environment or remove existing environment ";
+	  else
+	    QueryID;
+    	    if [ ${envid} == "notfound" ];
+	    then
+	      RequestID;
+	    fi
+           RequestPodNet;
+           RequestPubNet;
+           ReturnFact;
+         fi
        ;;
+
+	retrieve)
+	  QueryID;
+    	  if [ ${envid} == "notfound" ];
+	  then
+	    ReturnFail "${ENV_NAME} With UUID $ENV_UUID not found";
+	  fi
+          RequestPodNet;
+          RequestPubNet;
+          ReturnFact;
+        ;;
 
        rel)
        QueryID;
@@ -232,6 +308,16 @@ case "$ENV_ACTION" in
        ReturnSuccess "Environment ${ENV_NAME} (${ENV_UUID}) and all networks removed from database.";
        ;;
 
+	check)
+	  checkNameExisting;
+          if [[ ${env_name_count} -gt 0 ]];
+          then
+            ReturnFail "The environment ${ENV_NAME} is currently in use. Please rename this environment or remove existing environment ";
+	  else
+            countEnvAvailable;
+            returnAvailableCount;
+          fi
+	;;
        *)
        ReturnFail "Unknown input action $1 - valid options are req|rel.";
        ;;

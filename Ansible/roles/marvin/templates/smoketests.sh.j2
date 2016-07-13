@@ -1,3 +1,4 @@
+#!/bin/bash
 
 #Copyright 2016 ShapeBlue
 #
@@ -13,4 +14,23 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-nosetests --with-marvin --marvin-config=/tmp/zone.cfg  -w  /tmp/integration/smoke --hypervisor=vmware -a tags=advanced,required_hardware=true
+rm -f /tmp/combined_results.txt
+now=$(date +"%T")
+echo "Starting tests at $now
+
+" > /tmp/combined_results.txt
+{% if marvin_tests_source == "github" %}
+for file in /tmp/marvin/test/integration/smoke/test_*; do
+nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+done
+
+
+for dir in /tmp/MarvinLogs/; do
+  echo "$dir" >> /tmp/combined_results.txt
+  cat results.txt >> /tmp/combined_results.txt
+  echo ""
+  echo ""
+done
+
+{% endif %}
+

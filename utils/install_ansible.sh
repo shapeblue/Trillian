@@ -18,7 +18,7 @@
 yum install -y epel-release wget git libselinux-python
 yum install -y python-setuptools jq
 yum install -y mysql
-yum install -y python-crypto sshpass ansible
+yum install -y python-crypto sshpass ansible screen
 easy_install pip
 pip install pyvmomi
 pip install pysphere

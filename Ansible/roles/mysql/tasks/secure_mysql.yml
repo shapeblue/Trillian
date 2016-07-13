@@ -28,7 +28,6 @@
   mysql_user: user="root" password="{{ mysql_root_password }}" host="{{ item }}" login_user="root" login_password="{{ mysql_root_password }}"
   with_items:
     - 127.0.0.1
-    - "{{ ansible_hostname }}"
     - "%"
     - "::1"
   ignore_errors: true

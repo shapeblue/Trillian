@@ -265,20 +265,6 @@
       set_fact: use_hipchat="{{ def_use_hipchat }}"
       when: use_hipchat is undefined
 
-    - name: Set xs_ver to custom when XenServer not hypervisor
-      set_fact: xs_ver="custom"
-      when: ( hvtype | lower not in [ "xen", "x", "xs", "xenserver" ] ) 
-
-    - name: Set kvm_os to custom when KVM not hypervisor
-      set_fact: kvm_os="custom"
-      when: ( hvtype | lower not in [ "kvm", "k" ] ) 
-
-    - name: Set vmware_ver to custom when VMware not hypervisor
-      set_fact: vmware_ver="custom"
-      when: ( hvtype | lower not in [ "vmware", "v" ] ) 
-
-    - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
-
     - name: Generate commment for environments db
       set_fact: env_comment="Account {{ (acct_retval.stdout|from_json ).account[0].name }} - Project {{ env_name_clean }}"
 

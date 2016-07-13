@@ -21,11 +21,13 @@
   setup:
   tags:
     - "global_settings"
+    - "rename_browser"
 
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - "global_settings"
+    - "rename_browser"
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'

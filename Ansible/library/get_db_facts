@@ -28,7 +28,6 @@ else
 	registered_mgmt_servers=""
 fi
 
-echo $
 echo "{
 	\"ansible_facts\": {
 			\"master_file\": \"$master_file\",
