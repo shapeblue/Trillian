@@ -163,6 +163,8 @@ xs_public_network_label: "{{ xs_public_network_label | default( def_xs_public_ne
 xs_username: "{{ xs_username | default( def_xs_username ) }}"
 xs_password: "{{ xs_password | default( def_xs_password ) }}"
 
+
+
 # VMware
 esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
@@ -180,6 +182,8 @@ vmware_cluster_name: "{{ vmware_cluster_name | default( def_vmware_cluster_name 
 vmware_esxi_username: "{{ vmware_esxi_username | default( def_vmware_esxi_username ) }}"
 vmware_esxi_password: "{{ vmware_esxi_password | default( def_vmware_esxi_password ) }}"
 
+
+
 # Marvin server
 marvin_service_offering: "{{ mgmtsrv_service_offering | default( def_marvin_service_offering ) }}"
 marvin_server_template: "{{ mgmtsrv_template | default( def_marvin_server_template ) }}"
@@ -190,8 +194,11 @@ marvin_tests_github_source: "{{ marvin_tests_github_source | default ( def_marvi
 marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images_location ) }}"
 
 
+
+# Hipchat cli client
 use_hipchat: yes
 hipchat_server: "{{ hipchat_server | default( def_hipchat_server ) }}" 
 hipchat_token: "{{ hipchat_token | default ( def_hipchat_token ) }}"
 hipchat_cli_client_location: "{{ hipchat_cli_client_location | default ( def_hipchat_cli_client_location ) }}"
 hipchat_cli_client_version: "{{ hipchat_cli_client_version | default ( def_hipchat_cli_client_version ) }}"
+

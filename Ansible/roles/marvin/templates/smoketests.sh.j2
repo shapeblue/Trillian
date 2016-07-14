@@ -14,22 +14,38 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-rm -f /tmp/combined_results.txt
-now=$(date +"%T")
-echo "Starting tests at $now
 
-" > /tmp/combined_results.txt
 {% if marvin_tests_source == "github" %}
 
 NUMTESTS=`find /tmp/marvin/test/integration/smoke -name test_*.py | wc -l`
 counter=1
 for file in /tmp/marvin/test/integration/smoke/test_*; do
-{% if use_hipchat  %}hipchat --action sendNotification --room "SB Lab" --message "Starting testfile $file in {{ env_name_clean }} ($counter of $NUMTESTS)"{% endif %}
+  echo "Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}"
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "white" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS) - {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}"{% endif %}
 
-nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
-counter=$((counter+1))
+  nosetests --with-marvin --marvin-config=/tmp/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+  LASTUPDATEDIR=`ls /tmp/MarvinLogs/*/ -td | head -n 1`
+  if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
+    echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "white" --message "test $(basename $file) in {{ env_name_clean }} looks to have errors"{% endif %}
+  else
+    echo "test $(basename $file) in {{ env_name_clean }} looks OK"
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "white" --message "test $(basename $file) in {{ env_name_clean }} looks OK"{% endif %}
+  fi
+  counter=$((counter+1))
 done
-{% if use_hipchat %}hipchat --action sendNotification --room "SB Lab" --message "Smoketests for {{ env_name_clean }} completed" --colour "green"{% endif %}
+
+GOOD=0
+BAD=0
+for dir in /tmp/MarvinLogs/test*/; do
+  if [[ -s ${dir}failed_plus_exceptions.txt ]]; then
+    BAD=$((BAD+1))
+  else
+    GOOD=$((GOOD+1))
+  fi
+done
+echo "Test completed. $GOOD look ok, $BAD have errors"
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Smoketests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
 
 
 {% endif %}
