@@ -58,7 +58,6 @@ function countEnvAvailable()
 ################################################################################
 
 
-
 ################################################################################
 # QueryID:
 # Check if the nested cloud instance has already been added to the environments
@@ -68,8 +67,11 @@ function countEnvAvailable()
 function QueryID()
 {
   local id
-
-  id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is NULL"`
+  if ! [ -z ${ENV_UUID} ]; then
+    id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE envuuid='${ENV_UUID}' and removed is NULL"`
+  else
+    id=`${MYSQLCOMMAND} "SELECT id FROM ${DBNAME}.${ENVTBL} WHERE name='${ENV_NAME}' and removed is NULL"`
+  fi
   if [ -z ${id} ];
   then
     envid="notfound";
@@ -318,8 +320,21 @@ case "$ENV_ACTION" in
             returnAvailableCount;
           fi
 	;;
+
+       forced_rel)
+	QueryID
+    	  if [ ${envid} == "notfound" ];
+	  then
+	    ReturnFail "${ENV_NAME} not found";
+	  else
+	    ReleaseNetworks;
+            ReleaseID;
+            ReturnSuccess "Environment ${ENV_NAME} and all networks removed from database.";
+         fi
+       ;;
+
        *)
-       ReturnFail "Unknown input action $1 - valid options are req|rel.";
+       ReturnFail "Unknown input action $1 - valid options are req|rel|retrieve|check|forced_rel.";
        ;;
 esac
 exit

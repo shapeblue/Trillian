@@ -5,7 +5,7 @@
   when: {{ env_name_clean }} | length = 0
 
 - name: Delete environments folder
-  file: state=absent path={{ def_env_pripath }}{{ env_name_clean }}
+  file: state=absent path={{ env_pripath }}{{ env_name_clean }}
 
 - name: Delete environments folder
-  file: state=absent path={{ def_env_secpath }}{{ env_name_clean }}
+  file: state=absent path={{ env_secpath }}{{ env_name_clean }}

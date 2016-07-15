@@ -132,20 +132,18 @@
     - marvin
     - marvin_cfg
 
-- name: create mavin cfg file
-  template: src="{{ inventory_dir }}/roles/marvin/templates/advanced-cfg.j2" dest="/tmp/{{ env_name_clean }}-advanced-cfg"
+- name: clear marvin dirs if exists
+  file: path="{{ item }}" state=absent 
+  with_items: 
+    - "/marvin"
+    - "/tmp/marvin"
+  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
 
-- name: replace test_data.py in /usr/lib/python2.7/site-packages/marvin/config/
-  template: src=test_data.py.j2 dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: remove compiled version
-  file: path="/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc" state=absent
+- name: create Marvin dir if required
+  file: path=/marvin state=directory
   tags:
     - marvin
     - marvin_cfg
@@ -157,30 +155,58 @@
     - marvin
     - marvin_cfg
 
-- name: determine extraneous directories
-  shell: ls -1 /tmp/marvin
-  register: dir_contents
+- name: copy tests
+  command: cp -r /tmp/marvin/test /marvin/
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
 
-- debug: msg="reporting directories {{ dir_contents }}"
+- name: remove extraneous directories and files
+  command: rm -f /marvin/*
+  when: ("{{ marvin_tests_source }}" == "github")
+  ignore_errors: true
   tags:
     - marvin
     - marvin_cfg
 
-- name: remove extraneous directories
-  file: path=/tmp/marvin/{{ item }} state=absent
-  with_items: contents.stdout_lines
-  when: item != "test" and ("{{ marvin_tests_source }}" == "github")
+- name: create mavin cfg file
+  template: src=advanced-cfg.j2 dest="/marvin/{{ env_name_clean }}-advanced-cfg"
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: remove orginal test_data files
+  file: path="{{ item }}" state=absent
+  with_items:
+    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc"
+    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.py"
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: create templated test_data.py
+  template: src=test_data.py.j2 dest=/marvin/test_data.py
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: create symlink to test_data.py
+  file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
   tags:
     - marvin
     - marvin_cfg
 
 - name: create smoketest file
-  template: src="smoketests.sh.j2" dest="/tmp/smoketest-{{ env_name_clean }}.sh" mode=0755
+  template: src="smoketests.sh.j2" dest="/marvin/smoketest-{{ env_name_clean }}.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
 
+- name: create componenttest file
+  template: src="componenttests.sh.j2" dest="/marvin/componenttests-{{ env_name_clean }}.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+
+- include: ./fix_tests.yml
