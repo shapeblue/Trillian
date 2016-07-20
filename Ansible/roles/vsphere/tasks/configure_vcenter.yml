@@ -69,12 +69,12 @@
     - vc_config
     - create_vmware_dc
 
-- name: Ensure Cluster {{ vmware_cluster_name }} exists
+- name: Ensure Cluster {{ env_zone_clustername }} exists
   local_action: >
         vmware_cluster
         hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}"
-        cluster_name="{{ vmware_cluster_name }}"
+        cluster_name="{{ env_zone_clustername }}"
         enable_ha=False
         enable_drs=False
         enable_vsan=False
