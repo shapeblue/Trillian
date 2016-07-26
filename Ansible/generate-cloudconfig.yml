@@ -173,7 +173,7 @@
 
     - name: Check returned hypervisor type
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
-      when: hvtype not in [ "v",  "x", "k" ]
+      when: hvtype not in [ "v",  "x", "k", "kvm" ]
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
