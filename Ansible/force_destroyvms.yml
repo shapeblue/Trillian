@@ -1,0 +1,93 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+ 
+  - name: set 
+    set_fact: destroy_forced = yes
+
+  - name: set clean environment name
+    set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
+    when: env_name_clean is undefined and env_name is defined
+  
+  - name: set facts
+    set_fact: pri_password=def_pri_password
+    when: pri_password is undefined
+  
+  - name: set facts
+    set_fact: sec_password=def_sec_password
+    when: sec_password is undefined
+  
+  - name: set facts
+    set_fact: env_pri_host=def_env_prihost
+    when: env_prihost is undefined
+  
+  - name: set facts
+    set_fact: env_sec_host=def_env_sechost
+    when: env_sechost is undefined
+  
+  - name: set facts
+    set_fact: env_pripath=def_env_pripath
+    when: env_pripath is undefined
+  
+  - name: set facts
+    set_fact: env_secpath=def_env_secpath
+    when: env_secpath is undefined
+  
+  - name: set facts
+    set_fact: env_db_ip=def_env_db_ip
+    when: env_db_ip is undefined
+  
+  - name: set facts
+    set_fact: env_db_user=def_env_db_user
+    when: env_db_user is undefined
+  
+  - name: set facts
+    set_fact: env_db_password=def_env_db_password
+    when: env_db_password is undefined
+  
+  - name: set facts
+    set_fact: env_db_name=def_env_db_name
+    when: env_db_name is undefined
+  
+  - name: set facts
+    set_fact: build_project="{{ env_name_clean }}-NestedClouds"
+    when: build_project is undefined
+
+    - name: Update in memory inventory with storage host
+      add_host:
+        name=secondary_storage_host
+        group=secondary_storage_hosts
+        ansible_ssh_host="{{ env_sechost }}" 
+        ansible_ssh_pass="{{ sec_password }}"
+      when: destroy_forced
+
+    - name: Update in memory inventory with storage host
+      add_host:
+        name=primary_storage_host
+        group=primary_storage_hosts
+        ansible_ssh_host="{{ env_prihost }}"
+        ansible_ssh_pass="{{ pri_password }}"    
+      when: destroy_forced
+
+- hosts: primary_storage_hosts
+  gather_facts: no
+  tasks:
+    - include: ./roles/cloudstack-nfsshares/tasks/remove_shares_forced.yml
+
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  tasks:
+    - include: ./roles/cloudstack-nfsshares/tasks/remove_shares_forced.yml
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: Release environment details
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=forced_rel
+      when: destroy_forced
+

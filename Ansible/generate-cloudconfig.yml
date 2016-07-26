@@ -113,7 +113,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  ("{{ all-file_version|int }}" < 2 )
+      when:  ("{{ all-file_version|int }}" < 4 )
 
 - hosts: localhost
   connection: local
@@ -173,31 +173,31 @@
 
     - name: Check returned hypervisor type
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
-      when: hvtype | lower not in [ "vmware", "v", "xenserver", "x", "kvm", "k" ]
+      when: hvtype not in [ "v",  "x", "k" ]
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
-      when: ( hvtype | lower in [ "xen", "x", "xenserver", "xs" ] ) and ( xs_ver is undefined )
+      when: ("{{ hvtype }}" == "x" ) and ( xs_ver is undefined )
 
     - name: ensure vmware_ver is specified when hypervisor is v
       fail: msg="VMware version (vmware_ver) required when nypervisor is VMware (v)"
-      when: hvtype | lower in [ "vmware", "v" ] and  ( vmware_ver is undefined )
+      when: ("{{ hvtype }}" == "v" ) and  ( vmware_ver is undefined )
 
     - name: Ensure KVM OS is specified when hypervisor is k
       fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
-      when: ( hvtype | lower in [ "kvm", "k" ] ) and ( kvm_os is undefined )
+      when: ("{{ hvtype }}" == "k" ) and ( kvm_os is undefined )
 
     - name: Set xs_ver to custom when XenServer not hypervisor
-      set_fact: xs_ver="custom"
-      when: ( hvtype | lower not in [ "xen", "x", "xs", "xenserver" ] ) 
+      set_fact: xs_ver="na"
+      when: ("{{ hvtype }}" != "x" ) 
 
     - name: Set kvm_os to custom when KVM not hypervisor
-      set_fact: kvm_os="custom"
-      when: ( hvtype | lower not in [ "kvm", "k" ] ) 
+      set_fact: kvm_os="na"
+      when: ("{{ hvtype }}" !=  "k" ) 
 
     - name: Set vmware_ver to custom when VMware not hypervisor
-      set_fact: vmware_ver="custom"
-      when: ( hvtype | lower not in [ "vmware", "v" ] ) 
+      set_fact: vmware_ver="na"
+      when: ("{{ hvtype }}" != "v") 
 
     - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
 

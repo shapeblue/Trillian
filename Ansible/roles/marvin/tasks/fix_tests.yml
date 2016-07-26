@@ -1,0 +1,25 @@
+---
+
+- name: remove compiled code/tests
+  command: rm -f "{{ item }}"/*.pyc
+  with_items:
+    - "/marvin/test/integration/smoke"
+    - "/marvin/test/integration/component"
+    - "/usr/lib/python2.7/site-packages/marvin/lib"
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_fix_tests
+
+- name: copy locally fixed tests
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - {src: "test_internal_lb.py", dest: "/marvin/test/integration/smoke/test_internal_lb.py"}
+    - {src: "test_vpc_vpn.py", dest: "/marvin/test/integration/smoke/test_vpc_vpn.py"}
+#    - {src: "common.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/common.py"}
+    - {src: "test_network_acl.py", dest: "/marvin/test/integration/smoke/test_network_acl.py"}
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_fix_tests
+

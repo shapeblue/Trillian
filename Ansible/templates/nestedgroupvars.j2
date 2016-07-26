@@ -15,6 +15,7 @@
 #limitations under the License.
 
 
+
 # Environment vars
 management_network: "{{ management_network | default( def_management_network ) }}"
 guest_public_network: "{{ guest_public_network | default( def_guest_public_network ) }}"
@@ -138,7 +139,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% else %}
-{% set kvmosversion = "custom" %}
+{% set kvmosversion = "na" %}
 {% endif %}
 {% if kvmosversion != "custom" %}
 baseurl_kvm: "{{ baseurl_cloudstack | default( def_baseurl_cloudstack ) }}{{ kvmosversion }}/{{ numversion }}/"
@@ -166,6 +167,7 @@ xs_password: "{{ xs_password | default( def_xs_password ) }}"
 
 
 # VMware
+vmware: "{{ vmware_ver }}"
 esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
@@ -175,10 +177,13 @@ esxi_guest_network_label: "{{ esxi_guest_network_label | default( def_esxi_guest
 esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_public_network_label ) }}"
 
 # VMware datacentre configuration
-vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_user ) }}"
+
+{% if vmware_ver == "51u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% elif vmware_ver == "50u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% else %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_user ) }}"
+{% endif %}
 vmware_vcsa_pass: "{{ vmware_vcsa_pass | default( def_vmware_vcsa_pass ) }}"
 vmware_datacenter_name: "{{ vmware_datacenter_name | default( def_vmware_datacenter_name ) }}"
-vmware_cluster_name: "{{ vmware_cluster_name | default( def_vmware_cluster_name ) }}"
 vmware_esxi_username: "{{ vmware_esxi_username | default( def_vmware_esxi_username ) }}"
 vmware_esxi_password: "{{ vmware_esxi_password | default( def_vmware_esxi_password ) }}"
 

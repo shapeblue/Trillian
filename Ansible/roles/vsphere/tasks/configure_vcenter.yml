@@ -84,6 +84,24 @@
   tags:
     - vc_config
     - create_vmware_cluster
+  when: ("{{ vmware_ver }}" != "51u1")
+
+- name: Ensure Cluster {{ env_zone_clustername }} exists
+  local_action: >
+        vmware_cluster
+        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        datacenter_name="{{ vmware_datacenter_name }}"
+        cluster_name="{{ env_zone_clustername }}"
+        enable_ha=False
+        enable_drs=False
+        validate_certs=False
+  delegate_to: localhost
+  ignore_errors: true
+  tags:
+    - vc_config
+    - create_vmware_cluster
+  when: ("{{ vmware_ver }}" == "51u1")
+
 
 - name: add hosts to vCenter
   local_action:
@@ -92,7 +110,7 @@
         username: "{{ vmware_vcsa_user }}"
         password: "{{ vmware_vcsa_pass }}"
         datacenter_name: "{{ vmware_datacenter_name }}"
-        cluster_name: "{{ vmware_cluster_name }}"
+        cluster_name: "{{ env_zone_clustername }}"
         esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
         esxi_username: "{{ vmware_esxi_username }}"
         esxi_password: "{{ vmware_esxi_password }}"

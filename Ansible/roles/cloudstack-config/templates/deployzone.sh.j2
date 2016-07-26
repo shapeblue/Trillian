@@ -120,8 +120,8 @@ then
   WriteOutput "Adding VMware cluster."
   if [ "{{ env_zone_addhosts }}" == "true" ];
   then
-    cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' PodID=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ vmware_cluster_name }}" clustername="{{ vmware_cluster_name }}" vsmipaddress="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" vsmpassword='{{ vmware_vcsa_pass }}' vsmusername='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
-    ClusterID=`cloudmonkey list clusters clustername="{{ vmware_cluster_name }}" | jq '.cluster[] | .id'`;
+    cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' PodID=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" vsmipaddress="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" vsmpassword='{{ vmware_vcsa_pass }}' vsmusername='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
+    ClusterID=`cloudmonkey list clusters clustername="{{ env_zone_clustername }}" | jq '.cluster[] | .id'`;
   fi
 elif  [ "{{ env_hv | lower }}" == "xenserver" ];
 then

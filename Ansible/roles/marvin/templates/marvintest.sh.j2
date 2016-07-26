@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+mkdir /marvin/MarvinLogArchive
+mv /marvin/MarvinLogs/* /marvin/MarvinLogArchive
+rm -f /usr/lib/python2.7/site-packages/marvin/config/test_data.pyc
+
+{% if marvin_tests_source == "github" %}
+counter=1
+for TESTNME in "$@";
+do
+
+TESTFILE=`find /marvin/test -name "$TESTNAME"`
+rm $(TESTFILE)c
+
+echo -e "\e[92m ---->  Starting $(basename $TESTFILE) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $TESTFILE)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of "$#") - {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}"{% endif %}
+
+nosetests --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $TESTFILE
+LASTUPDATEDIR=`ls /marvin/MarvinLogs/*/ -td | head -n 1`
+if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
+  echo -e "\e[92m ---->  test $(basename $file) in {{ env_name_clean }} looks to have errors\e[0m"
+  {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>"{% endif %}
+else
+  echo -e "\e[92m ---->  test $(basename $file) in {{ env_name_clean }} looks OK\e[0m"
+  {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#00FF40">OK</span>"{% endif %}
+fi
+counter=$((counter+1))
+done
+
+if [[ "$#" -gt 1 ]]; then 
+mkdir -f /marvin/MarvinLogs/pass
+mkdir -f /marvin/MarvinLogs/error
+
+GOOD=0
+BAD=0
+for dir in /marvin/MarvinLogs/test*/; do
+  if [[ -s ${dir}failed_plus_exceptions.txt ]]; then
+    BAD=$((BAD+1))
+  else
+    GOOD=$((GOOD+1))
+  fi
+done
+echo "Test completed. $GOOD look ok, $BAD have errors"
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Requested tests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
+
+{% endif %}

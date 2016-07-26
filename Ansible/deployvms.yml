@@ -20,7 +20,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  ("{{ all-file_version|int }}" < 3 )
+      when:  ("{{ all-file_version|int }}" < 4 )
 
 - hosts: localhost
   connection: local
@@ -50,8 +50,49 @@
         - "env_podendip: \"{{ env_podendip }}\""
         - "env_podstartip: \"{{ env_podstartip }}\""
 
+# Create build project if it doesn't exist.
+
+    - name: Create project
+      local_action:
+        module: cs_project
+        name: "{{ build_project }}"
+        state: present
+      register: project_retval
+    
+    - name: Add accounts to project
+      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
+      with_items:
+        - "{{ env_accounts.split(',') }}"
+    
+    - name: Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 0, tagkey: 'env_name', tagval: "{{ env_name_clean }}" }
+        - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
+        - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
+        - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
+    
     - name: Build VMs
       include: ./tasks/deployvms.yml
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: update Tag project
+      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
+
+    - name: update Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
+
+## as you were
 
 - hosts: localhost
   connection: local
@@ -75,6 +116,25 @@
     - { role: mysql, when: num_db_hosts | int == 0 }
     - cloudstack-manager
     - cloudmonkey
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: update Tag project
+      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
+
+    - name: update Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
+
+## as you were
 
 - hosts: xenserver_hosts
   gather_facts: no
@@ -118,9 +178,47 @@
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
 
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: update Tag project
+      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
+
+    - name: update Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
+
+## as you were
+
 - hosts: primary_cs_manager
   roles:
     - cloudstack-config
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: update Tag project
+      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
+
+    - name: update Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
+
+## as you were
 
 - hosts: marvin_host
   gather_facts: no
@@ -147,3 +245,23 @@
 
     - name: Report CloudStack URL
       debug: msg="Nested cloud now available on http{{ "://" }}{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}{{ ":" }}8080/client"
+
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: update Tag project
+      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
+
+    - name: update Tag project
+      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+      with_items:
+        - { tagno: 3, tagkey: 'state', tagval: 'Environment_Built' }
+
+## as you were

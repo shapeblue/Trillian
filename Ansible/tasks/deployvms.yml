@@ -29,26 +29,7 @@
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
-# Create build project if it doesn't exist.
-#
-- name: Create project
-  local_action:
-    module: cs_project
-    name: "{{ build_project }}"
-    state: present
-  register: project_retval
 
-- name: Add accounts to project
-  shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
-  with_items:
-    - "{{ env_accounts.split(',') }}"
-
-- name: Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 0, tagkey: 'env_name', tagval: "{{ env_name_clean }}" }
-    - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
-    - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
 
 ####################################################################
 # First management server
