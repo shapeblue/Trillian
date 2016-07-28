@@ -337,6 +337,22 @@ test_data = {
         "privateport": 22,
         "publicport": 22,
         "protocol": "TCP",
+{% if env_hv == "kvm" %}
+        "displaytext": "kvm",
+        "name": "kvm",
+        "passwordenabled": False,
+        "ostype": "CentOS 5.5 (64-bit)",
+{% elif env_hv == "xenserver" %}
+        "displaytext": "xs",
+        "name": "xs",
+        "passwordenabled": False,
+        "ostype": "CentOS 5.6 (64-bit)"
+{% elif env_hv == "vmware" %}
+        "displaytext": "vmware",
+        "name": "vmware",
+        "passwordenabled": False,
+        "ostype": "CentOS 5.3 (64-bit)"
+{% endif %}
         "affinity": {
             "name": "webvms",
             "type": "host anti-affinity",
@@ -951,7 +967,7 @@ test_data = {
         "full": "4090-4095"
     },
     "nfs": {
-        "url": "{{ env_priprot }}:/{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri1",
+        "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri1",
         "name": "Marvin Primary Pool"
     },
     "iscsi": {

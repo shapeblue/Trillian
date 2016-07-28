@@ -413,7 +413,7 @@
       - { key: env_uuid, value: "{{ env_uuid }}" }
       - { key: env_user, value: "{{ env_user }}" }
     networks:
-      - "{{ management_network }}"
+      - "{{ marvin_network }}"
     state: present
   with_items:
     - "{{ groups['marvin_host'] }}"

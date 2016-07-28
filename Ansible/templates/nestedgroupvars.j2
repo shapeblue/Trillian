@@ -17,6 +17,7 @@
 
 
 # Environment vars
+marvin_network: "{{ marvin_network | default( def_marvin_network ) }}"
 management_network: "{{ management_network | default( def_management_network ) }}"
 guest_public_network: "{{ guest_public_network | default( def_guest_public_network ) }}"
 management_vm_hypervisor: "{{ management_vm_hypervisor | default( def_management_vm_hypervisor ) }}"

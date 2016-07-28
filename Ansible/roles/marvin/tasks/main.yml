@@ -126,6 +126,12 @@
   tags:
     - marvin
 
+- name: ensure /root/.ssh dir exists
+  file: path=/root/.ssh state=directory
+
+- name: Install SSH key for ESXi hosts
+  copy: src=id_rsa dest=/root/.ssh/id_rsa mode=0600
+
 - name: retrieve environment data
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ACTION=retrieve
   tags:

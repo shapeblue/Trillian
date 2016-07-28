@@ -15,23 +15,6 @@
 #limitations under the License.
 
 
-
-#- name: unmount local datastore 
-#  shell: esxcli storage filesystem unmount -l datastore1
-#  ignore_errors: true
-
-#- name: remount local datastore 
-#  shell: esxcli storage filesystem mount -l datastore1
-#  ignore_errors: true
-
-#- name: enable jumbo frames for vSwitch0 (raw used for pre 6.0 compatibility)
-#  raw: esxcli network vswitch standard set -m 9000 -v vSwitch0
-#  ignore_errors: true
-
-#- name: enable jumbo frames for VMKernel on vSwitch0 (raw used for pre 6.0 compatibility)
-#  raw: esxcli network ip interface set -m 1500 -i vmk0
-#  ignore_errors: true
-
 - name: enable vMotion on VMKernel
   raw: vim-cmd hostsvc/vmotion/vnic_set vmk0
   ignore_errors: true
@@ -48,10 +31,18 @@
   raw: esxcli network vswitch standard policy failover set --vswitch-name=vSwitch1 --active-uplinks=vmnic1
   ignore_errors: true
 
-#- name: enable promiscomous mode on public/guest traffic (raw used for pre 6.0 compatibility)
-#  raw: esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change yes --allow-promiscuous yes --vswitch-name vSwitch1
-#  ignore_errors: true
-
 #- name: Reset Evaluation Timer for new deployment
 #  shell: "rm -r /etc/vmware/license.cfg && cp /etc/vmware/.#license.cfg /etc/vmware/license.cfg && /etc/init.d/vpxa restart"
 #  ignore_errors: true
+
+- name: copy public key to ESXi host
+  copy: src=id_rsa.pub dest=/tmp/id_rsa.pub
+
+- name: add public to authorized keys
+  raw: cat /tmp/id_rsa.pub >> /etc/ssh/keys-root/authorized_keys
+
+- name: remove public key file
+  file: path=/tmp/id_rsa.pub state=absent
+
+- name: update config-ssh
+  raw: sed -i -e "/^PermitRootLogin/ c\PermitRootLogin yes" -e "/^PasswordAuthentication/ c\PasswordAuthentication no" -e '/PasswordAuthentication/ a\ChallengeResponseAuthentication no' /etc/ssh/sshd_config

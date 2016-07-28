@@ -58,12 +58,7 @@
         name: "{{ build_project }}"
         state: present
       register: project_retval
-    
-    - name: Add accounts to project
-      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
-      with_items:
-        - "{{ env_accounts.split(',') }}"
-    
+       
     - name: Tag project
       shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
       with_items:
@@ -72,6 +67,11 @@
         - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
         - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
     
+    - name: Add accounts to project
+      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
+      with_items:
+        - "{{ env_accounts.split(',') }}"
+ 
     - name: Build VMs
       include: ./tasks/deployvms.yml
 
