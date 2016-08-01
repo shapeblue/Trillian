@@ -26,6 +26,12 @@
     - marvin
     - marvin_cfg
 
+- name: CentOS 7 hostname fixup
+  file: path=/etc/hostname state=absent
+  tags:
+    - marvin
+    - marvin_cfg
+
 - name: Install Dev Tools Group
   yum: name="@Development tools" state=installed
   tags:
@@ -65,6 +71,8 @@
   - mariadb
   - git
   - screen
+  - sshpass
+  - at
   tags:
     - marvin
     - marvin_install
@@ -97,9 +105,13 @@
   - pyopenssl
   - pyasn1
   - wget
+  - texttable
   tags:
     - marvin
     - marvin_install
+
+- name: ensure atd is running to schedule jobs
+  service: name=atd state=started enabled=yes
 
 - name: Get Marvin files
   get_url: url='https://builds.apache.org/job/cloudstack-marvin/lastSuccessfulBuild/artifact/tools/marvin/dist/*zip*/dist.zip' dest=/tmp
@@ -129,7 +141,7 @@
 - name: ensure /root/.ssh dir exists
   file: path=/root/.ssh state=directory
 
-- name: Install SSH key for ESXi hosts
+- name: Install SSH key for ESXi and KVM hosts
   copy: src=id_rsa dest=/root/.ssh/id_rsa mode=0600
 
 - name: retrieve environment data
@@ -148,8 +160,19 @@
     - marvin
     - marvin_cfg
 
-- name: create Marvin dir if required
-  file: path=/marvin state=directory
+- name: create Marvin dirs if required
+  file: path="{{ item }}" state=directory
+  with_items:
+    - "/marvin"    
+    - "/marvin/tools"
+    - "/marvin/error"
+    - "/marvin/pass"
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: Retrieve cloud SSH keys from mgmt server
+  shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
   tags:
     - marvin
     - marvin_cfg
@@ -163,6 +186,13 @@
 
 - name: copy tests
   command: cp -r /tmp/marvin/test /marvin/
+  when: ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: copy travis xunit parser
+  shell: cp /tmp/marvin/tools/travis/* /marvin/tools/
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
@@ -223,3 +253,10 @@
     - mavintest
 
 - include: ./fix_tests.yml
+
+- name: Set component tests to run 
+  shell: "echo /marvin/componenttests-{{ env_name_clean }}.sh | at now + 1 min"
+  tags:
+    - marvin
+    - run_component_tests
+  when: run_component_tests

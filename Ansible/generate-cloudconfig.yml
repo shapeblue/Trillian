@@ -253,6 +253,14 @@
     #  set_fact: build_project="{{ (acct_retval.stdout|from_json ).account[0].name | capitalize }}-NestedClouds"
     #  when: build_project is undefined
 
+    - name: set component auto test
+      set_fact: run_component_tests=no
+      when: run_component_tests is undefined
+
+    - name: set smoke auto test
+      set_fact: run_smoke_tests=no
+      when: run_smoke_tests is undefined
+
     - name: Generate environment tagged project name
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined

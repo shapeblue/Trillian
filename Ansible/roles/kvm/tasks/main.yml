@@ -34,3 +34,22 @@
   when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm
+
+- name: copy public key to KVM hosts
+  copy: src=id_rsa.pub dest=/tmp/id_rsa.pub
+  tags:
+    - kvm
+    - ssh_keys
+
+- name: add key to local host
+  authorized_key: user=root key="{{ lookup('file', '/tmp/id_rsa.pub') }}"
+  tags:
+    - kvm
+    - ssh_keys
+
+- name: remove public key file
+  file: path=/tmp/id_rsa.pub state=absent
+  tags:
+    - kvm
+    - ssh_keys
+

@@ -13,11 +13,26 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- debug: msg="Connecting to host {{ ansible_ssh_host }}"
+  tags:
+    - "hipchat"
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  tags:
+    - "hipchat"
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   yum: name=libselinux-python state=present
   tags:
     - "hipchat"
+
+- name: Install Other Dependancies
+  yum: name={{ item }} state=installed
+  with_items:
+  - bzip2-devel
+  - unzip
+
 
 - name: install java
   yum: name=java-1.8.0-openjdk.x86_64 state=present

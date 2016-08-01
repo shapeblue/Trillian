@@ -4,90 +4,114 @@
   connection: local
   gather_facts: no
   tasks:
- 
-  - name: set 
-    set_fact: destroy_forced = yes
 
-  - name: set clean environment name
-    set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
-    when: env_name_clean is undefined and env_name is defined
-  
-  - name: set facts
-    set_fact: pri_password=def_pri_password
-    when: pri_password is undefined
-  
-  - name: set facts
-    set_fact: sec_password=def_sec_password
-    when: sec_password is undefined
-  
-  - name: set facts
-    set_fact: env_pri_host=def_env_prihost
-    when: env_prihost is undefined
-  
-  - name: set facts
-    set_fact: env_sec_host=def_env_sechost
-    when: env_sechost is undefined
-  
-  - name: set facts
-    set_fact: env_pripath=def_env_pripath
-    when: env_pripath is undefined
-  
-  - name: set facts
-    set_fact: env_secpath=def_env_secpath
-    when: env_secpath is undefined
-  
-  - name: set facts
-    set_fact: env_db_ip=def_env_db_ip
-    when: env_db_ip is undefined
-  
-  - name: set facts
-    set_fact: env_db_user=def_env_db_user
-    when: env_db_user is undefined
-  
-  - name: set facts
-    set_fact: env_db_password=def_env_db_password
-    when: env_db_password is undefined
-  
-  - name: set facts
-    set_fact: env_db_name=def_env_db_name
-    when: env_db_name is undefined
-  
-  - name: set facts
-    set_fact: build_project="{{ env_name_clean }}-NestedClouds"
-    when: build_project is undefined
+    - name: set facts
+      set_fact: env_pri_host="{{ def_env_prihost }}"
+      when: env_prihost is undefined
+
+    - name: set facts
+      set_fact: env_sec_host="{{ def_env_sechost }}"
+      when: env_sechost is undefined
+    
+    - name: set facts
+      set_fact: pri_password="{{ def_pri_password }}"
+      when: pri_password is undefined
+
+    - name: set facts
+      set_fact: sec_password="{{ def_sec_password }}"
+      when: sec_password is undefined
 
     - name: Update in memory inventory with storage host
       add_host:
-        name=secondary_storage_host
-        group=secondary_storage_hosts
-        ansible_ssh_host="{{ env_sechost }}" 
+        name="secondary_storage_host"
+        group="secondary_storage_hosts"
+        ansible_ssh_host="{{ env_sec_host }}" 
         ansible_ssh_pass="{{ sec_password }}"
-      when: destroy_forced
-
+  
     - name: Update in memory inventory with storage host
       add_host:
-        name=primary_storage_host
-        group=primary_storage_hosts
-        ansible_ssh_host="{{ env_prihost }}"
-        ansible_ssh_pass="{{ pri_password }}"    
-      when: destroy_forced
+        name="primary_storage_host"
+        group="primary_storage_hosts"
+        ansible_ssh_host="{{ env_pri_host }}"
+        ansible_ssh_pass="{{ pri_password }}"
 
 - hosts: primary_storage_hosts
   gather_facts: no
   tasks:
-    - include: ./roles/cloudstack-nfsshares/tasks/remove_shares_forced.yml
+
+    - name: set clean environment name
+      set_fact: env_name_clean="{{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}"
+      when: env_name_clean is undefined and env_name is defined
+               
+    - name: set facts
+      set_fact: env_pripath="{{ def_env_pripath }}"
+      when: env_pripath is undefined
+  
+    - debug: msg="NFS environment {{ env_name_clean }} to be removed - {{ env_pripath }}"
+
+    - name: Fail if env_name_clean is blank
+      fail: msg="env_name_clean is blank - bailing as this is VERY DANGEROUS."
+      when: "({{ env_name_clean |length|int }} == 0)"
+    
+    - name: Delete environments folder
+      file: state=absent path="{{ env_pripath }}{{ env_name_clean }}"
+
 
 - hosts: secondary_storage_hosts
   gather_facts: no
   tasks:
-    - include: ./roles/cloudstack-nfsshares/tasks/remove_shares_forced.yml
+
+    - name: set clean environment name
+      set_fact: env_name_clean="{{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}"
+      when: env_name_clean is undefined and env_name is defined
+               
+    - name: set facts
+      set_fact: env_secpath="{{ def_env_secpath }}"
+      when: env_pripath is undefined
+  
+    - debug: msg="NFS environment {{ env_name_clean }} to be removed - {{ env_secpath }}"
+
+    - name: Fail if env_name_clean is blank
+      fail: msg="env_name_clean is blank - bailing as this is VERY DANGEROUS."
+      when: "({{ env_name_clean |length|int }} == 0)"
+    
+    - name: Delete environments folder
+      file: state=absent path="{{ env_secpath }}{{ env_name_clean }}"
+
 
 - hosts: localhost
   connection: local
   gather_facts: no
+  vars:
+    destroy_forced: yes
   tasks:
+
+    - name: set facts
+      set_fact: env_db_ip=def_env_db_ip
+      when: env_db_ip is undefined
+    
+    - name: set facts
+      set_fact: env_db_user=def_env_db_user
+      when: env_db_user is undefined
+    
+    - name: set facts
+      set_fact: env_db_password=def_env_db_password
+      when: env_db_password is undefined
+    
+    - name: set facts
+      set_fact: env_db_name=def_env_db_name
+      when: env_db_name is undefined
 
     - name: Release environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=forced_rel
       when: destroy_forced
 
+    - name: set clean environment name
+      set_fact: env_name_clean="{{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}"
+      when: env_name_clean is undefined and env_name is defined
+
+    - name: Generate environment tagged project name
+      set_fact: build_project="{{ env_name_clean }}-NestedClouds"
+      when: build_project is undefined
+
+    - include: ./tasks/removeproject.yml

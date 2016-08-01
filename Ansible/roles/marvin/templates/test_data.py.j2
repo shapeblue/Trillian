@@ -338,18 +338,12 @@ test_data = {
         "publicport": 22,
         "protocol": "TCP",
 {% if env_hv == "kvm" %}
-        "displaytext": "kvm",
-        "name": "kvm",
         "passwordenabled": False,
         "ostype": "CentOS 5.5 (64-bit)",
 {% elif env_hv == "xenserver" %}
-        "displaytext": "xs",
-        "name": "xs",
         "passwordenabled": False,
         "ostype": "CentOS 5.6 (64-bit)",
 {% elif env_hv == "vmware" %}
-        "displaytext": "vmware",
-        "name": "vmware",
         "passwordenabled": False,
         "ostype": "CentOS 5.3 (64-bit)",
 {% endif %}
@@ -1471,12 +1465,7 @@ test_data = {
 
         "network": {
             "name": "Network-",
-            "displaytext": "Network-",
-            "gateway": "10.223.1.1",
-            "netmask": "255.255.255.0",
-            "startip": "10.223.59.200",
-            "endip": "10.223.59.240",
-            "vlan": "1000"
+            "displaytext": "Network-" # following removed as breaks test_acl_islolatednetwork.py --> ,"gateway": "10.223.1.1","netmask": "255.255.255.0","startip": "10.223.59.200","endip": "10.223.59.240","vlan": "1000"
         },
         "netscaler": {
             "ipaddress": "",

@@ -17,6 +17,11 @@
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
+- name: CentOS 7 hostname fixup
+  file: path=/etc/hostname state=absent
+  when: ansible_distribution_major_version == "7"
+
+
 - name: Ensure the Apache Cloudstack Repo file is configured
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
 
@@ -90,13 +95,14 @@
   yum: name=sshpass state=present
   when: ansible_distribution_major_version == "6"
 
-- name: Open 8096 when Marvin is required
-  shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT"
-  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+- name: Open 8096 when Marvin is required (CentOS 6)
+  shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT && iptables-save > /etc/sysconfig/iptables"
+  when: (num_marv_hosts > 0)
+# and (ansible_distribution_major_version == "6")
 
-- name: IPtables save config
-  shell: "iptables-save > /etc/sysconfig/iptables"
-  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+#- name: Open 8096 when Marvin is required (CentOS 7)
+#  shell: firewall-cmd --permanent --zone=public --add-port=8096/tcp && firewall-cmd --reload
+#  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
 
 - name: Ensure CloudStack Usage Service is started
   service: name=cloudstack-usage state=started

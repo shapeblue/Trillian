@@ -37,3 +37,15 @@ ENVNAME=`echo ${EXTRAVARS%$env_name=*} | head -n1 | cut -d " " -f1|cut -d "=" -f
 ansible-playbook ./deployvms.yml -i ./hosts_"$ENVNAME"
 ' > /usr/bin/build-env
 chmod 0755 /usr/bin/build-env
+
+echo '
+#!/bin/bash
+
+if [[ -z `echo $1 | grep \'^hosts_\'` ]]; then
+  ansible-playbook ./destroyvms.yml -i ./hosts_$1 --extra-vars "expunge=yes removeconfig=yes removeproject=yes"
+else
+  ansible-playbook ./destroyvms.yml -i ./$1 --extra-vars "expunge=yes removeconfig=yes removeproject=yes"
+fi
+
+' > /usr/bin/erase-env
+chmod 0755 /usr/bin/erase-env

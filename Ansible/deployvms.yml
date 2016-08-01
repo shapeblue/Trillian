@@ -52,6 +52,9 @@
 
 # Create build project if it doesn't exist.
 
+    - name: Get date time stamp
+      setup: gather_subset=!all
+
     - name: Create project
       local_action:
         module: cs_project
@@ -66,12 +69,13 @@
         - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
         - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
         - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
+        - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
     
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
       with_items:
         - "{{ env_accounts.split(',') }}"
- 
+
     - name: Build VMs
       include: ./tasks/deployvms.yml
 
@@ -226,8 +230,8 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: marvin, when: num_marv_hosts | int != 0  }
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
+    - { role: marvin, when: num_marv_hosts | int != 0  }
 
 - hosts: primary_cs_manager
   tasks:
