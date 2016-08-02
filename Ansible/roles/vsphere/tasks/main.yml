@@ -37,12 +37,16 @@
 
 - name: copy public key to ESXi host
   copy: src=id_rsa.pub dest=/tmp/id_rsa.pub
+  ignore_errors: true
 
 - name: add public to authorized keys
   raw: cat /tmp/id_rsa.pub >> /etc/ssh/keys-root/authorized_keys
+  ignore_errors: true
 
 - name: remove public key file
   file: path=/tmp/id_rsa.pub state=absent
+  ignore_errors: true
 
 - name: update config-ssh
   raw: sed -i -e "/^PermitRootLogin/ c\PermitRootLogin yes" -e "/^PasswordAuthentication/ c\PasswordAuthentication no" -e '/PasswordAuthentication/ a\ChallengeResponseAuthentication no' /etc/ssh/sshd_config
+  ignore_errors: true
