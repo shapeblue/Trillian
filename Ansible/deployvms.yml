@@ -20,7 +20,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  ("{{ all-file_version|int }}" < 4 )
+      when:  ("{{ all-file_version|int }}" < 5 )
 
 - hosts: localhost
   connection: local
@@ -149,7 +149,6 @@
 
 - hosts: kvm_hosts
   gather_facts: no
-  strategy: free
   vars:
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
   roles:
@@ -157,7 +156,6 @@
 
 - hosts: esxi_hosts
   gather_facts: no
-  strategy: free
   vars:
     num_esxi_hosts: "{{ groups['vc_hosts'] | length }}"
   roles:
@@ -246,10 +244,6 @@
       debug: msg="{{ item }} ansible_ssh_host={{ hostvars[item]['ansible_ssh_host'] | default( '<undefined>' ) }}"
       with_items:
         - "{{ groups[ env_name_clean ] }}"
-
-    - name: Report CloudStack URL
-      debug: msg="Nested cloud now available on http{{ "://" }}{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}{{ ":" }}8080/client"
-
 
 ## update status
 

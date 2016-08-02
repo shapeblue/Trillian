@@ -115,12 +115,11 @@ mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmt_templates[osversion].
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 {% if rooturl_cloudstack is not defined %}
-{% set rooturl = def_rooturl_cloudstack~osversion~"/"~numversion~"/" %}
+{% set baseurl = def_rooturl_cloudstack~osversion~"/"~numversion~"/" %}
 {% else %}
-{% set rooturl = rooturl_cloudstack~osversion~"/"~numversion~"/" %}
+{% set baseurl = rooturl_cloudstack~osversion~"/"~numversion~"/" %}
 {% endif %}
-rooturl_cloudstack: "{{ rooturl }}"
-baseurl_cloudstack: "{{ baseurl_cloudstack | default( rooturl ) }}"
+baseurl_cloudstack: "{{ baseurl_cloudstack | default( baseurl ) }}"
 
 # DB servers
 dbsrv_service_offering: "{{ dbsrv_service_offering | default( def_dbsrv_service_offering ) }}"
@@ -147,17 +146,19 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% else %}
 {% set kvmosversion = "na" %}
 {% endif %}
+kvm_os: "{{ kvmosversion }}"
 {% if kvmosversion != "custom" %}
 {% if rooturl_kvm is not defined %}
-{% set rooturl = def_rooturl_cloudstack~kvmosversion~"/"~numversion~"/" %}
+{% if rooturl_cloudstack is not defined %}
+{% set baseurl = def_rooturl_cloudstack~kvmosversion~"/"~numversion~"/" %}
 {% else %}
-{% set rooturl = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
+{% set baseurl = rooturl_cloudstack~kvmosversion~"/"~numversion~"/" %}
 {% endif %}
-rooturl_kvm: "{{ rooturl }}"
-baseurl_kvm: "{{ baseurl_kvm | default( rooturl ) }}"
+{% else %}
+{% set baseurl = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
 {% endif %}
-kvm_os: "{{ kvmosversion }}"
-
+baseurl_kvm: "{{ baseurl_kvm | default( baseurl ) }}"
+{% endif %}
 kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_template ) }}"
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"

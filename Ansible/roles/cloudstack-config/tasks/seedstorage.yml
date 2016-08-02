@@ -6,9 +6,13 @@
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=mounted opts=nolock
 
 - name: Install System VM templates
-  command: /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp -u {{ env_zone_systemplate }} -h {{ env_hv }}
+  command: /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp -u {{ env_zone_systemplate }} -h {{ env_hv }} -F
   ignore_errors: true
   changed_when: false
+
+- name: update permissions on vmware template
+  command: chown -R root:root /mnt/secstoragetmp/template/tmpl/1/8/*
+  when: "{{ env_hv }}" = "vmware"
 
 - name: Un-mount NFS storage 1 template
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=unmounted
