@@ -121,7 +121,7 @@ mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 {% set baseurl = rooturl_cloudstack~osversion~"/"~numversion~"/" %}
 {% endif %}
 baseurl_cloudstack: "{{ baseurl_cloudstack | default( baseurl ) }}"
-create_zone: "{{ create_zone | default( yes ) }}"
+{% if create_zone is not defined %}{% set create_zone = yes %}{% endif %}create_zone: {{ create_zone | default( yes ) }}
 
 
 # DB servers
