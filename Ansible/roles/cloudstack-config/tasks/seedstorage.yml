@@ -13,7 +13,7 @@
 - name: update permissions on vmware template
   file: dest="/mnt/secstoragetmp/template/tmpl/1/8" owner=root group=root recurse=yes
   when: ("{{ env_hv }}" == "vmware")
-  ignore_errors=true
+  ignore_errors: true
 
 - name: Un-mount NFS storage 1 template
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=unmounted
