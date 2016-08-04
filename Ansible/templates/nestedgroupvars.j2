@@ -118,10 +118,15 @@ mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 {% if rooturl_cloudstack is not defined %}
 {% set baseurl = def_rooturl_cloudstack~osversion~"/"~numversion~"/" %}
 {% else %}
+{% if baseurl_cloudstack is not defined %}
 {% set baseurl = rooturl_cloudstack~osversion~"/"~numversion~"/" %}
+{% else %}
+{% set baseurl = baseurl_cloudstack %}
 {% endif %}
-baseurl_cloudstack: "{{ baseurl_cloudstack | default( baseurl ) }}"
-{% if create_zone is not defined %}{% set create_zone = yes %}{% endif %}create_zone: {{ create_zone | default( yes ) }}
+{% endif %}
+baseurl_cloudstack: "{{ baseurl }}"
+{% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
+create_zone: {{ createzone }}
 
 
 # DB servers
