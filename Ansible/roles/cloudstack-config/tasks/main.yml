@@ -21,17 +21,21 @@
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh
+  when: create_zone
   tags:
     - buildzone
 
 - name: Ensure local log directory exists
   local_action: file path="/tmp/trillian_logs" state=directory mode=0755
   ignore_errors: true
+  when: create_zone
   tags:
     - buildzone
 
 - name: Retrieve log file from mgmt server
   fetch: src="/tmp/{{ env_name_clean }}-deployzone.log" dest="/tmp/trillian_logs/"
+  when: create_zone
+  ignore_errors: true
   tags:
     - buildzone
 

@@ -17,3 +17,4 @@
 
 - name: Un-mount NFS storage 1 template
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=unmounted
+  ignore_errors: true

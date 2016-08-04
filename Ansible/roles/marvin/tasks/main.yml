@@ -253,7 +253,7 @@
     - mavintest
 
 - name: add test result collation script
-  file: src=collate_results.sh dest=/marvin/collate_results.sh mode=0755
+  copy: src="collate_results.sh" dest="/marvin/collate_results.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
