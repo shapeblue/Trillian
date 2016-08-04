@@ -27,7 +27,7 @@
   gather_facts: no
   tasks:
     - name: Request and return environment details
-      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
 
     - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
@@ -37,7 +37,7 @@
       lineinfile:
         dest="group_vars/{{ env_name_clean }}"
         insertafter="^env_hv.*$"
-        line='{{ item }}'
+        line="{{ item }}"
       with_items:
         - "env_pubvlan: \"{{ env_pubvlan }}\""
         - "env_pubgw: \"{{ env_pubgw }}\""
@@ -49,6 +49,11 @@
         - "env_podmask: \"{{ env_podmask }}\""
         - "env_podendip: \"{{ env_podendip }}\""
         - "env_podstartip: \"{{ env_podstartip }}\""
+        - "env_guestnetstartip: \"{{ env_guestnetstartip }}\""
+        - "env_guestnetendip: \"{{ env_guestnetendip }}\""
+        - "env_guestnetmask: \"{{ env_guestnetmask }}\""
+        - "env_guestnetgw: \"{{ env_guestnetgw }}\""
+        - "env_guestnetvlan: \"{{ env_guestnetvlan }}\""
 
 # Create build project if it doesn't exist.
 

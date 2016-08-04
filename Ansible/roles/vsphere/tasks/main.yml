@@ -42,6 +42,7 @@
 - name: add public key to authorized keys # use curl for Pre 6.0 compatiblilty
   raw: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
   ignore_errors: true
+  when: build_marvin
 
 #- name: remove public key file
 #  file: path=/tmp/id_rsa.pub state=absent
@@ -50,3 +51,4 @@
 - name: update config-ssh
   raw: sed -i -e "/^PermitRootLogin/ c\PermitRootLogin yes" -e "/^PasswordAuthentication/ c\PasswordAuthentication no" -e '/PasswordAuthentication/ a\ChallengeResponseAuthentication no' /etc/ssh/sshd_config
   ignore_errors: true
+  when: build_marvin

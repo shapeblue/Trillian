@@ -145,7 +145,7 @@
   copy: src=id_rsa dest=/root/.ssh/id_rsa mode=0600
 
 - name: retrieve environment data
-  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ACTION=retrieve
+  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_ACTION=retrieve
   tags:
     - marvin
     - marvin_cfg
@@ -252,6 +252,13 @@
     - marvin_cfg
     - mavintest
 
+- name: add test result collation script
+  file: src=collate_results.sh dest=/marvin/collate_results.sh mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+    - mavintest
+
 - include: ./fix_tests.yml
 
 - name: Set component tests to run 
@@ -260,3 +267,11 @@
     - marvin
     - run_component_tests
   when: run_component_tests
+
+- name: Set smoke tests to run 
+  shell: "echo /marvin/smoketests-{{ env_name_clean }}.sh | at now + 1 min"
+  tags:
+    - marvin
+    - run_smoke_tests
+  when: run_smoke_tests
+

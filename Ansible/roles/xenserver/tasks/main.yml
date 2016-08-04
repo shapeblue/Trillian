@@ -23,23 +23,8 @@
   retries: 24
 
 - name: copy public key to KVM hosts
-  copy: src=id_rsa.pub dest=/tmp/id_rsa.pub
-  tags:
-    - kvm
-    - ssh_keys
-
-- name: add key to local host
-  authorized_key: user=root key="{{ lookup('file', '/tmp/id_rsa.pub') }}"
-  tags:
-    - kvm
-    - ssh_keys
-
-- name: remove public key file
-  file: path=/tmp/id_rsa.pub state=absent
-  tags:
-    - kvm
-    - ssh_keys
-
+  shell: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+  ignore_errors: true
 
 - name: Check if pool already exists
   shell: xe host-list params=uuid | grep -v ^$ | wc -l
@@ -49,35 +34,51 @@
   debug: msg="Host count is {{ hostsinpool.stdout }}."
 
 - block:
-  - name: Check management network NIC
+  - name: Get management network NIC
     shell: xe pif-list device={{ xs_mgmt_network_nic }} params=uuid --minimal
     register: mgmtnic
 
-  - name: Check guest network NIC
+  - name: Get guest network NIC
     shell: xe pif-list device={{ xs_guest_network_nic }} params=uuid --minimal
     register: guestnic
 
-  - name: Check public network NIC
+  - name: Get public network NIC
     shell: xe pif-list device={{ xs_public_network_nic }} params=uuid --minimal
     register: publicnic
 
-  - name: Check management network uuid
+  - name: Get management network uuid
     shell: xe network-list PIF-uuids={{ mgmtnic.stdout }} params=uuid --minimal
     register: mgmtuuid
 
-  - name: Check guest network uuid
+  - name: Get guest network uuid
     shell: xe network-list PIF-uuids={{ guestnic.stdout }} params=uuid --minimal
     register: guestuuid
+    when: ("{{ env_zonetype | lower }}" == "advanced")
 
-  - name: Check public network uuid
+  - name: rename guest network when basic networking
+    shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label="na"
+    register: guestuuid
+    when: ("{{ env_zonetype | lower }}" == "advanced")
+
+  - name: Get public network uuid
     shell: xe network-list PIF-uuids={{ publicnic.stdout }} params=uuid --minimal
     register: publicuuid
 
   - name: Set mgmt network name
     shell: xe network-param-set uuid={{ mgmtuuid.stdout }} name-label={{ xs_mgmt_network_label }}
 
-  - name: Set guest network name
+  - name: Set guest network name (Advanced Networking)
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
+    when: ("{{ env_zonetype | lower }}" == "advanced")
+
+  - name: create basic guest network 
+    shell: xe network-create name-label={{ xs_guest_network_label }} name-description="Basic zone guest network"
+    register: guestuuid
+    when: ("{{ env_zonetype | lower }}" == "basic")
+
+  - name: set basic guest network on vlan 11  - FIX STATICNESS SOONEST
+    shell: xe vlan-create network-uuid={{ guestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan=11
+    when: ("{{ env_zonetype |lower }}" == "basic")
 
   - name: Set public network name
     shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}

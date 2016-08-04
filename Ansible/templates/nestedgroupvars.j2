@@ -61,6 +61,7 @@ env_accounts: "{{ env_user }}"
 env_accounts: "{{ env_accounts }}"
 {% endif %}
 env_zonetype:  "{{ env_zonetype | default( def_env_zonetype ) }}"
+env_use_sec_groups: {{ env_use_sec_groups | default( def_env_use_sec_groups) }}
 {% if hvtype[0:1] | lower == "v" %}
 env_hv: "vmware"
 {% elif hvtype[0:1] | lower == "x" %}
