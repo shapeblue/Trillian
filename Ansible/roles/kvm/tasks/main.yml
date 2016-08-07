@@ -35,10 +35,10 @@
   tags:
     - kvm
 
-- name: remove public key file
-  shell: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
-  ignore_errors: true
-  tags:
-    - kvm
-    - ssh_keys
+#- name: insert public key file
+#  shell: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+#  ignore_errors: true
+#  tags:
+#    - kvm
+#    - ssh_keys
 

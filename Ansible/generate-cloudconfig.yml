@@ -94,6 +94,7 @@
 #   env_zone_systemplate: URL to system template, overrides version variable
 #   build_marvin: whether or not to build a marvin vm for testing purposes (default is no)
 #   wait_till_setup: only return once system VMs are running. (default is no)
+#   create_zone: default is yes.  set to no to not deploy zone
 #
 ##
 
@@ -142,10 +143,10 @@
       private: no
       when: env_accounts is undefined
 
-    - name: "hvtype"
-      prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
-      private: no
-      when: hvtype is undefined
+#    - name: "hvtype"
+#      prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
+#      private: no
+#      when: ( hvtype is undefined ) and ( hv > 0 )
 
     - name: "hv"
       prompt: "Number of hypervisor hosts"
@@ -157,7 +158,7 @@
       prompt: "Number of primary storage pools"
       default: "1"
       private: no
-      when: pri is undefined
+      when: ( pri is undefined ) and ( hv > 0 )
 
   tasks:
 
@@ -173,7 +174,7 @@
 
     - name: Check returned hypervisor type
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
-      when: hvtype not in [ "v",  "x", "k", "kvm", "vmware", "xenserver" ]
+      when:  ( hvtype not in [ "v",  "x", "k", "kvm", "vmware", "xenserver" ] ) and ( hv | int > 0 )
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
@@ -186,6 +187,10 @@
     - name: Ensure KVM OS is specified when hypervisor is k
       fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
       when: ("{{ hvtype }}" in [ "k", "kvm" ] ) and ( kvm_os is undefined )
+
+    - name: set value for hytype when not required
+      set_fact: hvtype="na"
+      when: hv | int == 0
 
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"

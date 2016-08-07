@@ -21,8 +21,13 @@
 - name: Configure bridge 1
   template: src=kvm-cloudbr0.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
-- name: Configure eth1
+- name: Configure eth1 (Advanced Networking)
   template: src=kvm-eth1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+  when: ("{{ env_zonetype | lower }}" == "advanced")
+
+- name: Configure eth1 (Basic Networking)
+  template: src=kvm-eth1-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1.11
+  when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: Configure bridge 2
   template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"

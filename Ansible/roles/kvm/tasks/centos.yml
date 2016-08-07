@@ -78,23 +78,23 @@
 - name: Update libvirtd.conf - listen_tls
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
   with_items:
-    - { regexp: "^listen_tls", line: "listen_tls = 0" }
-    - { regexp: "^listen_tcp", line: "listen_tcp = 1" }
-    - { regexp: "^tcp_port", line: "tcp_port = \"16509\"" }
-    - { regexp: "^auth_tcp", line: "auth_tcp = \"none\"" }
-    - { regexp: "^mdns_adv", line: "mdns_adv = 0" }
+    - { regexp: "listen_tls", line: "listen_tls = 0" }
+    - { regexp: "listen_tcp", line: "listen_tcp = 1" }
+    - { regexp: "tcp_port", line: "tcp_port = \"16509\"" }
+    - { regexp: "auth_tcp", line: "auth_tcp = \"none\"" }
+    - { regexp: "mdns_adv", line: "mdns_adv = 0" }
   tags:
     - kvm
     - kvm-agent
 
 - name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  lineinfile: dest=/etc/sysconfig/libvirtd regexp=^LIBVIRTD_ARGS line='LIBVIRTD_ARGS="--listen"' state=present
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
   tags:
     - kvm
     - kvm-agent
 
 - name: Update /etc/libvirt/qemu.conf
-  lineinfile: dest=/etc/libvirt/qemu.conf regexp=^vnc_listen line='vnc_listen = "0.0.0.0"' state=present
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
   tags:
     - kvm
     - kvm-agent

@@ -1,0 +1,163 @@
+#!/bin/bash
+################################################################################
+# deployzone.sh
+# Populated by Ansible as part of deployvms.yml playbook.
+
+################################################################################
+# Vars / constants
+DEPLOYLOG="/tmp/{{ env_name_clean }}-deployzone.log";
+
+################################################################################
+# Write to log file + console
+function WriteOutput()
+{
+  local LogTimestamp;
+  LogTimestamp=`date +"%Y-%m-%d %H:%M:%S"`;
+  echo -e "$*"
+  echo ${LogTimestamp} "$*" >> ${DEPLOYLOG};
+}
+
+WriteOutput "Checking login.";
+AccountCheck=`cloudmonkey list accounts name=admin | grep -i error`;
+if [ -z ${AccountCheck} ];
+then
+  WriteOutput "Admin account found. Good to go.";
+else
+  WriteOutput "Unable to log in, please check CloudStack installation.";
+  exit 1;
+fi
+
+WriteOutput "Checking if zone exists."
+ZoneCheck=`cloudmonkey list zones`;
+if [ -z ${ZoneCheck} ];
+then
+  WriteOutput "No zone exists. Good to go."
+else
+  WriteOutput "Zone already present, bailing out."
+  exit 1
+fi
+
+if [ "{{ env_zonetype | lower }}" == "advanced" ];
+then
+  WriteOutput "Creating advanced zone - {{ env_name_clean }}";
+  ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled={{ env_zone_secgroups }} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ env_zone_localstorage }} | jq -c -r '.zone.id'`;
+  WriteOutput "Zone created with ID ${ZoneID}.";
+  WriteOutput "Creating physical network - Management.";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  WriteOutput "Creating Physical Network - Guest / Public.";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" | jq '.physicalnetwork[] | .id'`;
+  PhysNetPubID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" | jq '.physicalnetwork[] | .id'`;
+  PhysNetGuestID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" | jq '.physicalnetwork[] | .id'`;
+  WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
+  WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
+  WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
+  WriteOutput "Adding Traffic Type - Public.";
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+else
+  WriteOutput "Creating basic zone - {{ env_name_clean }}";
+  ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled={{ env_zone_secgroups }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ env_zone_localstorage }} | jq -c -r '.zone.id'`;
+  WriteOutput "Zone created with ID ${ZoneID}.";
+  WriteOutput "Creating physical network.";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network' | tee -i -a ${DEPLOYLOG};
+  PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network" | jq '.physicalnetwork[] | .id'`;
+  WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
+fi
+WriteOutput "Adding Traffic Type - Management";
+cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
+WriteOutput "Adding Traffic Type - Guest";
+cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+PhysNetArray=`cloudmonkey list physicalnetworks filter=id | jq '.physicalnetwork[] | .id'`;
+for i in ${PhysNetArray};
+do
+  WriteOutput "Enabling Physical Network ${i}";
+  cloudmonkey update physicalnetwork state='Enabled' id=${i}  | tee -i -a ${DEPLOYLOG};
+done
+
+if [ "{{ env_zonetype | lower }}" == "advanced" ];
+then
+  NetProvArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name!="SecurityGroupProvider") | .id' | tr " " "\n"`;
+  IntLBArrayAdv=`cloudmonkey list internalloadbalancerelements filter=name,id | jq '.internalloadbalancerelement[] | .id' | tr " " "\n"`;
+  VRArrayAdv=`cloudmonkey list virtualrouterelements filter=name,id | jq '.virtualrouterelement[] | .id' | tr " " "\n"`;
+  for i in ${IntLBArrayAdv};
+  do
+    WriteOutput "Enabling internalloadbalancerelements ${i}";
+    cloudmonkey configure internalloadbalancerelement enabled='true' id=${i} | tee -i -a ${DEPLOYLOG};
+  done
+  for i in ${VRArrayAdv};
+  do
+    WriteOutput "Enabling virtualrouterelement ${i}";
+    cloudmonkey configure virtualrouterelement enabled='true' id=${i} | tee -i -a ${DEPLOYLOG};
+  done
+  for i in ${NetProvArrayAdv};
+  do
+    WriteOutput "Enabling networkserviceprovider ${i}";
+    cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
+  done
+  WriteOutput "Creating public range.";
+  cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
+  WriteOutput "Creating Guest VLAN range."
+  cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+else
+  NetProvArrayBas=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
+  VRArrayBas=`cloudmonkey list virtualrouterelements nspid=${NetProvArrayBas} | jq '.virtualrouterelement[] | .id'`;
+  cloudmonkey configure virtualrouterelement enabled='True' id=${VRArrayBas} | tee -i -a ${DEPLOYLOG};
+  cloudmonkey update networkserviceprovider id=${NetProvArrayBas} state='Enabled' | tee -i -a ${DEPLOYLOG};
+  NetOffIDBas=`cloudmonkey list networkofferings name="DefaultSharedNetworkOffering" displaytext="Offering for Shared networks" | jq '.networkoffering[] | .id'`;
+  cloudmonkey create network zoneid=${ZoneID} name=defaultGuestNetwork displaytext=defaultGuestNetwork networkofferingid=${NetOffIDBas}  | tee -i -a ${DEPLOYLOG};
+fi
+
+WriteOutput "Creating 1st Pod.";
+cloudmonkey create pod zoneid=${ZoneID} name="{{ env_zone_podname }}" gateway="{{ env_podgw }}" netmask="{{ env_podmask }}" startip="{{ env_podstartip }}" endip="{{ env_podendip }}" | tee -i -a ${DEPLOYLOG};
+PodID=`cloudmonkey list pods name=$POD1_NAME filter=id | jq '.pod[] | .id'`;
+WriteOutput "First Pod created with ID = ${PodID}";
+
+if [ "{{ env_hv | lower }}" == "vmware" ];
+then
+  WriteOutput "Adding VMware datacenter."
+  cloudmonkey add vmwaredc name="{{ vmware_datacenter_name }}" password="{{ vmware_vcsa_pass }}" username="{{ vmware_vcsa_user }}" vcenter="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" zoneid=${ZoneID} | tee -i -a ${DEPLOYLOG};
+  VMWDataCenter=`cloudmonkey list vmwaredcs zoneid=${ZoneID} | grep {{ vmware_datacenter_name }}`;
+  WriteOutput "Adding VMware cluster."
+  if [ "{{ env_zone_addhosts }}" == "true" ];
+  then
+    cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' PodID=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" vsmipaddress="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" vsmpassword='{{ vmware_vcsa_pass }}' vsmusername='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
+    ClusterID=`cloudmonkey list clusters clustername="{{ env_zone_clustername }}" | jq '.cluster[] | .id'`;
+  fi
+elif  [ "{{ env_hv | lower }}" == "xenserver" ];
+then
+  WriteOutput "Adding XenServer cluster.";
+  ClusterID=`cloudmonkey add cluster zoneid=${ZoneID} hypervisor='XenServer' clustertype='CloudManaged' PodID=${PodID} clustername='{{ env_zone_clustername }}'  | jq '.cluster[] | .id'`;
+  WriteOutput "Adding XenServer hosts.";
+  if [ "{{ env_zone_addhosts }}" == "true" ];
+  then
+    cloudmonkey add host zoneid=${ZoneID} PodID=${PodID} clusterid=${ClusterID} hypervisor=XenServer password="{{ xs_password }}" username="{{ xs_username }}" url="http://{% if groups['xenserver_hosts'] | length | int > 0 %}{{ hostvars[groups['xenserver_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" | tee -i -a ${DEPLOYLOG};
+  fi
+elif  [ "{{ env_hv | lower }}" == "kvm" ];
+then
+  WriteOutput "Adding KVM cluster."
+  ClusterID=`cloudmonkey add cluster zoneid=${ZoneID} hypervisor='KVM' clustertype='CloudManaged' PodID=${PodID} clustername='{{ env_zone_clustername }}'  | jq '.cluster[] | .id'`;
+  if [ "{{ env_zone_addhosts }}" == "true" ];
+  then
+    WriteOutput "Adding KVM hosts."
+    {% for host in groups[ 'kvm_hosts'] %}
+    WriteOutput "Adding KVM host {{ host }}.";
+    cloudmonkey add host zoneid=${ZoneID} PodID=${PodID} clusterid=${ClusterID} hypervisor='KVM' password="{{ kvm_password }}" username="{{ kvm_username }}" url="http://{{ hostvars[host]['ansible_ssh_host'] }}" | tee -i -a ${DEPLOYLOG};
+    {% endfor %}
+  fi
+fi
+sleep 30
+
+WriteOutput "Adding Primary Storage pools.";
+{% for pool in env_pripools %}
+WriteOutput "Adding Primary Storage pool {{ pool }}.";
+cloudmonkey create storagepool zoneid=${ZoneID} PodID=${PodID} clusterid=${ClusterID} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% endfor %}
+
+WriteOutput "Adding Secondary Storage Pool"
+{% for pool in env_secpools %}
+cloudmonkey add imagestore name='{{ pool }}' provider='NFS' zoneid=${ZoneID} url="NFS://{% if groups['secondary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_secpath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% endfor %}
+
+WriteOutput "Enabling zone."
+cloudmonkey update zone allocationstate='Enabled' id=${ZoneID} | tee -i -a ${DEPLOYLOG};
+WriteOutput "You're done. Good luck!";

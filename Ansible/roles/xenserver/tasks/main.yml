@@ -53,12 +53,10 @@
   - name: Get guest network uuid
     shell: xe network-list PIF-uuids={{ guestnic.stdout }} params=uuid --minimal
     register: guestuuid
-    when: ("{{ env_zonetype | lower }}" == "advanced")
 
   - name: rename guest network when basic networking
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label="na"
-    register: guestuuid
-    when: ("{{ env_zonetype | lower }}" == "advanced")
+    when: ("{{ env_zonetype | lower }}" == "basic")
 
   - name: Get public network uuid
     shell: xe network-list PIF-uuids={{ publicnic.stdout }} params=uuid --minimal
@@ -73,11 +71,11 @@
 
   - name: create basic guest network 
     shell: xe network-create name-label={{ xs_guest_network_label }} name-description="Basic zone guest network"
-    register: guestuuid
+    register: basguestuuid
     when: ("{{ env_zonetype | lower }}" == "basic")
 
   - name: set basic guest network on vlan 11  - FIX STATICNESS SOONEST
-    shell: xe vlan-create network-uuid={{ guestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan=11
+    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan=11
     when: ("{{ env_zonetype |lower }}" == "basic")
 
   - name: Set public network name
