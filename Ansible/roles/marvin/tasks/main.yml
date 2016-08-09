@@ -45,6 +45,9 @@
     - marvin
     - marvin_install
 
+- name: switch to http for file mirrors
+  shell: sed -i 's/mirrorlist=https:/mirrorlist=http:/g' /etc/yum.repos.d/epel.repo
+
 - name: Install Other Dependancies
   yum: name={{ item }} state=installed
   with_items:
