@@ -1,0 +1,50 @@
+---
+
+- name: get local facts
+  local_action: setup
+  tags:
+    - vc_config
+
+- name: replace vmware python module to fix cert checking  (CentOS/RHEL)
+  local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vsphere_guest.py dest="/usr/lib/python2.7/site-packages/ansible/modules/core/cloud/vmware/vsphere_guest.py" force=yes mode=0644
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  tags:
+    - vc_config
+
+- name: remove compiled vmware.py code (Ubuntu)
+  local_action: file path="/usr/lib/python2.7/site-packages/ansible/modules/core/cloud/vmware/vsphere_guest.pyc" state=absent
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  tags:
+    - vc_config
+
+- name: replace vmware python module to fix cert checking  (CentOS/RHEL)
+  local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vsphere_guest.py dest="/usr/local/lib/python2.7/dist-packages/ansible/modules/core/cloud/vmware/vsphere_guest.py" force=yes mode=0644
+  when: ansible_distribution == 'Ubuntu'
+  tags:
+    - vc_config
+
+- name: remove compiled vmware.py code (Ubuntu)
+  local_action: file path="/usr/local/lib/python2.7/dist-packages/ansible/modules/core/cloud/vmware/vsphere_guest.pyc" state=absent
+  when: ansible_distribution == 'Ubuntu'
+  tags:
+    - vc_config
+
+- name: add dvfilter to Nested Host interfaces
+  vsphere_guest:
+        vcenter_hostname: "{{ parent_vcenter_hostname }}"
+        username: "{{ parent_vcenter_username }}"
+        password: "{{ parent_vcenter_password }}"
+        guest: "{{ hostvars[item]['instance_name'] }}"
+        state: reconfigured
+        vm_extra_config:
+          ethernet0.filter4.name: "dvfilter-maclearn"
+          ethernet0.filter4.onFailure: "failOpen"
+          ethernet1.filter4.name: "dvfilter-maclearn"
+          ethernet1.filter4.onFailure: "failOpen"
+        esxi:
+          datacenter_name: "{{ parent_vcenter_dc }}"
+        validate_certs: no
+  with_items:
+    - "{{ groups['hypervisor_hosts'] }}"
+  tags:
+    - add_dvfilter
