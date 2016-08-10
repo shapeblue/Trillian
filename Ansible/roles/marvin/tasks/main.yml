@@ -154,8 +154,8 @@
     - marvin_cfg
 
 - name: clear marvin dirs if exists
-  file: path="{{ item }}" state=absent 
-  with_items: 
+  file: path="{{ item }}" state=absent
+  with_items:
     - "/marvin"
     - "/tmp/marvin"
   when: ("{{ marvin_tests_source }}" == "github")
@@ -166,7 +166,7 @@
 - name: create Marvin dirs if required
   file: path="{{ item }}" state=directory
   with_items:
-    - "/marvin"    
+    - "/marvin"
     - "/marvin/tools"
     - "/marvin/error"
     - "/marvin/pass"
@@ -179,6 +179,7 @@
   tags:
     - marvin
     - marvin_cfg
+  ignore_errors: yes
 
 - name: clone master repo
   git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1
@@ -264,17 +265,16 @@
 
 - include: ./fix_tests.yml
 
-- name: Set component tests to run 
+- name: Set component tests to run
   shell: "echo /marvin/componenttests-{{ env_name_clean }}.sh | at now + 1 min"
   tags:
     - marvin
     - run_component_tests
   when: run_component_tests
 
-- name: Set smoke tests to run 
+- name: Set smoke tests to run
   shell: "echo /marvin/smoketests-{{ env_name_clean }}.sh | at now + 1 min"
   tags:
     - marvin
     - run_smoke_tests
   when: run_smoke_tests
-
