@@ -1,20 +1,45 @@
 ---
 - name: Create secondary storage mount
   file: path=/mnt/secstoragetmp state=directory
+  tags:
+    - seed_sec_storage
 
 - name: Mount NFS storage template
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=mounted opts=nolock
+  tags:
+    - seed_sec_storage
+
+- name: detect cloud or cloudstack usage
+  stat: path=/usr/lib64/cloud/agent/scripts/storage/secondary/cloud-install-sys-tmplt
+  register: path_is_cloud
+  tags:
+    - seed_sec_storage
 
 - name: Install System VM templates
   command: /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp -u {{ env_zone_systemplate }} -h {{ env_hv }} -F
+  when: path_is_cloud.stat.exists == False
   ignore_errors: true
   changed_when: false
+  tags:
+    - seed_sec_storage
+
+- name: Install System VM templates
+  command: /usr/lib64/cloud/agent/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp -u {{ env_zone_systemplate }} -h {{ env_hv }} -F
+  when: path_is_cloud.stat.exists == True
+  ignore_errors: true
+  changed_when: false
+  tags:
+    - seed_sec_storage
 
 - name: update permissions on vmware template
   file: dest="/mnt/secstoragetmp/template/tmpl/1/8" owner=root group=root recurse=yes
   when: ("{{ env_hv }}" == "vmware")
   ignore_errors: true
+  tags:
+    - seed_sec_storage
 
 - name: Un-mount NFS storage 1 template
   mount: name=/mnt/secstoragetmp src={{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_secpath }}{{ env_name_clean }}/{{ env_secpools[0] }} fstype=nfs state=unmounted
   ignore_errors: true
+  tags:
+    - seed_sec_storage

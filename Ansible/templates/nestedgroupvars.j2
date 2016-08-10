@@ -39,8 +39,10 @@ env_version: "{{ env_version }}"
 {% set minorversion = env_version[3:4] %}
 {% set numversion = majorversion~ "." ~minorversion %}
 env_numversion: {{ numversion }}
-{% if mgmt_os[0:1] | lower == "6" %}
+{% if mgmt_os | lower == "6" %}
 {% set osversion = "centos" %}
+{% elif mgmt_os | lower == "62" %}
+{% set osversion = "centos62" %}
 {% elif mgmt_os[0:1] | lower == "7" %}
 {% set osversion = "centos7" %}
 {% elif mgmt_os[0:1] | lower == "u" %}
@@ -127,6 +129,8 @@ mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 baseurl_cloudstack: "{{ baseurl }}"
 {% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
 create_zone: {{ createzone }}
+{% if ccp_install_tarball is not defined %}{% set ccp_tarball = "na" %}{% else %}{% set ccp_tarball = ccp_install_tarball %}{% endif %}
+ccp_install_tarball: {{ ccp_tarball }}
 
 
 # DB servers
@@ -212,8 +216,8 @@ vmware_esxi_password: "{{ vmware_esxi_password | default( def_vmware_esxi_passwo
 
 
 # Marvin server
-marvin_service_offering: "{{ mgmtsrv_service_offering | default( def_marvin_service_offering ) }}"
-marvin_server_template: "{{ mgmtsrv_template | default( def_marvin_server_template ) }}"
+marvin_service_offering: "{{ marvin_service_offering | default( def_marvin_service_offering ) }}"
+marvin_server_template: "{{ marvin_server_template | default( def_marvin_server_template ) }}"
 marvin_username: "{{ marvin_username | default( def_marvin_username ) }}"
 marvin_password: "{{ marvin_password | default( def_marvin_password ) }}"
 marvin_tests_source: "{{ marvin_tests_source | default ( def_marvin_tests_source) }}"
@@ -225,8 +229,7 @@ marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images
 
 # Hipchat cli client
 use_hipchat: yes
-hipchat_server: "{{ hipchat_server | default( def_hipchat_server ) }}" 
+hipchat_server: "{{ hipchat_server | default( def_hipchat_server ) }}"
 hipchat_token: "{{ hipchat_token | default ( def_hipchat_token ) }}"
 hipchat_cli_client_location: "{{ hipchat_cli_client_location | default ( def_hipchat_cli_client_location ) }}"
 hipchat_cli_client_version: "{{ hipchat_cli_client_version | default ( def_hipchat_cli_client_version ) }}"
-
