@@ -58,6 +58,7 @@
     - traceroute
     - nano
     - iftop
+    - python-argparse
   tags:
     - kvm
 
