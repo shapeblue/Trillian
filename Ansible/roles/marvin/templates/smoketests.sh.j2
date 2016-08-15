@@ -17,12 +17,12 @@
 LOGDIR=/marvin/MarvinLogs
 
 {% if marvin_tests_source == "github" %}
-rm -f /marvin/test/integration/smoke/test_*.pyc
+rm -f /marvin/tests/smoke/test_*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/test_data.pyc
 
-NUMTESTS=`find /marvin/test/integration/smoke/test_*.py | wc -l`
+NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
 counter=1
-for file in /marvin/test/integration/smoke/test_*.py; do
+for file in /marvin/tests/smoke/test_*.py; do
   echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 

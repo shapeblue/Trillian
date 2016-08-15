@@ -6,7 +6,6 @@
 - name: set mysql_master_ip
   set_fact: mysql_master_ip={{ (num_db_hosts | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
 
-
 - name: preset some global settings
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
   with_items:
@@ -22,6 +21,9 @@
   when: ( item.condition == "marvin" ) and build_marvin
   tags:
     - "global_settings"
+
+- name: add admin keys for cloudmonkey
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
 
 - name: test for cloud or cloudstack Usage
   stat: path=/etc/rc.d/init.d/cloudstack-management

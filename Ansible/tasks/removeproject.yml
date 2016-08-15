@@ -42,6 +42,8 @@
   register: remove_retval
   ignore_errors: yes
   when: not destroy_forced
+  async: 1000
+  poll: 0
 
 ####################################################################
 # Remove project
@@ -54,4 +56,3 @@
   when: (removeproject is defined) or destroy_forced
   ignore_errors: yes
 ####################################################################
-

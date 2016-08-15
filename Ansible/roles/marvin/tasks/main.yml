@@ -45,8 +45,12 @@
     - marvin
     - marvin_install
 
-- name: switch to http for file mirrors
-  shell: sed -i 's/mirrorlist=https:/mirrorlist=http:/g' /etc/yum.repos.d/epel.repo
+- name: switch to baseurl as mirrors seem unreliable
+  shell: sed -i -e 's|mirrorlist=https:|#mirrorlist=http:|g' -e 's|#baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel.repo
+  ignore_errors: true
+  tags:
+    - marvin
+    - marvin_install
 
 - name: Install Other Dependancies
   yum: name={{ item }} state=installed
@@ -116,25 +120,43 @@
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes
 
+- name: Set repo to install PR tests from
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+  when: ("{{ marvin_tests_source }}" == "pr")
+  tags:
+    - marvin
+    - marvin_cfg
+
 - name: Get Marvin files
   get_url: url='https://builds.apache.org/job/cloudstack-marvin/lastSuccessfulBuild/artifact/tools/marvin/dist/*zip*/dist.zip' dest=/tmp
+  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
 
 - name: unpack Marvin files
   unarchive: src=/tmp/dist.zip dest=/tmp copy=no
+  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
 
-- name:
+- name: Rename Marvin files
   shell: mv /tmp/dist/Marvin-*.tar.gz /tmp/dist/Marvin.tar.gz
+  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
 
 - name: Install Marvin
   pip: name='file:///tmp/dist/Marvin.tar.gz'
+  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
+
+- name: Install Marvin packages from PR
+  yum: name=cloudstack-marvin state=present
+  when: ("{{ marvin_tests_source }}" == "pr")
+  tags:
+    - marvin
+    - marvin_cfg
 
 - name: Install nose
   easy_install: name=nose
@@ -158,7 +180,6 @@
   with_items:
     - "/marvin"
     - "/tmp/marvin"
-  when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
@@ -189,15 +210,22 @@
     - marvin_cfg
 
 - name: copy tests
-  command: cp -r /tmp/marvin/test /marvin/
+  command: cp -r /tmp/marvin/test/integration /marvin/tests
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
 
-- name: copy travis xunit parser
-  shell: cp /tmp/marvin/tools/travis/* /marvin/tools/
-  when: ("{{ marvin_tests_source }}" == "github")
+- name: Ensure integration test packages are installed
+  yum: name=cloudstack-integration-tests state=present
+  when: ("{{ marvin_tests_source }}" == "pr")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: copy tests
+  command: cp -r /usr/share/cloudstack-integration-tests /marvin/tests
+  when: ("{{ marvin_tests_source }}" == "pr")
   tags:
     - marvin
     - marvin_cfg
@@ -212,6 +240,12 @@
 
 - name: create mavin cfg file
   template: src=advanced-cfg.j2 dest="/marvin/{{ env_name_clean }}-advanced-cfg"
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: copy travis xunit parser
+  copy: src=xunit-reader.py dest=/marvin/tools/xunit-reader.py
   tags:
     - marvin
     - marvin_cfg
@@ -264,17 +298,3 @@
     - mavintest
 
 - include: ./fix_tests.yml
-
-- name: Set component tests to run
-  shell: "echo /marvin/componenttests-{{ env_name_clean }}.sh | at now + 1 min"
-  tags:
-    - marvin
-    - run_component_tests
-  when: run_component_tests
-
-- name: Set smoke tests to run
-  shell: "echo /marvin/smoketests-{{ env_name_clean }}.sh | at now + 1 min"
-  tags:
-    - marvin
-    - run_smoke_tests
-  when: run_smoke_tests

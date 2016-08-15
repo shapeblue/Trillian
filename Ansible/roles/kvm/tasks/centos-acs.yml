@@ -13,32 +13,19 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
+# Copyright (C) ShapeBlue Ltd - All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential
+# Released by ShapeBlue <info@shapeblue.com>, April 2014
 
-
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+- name: Ensure the Apache Cloudstack Repo file is configured
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
   tags:
     - kvm
+    - kvm-agent
 
-- name: Now I'm connected, get facts
-  setup:
+- name: Ensure CloudStack packages are installed
+  yum: name=cloudstack-agent state=present enablerepo=base
   tags:
     - kvm
-
-- include: ./centos.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-  tags:
-    - kvm
-
-- include: ./ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
-  tags:
-    - kvm
-
-- name: insert public key file
-  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
-  ignore_errors: true
-  tags:
-    - kvm
-    - ssh_keys
-
+    - kvm-agent

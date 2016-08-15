@@ -1,23 +1,5 @@
 ---
 
-#Copyright 2016 ShapeBlue
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-# Copyright (C) ShapeBlue Ltd - All Rights Reserved
-# Unauthorized copying of this file, via any medium is strictly prohibited
-# Proprietary and confidential
-# Released by ShapeBlue <info@shapeblue.com>, April 2014
-
 - name: Ensure prerequisite libselinux-python installed
   yum: name=libselinux-python state=installed
   tags:
@@ -34,19 +16,32 @@
   changed_when: false
   tags:
     - kvm
-  
+
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
   tags:
     - kvm
 
 - name: Ensure EPEL is available
-  yum: name="{{ current_epel }}" state=present
+  yum: name="{{ epel6 }}" state=present
+  when: ansible_distribution_major_version == "6"
+  tags:
+    - kvm
+
+- name: Ensure EPEL is available
+  yum: name="{{ epel7 }}" state=present
+  when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+
+- name: switch to http for file mirrors
+  shell: sed -i 's|mirrorlist=https:|mirrorlist=http:|g' /etc/yum.repos.d/epel.repo
+  ignore_errors: true
   tags:
     - kvm
 
 - name: Install basic utilities and tools
-  yum: name={{ item }} state=present
+  yum: name={{ item }} state=present enablerepo=base
   with_items:
     - bind-utils
     - bridge-utils
@@ -64,17 +59,16 @@
 
 - include: ./kvm_networking.yml
 
-- name: Ensure the Apache Cloudstack Repo file is configured
-  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
-  tags:
-    - kvm
-    - kvm-agent
+- debug: msg="Set Java on VM"
+- set_fact: java_ver="{{ kvm_java_ver }}"
+- set_fact: java_path="{{ kvm_java_path }}"
+- include: ../../../tasks/set_java.yml
 
-- name: Ensure CloudStack packages are installed
-  yum: name=cloudstack-agent state=present
-  tags:
-    - kvm
-    - kvm-agent
+- include: ./centos-acs.yml
+  when: ("{{ env_version[0:2]}}" == "cs")
+
+- include: ./centos-ccp.yml
+  when: ("{{ env_version[0:3]}}" == "ccp")
 
 - name: Update libvirtd.conf - listen_tls
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present

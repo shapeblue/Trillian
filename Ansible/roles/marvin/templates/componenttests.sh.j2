@@ -15,17 +15,17 @@
 #limitations under the License.
 
 LOGDIR=/marvin/MarvinLogs
-rm -f /marvin/test/integration/component/*.pyc
-rm -f /marvin/test/integration/component/maint/*.pyc
+rm -f /marvin/tests/component/*.pyc
+rm -f /marvin/tests/component/maint/*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/test_data.pyc
 
 {% if marvin_tests_source == "github" %}
 
-NUMTESTS1=`find /marvin/test/integration/component/test*.py | wc -l`
-NUMTESTS2=`find /marvin/test/integration/component/maint/test*.py | wc -l`
+NUMTESTS1=`find /marvin/tests/component/test*.py | wc -l`
+NUMTESTS2=`find /marvin/tests/component/maint/test*.py | wc -l`
 NUMTESTS=$((NUMTESTS1+NUMTESTS2))
 counter=1
-for file in /marvin/test/integration/component/test_*.py; do
+for file in /marvin/tests/component/test_*.py; do
 echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 
@@ -45,7 +45,7 @@ echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_
   counter=$((counter+1))
 done
 
-for file in /marvin/test/integration/component/maint/test_*.py; do
+for file in /marvin/tests/component/maint/test_*.py; do
   echo "Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 

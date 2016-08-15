@@ -66,7 +66,7 @@
         name: "{{ build_project }}"
         state: present
       register: project_retval
-       
+
     - name: Tag project
       shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
       with_items:
@@ -75,11 +75,15 @@
         - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
         - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
         - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
-    
+      async: 60
+      poll: 0
+      
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
       with_items:
         - "{{ env_accounts.split(',') }}"
+      async: 60
+      poll: 0
 
     - name: Build VMs
       include: ./tasks/deployvms.yml
@@ -268,3 +272,21 @@
         - { tagno: 3, tagkey: 'state', tagval: 'Environment_Built' }
 
 ## as you were
+
+- hosts: marvin_host
+  gather_facts: no
+  tasks:
+
+  - name: Set component tests to run
+    shell: "echo /marvin/componenttests-{{ env_name_clean }}.sh | at now + 1 min"
+    tags:
+      - marvin
+      - run_component_tests
+    when: run_component_tests
+
+  - name: Set smoke tests to run
+    shell: "echo /marvin/smoketests-{{ env_name_clean }}.sh | at now + 1 min"
+    tags:
+      - marvin
+      - run_smoke_tests
+    when: run_smoke_tests

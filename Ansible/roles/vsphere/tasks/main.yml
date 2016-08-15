@@ -40,7 +40,7 @@
 #  ignore_errors: true
 
 - name: add public key to authorized keys # use curl for Pre 6.0 compatiblilty
-  raw: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+  raw: "wget {{ repohost }}/id_rsa.pub -O /tmp/id_rsa.pub && cat /tmp/id_rsa.pub >> /etc/ssh/keys-root/authorized_keys"
   ignore_errors: true
   when: build_marvin
 

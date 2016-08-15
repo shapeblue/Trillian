@@ -1,0 +1,12 @@
+---
+
+- debug: msg="Java version required is {{ java_ver }} - {{ java_path }}"
+
+- name: ensure that above Java version is present
+  yum: name="{{ java_ver }}" state=latest enablerepo=base
+#  when: ("{{ java_type}}" == "openjdk")
+
+- debug: msg="register oracle java with alternatives (TODO)"
+
+- name: set as default version
+  shell: "alternatives --set java {{ java_path }}"

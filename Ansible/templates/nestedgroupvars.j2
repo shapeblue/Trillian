@@ -41,14 +41,28 @@ env_version: "{{ env_version }}"
 env_numversion: {{ numversion }}
 {% if mgmt_os | lower == "6" %}
 {% set osversion = "centos" %}
+{% set mgmt_os_type = "centos" %}
+{% set releaseurl = "centos" %}
 {% elif mgmt_os | lower == "62" %}
 {% set osversion = "centos62" %}
+{% set releaseurl = "centos" %}
+{% set mgmt_os_type = "centos" %}
+{% elif mgmt_os | lower == "64" %}
+{% set osversion = "centos64" %}
+{% set releaseurl = "centos" %}
+{% set mgmt_os_type = "centos" %}
 {% elif mgmt_os[0:1] | lower == "7" %}
 {% set osversion = "centos7" %}
+{% set releaseurl = "centos7" %}
+{% set mgmt_os_type = "centos" %}
 {% elif mgmt_os[0:1] | lower == "u" %}
 {% set osversion = "debian" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "debian" %}
 {% elif mgmt_os[0:1] | lower == "c" %}
 {% set osversion = "custom" %}
+{% set releaseurl = "custom" %}
+{% set mgmt_os_type = "unknown" %}
 {% else %}
 {% set osversion = "Management OS not found." %}
 {% endif %}
@@ -82,9 +96,21 @@ sec_password: "{{ sec_password | default( def_sec_password ) }}"
 env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
 {% if pri | int > 0 %}
 env_pripools:
+{% if vmware_ver | lower != "na" %}
 {% for n in range(1,pri | int + 1) %}
-  - {{ env_name_clean }}-pri{{ n }}
+  - {{ env_name_clean }}-esxi-pri{{ n }}
 {% endfor %}
+{% endif %}
+{% if kvm_os | lower != "na" %}
+{% for n in range(1,pri | int + 1) %}
+  - {{ env_name_clean }}-kvm-pri{{ n }}
+{% endfor %}
+{% endif %}
+{% if xs_ver | lower != "na" %}
+{% for n in range(1,pri | int + 1) %}
+  - {{ env_name_clean }}-xs-pri{{ n }}
+{% endfor %}
+{% endif %}
 {% endif %}
 {% if sec | int > 0 %}
 env_secpools:
@@ -109,6 +135,13 @@ env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[
 {% elif hvtype[0:1] | lower == "k" %}
 env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }}"
 {% endif %}
+env_zone_systemplate_str:
+{% if vmware_ver | lower != "na" %}  - "-u {{ env_zone_systemplate | default ( def_system_templates[env_version].vmware_url ) }} -h vmware -F"
+{% endif %}
+{% if xs_ver | lower != "na" %}  - "-u {{ env_zone_systemplate | default ( def_system_templates[env_version].xs_url ) }} -h xenserver -F"
+{% endif %}
+{% if kvm_os | lower != "na" %}  - "-u {{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }} -h kvm -F"
+{% endif %}
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default (def_build_marvin) }}
 
@@ -118,10 +151,10 @@ mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmt_templates[osversion].
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 {% if rooturl_cloudstack is not defined %}
-{% set baseurl = def_rooturl_cloudstack~osversion~"/"~numversion~"/" %}
+{% set baseurl = def_rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
 {% else %}
 {% if baseurl_cloudstack is not defined %}
-{% set baseurl = rooturl_cloudstack~osversion~"/"~numversion~"/" %}
+{% set baseurl = rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
 {% else %}
 {% set baseurl = baseurl_cloudstack %}
 {% endif %}
@@ -131,7 +164,18 @@ baseurl_cloudstack: "{{ baseurl }}"
 create_zone: {{ createzone }}
 {% if ccp_install_tarball is not defined %}{% set ccp_tarball = "na" %}{% else %}{% set ccp_tarball = ccp_install_tarball %}{% endif %}
 ccp_install_tarball: {{ ccp_tarball }}
-
+{% if mgmt_java_ver is not defined %}
+{% set mgmtjava = java_vers[env_version] %}
+{% else %}
+{% set mgmtjava = mgmt_java_ver %}
+{% endif %}
+mgmt_java_ver: "{{ mgmtjava }}"
+{% if mgmt_java_path is not defined %}
+{% set mgmtjavapath = java_paths[mgmt_os_type][mgmtjava] %}
+{% else %}
+{% set mgmtjavapath = mgmt_java_path %}
+{% endif %}
+mgmt_java_path: "{{ mgmtjavapath }}"
 
 # DB servers
 dbsrv_service_offering: "{{ dbsrv_service_offering | default( def_dbsrv_service_offering ) }}"
@@ -149,22 +193,38 @@ mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_
 
 # KVM
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
-{% if kvm_os[0:1] | lower == "6" %}
+{% if kvm_os | lower == "6" %}
 {% set kvmosversion = "centos" %}
+{% set kvmreleaseurl = "centos" %}
+{% set kvm_os_type = "centos" %}
+{% elif kvm_os | lower == "62" %}
+{% set kvmosversion = "centos62" %}
+{% set kvmreleaseurl = "centos" %}
+{% set kvm_os_type = "centos" %}
+{% elif kvm_os | lower == "64" %}
+{% set kvmosversion = "centos64" %}
+{% set kvmreleaseurl = "centos" %}
+{% set kvm_os_type = "centos" %}
 {% elif kvm_os[0:1] | lower == "7" %}
 {% set kvmosversion = "centos7" %}
+{% set kvmreleaseurl = "centos7" %}
+{% set kvm_os_type = "centos" %}
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
+{% set kvmreleaseurl = "debian" %}
+{% set kvm_os_type = "debian" %}
 {% else %}
 {% set kvmosversion = "na" %}
+{% set kvmreleaseurl = "na" %}
+{% set kvm_os_type = "na" %}
 {% endif %}
 kvm_os: "{{ kvmosversion }}"
 {% if kvmosversion != "custom" %}
 {% if rooturl_kvm is not defined %}
 {% if rooturl_cloudstack is not defined %}
-{% set baseurl = def_rooturl_cloudstack~kvmosversion~"/"~numversion~"/" %}
+{% set baseurl = def_rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
 {% else %}
-{% set baseurl = rooturl_cloudstack~kvmosversion~"/"~numversion~"/" %}
+{% set baseurl = rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
 {% endif %}
 {% else %}
 {% set baseurl = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
@@ -178,7 +238,21 @@ kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 
+{% if kvm_java_ver is not defined %}
+{% set kvmjava = java_vers[env_version] %}
+{% else %}
+{% set kvmjava = mgmt_java_ver %}
+{% endif %}
+kvm_java_ver: "{{ kvmjava }}"
+{% if kvm_java_path is not defined %}
+{% set kvmjavapath = java_paths[kvm_os_type][kvmjava] %}
+{% else %}
+{% set kvmjavapath = kvm_java_path %}
+{% endif %}
+kvm_java_path: "{{ kvmjavapath }}"
+
 # XS
+xs_ver: "{{ xs_ver }}"
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
 xs_template: "{{ xs_template | default( def_xenserver_templates[xs_ver].xs_template ) }}"
 xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
@@ -190,10 +264,9 @@ xs_public_network_label: "{{ xs_public_network_label | default( def_xs_public_ne
 xs_username: "{{ xs_username | default( def_xs_username ) }}"
 xs_password: "{{ xs_password | default( def_xs_password ) }}"
 
-
-
 # VMware
-vmware: "{{ vmware_ver }}"
+vmware: "{{ vmware_ver }}"  ##-- LEGACY REMOVE SOONEST
+vmware_ver: "{{ vmware_ver }}"
 esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
@@ -213,8 +286,6 @@ vmware_datacenter_name: "{{ vmware_datacenter_name | default( def_vmware_datacen
 vmware_esxi_username: "{{ vmware_esxi_username | default( def_vmware_esxi_username ) }}"
 vmware_esxi_password: "{{ vmware_esxi_password | default( def_vmware_esxi_password ) }}"
 
-
-
 # Marvin server
 marvin_service_offering: "{{ marvin_service_offering | default( def_marvin_service_offering ) }}"
 marvin_server_template: "{{ marvin_server_template | default( def_marvin_server_template ) }}"
@@ -225,6 +296,17 @@ marvin_tests_github_source: "{{ marvin_tests_github_source | default ( def_marvi
 marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images_location ) }}"
 {% if run_component_tests is not defined %}{% set run_component_tests = no %}{% endif %}run_component_tests: {{ run_component_tests }}
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
+
+{% if baseurl_marvin is not defined %}
+{% if rooturl_cloudstack is defined %}
+{% set marvinbaseurl = rooturl_cloudstack~"centos7"~"/"~numversion~"/" %}
+{% else %}
+{% set marvinbaseurl = "na" %}
+{% endif %}
+{% else %}
+{% set marvinbaseurl = baseurl_marvin %}
+{% endif %}
+baseurl_marvin: "{{ marvinbaseurl }}"
 
 
 # Hipchat cli client

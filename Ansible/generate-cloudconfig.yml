@@ -36,12 +36,12 @@
 #   env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
 #   env_version [mandatory]: Environment CloudStack version (cs45, cs46, cs49, custom, etc).
 #   mgmt_os [mandatory]: Management server OS (6, 7, u, custom)
-#   
+#
 #   hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
 #   hv: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
-#                  
+#
 #   pri [mandatory]: number of primary storage pools.
-#   
+#
 # Required depending on Hypervisor
 # kvm_os:
 # -	6 = centos6.8
@@ -194,15 +194,15 @@
 
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"
-      when: ("{{ hvtype }}" not in [ "x", "xenserver" ] ) 
+      when: ("{{ hvtype }}" not in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
 
     - name: Set kvm_os to custom when KVM not hypervisor
       set_fact: kvm_os="na"
-      when: ("{{ hvtype }}" not in [ "k", "kvm" ] ) 
+      when: ("{{ hvtype }}" not in [ "k", "kvm" ] ) and ( kvm_os is undefined )
 
     - name: Set vmware_ver to custom when VMware not hypervisor
       set_fact: vmware_ver="na"
-      when: ("{{ hvtype }}" not in [ "v", "vmware" ] ) 
+      when: ("{{ hvtype }}" not in [ "v", "vmware" ] ) and  ( vmware_ver is undefined )
 
     - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
 
