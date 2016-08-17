@@ -76,8 +76,8 @@
         - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
         - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
       async: 60
-      poll: 0
-      
+      poll: 1
+
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
       with_items:

@@ -57,6 +57,9 @@
   tags:
     - kvm
 
+- name: ensure rpcbind in started
+  service: name=rpcbind state=started enabled=yes
+
 - include: ./kvm_networking.yml
 
 - debug: msg="Set Java on VM"
