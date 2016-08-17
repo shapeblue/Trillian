@@ -54,6 +54,7 @@
     - nano
     - iftop
     - python-argparse
+    - rpcbind
   tags:
     - kvm
 
