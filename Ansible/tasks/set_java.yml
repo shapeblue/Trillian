@@ -10,3 +10,4 @@
 
 - name: set as default version
   shell: "alternatives --set java {{ java_path }}"
+  ignore_errors: yes
