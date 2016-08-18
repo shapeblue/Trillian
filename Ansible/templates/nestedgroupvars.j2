@@ -214,7 +214,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% elif kvm_os[0:1] | lower == "7" %}
 {% set kvmosversion = "centos7" %}
 {% set kvmreleaseurl = "centos7" %}
-{% set kvm_os_type = "centos" %}
+{% set kvm_os_type = "centos7" %}
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
