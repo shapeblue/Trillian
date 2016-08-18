@@ -15,7 +15,7 @@
 #limitations under the License.
 
 
-- name: Ensure the Apache Cloudstack Repo file is configured
+- name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
 
 - name: Ensure CloudStack packages are installed

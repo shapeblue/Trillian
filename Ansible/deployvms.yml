@@ -272,6 +272,12 @@
         - { tagno: 3, tagkey: 'state', tagval: 'Environment_Built' }
 
 ## as you were
+- hosts: primary_cs_manager
+  tasks:
+    - include: ./roles/cloudstack-manager/tasks/wait-for-template.yml
+      when: wait_for_template
+  tags:
+    - waitfortemplate
 
 - hosts: marvin_host
   gather_facts: no

@@ -59,7 +59,7 @@ env_numversion: {{ numversion }}
 {% elif mgmt_os[0:1] | lower == "7" %}
 {% set osversion = "centos7" %}
 {% set releaseurl = "centos7" %}
-{% set mgmt_os_type = "centos" %}
+{% set mgmt_os_type = "centos7" %}
 {% elif mgmt_os[0:1] | lower == "u" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
@@ -149,6 +149,7 @@ env_zone_systemplate_str:
 {% endif %}
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default (def_build_marvin) }}
+wait_for_template: {{ wait_for_template | default("no") }}
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
