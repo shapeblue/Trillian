@@ -47,5 +47,14 @@
 
 - include: ./setupdb.yml
 
-- name: Ensure CloudStack Usage Service is started
-  service: name=cloudstack-usage state=started
+- name: test for cloud or cloudstack Usage
+  stat: path=/etc/cloudstack/management/db.properties
+  register: path_is_cloudstack
+
+- name: Start cloud-usage service (older builds)
+  service: name=cloud-usage state=started enabled=yes
+  when: (path_is_cloudstack.stat.exists == False)
+
+- name: Start cloudstack-usage service
+  service: name=cloudstack-usage state=started enabled=yes
+  when: (path_is_cloudstack.stat.exists == True)
