@@ -9,5 +9,5 @@
 - debug: msg="register oracle java with alternatives (TODO)"
 
 - name: set as default version
-  shell: "alternatives --set java {{ java_path }}"
+  shell: "alternatives --set java `alternatives --list | grep {{ java_path }} | awk -F ' ' '{print $NF}'`"
   ignore_errors: yes

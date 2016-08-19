@@ -1,0 +1,21 @@
+---
+
+- debug: msg="Mgmt UI on {{ inventory_hostname['ansible_ssh_host'] }}{{":"}}8080/client "
+  tags:
+    - waitfortemplate
+    
+- name: test for API on 8080
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 25
+  tags:
+    - waitfortemplate
+
+- name: Wait for default template to be ready before returning
+  shell: cloudmonkey list templates listall=true templatefilter=all | jq '.template[]| select(.templatetype=="BUILTIN") | .isready'
+  register: result
+  until: result.stdout == "true"
+  retries: 200
+  tags:
+    - waitfortemplate
