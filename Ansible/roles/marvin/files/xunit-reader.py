@@ -94,8 +94,6 @@ def parse_reports(file_path_list):
                 elif 'error' == children.tag:
                     exit_code = 1
                     status = '`Error`'
-                    if 'type' in children.attrib:
-                        status = "`"+ children.attrib['type'] + "`"
             print "%s | %s | %s" % (name, status, time)
 
     return exit_code
