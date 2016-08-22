@@ -24,8 +24,6 @@ This script provides parsing of xunit xml files.
 import os
 import argparse
 
-import texttable
-
 import lxml.etree
 
 
@@ -72,8 +70,8 @@ def _generate_file_list(args):
 
 
 def parse_reports(file_path_list):
-    table = texttable.Texttable()
-    table.header(['Test', 'Result', 'Time'])
+    print "Test | Result | Time"
+    print "--- | --- | ---"
 
     exit_code = 0
 
@@ -92,16 +90,13 @@ def parse_reports(file_path_list):
                     status = 'Skipped'
                 elif 'failure' == children.tag:
                     exit_code = 1
-                    status = 'Failure'
+                    status = '`Failure`'
                 elif 'error' == children.tag:
                     exit_code = 1
-                    status = 'Error'
+                    status = '`Error`'
                     if 'type' in children.attrib:
-                        status = children.attrib['type']
-
-            table.add_row([name, status, time])
-
-    print table.draw()
+                        status = "`"+ children.attrib['type'] + "`"
+            print "%s | %s | %s" % (name, status, time)
 
     return exit_code
 
