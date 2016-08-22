@@ -55,5 +55,6 @@ done
 echo "Test completed. $GOOD look ok, $BAD have errors"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Smoketests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
 
-python /marvin/tools/xunit-reader.py $LOGDIR/ > /marvin/smoketests-summary.txt
+echo "Test completed. $GOOD look ok, $BAD have errors" > /marvin/smoketests-summary.txt
+python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
