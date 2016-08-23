@@ -25,6 +25,7 @@ import os
 import argparse
 
 import lxml.etree
+from operator import itemgetter
 
 
 def main():
@@ -70,11 +71,13 @@ def _generate_file_list(args):
 
 
 def parse_reports(file_path_list):
-    print "Test | Result | Time"
+    print ""
+    print "Test | Result | Time (s)"
     print "--- | --- | ---"
 
     exit_code = 0
 
+    tests = []
     for file_path in file_path_list:
         data = lxml.etree.iterparse(file_path, tag='testcase')
         for event, elem in data:
@@ -94,8 +97,11 @@ def parse_reports(file_path_list):
                 elif 'error' == children.tag:
                     exit_code = 1
                     status = '`Error`'
-            print "%s | %s | %s" % (name, status, time)
+            tests.append([name, status, time])
 
+    for test in sorted(tests, key=itemgetter(1,0,2), reverse=True):
+        print "%s | %s | %s" % (test[0], test[1], test[2])
+    print ""
     return exit_code
 
 
