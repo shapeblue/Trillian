@@ -133,13 +133,6 @@ env_zone_localstorage: "{{ localstorage | default( def_env_zone_localstorage ) }
 env_zone_podname: "{{ env_zone_podname | default( def_env_zone_podname ) }}"
 env_zone_clustername: "{{ env_zone_clustername | default( def_env_zone_clustername ) }}"
 env_zone_addhosts: "{{ env_zone_addhosts | default( def_env_zone_addhosts ) }}"
-{% if hvtype[0:1] | lower == "v" %}
-env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].vmware_url ) }}"
-{% elif hvtype[0:1] | lower == "x" %}
-env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].xs_url ) }}"
-{% elif hvtype[0:1] | lower == "k" %}
-env_zone_systemplate: "{{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }}"
-{% endif %}
 env_zone_systemplate_str:
 {% if vmware_ver | lower != "na" %}  - "-u {{ env_zone_systemplate | default ( def_system_templates[env_version].vmware_url ) }} -h vmware -F"
 {% endif %}
@@ -156,14 +149,12 @@ mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_se
 mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmt_templates[osversion].mgmtsrv_template ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
-{% if rooturl_cloudstack is not defined %}
-{% set baseurl = def_rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
-{% else %}
-{% if baseurl_cloudstack is not defined %}
+{% if rooturl_cloudstack is defined %}
 {% set baseurl = rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
-{% else %}
+{% elif baseurl_cloudstack is defined %}
 {% set baseurl = baseurl_cloudstack %}
-{% endif %}
+{% else %}
+{% set baseurl = def_rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
 {% endif %}
 baseurl_cloudstack: "{{ baseurl }}"
 {% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
@@ -226,16 +217,18 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% endif %}
 kvm_os: "{{ kvmosversion }}"
 {% if kvmosversion != "custom" %}
-{% if rooturl_kvm is not defined %}
-{% if rooturl_cloudstack is not defined %}
-{% set baseurl = def_rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
+{% if rooturl_kvm is defined %}
+{% set baseurlkvm = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
+{% elif baseurl_kvm is defined %}
+{% set baseurlkvm = baseurl_kvm %}
+{% elif rooturl_cloudstack is defined %}
+{% set baseurlkvm = rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
+{% elif baseurl_cloudstack is defined %}
+{% set baseurlkvm = baseurl_cloudstack %}
 {% else %}
-{% set baseurl = rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
+{% set baseurlkvm = def_rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
 {% endif %}
-{% else %}
-{% set baseurl = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
-{% endif %}
-baseurl_kvm: "{{ baseurl_kvm | default( baseurl ) }}"
+baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
 {% endif %}
 kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_template ) }}"
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
