@@ -83,13 +83,6 @@ xe pif-reconfigure-ip uuid=$PIFUUID mode=DHCP
 xe host-management-reconfigure pif-uuid=$PIFUUID
 xe host-param-set uuid=$HOSTUUID name-label=`xe host-list params=hostname --minimal`
 
-echo "Creating SRs and templates"
-stringZ=`pvdisplay | grep "VG Name"`
-localsruuid=${stringZ: 38}
-xe sr-create uuid=$localsruuid type=lvm name-label="Local Storage" content-type=user device-config:device=/dev/sda3
-xe sr-create host-uuid=$HOSTUUID type=udev name-label="DVD drive" device-config:"location"=/dev/xapi/cd
-/opt/xensource/libexec/create_templates
-
 echo ""
 echo "request dhcp address (until one is returned)"
 HAVADDR=0
@@ -101,6 +94,13 @@ do
   ADDR=`ifconfig xenbr0 | grep 'inet addr'`
   if [[ -n "$ADDR" ]]; then HAVADDR=1; fi
 done
+
+
+echo "Creating SRs and templates"
+stringZ=`pvdisplay | grep "VG Name"`
+localsruuid=${stringZ: 38}
+xe sr-create uuid=$localsruuid type=lvm name-label="Local Storage" content-type=user device-config:device=/dev/sda3
+/opt/xensource/libexec/create_templates
 
 rm -f /etc/rc3.d/S99nestedfixup
 rm -f /tmp/state-secondboot-started

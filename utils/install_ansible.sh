@@ -36,12 +36,13 @@ ansible-playbook ./generate-cloudconfig.yml -i ./localhost --extra-vars "$EXTRAV
 ENVNAME=`echo ${EXTRAVARS%$env_name=*} | head -n1 | cut -d " " -f1|cut -d "=" -f 2`
 ansible-playbook ./deployvms.yml -i ./hosts_"$ENVNAME"
 ' > /usr/bin/build-env
+
 chmod 0755 /usr/bin/build-env
 
 echo '
 #!/bin/bash
 
-if [[ -z `echo $1 | grep \'^hosts_\'` ]]; then
+if [[ -z `echo $1 | grep "^hosts_"` ]]; then
   ansible-playbook ./destroyvms.yml -i ./hosts_$1 --extra-vars "expunge=yes removeconfig=yes removeproject=yes"
 else
   ansible-playbook ./destroyvms.yml -i ./$1 --extra-vars "expunge=yes removeconfig=yes removeproject=yes"
