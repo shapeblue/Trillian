@@ -67,6 +67,7 @@
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
 - include: ../../../tasks/set_java.yml
+  when: force_java
 
 - include: ./centos-acs.yml
   when: ("{{ env_version[0:2]}}" == "cs")

@@ -143,6 +143,8 @@ env_zone_systemplate_str:
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default (def_build_marvin) }}
 wait_for_template: {{ wait_for_template | default("no") }}
+force_java: {{ force_java | default("no") }}
+
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"

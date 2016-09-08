@@ -33,14 +33,6 @@
 - name: switch to baseurl as mirrors seem unreliable
   shell: sed -i -e 's|mirrorlist=https:|#mirrorlist=http:|g' -e 's|#baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel.repo
 
-#- name: install Java 1.6 when running cs4.3
-#  yum: name=java-1.6.0-openjdk state=present
-#  when: env_numversion < 4.3
-
-#- name: set host to use Java 1.6
-#  shell: alternatives --set java_1.6 /usr/lib/jvm/jre-1.6.0-openjdk.x86_64/bin/java
-#  when: env_numversion < 4.3
-
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   yum: name=lvm2 state=latest
 
@@ -48,6 +40,7 @@
 - set_fact: java_ver="{{ mgmt_java_ver }}"
 - set_fact: java_path="{{ mgmt_java_path }}"
 - include: ../../../tasks/set_java.yml
+  when: force_java
 
 - include: ./centos-acs.yml
   when: ("{{ env_version[0:2]}}" == "cs")
