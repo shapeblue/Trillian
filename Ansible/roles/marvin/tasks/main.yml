@@ -19,12 +19,14 @@
   tags:
     - marvin
     - marvin_cfg
+    - marvin_install
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
   tags:
     - marvin
     - marvin_cfg
+    - marvin_install
 
 - name: CentOS 7 hostname fixup
   file: path=/etc/hostname state=absent
@@ -37,6 +39,7 @@
   tags:
     - marvin
     - marvin_cfg
+    - marvin_install
 
 - name: Ensure EPEL is available (centOS7)
   yum: name="{{ epel7 }}" state=present
@@ -179,7 +182,6 @@
   file: path="{{ item }}" state=absent
   with_items:
     - "/marvin"
-    - "/tmp/marvin"
   tags:
     - marvin
     - marvin_cfg
@@ -202,9 +204,24 @@
     - marvin_cfg
   ignore_errors: yes
 
-- name: clone master repo
-  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1
+- name: If using tests from master (on GitHub) check if repo already cloned
+  stat: path=/tmp/cloudstack/marvin
+  register: marvintests_dir
   when: ("{{ marvin_tests_source }}" == "github")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: If updating (pulling) from master (on GitHub)
+  shell: "cd /tmp/marvin && git pull"
+  when: ("{{ marvin_tests_source }}" == "github") and (marvintests_dir.stat.exists == True)
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: clone master repo
+  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1 accept_hostkey=true
+  when: ("{{ marvin_tests_source }}" == "github") and (marvintests_dir.stat.exists == False)
   tags:
     - marvin
     - marvin_cfg
