@@ -20,6 +20,9 @@
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
 
+- name: install rng-tools to get entropy
+  yum: name=rng-tools state=present
+
 - name: Ensure EPEL is available (centOS6)
   yum: name="{{ epel6 }}" state=present
   ignore_errors: true

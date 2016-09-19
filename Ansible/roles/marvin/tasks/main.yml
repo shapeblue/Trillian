@@ -28,12 +28,6 @@
     - marvin_cfg
     - marvin_install
 
-- name: CentOS 7 hostname fixup
-  file: path=/etc/hostname state=absent
-  tags:
-    - marvin
-    - marvin_cfg
-
 - name: Install Dev Tools Group
   yum: name="@Development tools" state=installed
   tags:
@@ -205,7 +199,7 @@
   ignore_errors: yes
 
 - name: If using tests from master (on GitHub) check if repo already cloned
-  stat: path=/tmp/cloudstack/marvin
+  stat: path=/tmp/marvin
   register: marvintests_dir
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
@@ -247,13 +241,13 @@
     - marvin
     - marvin_cfg
 
-- name: remove extraneous directories and files
-  command: rm -f /marvin/*
-  when: ("{{ marvin_tests_source }}" == "github")
-  ignore_errors: true
-  tags:
-    - marvin
-    - marvin_cfg
+#- name: remove extraneous directories and files
+#  command: rm -f /marvin/*
+#  when: ("{{ marvin_tests_source }}" == "github")
+#  ignore_errors: true
+#  tags:
+#    - marvin
+#    - marvin_cfg
 
 - name: create mavin cfg file
   template: src=advanced-cfg.j2 dest="/marvin/{{ env_name_clean }}-advanced-cfg"
