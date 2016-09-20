@@ -167,13 +167,13 @@
     - marvin
     - marvin_cfg
 
-- name: clear marvin dirs if exists
-  file: path="{{ item }}" state=absent
-  with_items:
-    - "/marvin"
-  tags:
-    - marvin
-    - marvin_cfg
+#- name: clear marvin dirs if exists
+#  file: path="{{ item }}" state=absent
+#  with_items:
+#    - "/marvin"
+#  tags:
+#    - marvin
+#    - marvin_cfg
 
 - name: create Marvin dirs if required
   file: path="{{ item }}" state=directory
@@ -194,15 +194,15 @@
   ignore_errors: yes
 
 - name: If using tests from master (on GitHub) check if repo already cloned
-  stat: path=/tmp/marvin
+  stat: path=/tmp/marvin/.git/HEAD
   register: marvintests_dir
   when: ("{{ marvin_tests_source }}" == "github")
   tags:
     - marvin
     - marvin_cfg
 
-- name: If updating (pulling) from master (on GitHub)
-  shell: "cd /tmp/marvin && git pull"
+- name: Update if updating (pulling) from master (on GitHub)
+  command: cd /tmp/marvin && git pull
   when: ("{{ marvin_tests_source }}" == "github") and (marvintests_dir.stat.exists == True)
   tags:
     - marvin
