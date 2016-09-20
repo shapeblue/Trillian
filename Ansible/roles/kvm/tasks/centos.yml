@@ -22,21 +22,11 @@
   tags:
     - kvm
 
-- name: Ensure EPEL is available
-  yum: name="{{ epel6 }}" state=present
-  when: ansible_distribution_major_version == "6"
-  tags:
-    - kvm
-
-- name: Ensure EPEL is available
-  yum: name="{{ epel7 }}" state=present
-  when: ansible_distribution_major_version == "7"
-  tags:
-    - kvm
-
-- name: switch to http for file mirrors
-  shell: sed -i 's|mirrorlist=https:|mirrorlist=http:|g' /etc/yum.repos.d/epel.repo
-  ignore_errors: true
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
   tags:
     - kvm
 

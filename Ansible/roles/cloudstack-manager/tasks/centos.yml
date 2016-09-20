@@ -17,24 +17,17 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
 
 - name: install rng-tools to get entropy
   yum: name=rng-tools state=present
-
-- name: Ensure EPEL is available (centOS6)
-  yum: name="{{ epel6 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "6"
-
-- name: Ensure EPEL is available (centOS7)
-  yum: name="{{ epel7 }}" state=present
-  ignore_errors: true
-  when: ansible_distribution_major_version == "7"
-
-- name: switch to baseurl as mirrors seem unreliable
-  shell: sed -i -e 's|mirrorlist=https:|#mirrorlist=http:|g' -e 's|#baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel.repo
 
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   yum: name=lvm2 state=latest

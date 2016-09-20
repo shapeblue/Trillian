@@ -35,16 +35,11 @@
     - marvin_cfg
     - marvin_install
 
-- name: Ensure EPEL is available (centOS7)
-  yum: name="{{ epel7 }}" state=present
-  ignore_errors: true
-  tags:
-    - marvin
-    - marvin_install
-
-- name: switch to baseurl as mirrors seem unreliable
-  shell: sed -i -e 's|mirrorlist=https:|#mirrorlist=http:|g' -e 's|#baseurl=http|baseurl=http|g' /etc/yum.repos.d/epel.repo
-  ignore_errors: true
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
   tags:
     - marvin
     - marvin_install
