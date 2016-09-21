@@ -25,13 +25,6 @@
   tags:
     - kvm
 
-- name: insert public key file
-  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
-  ignore_errors: true
-  tags:
-    - kvm
-    - ssh_keys
-
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
@@ -41,3 +34,10 @@
   when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm
+
+- name: insert public key file
+  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+  ignore_errors: true
+  tags:
+   - kvm
+  - ssh_keys
