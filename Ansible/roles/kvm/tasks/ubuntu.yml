@@ -26,10 +26,10 @@
     - iptables-persistent
     - qemu-kvm
 
-- name: set apt repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
-  with_items:
-    - "sources.list"
+#- name: set apt repo to local
+#  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+#  with_items:
+#    - "sources.list"
 
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
