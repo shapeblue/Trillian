@@ -33,7 +33,7 @@
   shell: "service cloudstack-management stop && sleep 5 && service cloudstack-management stop && sleep 10 && service cloudstack-management start"
   when: (path_is_cloudstack.stat.exists == True) and (ansible_distribution_major_version == "6")
   ignore_errors: true
-  
+
 - name: restart mgmt service (inc fix for broken stop)
   shell: "service cloud-management stop && sleep 5 && service cloud-management stop && sleep 10 && service cloud-management start"
   when: (path_is_cloudstack.stat.exists == False) and (ansible_distribution_major_version == "6")
@@ -41,4 +41,5 @@
 
 - name: restart mgmt service (centos7 - systemctl)
   service: name=cloudstack-management state=restarted
+  when: ansible_distribution_major_version == "7"
   ignore_errors: true
