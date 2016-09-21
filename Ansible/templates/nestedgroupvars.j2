@@ -24,7 +24,7 @@ management_vm_hypervisor: "{{ management_vm_hypervisor | default( def_management
 build_project: "{{ build_project }}"
 build_zone: "{{ build_zone | default( def_build_zone ) }}"
 build_keyboard: "{{ build_keyboard | default( def_build_keyboard ) }}"
-
+ssh_retries: {{ ssh_retries | default( def_ssh_retries ) }}
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
 env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
@@ -144,7 +144,7 @@ wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default (def_build_marvin) }}
 wait_for_template: {{ wait_for_template | default("no") }}
 force_java: {{ force_java | default("no") }}
-
+use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
