@@ -17,10 +17,15 @@
 - name: Ensure NTP packages are installed
   apt: pkg=openntpd state=present update_cache=true
 
+  - name: set apt repo to local
+    template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+    with_items:
+      - "sources.list"
+
 - name: Add specified repository into sources list.
   apt_repository: repo='deb "{{ baseurl_cloudstack }}" ./' state=present
 
-- apt_key: url=https://packages.shapeblue.com/release.asc state=present
+- apt_key: url={{ repohost }}/release.asc state=present
 
 - name: Ensure CloudStack packages are installed
   apt: pkg=cloudstack-management state=present update_cache=true
