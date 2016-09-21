@@ -29,7 +29,10 @@
 - name: set apt repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
   with_items:
-    - "sources.list"
+   - "sources.list"
+
+- name: Remove cloud-init
+  apt: pkg=cloud-init state=absent 
 
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
