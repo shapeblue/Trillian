@@ -14,11 +14,11 @@
   tags:
     - "global_settings"
 
-- name: preset some global settings
-  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
+- name: Overwrite built-in template location
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET url='{{ item.url }}' WHERE id='{{ item.id }}';"
   with_items:
-  - "{{ global_settings }}"
-  when: ( item.condition == "marvin" ) and build_marvin
+  - "{{ builtin_templates }}"
+  when: local_templates
   tags:
     - "global_settings"
 
@@ -33,7 +33,7 @@
   shell: "service cloudstack-management stop && sleep 5 && service cloudstack-management stop && sleep 10 && service cloudstack-management start"
   when: (path_is_cloudstack.stat.exists == True) and (ansible_distribution_major_version == "6")
   ignore_errors: true
-  
+
 - name: restart mgmt service (inc fix for broken stop)
   shell: "service cloud-management stop && sleep 5 && service cloud-management stop && sleep 10 && service cloud-management start"
   when: (path_is_cloudstack.stat.exists == False) and (ansible_distribution_major_version == "6")

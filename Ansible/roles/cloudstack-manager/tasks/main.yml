@@ -15,7 +15,7 @@
 #limitations under the License.
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 
 - name: now i'm connected, get facts
   setup:
@@ -41,5 +41,4 @@
   retries: 48
 
 
-- include: ./preconfig_globalsettings.yml 
-
+- include: ./preconfig_globalsettings.yml

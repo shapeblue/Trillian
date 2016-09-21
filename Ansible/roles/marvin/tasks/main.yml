@@ -22,7 +22,7 @@
     - marvin_install
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   tags:
     - marvin
     - marvin_cfg
@@ -109,6 +109,10 @@
     - marvin
     - marvin_install
 
+- name: insert public key file
+  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+  ignore_errors: true
+  
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes
 

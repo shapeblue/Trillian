@@ -270,7 +270,7 @@
     - name: update Tag project
       shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
       with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Environment_Built' }
+        - { tagno: 3, tagkey: 'state', tagval: 'Built' }
 
 ## as you were
 - hosts: primary_cs_manager
