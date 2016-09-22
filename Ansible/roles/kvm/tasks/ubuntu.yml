@@ -31,8 +31,8 @@
   with_items:
    - "sources.list"
 
-- name: Remove cloud-init
-  apt: pkg=cloud-init state=absent 
+- name: Re-configure cloud-init
+  file: path="/etc/cloud/cloud.cfg.d/99_cloudstack.cfg" state=absent
 
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
