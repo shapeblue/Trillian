@@ -17,7 +17,7 @@
 - name: Overwrite built-in template location
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET url='{{ item.url }}' WHERE id='{{ item.id }}';"
   with_items:
-  - "{{ builtin_templates }}"
+  - "{{ local_builtin_templates }}"
   when: use_local_templates
   tags:
     - "global_settings"
