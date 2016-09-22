@@ -31,9 +31,6 @@
   with_items:
    - "sources.list"
 
-- name: Re-configure cloud-init
-  file: path="/etc/cloud/cloud.cfg.d/90_dpkg.cfg" state=absent
-
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
 
