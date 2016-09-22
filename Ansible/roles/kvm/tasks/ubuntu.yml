@@ -32,10 +32,7 @@
    - "sources.list"
 
 - name: Re-configure cloud-init
-  file: path="/etc/cloud/cloud.cfg.d/99_cloudstack.cfg" state=absent
-
-- name: Updated Cloud-init configfile
-  lineinfile: dest=/etc/cloud/cloud.cfg.d/90_dpkg.cfg regexp='datasource_list: [ NoCloud, ConfigDrive, OpenNebula, Azure, AltCloud, OVF, MAAS, GCE, OpenStack, CloudSigma, Ec2, CloudStack, SmartOS, None ]' line='datasource_list: [ None ]'
+  file: path="/etc/cloud/cloud.cfg.d/90_dpkg.cfg" state=absent
 
 - name: Add specified repository into sources list.
   apt_repository: repo='deb {{ baseurl_kvm }} ./' state=present
