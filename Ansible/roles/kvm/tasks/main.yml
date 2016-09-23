@@ -35,6 +35,11 @@
   tags:
     - kvm
 
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  tags:
+   - kvm
+
 - name: insert public key file
   shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
   ignore_errors: true
