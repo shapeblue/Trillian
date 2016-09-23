@@ -43,7 +43,7 @@ env_version: "{{ env_version }}"
 {% set minorversion = env_version[4:7] %}
 {% endif %}
 {% set numversion = majorversion~ "." ~minorversion %}
-env_numversion: {{ numversion }}
+env_numversion: "{{ numversion }}"
 {% if mgmt_os | lower == "6" %}
 {% set osversion = "centos" %}
 {% set mgmt_os_type = "centos" %}

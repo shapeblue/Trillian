@@ -85,7 +85,7 @@ else
   {% endif %}
 fi
 WriteOutput "Adding Traffic Type - Management";
-{% if env_numversion | float > 4.2 %}
+{% if env_numversion | version_compare('4.2','>') %}
 cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
 {% else %}
 cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_network_label }}' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};

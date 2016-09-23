@@ -84,13 +84,13 @@
 
 - name: Setup CloudStack Manager (centos/rhel7 ACS >= 4.6)
   command: /usr/bin/cloudstack-setup-management --tomcat7
-  when: (ansible_distribution_major_version == "7") and ( env_numversion|float >= 4.6)
+  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.6','>='))
   tags:
     - setup_mgmt
 
 - name: Setup CloudStack Manager (centos/rhel7) ACS < 4.6
   command: /usr/bin/cloudstack-setup-management
-  when: (ansible_distribution_major_version == "7") and ( env_numversion|float  < 4.6)
+  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.6','<'))
   tags:
     - setup_mgmt
 
