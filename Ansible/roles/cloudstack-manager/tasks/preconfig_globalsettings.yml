@@ -49,4 +49,5 @@
 
 - name: restart mgmt service (centos7 - systemctl)
   service: name=cloudstack-management state=restarted
+  when: ansible_distribution_major_version == "7"
   ignore_errors: true
