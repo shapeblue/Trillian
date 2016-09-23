@@ -298,8 +298,8 @@ marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images
 {% if run_component_tests is not defined %}{% set run_component_tests = no %}{% endif %}run_component_tests: {{ run_component_tests }}
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
 {% if baseurl_marvin is not defined %}
-{% if rooturl_cloudstack is defined %}
-{% set marvinbaseurl = rooturl_cloudstack~"centos7"~"/"~numversion~"/" %}
+{% if def_rooturl_cloudstack is defined %}
+{% set marvinbaseurl = def_rooturl_cloudstack~"/centos7"~"/"~numversion~"/" %}
 {% else %}
 {% set marvinbaseurl = "na" %}
 {% endif %}
