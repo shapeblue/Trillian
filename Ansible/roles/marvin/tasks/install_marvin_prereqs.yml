@@ -1,0 +1,117 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- debug: msg="Connecting to Marvin host {{ ansible_ssh_host }}"
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_install
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_install
+
+- name: Install Dev Tools Group
+  yum: name="@Development tools" state=installed
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_install
+
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install Other Dependancies
+  yum: name={{ item }} state=installed
+  with_items:
+  - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
+  - zlib-devel
+  - bzip2-devel
+  - openssl-devel
+  - xz-libs
+  - wget
+  - sqlite
+  - sqlite-devel
+  - python-paramiko
+  - python-setuptools
+  - python-devel
+  - mysql-devel
+  - zlib-devel
+  - bzip2-devel
+  - openssl-devel
+  - ncurses-devel
+  - libxslt-devel
+  - libffi-devel
+  - openssh-askpass
+  - jq
+  - mariadb
+  - git
+  - screen
+  - sshpass
+  - at
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install mysql-connector-python
+  yum: name=mysql-connector-python state=installed
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install pip
+  easy_install: name=pip
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Update pip and setuptools
+  pip: name={{ item }} extra_args='--upgrade'
+  with_items:
+  - pip
+  - setuptools
+  tags:
+    - marvin
+    - marvin_install
+
+- name: install pip security components
+  pip: name={{ item }}
+  with_items:
+  - '"requests[security]"'
+  - pyopenssl
+  - pyasn1
+  - wget
+  - texttable
+  tags:
+    - marvin
+    - marvin_install
+
+- name: insert public key file
+  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
+  ignore_errors: true
+
+- name: ensure atd is running to schedule jobs
+  service: name=atd state=started enabled=yes

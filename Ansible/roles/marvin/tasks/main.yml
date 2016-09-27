@@ -1,155 +1,29 @@
 ---
 
-#Copyright 2016 ShapeBlue
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
+- include: ./install_marvin_prereqs.yml
 
-
-- debug: msg="Connecting to Marvin host {{ ansible_ssh_host }}"
-  tags:
-    - marvin
-    - marvin_cfg
-    - marvin_install
-
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
-  tags:
-    - marvin
-    - marvin_cfg
-    - marvin_install
-
-- name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed
-  tags:
-    - marvin
-    - marvin_cfg
-    - marvin_install
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Install Other Dependancies
-  yum: name={{ item }} state=installed
-  with_items:
-  - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
-  - zlib-devel
-  - bzip2-devel
-  - openssl-devel
-  - xz-libs
-  - wget
-  - sqlite
-  - sqlite-devel
-  - python-paramiko
-  - python-setuptools
-  - python-devel
-  - mysql-devel
-  - zlib-devel
-  - bzip2-devel
-  - openssl-devel
-  - ncurses-devel
-  - libxslt-devel
-  - libffi-devel
-  - openssh-askpass
-  - jq
-  - mariadb
-  - git
-  - screen
-  - sshpass
-  - at
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Install mysql-connector-python
-  yum: name=mysql-connector-python state=installed
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Install pip
-  easy_install: name=pip
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Update pip and setuptools
-  pip: name={{ item }} extra_args='--upgrade'
-  with_items:
-  - pip
-  - setuptools
-  tags:
-    - marvin
-    - marvin_install
-
-- name: install pip security components
-  pip: name={{ item }}
-  with_items:
-  - '"requests[security]"'
-  - pyopenssl
-  - pyasn1
-  - wget
-  - texttable
-  tags:
-    - marvin
-    - marvin_install
-
-- name: insert public key file
-  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
-  ignore_errors: true
-  
-- name: ensure atd is running to schedule jobs
-  service: name=atd state=started enabled=yes
 
 - name: Set repo to install PR tests from
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
-  when: ("{{ marvin_tests_source }}" == "pr")
   tags:
     - marvin
     - marvin_cfg
 
-- name: Get Marvin files
-  get_url: url='https://builds.apache.org/job/cloudstack-marvin/lastSuccessfulBuild/artifact/tools/marvin/dist/*zip*/dist.zip' dest=/tmp
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
+- name: Determine if Marvin Package availble from this repo
+  package_available: PACKAGE=cloudstack-marvin
 
-- name: unpack Marvin files
-  unarchive: src=/tmp/dist.zip dest=/tmp copy=no
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
+- name: If cloudstack-marvin package does not exist, add fallback repo
+  template: src=marvin.repo.j2 dest=/etc/yum.repos.d/marvin.repo
+  when: mypackage_available == "false"
 
-- name: Rename Marvin files
-  shell: mv /tmp/dist/Marvin-*.tar.gz /tmp/dist/Marvin.tar.gz
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
-
-- name: Install Marvin
-  pip: name='file:///tmp/dist/Marvin.tar.gz'
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
-
-- name: Install Marvin packages from PR
+- name: Install Marvin package
   yum: name=cloudstack-marvin state=present
-  when: ("{{ marvin_tests_source }}" == "pr")
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: Ensure integration test packages are installed
+  yum: name=cloudstack-integration-tests state=present
   tags:
     - marvin
     - marvin_cfg
@@ -197,56 +71,11 @@
     - marvin_cfg
   ignore_errors: yes
 
-- name: If using tests from master (on GitHub) check if repo already cloned
-  stat: path=/opt/cloudstack/.git
-  register: marvintests_dir
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: Update if updating (pulling) from master (on GitHub)
-  command: cd /opt/cloudstack && git pull
-  when: ("{{ marvin_tests_source }}" == "github") and (marvintests_dir.stat.exists == True)
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: clone master repo
-  git: repo="{{ marvin_tests_github_source }}" dest=/tmp/marvin depth=1 accept_hostkey=true
-  when: ("{{ marvin_tests_source }}" == "github") and (marvintests_dir.stat.exists == False)
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: copy tests
-  command: cp -r /opt/cloudstack/test/integration /marvin/tests
-  when: ("{{ marvin_tests_source }}" == "github")
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: Ensure integration test packages are installed
-  yum: name=cloudstack-integration-tests state=present
-  when: ("{{ marvin_tests_source }}" == "pr")
-  tags:
-    - marvin
-    - marvin_cfg
-
 - name: copy tests
   command: cp -r /usr/share/cloudstack-integration-tests /marvin/tests
-  when: ("{{ marvin_tests_source }}" == "pr")
   tags:
     - marvin
     - marvin_cfg
-
-#- name: remove extraneous directories and files
-#  command: rm -f /marvin/*
-#  when: ("{{ marvin_tests_source }}" == "github")
-#  ignore_errors: true
-#  tags:
-#    - marvin
-#    - marvin_cfg
 
 - name: create mavin cfg file
   template: src=advanced-cfg.j2 dest="/marvin/{{ env_name_clean }}-advanced-cfg"

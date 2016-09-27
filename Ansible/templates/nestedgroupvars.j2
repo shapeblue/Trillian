@@ -307,7 +307,7 @@ marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images
 {% set marvinbaseurl = baseurl_marvin %}
 {% endif %}
 baseurl_marvin: "{{ marvinbaseurl }}"
-
+fallback_marvin_test_repo: "{{ fallback_marvin_test_repo | default( def_fallback_marvin_test_repo ) }}"
 
 # Hipchat cli client
 use_hipchat: yes
