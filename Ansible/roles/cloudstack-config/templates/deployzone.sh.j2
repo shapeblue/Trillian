@@ -146,14 +146,14 @@ fi
 NEXTCLUSTER=1
 if [ "{{ vmware_ver | lower }}" != "na" ];
 then
-  {% if env_numversion | float > 4.2 %}
+  {% if env_numversion | version_compare('4.2','>') %}
   WriteOutput "Adding VMware datacenter."
   cloudmonkey add vmwaredc name="{{ vmware_datacenter_name }}" password="{{ vmware_vcsa_pass }}" username="{{ vmware_vcsa_user }}" vcenter="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" zoneid=${ZoneID}
   {% endif %}
   if [ "{{ env_zone_addhosts }}" == "true" ];
   then
     WriteOutput "Adding VMware cluster."
-    {% if env_numversion | float > 4.2 %}
+    {% if env_numversion | version_compare('4.2','>') %}
     cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' podid=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" vsmipaddress="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" vsmpassword='{{ vmware_vcsa_pass }}' vsmusername='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
     {% else %}
     cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' podid=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" password='{{ vmware_vcsa_pass }}' username='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
