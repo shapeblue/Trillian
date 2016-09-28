@@ -46,5 +46,8 @@
         validate_certs: no
   with_items:
     - "{{ groups['hypervisor_hosts'] }}"
+    - "{{ groups['vc_hosts'] }}"
+    - "{{ groups['cloudstack_manager_hosts'] }}"
+    - "{{ groups['marvin_host'] }}"
   tags:
     - add_dvfilter
