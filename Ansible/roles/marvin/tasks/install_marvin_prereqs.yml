@@ -72,6 +72,7 @@
   - screen
   - sshpass
   - at
+  - impitool
   tags:
     - marvin
     - marvin_install

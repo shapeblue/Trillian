@@ -70,6 +70,23 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{mgmtsrv1_retval.results}}"
 
+- name: Update inventory file with mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: Update in memory inventory with Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="primary_cs_manager"
+    instance_name={{ item.instance_name }}
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+
+
 ####################################################################
 # Additional management servers
 #
@@ -107,6 +124,21 @@
     name={{ item.name }}
     groups="secondary_cs_manager"
     ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update inventory file with addtional mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="secondary_cs_manager"
+    instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrvs_retval.results}}"
 
 ####################################################################
@@ -227,7 +259,7 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{kvm_retval.results}}"
 
-- name: Update inventory file with ESXi host instance names
+- name: Update inventory file with KVM host instance names
   replace:
     dest="hosts_{{ env_name_clean }}"
     regexp='{{ item.name }}-instance_name'
@@ -235,7 +267,7 @@
     backup=no
   with_items: "{{kvm_retval.results}}"
 
-- name: Update in memory inventory with ESXi host instance names
+- name: Update in memory inventory with KVM host instance names
   add_host:
     name={{ item.name }}
     groups="kvm_hosts"
@@ -394,6 +426,20 @@
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{vc_retval.results}}"
 
+- name: Update inventory file with VC host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC Mgt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{vc_retval.results}}"
 
 ####################################################################
 # Marvin Server
@@ -435,6 +481,22 @@
   with_items: "{{marvin_retval.results}}"
 
 
+- name: Update inventory file with addtional mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{marvin_retval.results}}"
+
+- name: Update in memory inventory with additional Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="marvin_host"
+    instance_name={{ item.instance_name }}
+  with_items: "{{marvin_retval.results}}"
+
+  
 ####################################################################
 # Work out lists of hosts to be used in zone create script
 #

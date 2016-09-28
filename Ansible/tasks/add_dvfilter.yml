@@ -46,6 +46,23 @@
         validate_certs: no
   with_items:
     - "{{ groups['hypervisor_hosts'] }}"
+  tags:
+    - add_dvfilter
+
+- name: add dvfilter to Nested Host interfaces
+  vsphere_guest:
+        vcenter_hostname: "{{ parent_vcenter_hostname }}"
+        username: "{{ parent_vcenter_username }}"
+        password: "{{ parent_vcenter_password }}"
+        guest: "{{ hostvars[item]['instance_name'] }}"
+        state: reconfigured
+        vm_extra_config:
+          ethernet0.filter4.name: "dvfilter-maclearn"
+          ethernet0.filter4.onFailure: "failOpen"
+        esxi:
+          datacenter_name: "{{ parent_vcenter_dc }}"
+        validate_certs: no
+  with_items:
     - "{{ groups['vc_hosts'] }}"
     - "{{ groups['cloudstack_manager_hosts'] }}"
     - "{{ groups['marvin_host'] }}"

@@ -42,13 +42,13 @@ secondary_cs_manager
 
 [primary_cs_manager]
 {% if mgmt | int > 0 %}
-{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ env_name_clean }}-mgmt1-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
+{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ env_name_clean }}-mgmt1-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }} instance_name={{ env_name_clean }}-mgmt1-instance_name
 {% endif %}
 
 [secondary_cs_manager]
 {% if mgmt | int > 1 %}
 {% for n in range(2,mgmt | int + 1) %}
-{{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
+{{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }} instance_name={{ env_name_clean }}-mgmt{{ n }}-instance_name
 {% endfor %}
 {% endif %}
 
@@ -66,7 +66,7 @@ secondary_cs_manager
 
 [vc_hosts]
 {% if vmware_ver | lower != "na" %}
-{{ env_name_clean }}-vc1 ansible_ssh_host={{ env_name_clean }}-vc1-ip
+{{ env_name_clean }}-vc1 ansible_ssh_host={{ env_name_clean }}-vc1-ip instance_name={{ env_name_clean }}-vc1-instance_name
 {% endif %}
 
 [esxi_hosts]
@@ -92,7 +92,7 @@ secondary_cs_manager
 
 [marvin_host]
 {% if build_marvin %}
-{{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }}
+{{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }} instance_name={{ env_name_clean }}-marvin-instance_name
 {% endif %}
 
 [storage_hosts:children]
