@@ -52,6 +52,10 @@ env_numversion: "{{ numversion }}"
 {% set osversion = "centos62" %}
 {% set releaseurl = "centos" %}
 {% set mgmt_os_type = "centos" %}
+{% elif mgmt_os | lower == "63" %}
+{% set osversion = "centos63" %}
+{% set releaseurl = "centos" %}
+{% set mgmt_os_type = "centos" %}
 {% elif mgmt_os | lower == "64" %}
 {% set osversion = "centos64" %}
 {% set releaseurl = "centos" %}

@@ -23,7 +23,7 @@
     - "sources.list"
 
 - name: Add specified repository into sources list.
-  apt_repository: repo='deb "{{ baseurl_cloudstack }}" ./' state=present
+  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=present
 
 - apt_key: url={{ repohost }}/release.asc state=present
 
