@@ -282,8 +282,10 @@ esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_pub
 
 # VMware datacentre configuration
 
-{% if vmware_ver == "51u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
-{% elif vmware_ver == "50u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% if vmware_ver == "50u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% elif vmware_ver == "51u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% elif vmware_ver == "51u2" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
+{% elif vmware_ver == "51u3" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
 {% else %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_user ) }}"
 {% endif %}
 vmware_vcsa_pass: "{{ vmware_vcsa_pass | default( def_vmware_vcsa_pass ) }}"
