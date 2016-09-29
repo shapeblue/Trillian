@@ -20,9 +20,9 @@
 - name: extract tarball
   unarchive: src="/tmp/{{ ccp_install_tarball }}.tar.gz" dest=/tmp copy=no
 
-- name: enable base repo
-  set_fact: base_repo_enabled=1
-- template: src=CentOS-Base.repo.j2 dest=/etc/yum.repos.d/CentOS-Base.repo
+#- name: enable base repo
+#  set_fact: base_repo_enabled=1
+#- template: src=CentOS-Base.repo.j2 dest=/etc/yum.repos.d/CentOS-Base.repo
 
 - name: run installer -- THIS IS VERY FRAGILE
   shell: "cd /tmp/{{ ccp_install_tarball }} && ./install.sh -m -s"
@@ -39,9 +39,9 @@
   yum: name=mysql state=present
   when: ansible_distribution_major_version == "6"
 
-- name: disable base repo
-  set_fact: base_repo_enabled=0
-- template: src=CentOS-Base.repo.j2 dest=/etc/yum.repos.d/CentOS-Base.repo
+#- name: disable base repo
+#  set_fact: base_repo_enabled=0
+#- template: src=CentOS-Base.repo.j2 dest=/etc/yum.repos.d/CentOS-Base.repo
 
 #- name: rename CloudStack title in browser
 #  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js
