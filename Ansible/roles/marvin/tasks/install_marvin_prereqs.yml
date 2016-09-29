@@ -44,7 +44,7 @@
     - marvin
     - marvin_install
 
-- name: Install Other Dependancies
+- name: Install other dependancies
   yum: name={{ item }} state=installed
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
