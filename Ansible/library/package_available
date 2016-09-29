@@ -4,10 +4,11 @@ ARGS="(`cat $1`)"
 
 PACKAGE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="PACKAGE"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 
-if [[ -n `yum list $PACKAGE | grep 'No matching Packages to list'` ]]; then
-  AVAILABILITY="true"
+yum list $PACKAGE
+if [ $? -ne 0 ]; then
+AVAILABILITY="false"
 else
-  AVAILABILITY="false"
+AVAILABILITY="true"
 fi
 echo "
 {
