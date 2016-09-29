@@ -58,14 +58,22 @@ then
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
-  {% if env_numversion | float > 4.2 %}
+  {% if env_numversion | version_compare('4.2','>') %}
+  {% if esxi_use_dvswitch %}
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='dvswitch0,,vmwaredvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
+  {% endif %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }}' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
-  {% if env_numversion | float > 4.2 %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% if env_numversion | version_compare('4.2','>') %}
+  {% if esxi_use_dvswitch %}
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='dvswitch0,,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% else %}
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% end if %}
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}

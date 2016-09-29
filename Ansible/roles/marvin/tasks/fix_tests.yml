@@ -14,18 +14,19 @@
 - name: copy locally fixed tests
   copy: src={{ item.src }} dest={{ item.dest }}
   with_items:
-    - {src: "test_internal_lb.py", dest: "/marvin/tests/smoke/test_internal_lb.py"}
-    - {src: "test_vpc_vpn.py", dest: "/marvin/tests/smoke/test_vpc_vpn.py"}
     - {src: "common.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/common.py"}
-    - {src: "test_network_acl.py", dest: "/marvin/tests/smoke/test_network_acl.py"}
-    - {src: "test_password_server.py", dest: "/marvin/tests/smoke/test_password_server.py"}
-    - {src: "test_privategw_acl.py", dest: "/marvin/tests/smoke/test_privategw_acl.py"}
-    - {src: "test_router_dhcphosts.py", dest: "/marvin/tests/smoke/test_router_dhcphosts.py"}
-    - {src: "test_routers_network_ops.py", dest: "/marvin/tests/smoke/test_routers_network_ops.py"}
-    - {src: "test_vpc_redundant.py", dest: "/marvin/tests/smoke/test_vpc_redundant.py"}
-    - {src: "test_vpc_router_nics.py", dest: "/marvin/tests/smoke/test_vpc_router_nics.py"}
-    - {src: "test_vpc_vpn.py", dest: "/marvin/tests/smoke/test_vpc_vpn.py"}
   tags:
     - marvin
     - marvin_cfg
     - marvin_fix_tests
+
+#    - {src: "test_internal_lb.py", dest: "/marvin/tests/smoke/test_internal_lb.py"}
+#    - {src: "test_vpc_vpn.py", dest: "/marvin/tests/smoke/test_vpc_vpn.py"}
+#    - {src: "test_network_acl.py", dest: "/marvin/tests/smoke/test_network_acl.py"}
+#    - {src: "test_password_server.py", dest: "/marvin/tests/smoke/test_password_server.py"}
+#    - {src: "test_privategw_acl.py", dest: "/marvin/tests/smoke/test_privategw_acl.py"}
+#    - {src: "test_router_dhcphosts.py", dest: "/marvin/tests/smoke/test_router_dhcphosts.py"}
+#    - {src: "test_routers_network_ops.py", dest: "/marvin/tests/smoke/test_routers_network_ops.py"}
+#    - {src: "test_vpc_redundant.py", dest: "/marvin/tests/smoke/test_vpc_redundant.py"}
+#    - {src: "test_vpc_router_nics.py", dest: "/marvin/tests/smoke/test_vpc_router_nics.py"}
+#    - {src: "test_vpc_vpn.py", dest: "/marvin/tests/smoke/test_vpc_vpn.py"}

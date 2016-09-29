@@ -24,7 +24,7 @@
 
 - name: replace vmware python module to fix cert checking  (CentOS/RHEL)
   local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.py" force=yes mode=0644
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' 
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - vc_config
 
@@ -36,7 +36,7 @@
 
 - name: replace vmware python module to fix cert checking  (CentOS/RHEL)
   local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/local/lib/python2.7/dist-packages/ansible/module_utils/vmware.py" force=yes mode=0644
-  when: ansible_distribution == 'Ubuntu' 
+  when: ansible_distribution == 'Ubuntu'
   tags:
     - vc_config
 
@@ -123,3 +123,44 @@
   tags:
     - vc_config
     - add_vwmare_hosts
+
+
+- name: Create dvswitch
+  local_action:
+    module: vmware_dvswitch
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    datacenter_name: "{{ vmware_datacenter_name }}"
+    switch_name: dvSwitch0
+    mtu: 1500
+    uplink_quantity: 1
+    discovery_proto: lldp
+    discovery_operation: both
+    state: present
+    validate_certs: false
+  when: esxi_use_dvswitch
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+
+- name: Add Host to dVS
+  local_action:
+    module: vmware_dvs_host
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
+    switch_name: dvSwitch0
+    vmnics:
+        - vmnic1
+    state: present
+    validate_certs: false
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  when: esxi_use_dvswitch
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
