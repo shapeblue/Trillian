@@ -27,13 +27,13 @@
 - name: run installer -- THIS IS VERY FRAGILE
   shell: "cd /tmp/{{ ccp_install_tarball }} && ./install.sh -m -s"
 
-#- name: install Java 1.6 when running cs4.3
-#  yum: name=java-1.6.0-openjdk state=present
-#  when: env_numversion < 4.3
+- name: install Java 1.6 when running cs4.3
+  yum: name=java-1.6.0-openjdk state=present
+  when: env_numversion | version_compare('4.3','<=')
 
-#- name: set host to use Java 1.6
-#  shell: alternatives --set java_1.6 /usr/lib/jvm/jre-1.6.0-openjdk.x86_64/bin/java
-#  when: env_numversion < 4.3
+- name: set host to use Java 1.6
+  shell: alternatives --set java /usr/lib/jvm/jre-1.6.0-openjdk.x86_64/bin/java
+  when: env_numversion | version_compare('4.3','<=')
 
 - name: Ensure MySQL Client is present (centos/rhel6)
   yum: name=mysql state=present
