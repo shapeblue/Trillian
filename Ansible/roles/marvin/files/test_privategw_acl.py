@@ -24,7 +24,6 @@ from marvin.lib.utils import *
 from marvin.lib.base import *
 from marvin.lib.common import *
 from nose.plugins.attrib import attr
-from marvin.codes import PASS
 
 import time
 import logging
@@ -197,6 +196,8 @@ class TestPrivateGwACL(cloudstackTestCase):
     def setUp(self):
         self.apiclient = self.testClient.getApiClient()
         self.dbclient = self.testClient.getDbConnection()
+        self.hypervisor = self.testClient.getHypervisorInfo()
+
         self.logger.debug("Creating Admin Account for Domain ID ==> %s" % self.domain.id)
         self.account = Account.create(
             self.apiclient,
@@ -236,18 +237,14 @@ class TestPrivateGwACL(cloudstackTestCase):
 
         self.cleanup = [vpc, vpc_off, self.account]
 
-        physical_networks = get_physical_networks(self.apiclient, self.zone.id)
-        if not physical_networks:
+        physical_network = self.get_guest_traffic_physical_network(self.apiclient, self.zone.id)
+        if not physical_network:
             self.fail("No Physical Networks found!")
 
         qresultset = self.dbclient.execute(
             "select vnet from op_dc_vnet_alloc where physical_network_id=\
-            (select id from physical_network where uuid='%s' ) and taken is NULL;" % physical_networks[0].id
+            (select id from physical_network where uuid='%s' ) and taken is NULL;" % physical_network.id
         )
-        self.assertEqual(validateList(qresultset)[0],
-                         PASS,
-                         "Invalid sql query response"
-                         )
         vlans = qresultset
         vlan_1 = int(vlans[0][0])
 
@@ -312,17 +309,13 @@ class TestPrivateGwACL(cloudstackTestCase):
 
         self.cleanup = [vpc_1, vpc_2, vpc_off, self.account]
 
-        physical_networks = get_physical_networks(self.apiclient, self.zone.id)
-        if not physical_networks:
+        physical_network = self.get_guest_traffic_physical_network(self.apiclient, self.zone.id)
+        if not physical_network:
             self.fail("No Physical Networks found!")
 
         qresultset = self.dbclient.execute(
             "select vnet from op_dc_vnet_alloc where physical_network_id=\
-            (select id from physical_network where uuid='%s' ) and taken is NULL;" % physical_networks[0].id
-        )
-        self.assertEqual(validateList(qresultset)[0],
-                         PASS,
-                         "Invalid sql query response"
+            (select id from physical_network where uuid='%s' ) and taken is NULL;" % physical_network.id
         )
         vlans = qresultset
         vlan_1 = int(vlans[0][0])
@@ -372,12 +365,15 @@ class TestPrivateGwACL(cloudstackTestCase):
 
         self.cleanup = [vpc_1, vpc_off, self.account]
 
-        physical_networks = get_physical_networks(self.apiclient, self.zone.id)
-        if not physical_networks:
+        physical_network = self.get_guest_traffic_physical_network(self.apiclient, self.zone.id)
+        if not physical_network:
             self.fail("No Physical Networks found!")
-
-        vlans = physical_networks[0].vlan.split('-')
-        vlan_1 = int(vlans[0])
+        qresultset = self.dbclient.execute(
+            "select vnet from op_dc_vnet_alloc where physical_network_id=\
+            (select id from physical_network where uuid='%s' ) and taken is NULL;" % physical_network.id
+        )
+        vlans = qresultset
+        vlan_1 = int(vlans[0][0])
 
         net_offering_no_lb = "network_offering_no_lb"
 
@@ -408,7 +404,7 @@ class TestPrivateGwACL(cloudstackTestCase):
 
         public_ip_1 = self.acquire_publicip(vpc_1, network_1)
         nat_rule_1 = self.create_natrule(vpc_1, vm1, public_ip_1, network_1)
-        
+
         self.check_private_gateway_interfaces()
 
         self.check_pvt_gw_connectivity(vm1, public_ip_1, [vm2.nic[0].ipaddress, vm3.nic[0].ipaddress, vm4.nic[0].ipaddress])
@@ -589,14 +585,14 @@ class TestPrivateGwACL(cloudstackTestCase):
         return obj_network
 
     def createPvtGw(self, vpc, ip_address, gateway, aclId, vlan):
-        physical_networks = get_physical_networks(self.apiclient, self.zone.id)
-        if not physical_networks:
+        physical_network = self.get_guest_traffic_physical_network(self.apiclient, self.zone.id)
+        if not physical_network:
             self.fail("No Physical Networks found!")
 
-        self.logger.debug('::: Physical Networks ::: ==> %s' % physical_networks)
+        self.logger.debug('::: Physical Networks ::: ==> %s' % physical_network)
 
         createPrivateGatewayCmd = createPrivateGateway.createPrivateGatewayCmd()
-        createPrivateGatewayCmd.physicalnetworkid = physical_networks[0].id
+        createPrivateGatewayCmd.physicalnetworkid = physical_network.id
         createPrivateGatewayCmd.gateway = gateway
         createPrivateGatewayCmd.netmask = "255.255.255.0"
         createPrivateGatewayCmd.ipaddress = ip_address
@@ -707,13 +703,13 @@ class TestPrivateGwACL(cloudstackTestCase):
                 self.logger.debug("Ping to VM inside another Network Tier")
                 result = str(ssh.execute(ssh_command))
 
-                self.logger.debug("SSH result: %s; COUNT is ==> %s" % (result, result.count("3 received, 0% packet loss")))
+                self.logger.debug("SSH result: %s; COUNT is ==> %s" % (result, result.count("3 received")))
             except Exception as e:
                 self.fail("SSH Access failed for %s: %s" % \
                           (virtual_machine, e)
                           )
 
-            succeeded_pings += result.count("3 received, 0% packet loss")
+            succeeded_pings += result.count("3 received")
 
 
         self.assertTrue(succeeded_pings >= minimum_vms_to_pass,
@@ -847,3 +843,11 @@ class TestPrivateGwACL(cloudstackTestCase):
 
         if cnts[vals.index(status_to_check)] != expected_count:
             self.fail("Expected '%s' routers at state '%s', but found '%s'!" % (expected_count, status_to_check, cnts[vals.index(status_to_check)]))
+
+    def get_guest_traffic_physical_network(self, apiclient, zoneid):
+        physical_networks = get_physical_networks(apiclient, zoneid)
+        if not physical_networks:
+            return None
+        for physical_network in physical_networks:
+            if physical_network.vlan:
+                return physical_network
