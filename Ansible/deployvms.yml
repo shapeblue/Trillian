@@ -280,6 +280,12 @@
   tags:
     - waitfortemplate
 
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  tasks:
+    - include: ./tasks/xenserver_builtintemplate_hack.yml
+      when: wait_for_template
+
 - hosts: marvin_host
   gather_facts: no
   tasks:

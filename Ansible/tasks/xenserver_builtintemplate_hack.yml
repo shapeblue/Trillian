@@ -1,0 +1,5 @@
+---
+
+- name: nasty xenserver_builtintemplate_hack to remove extraneous templates
+  script: "./library/xenserver_builtintemplate_hack.sh --some-arguments /acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5"
+  ignore_errors: true
