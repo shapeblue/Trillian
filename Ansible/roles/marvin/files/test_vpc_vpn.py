@@ -320,6 +320,7 @@ class TestVpcRemoteAccessVpn(cloudstackTestCase):
         self.assert_(vpcOffering is not None and len(
             vpcOffering) > 0, "No VPC offerings found")
 
+        vpc = None
         try:
             vpc = VPC.create(
                 apiclient=self.apiclient,
