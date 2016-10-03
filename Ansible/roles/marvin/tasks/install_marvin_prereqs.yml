@@ -72,6 +72,8 @@
   - screen
   - sshpass
   - at
+  - vim
+  - tmux
   tags:
     - marvin
     - marvin_install
