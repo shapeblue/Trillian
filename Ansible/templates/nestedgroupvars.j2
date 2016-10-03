@@ -276,6 +276,7 @@ esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esx
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
 vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
+esxi_use_dvswitch: "{{ esxi_use_dvswitch | default( def_esxi_use_dvswitch ) }}"
 esxi_mgmt_network_label: "{{ esxi_mgmt_network_label | default( def_esxi_mgmt_network_label ) }}"
 esxi_guest_network_label: "{{ esxi_guest_network_label | default( def_esxi_guest_network_label ) }}"
 esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_public_network_label ) }}"
