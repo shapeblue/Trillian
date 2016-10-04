@@ -217,7 +217,7 @@
 ## KVM check required - a bit more complicated
 
     - name: Sanitise environment name
-      set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-_]', '_') | regex_replace('[_]+', '_') }}
+      set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-]', '-') | regex_replace('[-]+', '-') }}
 
     - name: Check if inventory file exists
       stat: path=./hosts_{{ env_name_clean }}
