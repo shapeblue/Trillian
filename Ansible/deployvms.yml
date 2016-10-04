@@ -27,7 +27,7 @@
   gather_facts: no
   tasks:
     - name: Request and return environment details
-      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=req
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=req
 
     - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
@@ -75,6 +75,7 @@
         - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
         - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
         - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
+        - { tagno: 4, tagkey: 'comment', tagval: "{{ env_comment | regex_replace(' ', '_') }}" }
       async: 60
       poll: 1
       ignore_errors: true
