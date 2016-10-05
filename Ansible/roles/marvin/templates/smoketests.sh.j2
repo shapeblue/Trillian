@@ -16,6 +16,28 @@
 
 set +e # stop erroneous failures reported by Jenkins
 
+cleanup() {
+    cloudmonkey set asyncblock false
+    cloudmonkey set display default
+    # TODO: destroy accounts, domains, templates
+    # Destroy vms
+    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy router id=$vmid expunge=true || true
+    done
+    # Destroy routers
+    for rid in $(cloudmonkey list routers listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy router id=$rid || true
+    done
+    # Destroy networks
+    for netid in $(cloudmonkey list networks listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete network id=$netid || true
+    done
+    # Destroy vpcs
+    for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete vpc id=$netid || true
+    done
+}
+
 LOGDIR=/marvin/MarvinLogs
 
 rm -f /marvin/tests/smoke/test_*.pyc
@@ -42,6 +64,7 @@ for file in /marvin/tests/smoke/test_*.py; do
 
   fi
   counter=$((counter+1))
+  cleanup || true
 done
 
 GOOD=0
