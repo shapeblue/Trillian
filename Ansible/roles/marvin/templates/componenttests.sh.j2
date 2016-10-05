@@ -18,7 +18,9 @@ set +e # stop erroneous failures reported by Jenkins
 LOGDIR=/marvin/MarvinLogs
 rm -f /marvin/tests/component/*.pyc
 rm -f /marvin/tests/component/maint/*.pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/config/test_data.pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
 
 NUMTESTS1=`find /marvin/tests/component/test*.py | wc -l`
