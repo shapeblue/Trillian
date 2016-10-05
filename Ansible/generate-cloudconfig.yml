@@ -21,11 +21,8 @@
 #   1) Ansible inventory file
 #   2) Ansible group variable file
 #
-# Run in interactive mode with:
-#     ansible-playbook generate-cloudconfig.yml
-#
-# Alternatively pass all variables with:
-#     ansible-playbook generate-cloudconfig.yml --extra-vars "varname1=variablevalue1 varname2='variable text 2'"
+# Pass all variables with:
+#     ansible-playbook generate-cloudconfig.yml -i localhot -e "varname1=variablevalue1 varname2='variable text 2'"
 # E.g.
 #     ansible-playbook generate-cloudconfig.yml -i localhost -e "env_name=NestedCloud1 mgmt=2 db=1 hvtype=k hv=5"
 #
@@ -36,10 +33,8 @@
 #   env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
 #   env_version [mandatory]: Environment CloudStack version (cs45, cs46, cs49, custom, etc).
 #   mgmt_os [mandatory]: Management server OS (6, 7, u, custom)
-#
 #   hvtype [mandatory]: XenServer (x), KVM (k) or VMware (v)
-#   hv: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
-#
+#   hv [mandatory]: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required. This does not have to be specified anywhere.
 #   pri [mandatory]: number of primary storage pools.
 #
 # Required depending on Hypervisor
@@ -57,9 +52,7 @@
 # When not used they will default to 'custom' to avoid template issues
 #
 # If you specify KVM as hypervisor  (hvtype=k) you must specify the kvm_os OR set it to custom and set the template to use (kvm_template) in the extra vars (kvm_template="Ubuntu Server 14.04")
-# The same applies to the other hypervisor types. For custom VMware you would need to specify both the vCenter and ESXi templates#
-#
-#
+# The same applies to the other hypervisor types. For custom VMware you would need to specify both the vCenter and ESXi templates
 #
 # Advanced variables [all optional]:
 #   mgmt: Number of management servers to configure (default is 1)
@@ -71,6 +64,7 @@
 #   build_project: project name to use for the nested cloudstack build (default <accountname>-NestedClouds)
 #   build_zone: parent cloud zone name
 #   build_keyboard: keyboard used for nested VMs (default UK)
+#   build_marvin: builds marvin testing host
 #   mgmtsrv_service_offering: parent cloud service offering used for the management server build
 #   mgmtsrv_template: parent cloud template used for the management server build
 #   dbsrv_service_offering: parent cloud service offering used for database server build
@@ -96,10 +90,8 @@
 #   wait_till_setup: only return once system VMs are running. (default is no)
 #   create_zone: default is yes.  set to no to not deploy zone
 #
-##
+# For a full list please refer to the nested group variables.
 
-#
-#
 # Some example --extra-args:
 #
 # "env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=yes mgmt_os=6"
@@ -119,51 +111,9 @@
 - hosts: localhost
   connection: local
   gather_facts: no
-
-  vars_prompt:
-    - name: "env_name"
-      prompt: "Environment name"
-      private: no
-      when: env_name is undefined
-
-    - name: "env_version"
-      prompt: "CloudStack version (cs45 / cs46 / custom)"
-      private: no
-      default: "cs45"
-      when: env_version is undefined
-
-    - name: "mgmt_os"
-      prompt: "Management OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u)"
-      private: no
-      default: "6"
-      when: mgmt_os is undefined
-
-    - name: "env_accounts"
-      prompt: "Accounts to be added to project"
-      private: no
-      when: env_accounts is undefined
-
-#    - name: "hvtype"
-#      prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
-#      private: no
-#      when: ( hvtype is undefined ) and ( hv > 0 )
-
-    - name: "hv"
-      prompt: "Number of hypervisor hosts"
-      default: "2"
-      private: no
-      when: hv is undefined
-
-    - name: "pri"
-      prompt: "Number of primary storage pools"
-      default: "1"
-      private: no
-      when: ( pri is undefined ) and ( hv > 0 )
-
   tasks:
 
 # check incomming args
-
     - name: Check returned environment name
       fail: msg="No environment name provided."
       when: env_name is not defined or ( env_name is defined and env_name =="" )
