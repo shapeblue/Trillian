@@ -15,9 +15,11 @@
 #limitations under the License.
 
 
-mkdir /marvin/MarvinLogArchive
+mkdir -p /marvin/MarvinLogArchive
 mv /marvin/MarvinLogs/* /marvin/MarvinLogArchive
-rm -f /usr/lib/python2.7/site-packages/marvin/config/test_data.pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
 counter=1
 for TESTNAME in "$@";
