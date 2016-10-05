@@ -1,5 +1,10 @@
 ---
 
-- name: nasty xenserver_builtintemplate_hack to remove extraneous templates
-  script: "./library/xenserver_builtintemplate_hack.sh --some-arguments /acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5"
-  ignore_errors: true
+- name: create builtin xenserver template_dir
+  file: path="/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5" state=directory mode=0755
+
+- name: copy template and properties.template files
+  get_url: url="{{ repohost }}/builtin_templates/{{ item }}" dest="/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5/{{ item }}"
+  with_items:
+    - "b418e433-4ecd-3a1d-a90e-183157a165d5.vhd"
+    - "template.properties"

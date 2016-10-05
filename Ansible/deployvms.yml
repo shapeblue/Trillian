@@ -191,6 +191,16 @@
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
 
+## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  vars:
+    num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
+  tasks:
+    - include: ./tasks/xenserver_builtintemplate_hack.yml
+      when: "num_xen_hosts | int != 0"
+## REMOVE WHEN SSVM FIXED
+
 ## update status
 
 - hosts: localhost
@@ -234,7 +244,6 @@
 ## as you were
 
 - hosts: marvin_host
-  gather_facts: no
   vars:
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
@@ -281,12 +290,6 @@
       when: wait_for_template
   tags:
     - waitfortemplate
-
-- hosts: secondary_storage_hosts
-  gather_facts: no
-  tasks:
-    - include: ./tasks/xenserver_builtintemplate_hack.yml
-      when: wait_for_template
 
 - hosts: marvin_host
   gather_facts: no
