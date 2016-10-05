@@ -239,6 +239,7 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
+    - cloudmonkey
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
     - { role: marvin, when: num_marv_hosts | int != 0  }
 
