@@ -22,7 +22,7 @@ cleanup() {
     # TODO: destroy accounts, domains, templates
     # Destroy vms
     for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey destroy router id=$vmid expunge=true || true
+        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
     done
     # Destroy routers
     for rid in $(cloudmonkey list routers listall=true filter=id | grep '^id' | awk '{print $3}'); do
