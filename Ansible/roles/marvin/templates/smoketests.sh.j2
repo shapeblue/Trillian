@@ -47,7 +47,7 @@ cleanup() {
 
 runtest() {
     file=$1
-    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file)_*
+    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')_*
     nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
     cleanup || true
 }
