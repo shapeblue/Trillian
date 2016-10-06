@@ -34,7 +34,7 @@ cleanup() {
     done
     # Destroy vpcs
     for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey delete vpc id=$netid || true
+        cloudmonkey delete vpc id=$vid || true
     done
 }
 
