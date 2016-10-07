@@ -22,6 +22,12 @@
   wait_for: path=/tmp/state-built
   retries: 24
 
+- name: remove orginal timezone symlink
+  file: path=/etc/localtime state=absent
+
+- name: set new timezone
+  file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
+
 - name: copy public key to KVM hosts
   shell: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
   ignore_errors: true
@@ -69,7 +75,7 @@
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
     when: ("{{ env_zonetype | lower }}" == "advanced")
 
-  - name: create basic guest network 
+  - name: create basic guest network
     shell: xe network-create name-label={{ xs_guest_network_label }} name-description="Basic zone guest network"
     register: basguestuuid
     when: ("{{ env_zonetype | lower }}" == "basic")
