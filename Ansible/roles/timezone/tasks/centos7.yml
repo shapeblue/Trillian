@@ -1,0 +1,4 @@
+---
+
+- name: "set Timezone to {{ env_timezone }}"
+  command: "timedatectl set-timezone {{ env_timezone }}"

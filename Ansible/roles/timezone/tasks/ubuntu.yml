@@ -1,0 +1,8 @@
+---
+
+
+- name: remove old link
+  file: path=/etc/localtime state=absent
+
+- name: set new timezone
+  file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link

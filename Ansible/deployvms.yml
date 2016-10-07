@@ -120,6 +120,7 @@
   vars:
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
+    - { role: timezone, when: num_db_hosts | int != 0 }
     - { role: mysql, when: num_db_hosts | int != 0 }
 
 - hosts: cloudstack_manager_hosts
@@ -128,6 +129,7 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
+    - timezone
     - { role: mysql, when: num_db_hosts | int == 0 }
     - cloudstack-manager
     - cloudmonkey
@@ -163,6 +165,7 @@
   vars:
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
   roles:
+    - { role: timezone, when: num_kvm_hosts | int != 0 }
     - { role: kvm, when: num_kvm_hosts | int != 0 }
 
 - hosts: esxi_hosts
@@ -248,7 +251,9 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - cloudmonkey
+
+    - { role: timezone, when: num_marv_hosts | int != 0 }
+    - { role: cloudmonkey, when: num_marv_hosts | int != 0  }
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
     - { role: marvin, when: num_marv_hosts | int != 0  }
 

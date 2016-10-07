@@ -1,0 +1,16 @@
+---
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
+- name: Now I'm connected, get facts
+  setup:
+
+- include: ./centos6.yml
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "6" )
+
+- include: ./centos7.yml
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "7" )
+
+- include: ./ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
