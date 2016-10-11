@@ -28,7 +28,13 @@
 - name: set new timezone
   file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
 
-- name: copy public key to KVM hosts
+- name: set name-label
+  shell: xe host-param-set name-label=`echo $HOSTNAME` uuid=`xe host-list --minimal`
+
+- name: set iscsi iqn
+  shell: 'xe host-param-set other-config:iscsi_iqn=`cat /etc/iscsi/initiatorname.iscsi | cut -d "=" -f 2` uuid=`xe host-list --minimal`'
+
+- name: copy public key to XenServer hosts
   shell: "curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
   ignore_errors: true
 
@@ -100,5 +106,8 @@
 
   - name: Allow pooljoin to complete
     pause: seconds=30
+
+  - name: set pool name-label
+    shell: xe pool-param-set name-label=XS-Cluster1 uuid=`xe pool-list --minimal`
 
   when: ( hostsinpool.stdout | int == 1 ) and ( inventory_hostname != "{{ groups['xenserver_hosts'][0] }}" )

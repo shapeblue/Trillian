@@ -965,9 +965,12 @@ test_data = {
         "name": "Marvin Primary Pool"
     },
     "iscsi": {
-        "url":
-            "iscsi://192.168.100.21/iqn.2012-01.localdomain.clo-cstack-cos6:iser/1",
-        "name": "Primary iSCSI"
+{% if env_iscsi_test_host == "marvin" %}
+        "url": "iscsi://{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}/{{ env_iscsi_test_target }}",
+{% else %}
+        "url": "iscsi://{{ env_iscsi_test_host }}/{{ env_iscsi_test_target }}",
+{% endif %}
+        "name": "Test iSCSI"
     },
     "volume": {"diskname": "Test Volume",
                "size": 1
@@ -1480,8 +1483,12 @@ test_data = {
             "port": 22
         },
         "iscsi": {
-            "url": "",
-            "name": "Primary iSCSI"
+        {% if env_iscsi_test_host == "marvin" %}
+                "url": "iscsi://{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}/{{ env_iscsi_test_target }}",
+        {% else %}
+                "url": "iscsi://{{ env_iscsi_test_host }}/{{ env_iscsi_test_target }}",
+        {% endif %}
+                "name": "Test iSCSI"
         },
         "host": {
                  "publicport": 22,
@@ -1669,8 +1676,12 @@ test_data = {
                 "port": 22
             },
             "iscsi": {
-                "url": "",
-                "name": "Primary iSCSI"
+            {% if env_iscsi_test_host == "marvin" %}
+                    "url": "iscsi://{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}/{{ env_iscsi_test_target }}",
+            {% else %}
+                    "url": "iscsi://{{ env_iscsi_test_host }}/{{ env_iscsi_test_target }}",
+            {% endif %}
+                    "name": "Test iSCSI"
             },
             "host": {
                 "publicport": 22,

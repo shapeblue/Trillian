@@ -150,6 +150,8 @@ build_marvin: {{ build_marvin | default (def_build_marvin) }}
 wait_for_template: {{ wait_for_template | default("no") }}
 force_java: {{ force_java | default("no") }}
 use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}
+env_iscsi_test_target: "{{ env_iscsi_test_target | default (def_env_iscsi_test_target) }}"
+env_iscsi_test_host: "{{ env_iscsi_test_host | default (def_env_iscsi_test_host) }}"
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
