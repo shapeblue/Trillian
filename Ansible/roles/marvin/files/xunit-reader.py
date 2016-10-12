@@ -72,13 +72,14 @@ def _generate_file_list(args):
 
 def parse_reports(file_path_list):
     print ""
-    print "Test | Result | Time (s)"
-    print "--- | --- | ---"
+    print "Test | Result | Time (s) | Test File"
+    print "--- | --- | --- | ---"
 
     exit_code = 0
 
     tests = []
     for file_path in file_path_list:
+        filename = file_path[file_path.find('test_'):].replace('.xml', '')
         data = lxml.etree.iterparse(file_path, tag='testcase')
         for event, elem in data:
             name = ''
@@ -87,7 +88,7 @@ def parse_reports(file_path_list):
             if 'name' in elem.attrib:
                 name = elem.attrib['name']
             if 'time' in elem.attrib:
-                time = elem.attrib['time']
+                time = str(elem.attrib['time'])
             for children in elem.getchildren():
                 if 'skipped' == children.tag:
                     status = 'Skipped'
@@ -97,10 +98,10 @@ def parse_reports(file_path_list):
                 elif 'error' == children.tag:
                     exit_code = 1
                     status = '`Error`'
-            tests.append([name, status, time])
+            tests.append([name, status, time, filename])
 
-    for test in sorted(tests, key=itemgetter(1,0,2), reverse=True):
-        print "%s | %s | %s" % (test[0], test[1], test[2])
+    for test in sorted(tests, key=itemgetter(1,3,0), reverse=True):
+        print "%s | %s | %.2f | %s" % (test[0], test[1], float(test[2]), test[3])
     print ""
     return exit_code
 
