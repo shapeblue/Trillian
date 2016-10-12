@@ -57,7 +57,7 @@ launchtest() {
     file=$1
     runtest $file
     # Run tests once again on error or failure
-    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Tested twice for intermitten failure: $file" >> /marvin/smoketests-summary.txt
+    #python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Tested twice for intermitten failure: $file" >> /marvin/smoketests-summary.txt
 }
 
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
