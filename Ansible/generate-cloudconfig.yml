@@ -279,7 +279,8 @@
       when: use_hipchat is undefined
 
     - name: Generate commment for environments db
-      set_fact: env_comment="Account {{ (acct_retval.stdout|from_json ).account[0].name }} - Project {{ env_name_clean }}"
+      set_fact: env_comment="{{ env_name_clean }}"
+      when: env_comment is undefined
 
     - name: Generate environment uuid
       shell: uuidgen
