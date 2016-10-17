@@ -243,6 +243,7 @@
   with_items:
     - "{{ groups['kvm_hosts'] }}"
   register: kvm_retval
+  when: not use_external_hv_hosts
 
 - name: Update inventory file with KVM host IP addresses
   replace:
@@ -251,6 +252,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{kvm_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update in memory inventory with KVM host IP addresses
   add_host:
@@ -258,6 +260,7 @@
     groups="kvm_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{kvm_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update inventory file with KVM host instance names
   replace:
@@ -266,6 +269,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{kvm_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update in memory inventory with KVM host instance names
   add_host:
@@ -273,7 +277,7 @@
     groups="kvm_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{kvm_retval.results}}"
-
+  when: not use_external_hv_hosts
 
 ####################################################################
 # XenServer hosts
@@ -299,6 +303,7 @@
   with_items:
     - "{{ groups['xenserver_hosts'] }}"
   register: xs_retval
+  when: not use_external_hv_hosts
 
 - name: Update inventory file with XenServer host IP addresses
   replace:
@@ -307,29 +312,32 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{xs_retval.results}}"
+  when: not use_external_hv_hosts
 
-- name: Update in memory inventory with XS host IP addresses
+- name: Update in memory inventory with XenServer host IP addresses
   add_host:
     name={{ item.name }}
     groups="xenserver_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{xs_retval.results}}"
+  when: not use_external_hv_hosts
 
-- name: Update inventory file with ESXi host instance names
+- name: Update inventory file with XenServer host instance names
   replace:
     dest="hosts_{{ env_name_clean }}"
     regexp='{{ item.name }}-instance_name'
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{xs_retval.results}}"
+  when: not use_external_hv_hosts
 
-- name: Update in memory inventory with ESXi host instance names
+- name: Update in memory inventory with XenServer host instance names
   add_host:
     name={{ item.name }}
     groups="xenserver_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{xs_retval.results}}"
-
+  when: not use_external_hv_hosts
 
 ####################################################################
 # VMware ESXi hosts
@@ -355,6 +363,7 @@
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   register: esxi_retval
+  when: not use_external_hv_hosts
 
 - name: Update inventory file with ESXi host IP addresses
   replace:
@@ -363,6 +372,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{esxi_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update in memory inventory with ESXi host IP addresses
   add_host:
@@ -370,6 +380,7 @@
     groups="esxi_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{esxi_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update inventory file with ESXi host instance names
   replace:
@@ -378,6 +389,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{esxi_retval.results}}"
+  when: not use_external_hv_hosts
 
 - name: Update in memory inventory with ESXi host instance names
   add_host:
@@ -385,7 +397,7 @@
     groups="esxi_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{esxi_retval.results}}"
-
+  when: not use_external_hv_hosts
 
 ####################################################################
 # VMware VC hosts

@@ -26,6 +26,8 @@ build_zone: "{{ build_zone | default( def_build_zone ) }}"
 build_keyboard: "{{ build_keyboard | default( def_build_keyboard ) }}"
 ssh_retries: {{ ssh_retries | default( def_ssh_retries ) }}
 env_timezone: "{{ env_timezone | default(def_env_timezone) }}"
+use_external_hv_hosts: "{{ use_external_hv_hosts | default(no) }}"
+
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
 env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
