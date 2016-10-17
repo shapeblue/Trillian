@@ -44,6 +44,10 @@ cleanup() {
     for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
         cloudmonkey delete vpc id=$vid || true
     done
+    # Destroy alerts
+    for id in $(cloudmonkey list alerts listall=true keyword=auth-error filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete alerts ids=$id || true
+    done
 }
 
 runtest() {
