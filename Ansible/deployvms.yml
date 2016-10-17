@@ -124,6 +124,7 @@
     - { role: mysql, when: num_db_hosts | int != 0 }
 
 - hosts: cloudstack_manager_hosts
+  serial: 1
   gather_facts: no
   vars:
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"

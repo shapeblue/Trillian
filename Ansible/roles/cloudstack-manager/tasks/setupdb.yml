@@ -63,12 +63,24 @@
 
 - name: Refresh Mysql status
   get_db_facts: DBHOST="{{ mysql_master_ip }}" DBUSER="root" DBPASSWORD="{{ mysql_root_password }}"
+  register: dbstate
   tags:
     - setup_db
 
-#- name: Setup Secondary CloudStack Databases
-#  command: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_vip }}'"
-#  when: ("secondary_cs_manager" in group_names) and ("{{ mgmt_ip }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}")
+- debug: msg="{{ dbstate }}"
+
+- name: Setup Secondary CloudStack Databases for older builds
+  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}'"
+  when: ("secondary_cs_manager" in group_names) and (path_is_cloudstack.stat.exists == True)
+  tags:
+    - setup_db
+##and ("{{ ansible_ssh_host }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}")
+
+- name: Setup Secondary CloudStack Databases
+  shell: "/usr/bin/cloud-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}'"
+  when: ("secondary_cs_manager" in group_names) and (path_is_cloudstack.stat.exists == False)
+  tags:
+    - setup_db
 
 - name: Setup CloudStack Manager (centos/rhel6)
   command: /usr/bin/cloudstack-setup-management

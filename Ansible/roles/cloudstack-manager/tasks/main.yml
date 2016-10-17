@@ -39,6 +39,6 @@
   register: result
   until: result.stdout.find("unable to verify user") != -1
   retries: 48
-
+  when: ("primary_cs_manager" in group_names)
 
 - include: ./preconfig_globalsettings.yml
