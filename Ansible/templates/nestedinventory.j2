@@ -76,18 +76,18 @@ secondary_cs_manager
 {{ env_name_clean }}-esxi{{ n }} ansible_ssh_host={{ env_name_clean }}-esxi{{ n }}-ip ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }} instance_name={{ env_name_clean }}-esxi{{ n }}-instance_name
 {% endfor %}
 {% else %}
-
+{{ env_name_clean }}-esxi-n ansible_ssh_host=XXX ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }}
 {% endif %}
 {% endif %}
 
 [xenserver_hosts]
 {% if xs_ver | lower != "na" %}
-{% if not use_external_hv_hosts %}
+{% if use_external_hv_hosts == false %}
 {% for n in range(1,hv | int + 1) %}
 {{ env_name_clean }}-xs{{ n }} ansible_ssh_host={{ env_name_clean }}-xs{{ n }}-ip ansible_ssh_pass={{ xs_password | default( def_xs_password ) }} instance_name={{ env_name_clean }}-xs{{ n }}-instance_name
 {% endfor %}
 {% else %}
-
+{{ env_name_clean }}-xsn ansible_ssh_host=ip[0] ansible_ssh_pass={{ xs_password | default( def_xs_password ) }}
 {% endif %}
 {% endif %}
 
@@ -99,7 +99,7 @@ secondary_cs_manager
 {{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name
 {% endfor %}
 {% else %}
-
+{{ env_name_clean }}-kvmn ansible_ssh_host=ip[0] ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }}
 {% endif %}
 {% endif %}
 

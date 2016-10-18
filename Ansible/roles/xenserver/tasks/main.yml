@@ -21,6 +21,7 @@
 - name: Wait for XenServer completion
   wait_for: path=/tmp/state-built
   retries: 24
+  when: not use_external_hv_hosts
 
 - name: remove orginal timezone symlink
   file: path=/etc/localtime state=absent
