@@ -107,13 +107,14 @@
       with_items:
         - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
 
-## as you were
+## Add dvFilter to interfaces
 
 - hosts: localhost
   connection: local
   gather_facts: no
   tasks:
     - include: ./tasks/add_dvfilter.yml
+      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
 
 - hosts: mysql_hosts
   gather_facts: no
@@ -124,7 +125,6 @@
     - { role: mysql, when: num_db_hosts | int != 0 }
 
 - hosts: cloudstack_manager_hosts
-  serial: 1
   gather_facts: no
   vars:
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"

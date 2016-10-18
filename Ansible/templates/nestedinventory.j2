@@ -71,23 +71,45 @@ secondary_cs_manager
 
 [esxi_hosts]
 {% if vmware_ver | lower != "na" %}
+{% if not use_external_hv_hosts %}
 {% for n in range(1,hv | int + 1) %}
 {{ env_name_clean }}-esxi{{ n }} ansible_ssh_host={{ env_name_clean }}-esxi{{ n }}-ip ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }} instance_name={{ env_name_clean }}-esxi{{ n }}-instance_name
 {% endfor %}
+{% else %}
+{% set iplist = hviplist.split(',') %}
+{% for ip in iplist %}
+{{ env_name_clean }}-esxi{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }}
+{% endfor %}
+{% endif %}
 {% endif %}
 
 [xenserver_hosts]
 {% if xs_ver | lower != "na" %}
+{% if use_external_hv_hosts == false %}
 {% for n in range(1,hv | int + 1) %}
 {{ env_name_clean }}-xs{{ n }} ansible_ssh_host={{ env_name_clean }}-xs{{ n }}-ip ansible_ssh_pass={{ xs_password | default( def_xs_password ) }} instance_name={{ env_name_clean }}-xs{{ n }}-instance_name
 {% endfor %}
+{% else %}
+{% set iplist = hviplist.split(',') %}
+{% for ip in iplist %}
+{{ env_name_clean }}-xs{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ xs_password | default( def_xs_password ) }}
+{% endfor %}
 {% endif %}
+{% endif %}
+
 
 [kvm_hosts]
 {% if kvm_os | lower != "na" %}
+{% if not use_external_hv_hosts %}
 {% for n in range(1,hv | int + 1) %}
 {{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name
 {% endfor %}
+{% else %}
+{% set iplist = hviplist.split(',') %}
+{% for ip in iplist %}
+{{ env_name_clean }}-kvm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }}
+{% endfor %}
+{% endif %}
 {% endif %}
 
 [marvin_host]

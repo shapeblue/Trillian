@@ -99,7 +99,7 @@
     - marvin
     - marvin_install
 
-- name: install pip security components
+- name: install pip security components and extras
   pip: name={{ item }}
   with_items:
   - '"requests[security]"'
@@ -110,6 +110,9 @@
   tags:
     - marvin
     - marvin_install
+
+- name: WORKAROUND **Install pycparser v2.13**
+  pip: name=pycparser version=2.13
 
 - name: insert public key file
   shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"

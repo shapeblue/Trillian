@@ -82,32 +82,9 @@
   tags:
     - setup_db
 
-- name: Setup CloudStack Manager (centos/rhel6)
-  command: /usr/bin/cloudstack-setup-management
-  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists == True)
-  tags:
-    - setup_mgmt
+## run cloudstack-setup-management
+- include: ./setup-mgmt-primary.yml
+  when: ("primary_cs_manager" in group_names)
 
-- name: Setup CloudStack Manager (centos/rhel6)
-  command: /usr/bin/cloud-setup-management
-  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists == False)
-  tags:
-    - setup_mgmt
-
-- name: Setup CloudStack Manager (centos/rhel7 ACS >= 4.6)
-  command: /usr/bin/cloudstack-setup-management --tomcat7
-  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.6','>='))
-  tags:
-    - setup_mgmt
-
-- name: Setup CloudStack Manager (centos/rhel7) ACS < 4.6
-  command: /usr/bin/cloudstack-setup-management
-  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.6','<'))
-  tags:
-    - setup_mgmt
-
-- name: Setup CloudStack Manager (Ubuntu)
-  command: /usr/bin/cloudstack-setup-management
-  when: ansible_distribution == "Ubuntu"
-  tags:
-    - setup_mgmt
+- include: ./setup-mgmt-secondary.yml
+  when: ("secondary_cs_manager" in group_names)

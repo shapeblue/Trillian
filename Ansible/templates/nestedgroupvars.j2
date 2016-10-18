@@ -26,6 +26,9 @@ build_zone: "{{ build_zone | default( def_build_zone ) }}"
 build_keyboard: "{{ build_keyboard | default( def_build_keyboard ) }}"
 ssh_retries: {{ ssh_retries | default( def_ssh_retries ) }}
 env_timezone: "{{ env_timezone | default(def_env_timezone) }}"
+use_external_hv_hosts: "{{ use_external_hv_hosts | default(no) }}"
+use_dvfilter: {{ use_dvfilter | default(def_use_dvfilter) }}
+
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
 env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
@@ -308,10 +311,10 @@ marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images
 {% if run_component_tests is not defined %}{% set run_component_tests = no %}{% endif %}run_component_tests: {{ run_component_tests }}
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
 {% if baseurl_marvin is not defined %}
-{% if def_rooturl_cloudstack is defined %}
-{% set marvinbaseurl = def_rooturl_cloudstack~"centos7"~"/"~numversion~"/" %}
+{% if rooturl_cloudstack is defined %}
+{% set marvinbaseurl = rooturl_cloudstack~"centos7"~"/"~numversion~"/" %}
 {% else %}
-{% set marvinbaseurl = "na" %}
+{% set marvinbaseurl = def_rooturl_cloudstack~"centos7"~"/"~numversion~"/" %}
 {% endif %}
 {% else %}
 {% set marvinbaseurl = baseurl_marvin %}
