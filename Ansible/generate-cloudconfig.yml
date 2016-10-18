@@ -219,6 +219,10 @@
     - name: Sanitise environment name
       set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-]', '-') | regex_replace('[-]+', '-') }}
 
+    - name: set use_external_hv_hosts
+      set_fact: use_external_hv_hosts="{{ def_use_external_hv_hosts }}"
+      when: use_external_hv_hosts is not defined
+
 #    - name: Check if inventory file exists
 #      stat: path=./hosts_{{ env_name_clean }}
 #      register: inv_exists
