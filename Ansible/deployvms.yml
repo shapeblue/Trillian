@@ -114,7 +114,7 @@
   gather_facts: no
   tasks:
     - include: ./tasks/add_dvfilter.yml
-      when: (use_dvfilter) and (not use_external_hv_hosts)
+      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
 
 - hosts: mysql_hosts
   gather_facts: no
