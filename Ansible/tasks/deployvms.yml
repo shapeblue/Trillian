@@ -243,7 +243,7 @@
   with_items:
     - "{{ groups['kvm_hosts'] }}"
   register: kvm_retval
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with KVM host IP addresses
   replace:
@@ -252,7 +252,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{kvm_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with KVM host IP addresses
   add_host:
@@ -260,7 +260,7 @@
     groups="kvm_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{kvm_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with KVM host instance names
   replace:
@@ -269,7 +269,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{kvm_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with KVM host instance names
   add_host:
@@ -277,7 +277,7 @@
     groups="kvm_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{kvm_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 ####################################################################
 # XenServer hosts
@@ -303,7 +303,7 @@
   with_items:
     - "{{ groups['xenserver_hosts'] }}"
   register: xs_retval
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with XenServer host IP addresses
   replace:
@@ -312,7 +312,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{xs_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with XenServer host IP addresses
   add_host:
@@ -320,7 +320,7 @@
     groups="xenserver_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{xs_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with XenServer host instance names
   replace:
@@ -329,7 +329,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{xs_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with XenServer host instance names
   add_host:
@@ -337,7 +337,7 @@
     groups="xenserver_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{xs_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 ####################################################################
 # VMware ESXi hosts
@@ -363,7 +363,7 @@
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   register: esxi_retval
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with ESXi host IP addresses
   replace:
@@ -372,7 +372,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{esxi_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with ESXi host IP addresses
   add_host:
@@ -380,7 +380,7 @@
     groups="esxi_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{esxi_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update inventory file with ESXi host instance names
   replace:
@@ -389,7 +389,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{esxi_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 - name: Update in memory inventory with ESXi host instance names
   add_host:
@@ -397,7 +397,7 @@
     groups="esxi_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{esxi_retval.results}}"
-  when: not use_external_hv_hosts
+  when: use_external_hv_hosts|bool == false
 
 ####################################################################
 # VMware VC hosts
@@ -508,7 +508,7 @@
     instance_name={{ item.instance_name }}
   with_items: "{{marvin_retval.results}}"
 
-  
+
 ####################################################################
 # Work out lists of hosts to be used in zone create script
 #
