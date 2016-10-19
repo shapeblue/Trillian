@@ -15,6 +15,7 @@
   copy: src={{ item.src }} dest={{ item.dest }}
   with_items:
     - {src: "common.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/common.py"}
+    - {src: "base.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/base.py"}
   tags:
     - marvin
     - marvin_cfg
