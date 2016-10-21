@@ -156,7 +156,7 @@ function RequestGuestNet()
   local guestdetails
 
   # Check if guest network has already been assigned
-  guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
+  guestnetid=`${MYSQLCOMMAND} "SELECT idguest FROM ${DBNAME}.${GUESTTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
   echo "guestnet id is: " $guestnetid > /tmp/dblog;
   echo "guestnet envid is: " $envid >> /tmp/dblog;
 
@@ -183,7 +183,7 @@ function RequestGuestNet()
       exit;
     fi
   fi
-  guestnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${GUESTTBL} WHERE idguestnet = '${guestnetid}'" | sed -e "s/\t/|/g"`
+  guestnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${GUESTTBL} WHERE idguest = '${guestnetid}'" | sed -e "s/\t/|/g"`
   env_guestnetstartip=`echo ${guestnetdetails} | awk -F'|' '{print $2}'`
   env_guestnetendip=`echo ${guestnetdetails} | awk -F'|' '{print $3}'`
   env_guestnetmask=`echo ${guestnetdetails} | awk -F'|' '{print $4}'`
