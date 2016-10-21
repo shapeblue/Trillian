@@ -163,13 +163,16 @@ function RequestGuestNet()
   if [ -z ${podnetid} ];
   then # no existing found, request new
 
-    echo "guestnet not found" >> /tmp/dblog;
+    echo "here is guestnet not found ID statement " >> /tmp/dblog;
 
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
-    guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
+    # bug possibly here guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
 
-    echo "guestnet envid in the IF statement is: " $envid >> /tmp/dblog; 
+    guestnetid=`${MYSQLCOMMAND} "SELECT idguest FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
+
+
+    echo "guestnet envid in the IF statement is: " $envid >> /tmp/dblog;
     echo "guestnet id in the IF statement is: " $guestnetid >> /tmp/dblog;
 
 
