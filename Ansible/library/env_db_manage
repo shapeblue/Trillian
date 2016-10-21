@@ -157,11 +157,19 @@ function RequestGuestNet()
 
   # Check if guest network has already been assigned
   guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
+  echo "guestnet id is: " $guestnetid >> /tmp/dblog;
   if [ -z ${podnetid} ];
   then # no existing found, request new
+
+    echo "guestnet not found" >> /tmp/dblog;
+
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
+
+    echo "guestnet id in the IF statement is: " $guestnetid >> /tmp/dblog;
+
+
     if [ -z ${guestnetid} ];
     then #no free pod network blocks
       ReleaseNetworks;
