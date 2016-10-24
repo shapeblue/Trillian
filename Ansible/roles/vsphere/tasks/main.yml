@@ -39,13 +39,3 @@
 #- name: Reset Evaluation Timer for new deployment
 #  shell: "rm -r /etc/vmware/license.cfg && cp /etc/vmware/.#license.cfg /etc/vmware/license.cfg && /etc/init.d/vpxa restart"
 #  ignore_errors: true
-
-- name: add public key to authorized keys # use curl for Pre 6.0 compatiblilty
-  raw: "wget {{ repohost }}/id_rsa.pub -O /tmp/id_rsa.pub && cat /tmp/id_rsa.pub >> /etc/ssh/keys-root/authorized_keys"
-  ignore_errors: true
-  when: build_marvin
-
-- name: update config-ssh
-  raw: sed -i -e "/^PermitRootLogin/ c\PermitRootLogin yes" -e "/^PasswordAuthentication/ c\PasswordAuthentication no" -e '/ChallengeResponseAuthentication/ a\ChallengeResponseAuthentication no' /etc/ssh/sshd_config
-  ignore_errors: true
-  when: build_marvin

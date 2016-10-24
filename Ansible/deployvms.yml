@@ -152,7 +152,7 @@
       with_items:
         - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
 
-## as you were
+## Configure Hypervisor hosts
 
 - hosts: xenserver_hosts
   gather_facts: no
@@ -195,16 +195,6 @@
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
 
-## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
-- hosts: secondary_storage_hosts
-  gather_facts: no
-  vars:
-    num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
-  tasks:
-    - include: ./tasks/xenserver_builtintemplate_hack.yml
-      when: "num_xen_hosts | int != 0"
-## REMOVE WHEN SSVM FIXED
-
 ## update status
 
 - hosts: localhost
@@ -222,7 +212,7 @@
       with_items:
         - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
 
-## as you were
+## Configure Zone on Mgmt Server
 
 - hosts: primary_cs_manager
   roles:
@@ -245,7 +235,7 @@
       with_items:
         - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
 
-## as you were
+## Configure Marvin host
 
 - hosts: marvin_host
   vars:
@@ -289,7 +279,8 @@
       with_items:
         - { tagno: 3, tagkey: 'state', tagval: 'Built' }
 
-## as you were
+## Wait for services/templates etc
+
 - hosts: primary_cs_manager
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-template.yml
