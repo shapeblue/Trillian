@@ -160,7 +160,7 @@ function RequestGuestNet()
   echo "guestnet id is: " $guestnetid > /tmp/dblog;
   echo "guestnet envid is: " $envid >> /tmp/dblog;
 
-  if [ -z ${podnetid} ];
+  if [ -z ${guestnetid} ];
   then # no existing found, request new
 
     echo "here is guestnet not found ID statement " >> /tmp/dblog;
