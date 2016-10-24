@@ -1,0 +1,5 @@
+---
+
+- hosts: primary_cs_manager
+  roles:
+    - cloudstack-config
