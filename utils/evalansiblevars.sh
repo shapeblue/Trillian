@@ -7,5 +7,5 @@ IFS=$'\n';
 for i in `grep -ho '{{[^}]*}}' $1 | sort | uniq`;
 do
   cleanvarname=`echo ${i} | sed 's/{*//' | sed 's/}}//' | sed 's/^\ *//' | sed 's/\ *$//' | sed 's/|\ lower//'`;
-  ansible -m debug -a "var=${cleanvarname}" -i $2 $3
+  ansible -m debug -a "var=${cleanvarname}" -i $2 $3 | awk 'NR==2';
 done
