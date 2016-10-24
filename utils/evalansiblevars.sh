@@ -1,13 +1,15 @@
 #!/bin/bash
-# Evaluates Ansible template files againsts variable files
+# Evaluates Ansible jinja template files againsts variable files.
+# Extracts all Ansible variables from the jinja template and
+# does an ansible ad-hoc debug against each var individually rather
+# than processing all in one go.
+# Input:
 # $1 is the template file
 # $2 is the ansible hostfile
 # $3 is the ansible hostname
+#
 IFS=$'\n';
-echo -e "\nTemplate file: $1";
-echo -e "Host file:     $2";
-echo -e "Host:          $3\n";
-
+echo -e "\nTemplate file: $1\nHost file:     $2\nHost:          $3\n";
 for i in `grep -ho '{{[^}]*}}' $1 | sort | uniq`;
 do
   cleanvarname=`echo ${i} | sed 's/{*//' | sed 's/}}//' | sed 's/^\ *//' | sed 's/\ *$//' | sed 's/|\ lower//'`;
