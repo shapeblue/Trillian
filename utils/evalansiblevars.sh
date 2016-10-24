@@ -13,6 +13,6 @@ do
   #    foundvar="NOTFOUND";
   #fi
   #echo "${tmplvarname} matches: ${foundvar}";
-  cleanvarname=`echo ${i} | sed 's/{*//' | sed 's/}*//' | sed 's/^\ *//' | sed 's/\ *$//'`;
+  cleanvarname=`echo ${i} | sed 's/{*//' | sed 's/}}//' | sed 's/^\ *//' | sed 's/\ *$//' | sed 's/|\ lower//'`;
   ansible -m debug -a "var=${cleanvarname}" -i $2 $3
 done
