@@ -3,7 +3,7 @@
 # First arg is the template file
 
 IFS=$'\n';
-for i in `grep -ho '{{[a-zA-Z \-\_\[\]\.']*}}' $1 | sort | uniq`;
+for i in `grep -ho '{{[^}]*}}' $1 | sort | uniq`;
 do
   foundvar="";
   tmplvarname=`echo ${i} | sed 's/{*//' | sed 's/}*//' | sed 's/^\ *//' | sed 's/\ *$//'`;
