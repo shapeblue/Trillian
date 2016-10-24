@@ -4,6 +4,10 @@
 # $2 is the ansible hostfile
 # $3 is the ansible hostname
 IFS=$'\n';
+echo "Variable file: $1";
+echo "Host file:     $2";
+echo "Host:          $3/n";
+
 for i in `grep -ho '{{[^}]*}}' $1 | sort | uniq`;
 do
   cleanvarname=`echo ${i} | sed 's/{*//' | sed 's/}}//' | sed 's/^\ *//' | sed 's/\ *$//' | sed 's/|\ lower//'`;
