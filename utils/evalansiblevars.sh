@@ -4,9 +4,9 @@
 # $2 is the ansible hostfile
 # $3 is the ansible hostname
 IFS=$'\n';
-echo -e "\nVariable file: $1";
+echo -e "\nTemplate file: $1";
 echo -e "Host file:     $2";
-echo -e "Host:          $3\n\n";
+echo -e "Host:          $3\n";
 
 for i in `grep -ho '{{[^}]*}}' $1 | sort | uniq`;
 do
