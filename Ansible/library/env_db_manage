@@ -371,6 +371,8 @@ WriteOutput "ReturnAvailableCount - returning count."
 
 # Main script
 #
+WriteOutput "------------------------------------------------------";
+WriteOutput "env_db_manage called with arguments: ${ARGS};
 case "$ENV_ACTION" in
 	req)
     WriteOutput "Request process started.";
