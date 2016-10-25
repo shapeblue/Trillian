@@ -33,10 +33,10 @@
     - { regexp: "net.bridge.bridge-nf-call-ip6tables", line: "net.bridge.bridge-nf-call-ip6tables = 0" }
     - { regexp: "net.bridge.bridge-nf-call-arptables", line: "net.bridge.bridge-nf-call-arptables = 1" }
 
-- name: Configure bridge network backend
-  shell: sysctl -p /etc/sysctl.conf
+#- name: Configure bridge network backend
+#  shell: sysctl -p /etc/sysctl.conf
 
-- name: Configure bridge network backend
+- name: Reboot
   shell: /sbin/reboot
 
 - name: Wait for SSH
