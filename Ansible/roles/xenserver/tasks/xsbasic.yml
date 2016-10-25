@@ -24,7 +24,7 @@
   when: not use_external_hv_hosts
 
 - name: Configure bridge network backend
-  shell: xe-switch-network-backend bridge
+  shell: /opt/xensource/bin/xe-switch-network-backend bridge
 
 - name: Update sysctl.conf
   lineinfile: dest=/etc/sysctl.conf regexp={{ item.regexp }} line={{ item.line }} state=present
