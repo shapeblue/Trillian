@@ -1,0 +1,97 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: Wait for SSH
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900
+
+- name: Wait for XenServer completion
+  wait_for: path=/tmp/state-built
+  retries: 24
+  when: not use_external_hv_hosts
+
+- name: remove orginal timezone symlink
+  file: path=/etc/localtime state=absent
+
+- name: set new timezone
+  file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
+
+- name: set name-label
+  shell: xe host-param-set name-label=`echo $HOSTNAME` uuid=`xe host-list --minimal`
+
+- name: set iscsi iqn
+  shell: 'xe host-param-set other-config:iscsi_iqn=`cat /etc/iscsi/initiatorname.iscsi | cut -d "=" -f 2` uuid=`xe host-list --minimal`'
+
+- name: Check if pool already exists
+  shell: xe host-list params=uuid | grep -v ^$ | wc -l
+  register: hostsinpool
+
+- name: Confirm number of host in pool
+  debug: msg="Host count is {{ hostsinpool.stdout }}."
+
+- block:
+  - name: Get management network NIC
+    shell: xe pif-list device={{ xs_mgmt_network_nic }} params=uuid --minimal
+    register: mgmtnic
+
+  - name: Get guest network NIC
+    shell: xe pif-list device={{ xs_guest_network_nic }} params=uuid --minimal
+    register: guestnic
+
+  - name: Get public network NIC
+    shell: xe pif-list device={{ xs_public_network_nic }} params=uuid --minimal
+    register: publicnic
+
+  - name: Get management network uuid
+    shell: xe network-list PIF-uuids={{ mgmtnic.stdout }} params=uuid --minimal
+    register: mgmtuuid
+
+  - name: Get guest network uuid
+    shell: xe network-list PIF-uuids={{ guestnic.stdout }} params=uuid --minimal
+    register: guestuuid
+
+  - name: Get public network uuid
+    shell: xe network-list PIF-uuids={{ publicnic.stdout }} params=uuid --minimal
+    register: publicuuid
+
+  - name: Set mgmt network name
+    shell: xe network-param-set uuid={{ mgmtuuid.stdout }} name-label={{ xs_mgmt_network_label }}
+
+  - name: Set guest network name (Advanced Networking)
+    shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
+    when: ("{{ env_zonetype | lower }}" == "advanced")
+
+  - name: Set public network name
+    shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}
+    when: xs_guest_network_nic != xs_public_network_nic
+
+  when: ( hostsinpool.stdout | int == 1 ) and ( inventory_hostname == "{{ groups['xenserver_hosts'][0] }}" )
+
+- block:
+  - name: Join pool
+    shell: xe pool-join master-address={{ hostvars[groups['xenserver_hosts'][0]]['ansible_ssh_host'] }} master-username=root master-password={{ hostvars[groups['xenserver_hosts'][0]]['ansible_ssh_pass'] }}
+    register: pooljoinretval
+
+  - name: Report join return
+    debug: msg="{{ pooljoinretval.stdout }}"
+
+  - name: Allow pooljoin to complete
+    pause: seconds=30
+
+  - name: set pool name-label
+    shell: xe pool-param-set name-label=XS-Cluster1 uuid=`xe pool-list --minimal`
+
+  when: ( hostsinpool.stdout | int == 1 ) and ( inventory_hostname != "{{ groups['xenserver_hosts'][0] }}" )
