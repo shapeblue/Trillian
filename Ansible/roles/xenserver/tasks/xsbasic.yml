@@ -45,9 +45,16 @@
 - name: Wait for SSH to come back online
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900
 
+- name: Check uptime
+  shell: /usr/bin/uptime
+  register: xsuptime
+
 - name: Check bridge networking
   shell: cat /etc/xensource/network.conf
   register: netbackend
+
+- name: Report reboot and bridge status
+  debug: msg="Backend is {{ netbackend.stdout }} and uptime {{ xsuptime.stdout }}"
 
 - fail: msg="Bridge networking not configured."
   when: netbackend.stdout != "bridge"
