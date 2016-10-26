@@ -130,10 +130,12 @@ then
   WriteOutput "Creating Guest VLAN range."
   cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
 else
-  NetProvArrayBas=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
-  VRArrayBas=`cloudmonkey list virtualrouterelements nspid=${NetProvArrayBas} | jq '.virtualrouterelement[] | .id'`;
+  NetProvArrayBasVR=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
+  NetProvArrayBasSG=`cloudmonkey list networkserviceproviders name=SecurityGroupProvider physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
+  VRArrayBas=`cloudmonkey list virtualrouterelements nspid=${NetProvArrayBasVR} | jq '.virtualrouterelement[] | .id'`;
   cloudmonkey configure virtualrouterelement enabled='True' id=${VRArrayBas} | tee -i -a ${DEPLOYLOG};
-  cloudmonkey update networkserviceprovider id=${NetProvArrayBas} state='Enabled' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey update networkserviceprovider id=${NetProvArrayBasVR} state='Enabled' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey update networkserviceprovider id=${NetProvArrayBasSG} state='Enabled' | tee -i -a ${DEPLOYLOG};
   if [[ "$SECURITYGROUPENABLED" = "true" ]]; then
     NetOffIDBas=`cloudmonkey list networkofferings name="DefaultSharedNetworkOfferingWithSGService" displaytext="Offering for Shared Security group enabled networks" | jq '.networkoffering[] | .id'`;
   else
