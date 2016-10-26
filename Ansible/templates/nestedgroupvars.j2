@@ -90,7 +90,6 @@ env_accounts: "{{ env_user }}"
 env_accounts: "{{ env_accounts }}"
 {% endif %}
 env_zonetype:  "{{ env_zonetype | default( def_env_zonetype ) }}"
-env_use_sec_groups: {{ env_use_sec_groups | default( def_env_use_sec_groups) }}
 {% if hvtype[0:1] | lower == "v" %}
 env_hv: "vmware"
 {% elif hvtype[0:1] | lower == "x" %}
@@ -131,7 +130,13 @@ env_secpools:
   - {{ env_name_clean }}-sec{{ n }}
 {% endfor %}
 {% endif %}
-env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups ) }}"
+{% if env_zonetype | lower == "advanced" %}
+env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_advanced ) }}"
+{% elif env_zonetype | lower == "basic" %}
+env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_basic ) }}"
+{% else %}
+env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_advanced ) }}"
+{% endif %}
 env_zone_guestcidr: "{{ env_zone_guestcidr | default( def_env_zone_guestcidr ) }}"
 env_zone_dns1: "{{ env_zone_dns1 | default( def_env_zone_dns1 ) }}"
 env_zone_dns2: "{{ env_zone_dns2 | default( def_env_zone_dns2 ) }}"

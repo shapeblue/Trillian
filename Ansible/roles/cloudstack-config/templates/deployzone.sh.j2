@@ -6,7 +6,7 @@
 ################################################################################
 # Vars / constants
 DEPLOYLOG="/tmp/{{ env_name_clean }}-deployzone.log";
-SECGROUP=`echo "{{ env_use_sec_groups }}" | grep -i 'yes|true'`
+SECGROUP=`echo "{{ env_zone_secgroups }}" | grep -Ei 'yes|true'`
 if [[ -n $SECGROUP ]]; then
   SECURITYGROUPENABLED="true"
 else
