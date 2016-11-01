@@ -88,7 +88,7 @@
       poll: 0
 
     - name: Build VMs
-      include: ./tasks/deployvms.yml
+      include: ./tasks/buildvms.yml
 
 ## update status
 
