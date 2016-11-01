@@ -10,7 +10,7 @@
   gather_facts: no
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: not destroy_forced }
- 
+
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
@@ -43,7 +43,6 @@
         dest="group_vars/{{ env_name_clean }}"
         regexp="^env_hviplist.*$"
         state=absent
-
 
     - name: Update group vars file - remove environmemt details
       lineinfile:
