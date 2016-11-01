@@ -68,17 +68,7 @@
       register: project_retval
 
     - name: Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 0, tagkey: 'env_name', tagval: "{{ env_name_clean }}" }
-        - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
-        - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
-        - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
-        - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
-        - { tagno: 4, tagkey: 'comment', tagval: "{{ env_comment | regex_replace(' ', '_') }}" }
-      async: 60
-      poll: 1
-      ignore_errors: true
+      include: tasks/tagproject.yml project_tag=basetags
 
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
@@ -90,22 +80,8 @@
     - name: Build VMs
       include: ./tasks/buildvms.yml
 
-## update status
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-
     - name: update Tag project
-      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
-
-    - name: update Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
+      include: tasks/tagproject.yml project_tag=Configuring_MySQL_and_Mgmt_Server
 
 ## Add dvFilter to interfaces
 
@@ -141,16 +117,8 @@
   connection: local
   gather_facts: no
   tasks:
-
     - name: update Tag project
-      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
-
-    - name: update Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
+      include: tasks/tagproject.yml project_tag=Configuring_Hypervisors
 
 ## Configure Hypervisor hosts
 
@@ -211,16 +179,8 @@
   connection: local
   gather_facts: no
   tasks:
-
     - name: update Tag project
-      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
-
-    - name: update Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
+      include: tasks/tagproject.yml project_tag=Configuring_Zone
 
 ## Configure Zone on Mgmt Server
 
@@ -234,16 +194,8 @@
   connection: local
   gather_facts: no
   tasks:
-
     - name: update Tag project
-      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
-
-    - name: update Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
+      include: tasks/tagproject.yml project_tag=Configuring_Marvin
 
 ## Configure Marvin host
 
@@ -278,16 +230,8 @@
   connection: local
   gather_facts: no
   tasks:
-
     - name: update Tag project
-      shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
-
-    - name: update Tag project
-      shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-      with_items:
-        - { tagno: 3, tagkey: 'state', tagval: 'Built' }
+      include: tasks/tagproject.yml project_tag=Built
 
 ## Wait for services/templates etc
 
