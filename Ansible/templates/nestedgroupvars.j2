@@ -130,9 +130,9 @@ env_secpools:
   - {{ env_name_clean }}-sec{{ n }}
 {% endfor %}
 {% endif %}
-{% if env_zonetype | lower == "advanced" %}
+{% if env_zonetype | default( def_env_zonetype ) | lower == "advanced" %}
 env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_advanced ) }}"
-{% elif env_zonetype | lower == "basic" %}
+{% elif env_zonetype | default( def_env_zonetype ) | lower == "basic" %}
 env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_basic ) }}"
 {% else %}
 env_zone_secgroups: "{{ env_zone_secgroups | default( def_env_zone_secgroups_advanced ) }}"
