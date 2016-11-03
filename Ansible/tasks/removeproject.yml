@@ -42,8 +42,9 @@
   register: remove_retval
   ignore_errors: yes
   when: not destroy_forced
-  async: 1000
-  poll: 0
+#  async: 1000
+#  poll: 0
+#  Above removed due to returned async results does not parse in later replace.
 
 ####################################################################
 # Remove project
