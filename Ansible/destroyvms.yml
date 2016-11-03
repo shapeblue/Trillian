@@ -30,15 +30,19 @@
       fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
       when: env_return != "success"
 
-    - name: debug some
-      debug: msg="regexp is {{ item.default_ip }} and replace is {{ item.name }}"
-      with_items: "{{remove_retval.results}}"
-      
     - name: Update inventory file - remove server IP addresses
       replace:
         dest="hosts_{{ env_name_clean }}"
         regexp='{{ item.default_ip }}'
         replace='{{ item.name }}-ip'
+        backup=no
+      with_items: "{{remove_retval.results}}"
+
+    - name: Update inventory file - remove instance name
+      replace:
+        dest="hosts_{{ env_name_clean }}"
+        regexp='{{ item.instance_name }}'
+        replace='{{ item.name }}-instance_name'
         backup=no
       with_items: "{{remove_retval.results}}"
 
