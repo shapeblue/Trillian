@@ -42,8 +42,9 @@
   register: remove_retval
   ignore_errors: yes
   when: not destroy_forced
-  async: 1000
-  poll: 0
+#  async: 1000
+#  poll: 0
+#  Async removed due to results not parsing, host file not updating as result.
 
 ####################################################################
 # Remove project

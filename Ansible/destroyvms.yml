@@ -10,7 +10,7 @@
   gather_facts: no
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: not destroy_forced }
- 
+
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
@@ -38,12 +38,19 @@
         backup=no
       with_items: "{{remove_retval.results}}"
 
+    - name: Update inventory file - remove instance name
+      replace:
+        dest="hosts_{{ env_name_clean }}"
+        regexp='{{ item.instance_name }}'
+        replace='{{ item.name }}-instance_name'
+        backup=no
+      with_items: "{{remove_retval.results}}"
+
     - name: Remove HV IP list from group vars
       lineinfile:
         dest="group_vars/{{ env_name_clean }}"
         regexp="^env_hviplist.*$"
         state=absent
-
 
     - name: Update group vars file - remove environmemt details
       lineinfile:
