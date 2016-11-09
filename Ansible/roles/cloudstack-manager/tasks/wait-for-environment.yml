@@ -14,7 +14,7 @@
   shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="consoleproxy")|.state'
   register: result
   until: result.stdout.find("Running") != -1
-  retries: 100
+  retries: 200
   tags:
     - waitforenv
 
@@ -22,7 +22,7 @@
   shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="secondarystoragevm")|.state'
   register: result
   until: result.stdout.find("Running") != -1
-  retries: 100
+  retries: 200
   tags:
     - waitforenv
 
@@ -30,7 +30,7 @@
   shell: cloudmonkey list hosts type=ConsoleProxy | jq '.host[] | .state'
   register: result
   until: result.stdout.find("Up") != -1
-  retries: 100
+  retries: 200
   tags:
     - waitforenv
 
@@ -38,6 +38,6 @@
   shell: cloudmonkey list hosts type=SecondaryStorageVM | jq '.host[] | .state'
   register: result
   until: result.stdout.find("Up") != -1
-  retries: 100
+  retries: 200
   tags:
     - waitforenv
