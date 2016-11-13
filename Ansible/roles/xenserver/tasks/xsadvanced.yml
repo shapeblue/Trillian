@@ -35,6 +35,9 @@
 - name: set iscsi iqn
   shell: 'xe host-param-set other-config:iscsi_iqn=`cat /etc/iscsi/initiatorname.iscsi | cut -d "=" -f 2` uuid=`xe host-list --minimal`'
 
+- include: ./add_local_storage.yml
+  when: use_local_storage
+
 - name: Check if pool already exists
   shell: xe host-list params=uuid | grep -v ^$ | wc -l
   register: hostsinpool

@@ -1,0 +1,10 @@
+---
+
+- name: unplug existing storage
+  shell: 'xe pbd-unplug uuid=`xe sr-list name-label="Local Storage" params=PBDs --minimal`'
+
+- name: forget existing local storage SR
+  shell: 'xe sr-forget uuid=`xe sr-list name-label="Local Storage" --minimal`'
+
+- name: add local storage SR using new disk (/dev/sdb)
+  shell: 'xe sr-create type=lvm name-label="Local Storage" content-type=user device-config:device=/dev/sdb'
