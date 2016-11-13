@@ -45,7 +45,7 @@ fi
 if [ "{{ env_zonetype | lower }}" == "advanced" ];
 then
   WriteOutput "Creating advanced zone - {{ env_name_clean }}";
-  ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled={{ env_zone_secgroups }} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ env_zone_localstorage }} | jq -c -r '.zone.id'`;
+  ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled={{ env_zone_secgroups }} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network - Management.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
@@ -79,14 +79,14 @@ then
   {% endif %}
 else
   WriteOutput "Creating basic zone - {{ env_name_clean }}";
-  ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled={{ env_zone_secgroups }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ env_zone_localstorage }} | jq -c -r '.zone.id'`;
+  ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled={{ env_zone_secgroups }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network' | tee -i -a ${DEPLOYLOG};
   PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network" | jq '.physicalnetwork[] | .id'`;
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Adding Traffic Type - Guest( Basic Network)";
-  {% if env_numversion | float > 4.2 %}
+  {% if env_numversion | version_compare('4.2','>') %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},11,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
@@ -198,6 +198,7 @@ then
 fi
 sleep 30
 
+{% if use_shared_storage %}
 WriteOutput "Adding Primary Storage pools.";
 {% for pool in env_pripools %}
 WriteOutput "Adding Primary Storage pool {{ pool }}.";
@@ -209,6 +210,7 @@ cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${Clust
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% endif %}
 {% endfor %}
+{% endif %}
 
 WriteOutput "Adding Secondary Storage Pool"
 {% for pool in env_secpools %}

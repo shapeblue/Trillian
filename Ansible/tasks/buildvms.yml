@@ -282,7 +282,7 @@
 ####################################################################
 # XenServer hosts
 #
-- name: build XenServer hosts
+- name: build XenServer hosts (do not start)
   local_action:
     module: cs_instance
     name: "{{ item }}"
@@ -299,7 +299,7 @@
     networks:
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
-    state: present
+    state: stopped
   with_items:
     - "{{ groups['xenserver_hosts'] }}"
   register: xs_retval
@@ -337,6 +337,30 @@
     groups="xenserver_hosts"
     instance_name={{ item.instance_name }}
   with_items: "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+  with_items: "{{xs_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: Start XenServer hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    state: started
+  with_items:
+    - "{{ groups['xenserver_hosts'] }}"
   when: use_external_hv_hosts|bool == false
 
 ####################################################################
