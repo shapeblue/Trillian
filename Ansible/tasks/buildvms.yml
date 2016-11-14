@@ -239,7 +239,7 @@
     networks:
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
-    state: present
+    state: stopped
   with_items:
     - "{{ groups['kvm_hosts'] }}"
   register: kvm_retval
@@ -278,6 +278,32 @@
     instance_name={{ item.instance_name }}
   with_items: "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+  with_items: "{{kvm_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: Start ESXi hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    state: started
+  with_items:
+    - "{{ groups['kvm_hosts'] }}"
+  when: use_external_hv_hosts|bool == false
+
+
 
 ####################################################################
 # XenServer hosts
@@ -383,7 +409,7 @@
     networks:
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
-    state: present
+    state: stopped
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   register: esxi_retval
@@ -422,6 +448,32 @@
     instance_name={{ item.instance_name }}
   with_items: "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+  with_items: "{{esxi_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: Start ESXi hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    state: started
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  when: use_external_hv_hosts|bool == false
+
+
 
 ####################################################################
 # VMware VC hosts

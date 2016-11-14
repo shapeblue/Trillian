@@ -39,3 +39,6 @@
 #- name: Reset Evaluation Timer for new deployment
 #  shell: "rm -r /etc/vmware/license.cfg && cp /etc/vmware/.#license.cfg /etc/vmware/license.cfg && /etc/init.d/vpxa restart"
 #  ignore_errors: true
+
+- include: ./add_local_storage.yml
+  when: use_local_storage
