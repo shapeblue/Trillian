@@ -1,0 +1,16 @@
+---
+
+- name: rescan HBAs (RAW for compatibility)
+  raw: 'esxcli storage core adapter rescan --all'
+  tags:
+    - local_storage
+
+- name: Label and partition new disk
+  raw: "DEVICE='/vmfs/devices/disks/mpx.vmhba1:C0:T1:L0';partedUtil mklabel ${DEVICE} msdos;SECTOR_DATA=$(partedUtil getptbl ${DEVICE} | tail -1);x=$(echo $SECTOR_DATA | awk '{print $1}');y=$(echo $SECTOR_DATA | awk '{print $2}');z=$(echo $SECTOR_DATA | awk '{print $3}');END_SECTOR=`expr $x \\* $y \\* $z - 1`;/sbin/partedUtil \"setptbl\" \"${DEVICE}\" \"gpt\" \"1 2048 ${END_SECTOR} AA31E02A400F11DB9590000C2911D1B8 0\""
+  tags:
+    - local_storage
+
+- name: add New disk to as DataStore
+  raw: "DEVICE='/vmfs/devices/disks/mpx.vmhba1:C0:T1:L0\';/sbin/vmkfstools -C vmfs5 -b 1m -S $(hostname -s)-local-datastore ${DEVICE}:1"
+  tags:
+    - local_storage
