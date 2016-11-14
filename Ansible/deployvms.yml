@@ -210,10 +210,6 @@
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
     - { role: marvin, when: num_marv_hosts | int != 0  }
 
-- hosts: primary_cs_manager
-  tasks:
-    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
-      when: wait_till_setup
 
 - hosts: localhost
   connection: local
@@ -233,7 +229,40 @@
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Built
 
+
 ## Wait for services/templates etc
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Waiting_for_System_VMs
+  when: wait_till_setup
+
+- hosts: primary_cs_manager
+  tasks:
+    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
+      when: wait_till_setup
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=System_VMs_up
+  when: wait_till_setup
+
+
+## Wait for services/templates etc
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Waiting_for_builtin_template
+  when: waitfortemplate
 
 - hosts: primary_cs_manager
   tasks:
@@ -241,6 +270,16 @@
       when: wait_for_template
   tags:
     - waitfortemplate
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Running
+  when: waitfortemplate
+
+## Run Marvin Tests
 
 - hosts: marvin_host
   gather_facts: no

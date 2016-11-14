@@ -30,73 +30,17 @@
   ignore_errors: true
   when: project_tag == "basetags"
 
-## update status - Configuring_MySQL_and_Mgmt_Server
+## update status
 
-- name: update Tag project
+- name: Delete current tag (key - 3) for project
   shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
   with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
-  when: project_tag == "Configuring_MySQL_and_Mgmt_Server"
+    - { tagno: 3, tagkey: 'state' }
+  when: project_tag =! "basetags"
 
 
-- name: update Tag project
+- name: Create new tag (key - 3) for project
   shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
-  when: project_tag == "Configuring_MySQL_and_Mgmt_Server"
-
-## update status - configuring hypervisors
-
-- name: update Tag project
-  shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_MySQL_and_Mgmt_Server' }
-  when: project_tag == "Configuring_Hypervisors"
-
-- name: update Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
-  when: project_tag == "Configuring_Hypervisors"
-
-## update status - configuring zone
-
-- name: update Tag project
-  shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Hypervisors' }
-  when: project_tag == "Configuring_Zone"
-
-- name: update Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
-  when: project_tag == "Configuring_Zone"
-
-## update status - configuring marvin
-
-- name: update Tag project
-  shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Zone' }
-  when: project_tag == "Configuring_Marvin"
-
-- name: update Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
-  when: project_tag == "Configuring_Marvin"
-
-## update status - built
-
-- name: update Tag project
-  shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Configuring_Marvin' }
-  when: project_tag == "Built"
-
-- name: update Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
-  with_items:
-    - { tagno: 3, tagkey: 'state', tagval: 'Built' }
-  when: project_tag == "Built"
+    - { tagno: 3, tagkey: 'state', tagval: "{{ project_tag }}" }
+  when: project_tag =! "basetags"
