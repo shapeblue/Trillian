@@ -36,11 +36,11 @@
   shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
   with_items:
     - { tagno: 3, tagkey: 'state' }
-  when: project_tag =! "basetags"
+  when: project_tag != "basetags"
 
 
 - name: Create new tag (key - 3) for project
   shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
     - { tagno: 3, tagkey: 'state', tagval: "{{ project_tag }}" }
-  when: project_tag =! "basetags"
+  when: project_tag != "basetags"
