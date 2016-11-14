@@ -262,7 +262,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Waiting_for_builtin_template
-      when: waitfortemplate
+      when: wait_for_template
 
 - hosts: primary_cs_manager
   tasks:
@@ -277,7 +277,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Running
-      when: waitfortemplate
+      when: wait_for_template
 
 ## Run Marvin Tests
 
