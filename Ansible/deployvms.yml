@@ -238,7 +238,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Waiting_for_System_VMs
-  when: wait_till_setup
+      when: wait_till_setup
 
 - hosts: primary_cs_manager
   tasks:
@@ -251,7 +251,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=System_VMs_up
-  when: wait_till_setup
+      when: wait_till_setup
 
 
 ## Wait for services/templates etc
@@ -262,7 +262,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Waiting_for_builtin_template
-  when: waitfortemplate
+      when: waitfortemplate
 
 - hosts: primary_cs_manager
   tasks:
@@ -277,7 +277,7 @@
   tasks:
     - name: update Tag project
       include: tasks/tagproject.yml project_tag=Running
-  when: waitfortemplate
+      when: waitfortemplate
 
 ## Run Marvin Tests
 
