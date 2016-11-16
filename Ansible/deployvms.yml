@@ -71,7 +71,9 @@
       lineinfile:
         dest="group_vars/{{ env_name_clean }}"
         insertafter="^env_guestnetvlan.*$"
-        line="env_project_id: \"{{ item }}\""
+        line="{{ item }}"
+      with_items:
+        - "env_project_id: \"{{ iproject_retval.id }}\""
 
     - set_fact: "env_project_id={{ project_retval.id }}"
       when: env_project_id is undefined
