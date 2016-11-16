@@ -73,7 +73,7 @@
         insertafter="^env_guestnetvlan.*$"
         line="{{ item }}"
       with_items:
-        - "env_project_id: \"{{ iproject_retval.id }}\""
+        - "env_project_id: \"{{ project_retval.id }}\""
 
     - set_fact: "env_project_id={{ project_retval.id }}"
       when: env_project_id is undefined
