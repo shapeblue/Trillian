@@ -67,6 +67,15 @@
         state: present
       register: project_retval
 
+    - name: Update group vars file with 
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        insertafter="^env_guestnetvlan.*$"
+        line="env_project_id: \"{{ item }}\""
+
+    - set_fact: "env_project_id={{ project_retval.id }}"
+      when: env_project_id is undefined
+
     - name: Tag project
       include: tasks/tagproject.yml project_tag=basetags
 
@@ -80,9 +89,6 @@
     - name: Build VMs
       include: ./tasks/buildvms.yml
 
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_MySQL_and_Mgmt_Server
-
 ## Add dvFilter to interfaces
 
 - hosts: localhost
@@ -91,6 +97,8 @@
   tasks:
     - include: ./tasks/add_dvfilter.yml
       when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Configuring_MySQL
 
 - hosts: mysql_hosts
   gather_facts: no
@@ -99,6 +107,16 @@
   roles:
     - { role: timezone, when: num_db_hosts | int != 0 }
     - { role: mysql, when: num_db_hosts | int != 0 }
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - include: ./tasks/add_dvfilter.yml
+      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Configuring_Mgmt_Server
+
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -152,6 +170,15 @@
   tasks:
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
       when: "num_esxi_hosts | int != 0"
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update Tag project
+      include: tasks/tagproject.yml project_tag=Configuring_Storage
 
 - hosts: primary_storage_hosts
   gather_facts: no

@@ -17,7 +17,7 @@
 ## update status - basic tags
 
 - name: Tag project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+  shell: cs createTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
     - { tagno: 0, tagkey: 'env_name', tagval: "{{ env_name_clean }}" }
     - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
@@ -33,14 +33,14 @@
 ## update status
 
 - name: Delete current tag (key - 3) for project
-  shell: cs deleteTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
+  shell: cs deleteTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
   with_items:
     - { tagno: 3, tagkey: 'state' }
   when: project_tag != "basetags"
 
 
 - name: Create new tag (key - 3) for project
-  shell: cs createTags resourceids={{ project_retval.id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
+  shell: cs createTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
     - { tagno: 3, tagkey: 'state', tagval: "{{ project_tag }}" }
   when: project_tag != "basetags"
