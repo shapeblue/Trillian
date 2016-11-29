@@ -22,26 +22,69 @@ rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
+cleanup() {
+    cloudmonkey set asyncblock false
+    cloudmonkey set display default
+    # TODO: destroy accounts, domains, templates
+    # Destroy vms
+    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
+    done
+    # Destroy routers
+    for rid in $(cloudmonkey list routers listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy router id=$rid || true
+    done
+    # Destroy networks
+    for netid in $(cloudmonkey list networks listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete network id=$netid || true
+    done
+    # Destroy vpcs
+    for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete vpc id=$vid || true
+    done
+    # Destroy alerts
+    for id in $(cloudmonkey list alerts listall=true keyword=auth-error filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete alerts ids=$id || true
+    done
+}
+
+runtest() {
+    file=$1
+    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')_*
+    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+    cleanup || true
+}
+
+launchtest() {
+    file=$1
+    runtest $file
+    # Run tests once again on error or failure
+    #python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Tested twice for intermitten failure: $file" >> /marvin/smoketests-summary.txt
+}
+
 
 NUMTESTS1=`find /marvin/tests/component/test*.py | wc -l`
 NUMTESTS2=`find /marvin/tests/component/maint/test*.py | wc -l`
 NUMTESTS=$((NUMTESTS1+NUMTESTS2))
+PASSES=0
 counter=1
 for file in /marvin/tests/component/test_*.py; do
 echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 
-  #  nosetests --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
-  nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg  --hypervisor=vmware -a tags=advanced $file
+  # nosetests --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+  # nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg  --hypervisor=vmware -a tags=advanced $file
 
+  launchtest $file
   LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
   if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
     echo -e "\e[92m ---->  test $(basename $file) in {{ env_name_clean }} looks to have errors\e[0m"
-    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>"{% endif %}
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far."{% endif %}
 
   else
     echo -e "\e[92m ---->  test $(basename $file) in {{ env_name_clean }} looks OK\e[0m"
-    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#00FF40">OK</span>"{% endif %}
+    PASSES=$((PASSES+1))
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#00FF40">OK</span>. $PASSES of $counter good so far."{% endif %}
 
   fi
   counter=$((counter+1))
@@ -52,16 +95,18 @@ for file in /marvin/tests/component/maint/test_*.py; do
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 
   # nosetests --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
-  nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+  # nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+  launchtest $file
 
   LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
   if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
     echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
-    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>"{% endif %}
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far."{% endif %}
 
   else
     echo "test $(basename $file) in {{ env_name_clean }} looks OK"
-    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#00FF40">OK</span>"{% endif %}
+    PASSES=$((PASSES+1))
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#00FF40">OK</span>. $PASSES of $counter good so far."{% endif %}
 
   fi
   counter=$((counter+1))
