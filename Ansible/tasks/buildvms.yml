@@ -292,7 +292,7 @@
   with_items: "{{kvm_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
-- name: Start ESXi hosts
+- name: Start KVM hosts
   local_action:
     module: cs_instance
     name: "{{ item }}"

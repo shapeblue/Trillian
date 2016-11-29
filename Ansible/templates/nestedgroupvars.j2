@@ -259,7 +259,6 @@ kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_ne
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
-
 {% if kvm_java_ver is not defined %}
 {% set kvmjava = java_vers[env_version] %}
 {% else %}
@@ -272,6 +271,7 @@ kvm_java_ver: "{{ kvmjava }}"
 {% set kvmjavapath = kvm_java_path %}
 {% endif %}
 kvm_java_path: "{{ kvmjavapath }}"
+kvm_localstorage_mount: "{{ kvm_localstorage_mount | default( def_kvm_localstorage_mount ) }}"
 
 # XS
 xs_ver: "{{ xs_ver }}"

@@ -35,7 +35,8 @@
   tags:
     - kvm
 
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+- name: Update agent with local storage path
+  lineinfile: dest=/etc/cloudstack/agent/agent.properties line="local.storage.path={{ kvm_localstorage_mount }}" state=present
+  when: use_local_storage
   tags:
-   - kvm
+    - kvm

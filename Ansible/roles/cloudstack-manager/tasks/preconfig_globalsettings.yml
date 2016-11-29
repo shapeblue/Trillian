@@ -9,24 +9,24 @@
 - name: preset some global settings
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
   with_items:
-  - "{{ global_settings }}"
-  when: ( item.condition == "all" ) and ("primary_cs_manager" in group_names)
+  - "{{ global_settings.all }}"
+  when: ("primary_cs_manager" in group_names)
   tags:
     - "global_settings"
 
 - name: preset some global settings
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
   with_items:
-  - "{{ global_settings }}"
-  when: ( item.condition == "marvin" ) and (build_marvin) and ("primary_cs_manager" in group_names)
+  - "{{ global_settings.marvin }}"
+  when: (build_marvin) and ("primary_cs_manager" in group_names)
   tags:
     - "global_settings"
 
 - name: preset some global settings
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
   with_items:
-  - "{{ global_settings }}"
-  when: ( item.condition == "systemvmlocalstorage" ) and ("primary_cs_manager" in group_names) and use_shared_storage_systemvms
+  - "{{ global_settings.systemvmlocalstorage }}"
+  when: ("primary_cs_manager" in group_names) and use_shared_storage_systemvms
   tags:
     - "global_settings"
 

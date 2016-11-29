@@ -45,6 +45,12 @@
     - iftop
     - python-argparse
     - rpcbind
+    - parted
+  tags:
+    - kvm
+
+- include: ./add_local_storage.yml
+  when: use_local_storage
   tags:
     - kvm
 

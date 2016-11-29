@@ -1,0 +1,32 @@
+---
+
+- name: Create new partition
+  shell: parted /dev/sdb mklabel gpt mkpart primary 1 100% -s
+  ignore_errors: true
+  tags:
+    - kvm
+    - local_storage
+
+- name: Format new partition
+  shell: mkfs.ext4 /dev/sdb1
+  tags:
+    - kvm
+    - local_storage
+
+- name: Create local storage mount point
+  file: path="{{ kvm_localstorage_mount }}" state=directory
+  tags:
+    - kvm
+    - local_storage
+
+- name: update FSTAB
+  mount: 
+    name: "{{ kvm_localstorage_mount }}"
+    src: /dev/sdb1
+    fstype: ext4
+    state: mounted
+  tags:
+    - kvm
+    - local_storage
+
+

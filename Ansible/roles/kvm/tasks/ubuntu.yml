@@ -25,6 +25,7 @@
     - traceroute
     - iptables-persistent
     - qemu-kvm
+    - parted
 
 - name: set apt repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
@@ -35,6 +36,12 @@
   apt_repository: repo='deb {{ baseurl_kvm }} /' state=present
 
 - apt_key: url={{ repohost }}/release.asc state=present
+
+- include: ./add_local_storage.yml
+  when: use_local_storage
+  tags:
+    - kvm
+
 
 - name: Added network instances file
   template: src=interfaces.j2 dest="/etc/network/interfaces"

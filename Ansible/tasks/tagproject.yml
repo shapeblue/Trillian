@@ -16,6 +16,10 @@
 
 ## update status - basic tags
 
+- name: get timestamp
+  command: date +'%H:%M %D'
+  register: mydate
+
 - name: Tag project
   shell: cs createTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
@@ -23,7 +27,7 @@
     - { tagno: 1, tagkey: 'env_uuid', tagval: "{{ env_uuid }}" }
     - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
     - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
-    - { tagno: 4, tagkey: 'created', tagval: "{{ ansible_date_time.time }}_{{ ansible_date_time.date }}" }
+    - { tagno: 4, tagkey: 'created', tagval: "{{ mydate.stdout | regex_replace(' ', '_') }}" }
     - { tagno: 4, tagkey: 'comment', tagval: "{{ env_comment | regex_replace(' ', '_') }}" }
   async: 60
   poll: 1

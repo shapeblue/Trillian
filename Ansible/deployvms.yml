@@ -57,9 +57,6 @@
 
 # Create build project if it doesn't exist.
 
-    - name: Get date time stamp
-      setup: gather_subset=!all
-
     - name: Create project
       local_action:
         module: cs_project
