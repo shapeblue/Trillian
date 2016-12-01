@@ -28,7 +28,8 @@
     - { tagno: 2, tagkey: 'env_user', tagval: "{{ env_user }}" }
     - { tagno: 3, tagkey: 'state', tagval: 'Deploying_VMs' }
     - { tagno: 4, tagkey: 'created', tagval: "{{ mydate.stdout | regex_replace(' ', '_') }}" }
-    - { tagno: 4, tagkey: 'comment', tagval: "{{ env_comment | regex_replace(' ', '_') }}" }
+    - { tagno: 5, tagkey: 'comment', tagval: "{{ env_comment | regex_replace(' ', '_') }}" }
+    - { tagno: 6, tagkey: 'updated', tagval: "{{ mydate.stdout | regex_replace(' ', '_') }}" }
   async: 60
   poll: 1
   ignore_errors: true
@@ -40,6 +41,7 @@
   shell: cs deleteTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }}
   with_items:
     - { tagno: 3, tagkey: 'state' }
+    - { tagno: 6, tagkey: 'updated' }
   when: project_tag != "basetags"
 
 
@@ -47,4 +49,5 @@
   shell: cs createTags resourceids={{ env_project_id }} resourcetype=project tags[{{ item.tagno }}].key={{ item.tagkey }} tags[{{ item.tagno }}].value={{ item.tagval }}
   with_items:
     - { tagno: 3, tagkey: 'state', tagval: "{{ project_tag }}" }
+    - { tagno: 6, tagkey: 'updated', tagval: "{{ mydate.stdout | regex_replace(' ', '_') }}" }
   when: project_tag != "basetags"
