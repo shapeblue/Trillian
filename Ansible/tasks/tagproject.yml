@@ -17,7 +17,7 @@
 ## update status - basic tags
 
 - name: get timestamp
-  command: date +'%H:%M %D'
+  command: date +'%H:%M %d/%m/%y'
   register: mydate
 
 - name: Tag project
