@@ -114,9 +114,5 @@
 - name: WORKAROUND **Install pycparser v2.13**
   pip: name=pycparser version=2.13
 
-- name: insert public key file
-  shell: "mkdir /root/.ssh && curl {{ repohost }}/id_rsa.pub >> /root/.ssh/authorized_keys"
-  ignore_errors: true
-
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes

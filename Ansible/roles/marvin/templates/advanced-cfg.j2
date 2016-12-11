@@ -119,9 +119,9 @@
 {% for secpool in env_secpools %}
 			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
 			"name": "{{ secpool }}",
-			"provider": "NFS"
+			"provider": "NFS"}{% if not loop.last %},{% endif %}
 {% endfor %}
-		}]
+		]
 	}],
 	"dbSvr": {
 {% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
