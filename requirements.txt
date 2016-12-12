@@ -1,0 +1,5 @@
+ansible==2.1.0.0
+pyvmomi==6.0.0.2016.6
+pysphere==0.1.7
+cs==0.8.2
+cloudmonkey

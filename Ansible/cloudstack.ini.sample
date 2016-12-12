@@ -1,0 +1,4 @@
+[cloudstack]
+endpoint = <HTTP endpoint of the root management server used by Trillian to provision environments>
+key = <The API key for the account used by Trillian on the root management server>
+secret = <The secret key for the account used by Trillian on the root management server>

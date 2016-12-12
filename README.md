@@ -2,13 +2,22 @@
 
 More detailed information can be found in the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 
+
 #### Trillian makes use a 'parent' CloudStack' environment which is used to build virtualised nested environments.
 
 Trillian leverages ESXi's ability to virtualise the VT-x features allowing the creation of VT-x enabled virtualised hosts
 
 #### Trillian uses Ansible 2 to create environment configuration files and deploy those environments. The user can run 2 commandline statements and go from 0 to a running cloudstack environment with multiple hosts. 
 
+#### Installation using pyenv
 
+Trillian uses [pyenv](https://github.com/yyuu/pyenv) and [pyenv-virutalenv](https://github.com/yyuu/pyenv-virtualenv) to install and manage the Python and dependency versions (e.g. Ansible, pysphere, etc) in an isolated Python environment.  This approach not only ensures that Trillian functions as expected, it also ensures that it does not conflict with any other Python applications on the system.  These instructions require pyenv and pyenv-virtualenv are already installed on your system.  If you do not already have pyenv installed, please see the [pyenv installation instructions](https://github.com/yyuu/pyenv-virtualenv) and [pyenv-virtualenv](https://github.com/yyuu/pyenv-virtualenv#installation) for more information about the installation process.  Following pyenv and pyenv-virtualenv installation and configuration, execute the ``configure.sh`` script in the root of the project.  This script will ensure that the expected version of Python is installed, create a ``trillian`` virtualenv, and install the required dependencies using pip.
+
+#### Installation without pyenv
+
+If you are unable to use pyenv and pyenv-virtualenv, you will need to install Python version 2.7.11 and pip per the instructions for your operating system.  Executing ``pip install -r requirements.txt`` in the root of this project will trigger pip to install the dependencies required by Trillian.
+
+#### Environment Configuration
 
  Basic variables:
    env_name [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
