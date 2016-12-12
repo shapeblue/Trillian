@@ -113,7 +113,7 @@ secondary_cs_manager
 {% endif %}
 
 [marvin_host]
-{% if build_marvin %}
+{% if build_marvin | bool %}
 {{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }} instance_name={{ env_name_clean }}-marvin-instance_name
 {% endif %}
 

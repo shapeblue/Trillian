@@ -68,6 +68,7 @@
         - "^env_podmask.*$"
         - "^env_podendip.*$"
         - "^env_podstartip.*$"
+        - "^env_project_id.*$"
       ignore_errors: true
 
     - name: Delete inventory files
