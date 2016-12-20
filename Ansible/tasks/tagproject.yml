@@ -42,6 +42,7 @@
   with_items:
     - { tagno: 3, tagkey: 'state' }
     - { tagno: 6, tagkey: 'updated' }
+  ignore_errors: true
   when: project_tag != "basetags"
 
 
@@ -50,4 +51,5 @@
   with_items:
     - { tagno: 3, tagkey: 'state', tagval: "{{ project_tag }}" }
     - { tagno: 6, tagkey: 'updated', tagval: "{{ mydate.stdout | regex_replace(' ', '_') }}" }
+  ignore_errors: true
   when: project_tag != "basetags"
