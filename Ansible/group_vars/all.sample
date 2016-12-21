@@ -15,53 +15,58 @@
 #limitations under the License.
 ################################################################################
 # Sensitive / Vault vars - move to vault in secure environments
-def_env_db_user: "root"
-def_env_db_password: "P@ssword123"
-def_mgmtsrv_username: "root"
-def_mgmtsrv_password: "P@ssword123"
-def_pri_username: "root"
-def_pri_password: "P@ssword123"
-def_sec_username: "root"
-def_sec_password: "P@ssword123"
-def_dbsrv_username: "root"
-def_dbsrv_password: "P@ssword123"
-def_mysql_root_password: "P@ssword123"
-def_mysql_cloud_password: 'Password!23'
-def_mysql_replication_password: repL!Cation
-def_old_mysql_root_password: ""
-def_marvin_username: "root"
-def_marvin_password: "P@ssword123"
-def_kvm_username: "root"
-def_kvm_password: "P@ssword123"
-def_xs_username: "root"
-def_xs_password: "P@ssword123"
-def_vmware_vcsa_user: "Administrator@vsphere.local"
-def_vmware_vcsa_pass: "P@ssword123"
-def_vmware_esxi_username: "root"
-def_vmware_esxi_password: "P@ssword123"
+def_env_db_user: "<USERNAME_HERE>"
+def_env_db_password: "<PASSWORD_HERE>"
+def_mgmtsrv_username: "<USERNAME_HERE>"
+def_mgmtsrv_password: "<PASSWORD_HERE>"
+def_pri_username: "<USERNAME_HERE>"
+def_pri_password: "<PASSWORD_HERE>"
+def_sec_username: "<USERNAME_HERE>"
+def_sec_password: "<PASSWORD_HERE>"
+def_dbsrv_username: "<USERNAME_HERE>"
+def_dbsrv_password: "<PASSWORD_HERE>"
+def_mysql_root_password: "<PASSWORD_HERE>"
+def_mysql_cloud_password: "<PASSWORD_HERE>"
+def_mysql_replication_password: "<PASSWORD_HERE>"
+def_old_mysql_root_password: "<PASSWORD_HERE>"
+def_marvin_username: "<USERNAME_HERE>"
+def_marvin_password: "<PASSWORD_HERE>"
+def_kvm_username: "<USERNAME_HERE>"
+def_kvm_password: "<PASSWORD_HERE>"
+def_xs_username: "<USERNAME_HERE>"
+def_xs_password: "<PASSWORD_HERE>"
+def_vmware_vcsa_user: "<USERNAME_HERE>"
+def_vmware_vcsa_50_51_user: "<USERNAME_HERE>"
+def_vmware_vcsa_pass: "<PASSWORD_HERE>"
+def_vmware_esxi_username: "<USERNAME_HERE>"
+def_vmware_esxi_password: "<PASSWORD_HERE>"
 
-parent_vcenter_hostname: "10.2.0.11"
-parent_vcenter_password: "vmware"
-parent_vcenter_username: "root"
+parent_vcenter_hostname: "<IP_ADDRESS_HERE>"
+parent_vcenter_password: "<PASSWORD_HERE>"
+parent_vcenter_username: "<USERNAME_HERE>"
 
 ################################################################################
 # version of this file is checked when running generate or deploy
 # if the vars in this file are updated/added then version will be increased.
 
-all-file_version: 3
+all-file_version: 5
 
 # Environment vars
-def_management_network: "Shared Mgmt Network"
-def_guest_public_network: "Nested Trunked Network"
+def_marvin_network: "<NETWORK_NAME_HERE>"
+def_management_network: "<NETWORK_NAME_HERE>"
+def_guest_public_network: "<NETWORK_NAME_HERE>"
 def_management_vm_hypervisor: "VMware"
-def_build_zone: "SBC2Zone1"
+def_build_zone: "<ZONE_NAME_HERE>"
 def_build_keyboard: "uk"
-parent_vcenter_dc: "SBCloud2-SW19"
+parent_vcenter_dc: "<PARENT_VC_DC_NAME_HERE>"
+repohost: "http://<IP_ADDRESS_HERE>"
+def_env_timezone: "UTC"
+def_use_external_hv_hosts: no
 
 # Global URLs - not copied to granular group_vars
-current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
-epel7: http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-8.noarch.rpm
-epel6: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+epel7: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+epel6: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 vhdutil_url: http://download.cloud.com.s3.amazonaws.com/tools/vhd-util
 
 # Defaults for generate-config:
@@ -71,88 +76,162 @@ sec: 1
 def_build_marvin: no
 wait_till_setup: no
 def_api_retries: 25
-def_sysvms_running_reties: 100
-def_sysvms_up_reties: 100
+def_sysvms_running_retries: 250
+def_sysvms_up_retries: 100
+def_builin_template_retries: 400
+def_ui_up_retries: 75
+def_ssh_retries: 400
+def_ssh_timeout: 10
 destroy_forced: no
-
-# Environment database settings
-def_env_db_name: "acstest"
-def_env_db_ip: "10.2.0.3"
+def_env_uuid: "unknown"
 
 # Environment database settings
 def_env_db_name: "trillian_envs"
-def_env_db_ip: "ENVDBIP"
-def_env_uuid: unknown
+def_env_db_ip: "<IP_ADDRESS_HERE>"
+
 
 # Environment summary
 def_env_zonetype: "Advanced"
-def_env_prihost: "10.0.1.30"
-def_env_sechost: "10.0.1.30"
+# BEING DEPRECATED:
+def_env_use_sec_groups: yes
+def_env_prihost: "<IP_ADDRESS_HERE>"
+def_env_sechost: "<IP_ADDRESS_HERE>"
 def_env_pripath: "/acs/primary/"
 def_env_priprot: "NFS"
 def_env_secpath: "/acs/secondary/"
+# BEING DEPRECATED:
 def_env_zone_secgroups: "false"
-def_env_zone_guestcidr: "10.1.1.0/24"
-def_env_zone_dns1: "8.8.8.8"
-def_env_zone_dns2: "8.8.4.4"
-def_env_zone_intdns1: "8.8.8.8"
-def_env_zone_intdns2: "8.8.4.4"
+def_env_zone_secgroups_advanced: "false"
+def_env_zone_secgroups_basic: "true"
+def_env_zone_guestcidr: "<IP_ADDRESS_HERE>/24"
+def_env_zone_dns1: "<IP_ADDRESS_HERE>"
+def_env_zone_dns2: "<IP_ADDRESS_HERE>"
+def_env_zone_intdns1: "<IP_ADDRESS_HERE>"
+def_env_zone_intdns2: "<IP_ADDRESS_HERE>"
 def_env_zone_localstorage: "false"
 def_env_zone_podname: "Pod1"
 def_env_zone_clustername: "p1-c1"
 def_env_zone_addhosts: "true"
+def_env_iscsi_test_target: "iqn.2016-10.local.marvin:tgt1/0"
+def_env_iscsi_test_host: "marvin"
+def_use_dvfilter: yes
+def_use_local_storage: no
+def_use_shared_storage: yes
+def_use_local_storage_systemvms: no
+def_local_storage_disk_offering: "Custom"
+def_local_storage_disk_size: "80"
+
+java_vers:
+  ccp306: java-1.6.0-openjdk
+  ccp307: java-1.6.0-openjdk
+  ccp43: java-1.6.0-openjdk
+  cs43: java-1.6.0-openjdk
+  cs45: java-1.7.0-openjdk
+  cs46: java-1.7.0-openjdk
+  cs47: java-1.7.0-openjdk
+  cs48: java-1.7.0-openjdk
+  cs49: java-1.7.0-openjdk
+  cs410: java-1.7.0-openjdk
+  custom: custom
+  na: na
+
+java_paths:
+  centos:
+    java-1.6.0-openjdk: "jre_1.6.0_openjdk"
+    java-1.7.0-openjdk: "jre_1.7.0_openjdk"
+    java-1.8.0-openjdk: "jre_1.8.0_openjdk"
+    na: na
+  centos7:
+    java-1.6.0-openjdk: "jre_1.6.0_openjdk"
+    java-1.7.0-openjdk: "jre_1.7.0_openjdk"
+    java-1.8.0-openjdk: "jre_1.8.0_openjdk"
+    na: na
+  debian:
+    java-1.6.0-openjdk: "tbc"
+    java-1.7.0-openjdk: "tbc"
+    java-1.8.0-openjdk: "tbc"
+    na: na
+  na:
+    java-1.6.0-openjdk: "na"
+    java-1.7.0-openjdk: "na"
+    java-1.8.0-openjdk: "na"
 
 # Management server
 def_mgmtsrv_service_offering: "Mgmt Server"
-def_mgmtsrv_template: "CentOS 6.8 Minimal"
-def_baseurl_cloudstack: "http://10.2.0.4/shapeblue/cloudstack/upstream/"
+def_mgmtsrv_template: "CentOS 6.8"
+def_rooturl_cloudstack: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/"
 
 # System templates
 def_system_templates:
+  ccp306:
+    kvm_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2"
+    xs_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.vhd.bz2"
+    vmware_url: "http://download.cloud.com/templates/burbank/burbank-systemvm-08012012.ova"
+  ccp307:
+    kvm_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2"
+    xs_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.vhd.bz2"
+    vmware_url: "http://download.cloud.com/templates/burbank/burbank-systemvm-08012012.ova"
+  ccp43:
+    kvm_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-01-14-master-kvm.qcow2.bz2"
+    xs_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-01-14-master-xen.vhd.bz2"
+    vmware_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-02-13-master-vmware.ova"
   cs43:
-    kvm_url: "http://packages.shapeblue.com/systemvmtemplate/4.3/systemvm64template-4.3-kvm.qcow2.bz2"
-    xs_url: "http://packages.shapeblue.com/systemvmtemplate/4.3/systemvm64template-4.3-xen.vhd.bz2"
-    vmware_url: "http://packages.shapeblue.com/systemvmtemplate/4.3/systemvm64template-4.3-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-vmware.ova"
   cs45:
-    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
-    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
-    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
   cs46:
-    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
-    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
-    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
   cs47:
-    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
-    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
-    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
   cs48:
-    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
-    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
-    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
   cs49:
-    kvm_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
-    xs_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
-    vmware_url: "http://10.2.0.4/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
+  cs410:
+    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-kvm.qcow2.bz2"
+    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-xen.vhd.bz2"
+    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/systemvm64template-master-4.6.0-vmware.ova"
   custom:
     kvm_url: "KVMCustomURL"
     xs_url: "XSCustomURL"
     vmware_url: "VMwareCustomURL"
+  na:
+    kvm_url: "na"
+    xs_url: "na"
+    vmware_url: "na"
 
 # Default management VM templates based on management server OS choice
 def_mgmt_templates:
   centos:
-    mgmtsrv_template: "CentOS 6.8 Minimal"
+    mgmtsrv_template: "CentOS 6.8"
+  centos62:
+    mgmtsrv_template: "CentOS 6.2"
+  centos63:
+    mgmtsrv_template: "CentOS 6.3"
+  centos64:
+    mgmtsrv_template: "CentOS 6.4"
   centos7:
-    mgmtsrv_template: "CentOS 7 (Minimal)"
+    mgmtsrv_template: "CentOS7 KVM"
   debian:
     mgmtsrv_template: "Ubuntu Server 14.04"
   custom:
     mgmtsrv_template: "CustomTemplateName"
-
 # DB servers
 def_dbsrv_service_offering: "Mgmt Server"
-def_dbsrv_template: "CentOS 6.8 Minimal"
-def_envs_dbhost: "10.2.0.3"
+def_dbsrv_template: "CentOS 6.8"
+def_envs_dbhost: "<IP_ADDRESS_HERE>"
 def_db_type: "mysql"
 def_mysql_max_connections: 700
 def_mysql_innodb_buffer_pool_size: 256M
@@ -161,19 +240,26 @@ def_mysql_innodb_buffer_pool_size: 256M
 def_kvm_service_offering: "Nested Hypervisor"
 def_kvm_templates:
   centos:
-    kvm_template: "CentOS 6.8 Minimal"
+    kvm_template: "CentOS 6.8"
+  centos62:
+    kvm_template: "CentOS 6.2 - Locked"
+  centos64:
+    kvm_template: "CentOS 6.4 - Locked"
   centos7:
-    kvm_template: "KVM CentOS7"
+    kvm_template: "CentOS7 KVM"
   debian:
     kvm_template: "Ubuntu Server 14.04"
   custom:
     kvm_template: "CustomTemplateName"
+  na:
+    kvm_template: "na"
 def_kvm_mgmt_network_label: "cloudbr0"
 def_kvm_guest_network_label: "cloudbr1"
 def_kvm_public_network_label: "cloudbr1"
+def_kvm_localstorage_mount: "/localstorage"
 
 # XS
-def_xs_service_offering: "Nested Hypervisor"
+def_xs_service_offering: "Nested Hypervisor - MK1 hosts"
 def_xenserver_templates:
   xs62sp1:
     xs_template: "XenServer 6.2 SP1"
@@ -183,6 +269,8 @@ def_xenserver_templates:
     xs_template: "XenServer 6.2 SP1" ## need XS 7 template
   custom:
     xs_template: "CustomTemplateName"
+  na:
+    xs_template: "na"
 def_xs_mgmt_network_nic: "eth0"
 def_xs_mgmt_network_label: "Network0"
 def_xs_guest_network_nic: "eth1"
@@ -192,79 +280,126 @@ def_xs_public_network_label: "Network1"
 
 # VMware
 def_vmware_templates:
+  50u1:
+    esxi_template: "ESXi 5.0u1"
+    vc_template: "vCenter 50u1"
+  51u1:
+    esxi_template: "ESXi 5.1u1"
+    vc_template: "vCenter 5.1u1"
+  51u2:
+    esxi_template: "ESXi 5.1u2"
+    vc_template: "vCenter 5.1u2"
   55u3:
-    esxi_template: "ESXi 5.5 U3"
-    vc_template: "vCenter55u3"
+    esxi_template: "ESXi 5.5u3"
+    vc_template: "vCenter 55u3"
   60u2:
-    esxi_template: "ESXi 6.0 U2"
-    vc_template: "vCenter60u2"
-  51u:
-    esxi_template: "ESXi 5.1 U1"
-    vc_template: "vCenter55u3" #fixme
+    esxi_template: "ESXi 6.0u2"
+    vc_template: "vCenter 60u2"
+  "65":
+    esxi_template: "ESXi 6.5"
+    vc_template: "vCenter 65"
+  kddi:
+    esxi_template: "ESXi 5.0u1"
+    vc_template: "vCenter 55u3"
   custom:
     esxi_template: "CustomTemplateName"
     vc_template: "CustomTemplateName"
+  na:
+    esxi_template: "na"
+    vc_template: "na"
 def_vc_service_offering: "VC server"
 def_esxi_service_offering: "Nested Hypervisor"
+def_esxi_use_dvswitch: no
 def_esxi_mgmt_network_label: "vSwitch0"
 def_esxi_guest_network_label: "vSwitch1"
 def_esxi_public_network_label: "vSwitch1"
 
 # VMware datacentre configuration
-def_vmware_datacenter_name: "SBCLOUD"
-def_vmware_cluster_name: "vSphereCluster1"
+def_vmware_datacenter_name: "Trillian"
 
 # Marvin server
-def_marvin_service_offering: "Mgmt Server"
-def_marvin_server_template: "CentOS 7 (Minimal)"
+def_marvin_service_offering: "Marvin"
+def_marvin_server_template: "Marvin iSCSI"
 def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
-def_marvin_images_location: "http://<IP_OF_LOCAL_images>/marvin"
+def_marvin_images_location: "http://<IP_ADDRESS_HERE>/marvin"
+def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/testing/centos7/4.10.0/"
 
 # hipchat integration:
 
 def_use_hipchat: yes
-def_hipchat_server: ADDRESS_OF_HIPCHAT_SERVER
-def_hipchat_token: HIPCHAT_TOKEN
+def_hipchat_server: "<HIPCHAT_SERVER_URL>"
+def_hipchat_token: "<TOKEN_HERE>"
 def_hipchat_cli_client_location: "https://bobswift.atlassian.net/wiki/download/attachments/16285777/atlassian-cli-5.4.0-distribution.zip?version=1&modificationDate=1464662416465&api=v2"
 def_hipchat_cli_client_version: "atlassian-cli-5.4.0"
 
+# cloudmonkey keys:
 
+cm_apikey: "<KEY_HERE>"
+cm_secretkey_enc: "<ENCKEY_HERE>"
+cm_secretkey: "<KEY_HERE>"
 
 # global variables
 global_settings:
-  - {name: "vmware.create.full.clone", value: "FALSE", condition: "all"}
-  - {name: "secstorage.allowed.internal.sites", value: "10.0.0.0/8", condition: "all"}
-  - {name: "integration.api.port", value: "8096", condition: "marvin"} 
-  - {name: "account.cleanup.interval", value: "60", condition: "marvin"}
-  - {name: "extract.url.cleanup.interval", value: "300", condition: "marvin"}
-  - {name: "network.securitygroups.work.cleanup.interval", value: "120", condition: "marvin"}
-  - {name: "storage.cleanup.enabled", value: "TRUE", condition: "marvin"}
-  - {name: "storage.cleanup.interval", value: "300", condition: "marvin"}
-  - {name: "storage.template.cleanup.enabled", value: "TRUE", condition: "marvin"}
-  - {name: "task.cleanup.retry.interval", value: "600", condition: "marvin"}
-  - {name: "vm.op.cleanup.interval", value: "600", condition: "marvin"}
-  - {name: "vm.op.cleanup.wait", value: "600", condition: "marvin"}
-  - {name: "vpc.cleanup.interval", value: "600", condition: "marvin"}
-  - {name: "expunge.delay", value: "300", condition: "marvin"}
-  - {name: "expunge.interval", value: "300", condition: "marvin"}
-  - {name: "expunge.workers", value: "2", condition: "marvin"}
-  - {name: "alert.wait", value: "300", condition: "marvin"}
-  - {name: "backup.snapshot.wait", value: "600", condition: "marvin"}
-  - {name: "copy.volume.wait", value: "600", condition: "marvin"}
-  - {name: "create.private.template.from.snapshot.wait", value: "600", condition: "marvin"}
-  - {name: "create.private.template.from.volume.wait", value: "600", condition: "marvin"}
-  - {name: "create.volume.from.snapshot.wait", value: "600", condition: "marvin"}
-  - {name: "migratewait", value: "1200", condition: "marvin"}
-  - {name: "network.gc.wait", value: "600", condition: "marvin"}
-  - {name: "primary.storage.download.wait", value: "900", condition: "marvin"}
-  - {name: "storage.pool.max.waitseconds", value: "900", condition: "marvin"}
-  - {name: "update.wait", value: "300", condition: "marvin"}
-  - {name: "vm.op.cleanup.wait", value: "600", condition: "marvin"}
-  - {name: "vm.op.wait.interval", value: "60", condition: "marvin"}
-  - {name: "vm.tranisition.wait.interval", value: "300", condition: "marvin"}
-  - {name: "vmsnapshot.create.wait", value: "900", condition: "marvin"}
-  - {name: "wait", value: "3600", condition: "marvin"}
-  - {name: "xapiwait", value: "300", condition: "marvin"}
-  - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
-  - {name: "storage.cleanup.delay", value: "300", condition: "marvin"}
+  all:
+    - {name: "vmware.create.full.clone", value: "FALSE", condition: "all"}
+    - {name: "secstorage.allowed.internal.sites", value: "<IP_ADDRESS_HERE>/24", condition: "all"}
+    - {name: "cpu.overprovisioning.factor", value: "2", condition: "all"}
+    - {name: "cluster.cpu.allocated.capacity.disablethreshold", value: "0.95", condition: "all"}
+    - {name: "cluster.memory.allocated.capacity.disablethreshold", value: "0.95", condition: "all"}
+    - {name: "dynamic.apichecker.enabled", value: "true", condition: "all"}
+    - {name: "workers", value: "10", condition: "all"}
+  marvin:
+    - {name: "ping.interval", value: "10", condition: "marvin"}
+    - {name: "ping.timeout", value: "1.5", condition: "marvin"}
+    - {name: "integration.api.port", value: "8096", condition: "marvin"}
+    - {name: "account.cleanup.interval", value: "60", condition: "marvin"}
+    - {name: "extract.url.cleanup.interval", value: "300", condition: "marvin"}
+    - {name: "network.securitygroups.work.cleanup.interval", value: "120", condition: "marvin"}
+    - {name: "storage.cleanup.enabled", value: "TRUE", condition: "marvin"}
+    - {name: "storage.cleanup.interval", value: "150", condition: "marvin"}
+    - {name: "storage.template.cleanup.enabled", value: "TRUE", condition: "marvin"}
+    - {name: "task.cleanup.retry.interval", value: "600", condition: "marvin"}
+    - {name: "vm.op.cleanup.interval", value: "600", condition: "marvin"}
+    - {name: "vm.op.cleanup.wait", value: "60", condition: "marvin"}
+    - {name: "vpc.cleanup.interval", value: "600", condition: "marvin"}
+    - {name: "expunge.delay", value: "60", condition: "marvin"}
+    - {name: "expunge.interval", value: "60", condition: "marvin"}
+    - {name: "expunge.workers", value: "3", condition: "marvin"}
+    - {name: "alert.wait", value: "300", condition: "marvin"}
+    - {name: "backup.snapshot.wait", value: "3600", condition: "marvin"}
+    - {name: "kvm.snapshot.enabled", value: "true", condition: "marvin"}
+    - {name: "copy.volume.wait", value: "1200", condition: "marvin"}
+    - {name: "create.private.template.from.snapshot.wait", value: "1200", condition: "marvin"}
+    - {name: "create.private.template.from.volume.wait", value: "1200", condition: "marvin"}
+    - {name: "create.volume.from.snapshot.wait", value: "1200", condition: "marvin"}
+    - {name: "migratewait", value: "1200", condition: "marvin"}
+    - {name: "network.gc.wait", value: "300", condition: "marvin"}
+    - {name: "network.gc.interval", value: "60", condition: "marvin"}
+    - {name: "primary.storage.download.wait", value: "900", condition: "marvin"}
+    - {name: "storage.pool.max.waitseconds", value: "900", condition: "marvin"}
+    - {name: "update.wait", value: "300", condition: "marvin"}
+    - {name: "vm.op.cleanup.wait", value: "600", condition: "marvin"}
+    - {name: "vm.op.wait.interval", value: "60", condition: "marvin"}
+    - {name: "vm.tranisition.wait.interval", value: "300", condition: "marvin"}
+    - {name: "vmsnapshot.create.wait", value: "900", condition: "marvin"}
+    - {name: "wait", value: "3600", condition: "marvin"}
+    - {name: "xapiwait", value: "300", condition: "marvin"}
+    - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
+    - {name: "storage.cleanup.delay", value: "150", condition: "marvin"}
+    - {name: "enable.dynamic.scale.vm", value: "true", condition: "marvin"}
+    - {name: "outofbandmanagement.sync.interval", value: "5000", condition: "marvin"}
+  dvswitch:
+    - {name: "vmware.use.dvswitch", value: "true", condition: "dvswitch"}
+  systemvmlocalstorage:
+    - {name: "system.vm.use.local.storage", value: "true", condition: "systemvmlocalstorage"}
+
+# local_templates
+def_use_local_templates: true
+
+local_builtin_templates:
+  - {id: "2", url: "http://<IP_ADDRESS_HERE>/builtin_templates/f59f18fb-ae94-4f97-afd2-f84755767aca.vhd.bz2"} #CentOS 5.3(64-bit) no GUI (XenServer)
+  - {id: "4", url: "http://<IP_ADDRESS_HERE>/builtin_templates/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2"} #CentOS 5.5(64-bit) no GUI (KVM)
+  - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos56-x86_64.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
+  - {id: "6", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos6_4_64bit.vhd.bz2"} #CentOS 6.4(64-bit) GUI (Hyperv)
+  - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/CentOS5.3-x86_64.ova"} #CentOS 5.3(64-bit) no GUI (vSphere)
