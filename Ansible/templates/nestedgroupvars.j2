@@ -236,7 +236,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% elif kvm_os | lower == "custom" %}
 {% set kvmosversion = "custom" %}
 {% set kvmreleaseurl = "na" %}
-{% set kvm_os_type = "custom" %}
+{% set kvm_os_type = "na" %}
 {% else %}
 {% set kvmosversion = "na" %}
 {% set kvmreleaseurl = "na" %}
