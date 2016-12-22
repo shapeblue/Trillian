@@ -255,8 +255,11 @@ kvm_os: "{{ kvmosversion }}"
 {% else %}
 {% set baseurlkvm = def_rooturl_cloudstack~kvmreleaseurl~"/"~numversion~"/" %}
 {% endif %}
-baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
+{% else %}
+{% set baseurlkvm = baseurl_kvm %}
 {% endif %}
+baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
+
 kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_template ) }}"
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
