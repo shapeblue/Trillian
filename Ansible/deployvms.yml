@@ -63,20 +63,7 @@
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
 
-#    - name: Create project
-#      local_action:
-#        module: cs_project
-#        name: "{{ build_project }}"
-#        state: present
-#        tags:
-#          - { key: env_name, value: "{{ env_name_clean }}" }
-#          - { key: env_uuid, value: "{{ env_uuid }}" }
-#          - { key: env_user, value: "{{ env_user }}" }
-#          - { key: state, value: "Deploying_VMs" }
-#          - { key: created, value: "{{ env_builddate }}" }
-#          - { key: comment, value: "{{ env_comment | regex_replace(' ', '_') }}" }
-#          - { key: updated, value: "{{lookup('pipe','date +%d/%m/%y_%H:%M')}}" }
-#      register: project_retval
+
 
 #    - name: Update group vars file with project ID for reference
 #      lineinfile:
@@ -102,12 +89,6 @@
     - name: Build VMs
       include: ./tasks/buildvms.yml
 
-## Add dvFilter to interfaces
-
-#- hosts: localhost
-#  connection: local
-#  gather_facts: no
-#  tasks:
     - name: Add dvfilter
       include: ./tasks/add_dvfilter.yml
       when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
@@ -147,7 +128,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Configuring_Hypervisors
       include: tasks/updateproject.yml project_tag=Configuring_Hypervisors
 
 ## Configure Hypervisor hosts
@@ -189,7 +170,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Configuring_Storage
       include: tasks/updateproject.yml project_tag=Configuring_Storage
 
 - hosts: primary_storage_hosts
@@ -218,7 +199,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Configuring_Zone
       include: tasks/updateproject.yml project_tag=Configuring_Zone
 
 ## Configure Zone on Mgmt Server
@@ -233,7 +214,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Configuring_Marvin
       include: tasks/updateproject.yml project_tag=Configuring_Marvin
 
 ## Configure Marvin host
@@ -265,7 +246,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Built
       include: tasks/updateproject.yml project_tag=Built
 
 
@@ -275,7 +256,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Waiting_for_System_VMs
       include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
       when: wait_till_setup
 
@@ -288,7 +269,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag System_VMs_up
       include: tasks/updateproject.yml project_tag=System_VMs_up
       when: wait_till_setup
 
@@ -299,7 +280,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Waiting_for_builtin_template
       include: tasks/updateproject.yml project_tag=Waiting_for_builtin_template
       when: wait_for_template
 
@@ -314,7 +295,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Running
       include: tasks/updateproject.yml project_tag=Running
       when: wait_for_template
 
