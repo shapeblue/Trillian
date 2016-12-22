@@ -29,4 +29,4 @@
       - { key: created, value: "{{ env_builddate }}" }
       - { key: comment, value: "{{ env_comment | regex_replace(' ', '_') }}" }
       - { key: updated, value: "{{lookup('pipe','date +%d/%m/%y_%H:%M')}}" }
-    ignore_errors: true
+  ignore_errors: true
