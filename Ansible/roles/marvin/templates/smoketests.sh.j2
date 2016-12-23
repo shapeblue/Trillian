@@ -52,7 +52,7 @@ cleanup() {
 
 runtest() {
     file=$1
-    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')_*
+    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')*
     nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
     cleanup || true
 }
@@ -61,7 +61,7 @@ launchtest() {
     file=$1
     runtest $file
     # Run tests once again on error or failure
-    #python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Tested twice for intermitten failure: $file" >> /marvin/smoketests-summary.txt
+    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Intermitten failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
