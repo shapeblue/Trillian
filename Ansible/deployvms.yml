@@ -63,22 +63,6 @@
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
 
-
-
-#    - name: Update group vars file with project ID for reference
-#      lineinfile:
-#        dest="group_vars/{{ env_name_clean }}"
-#        insertafter="^env_guestnetvlan.*$"
-#        line="{{ item }}"
-#      with_items:
-#        - "env_project_id: \"{{ project_retval.id }}\""
-
-#    - set_fact: "env_project_id={{ project_retval.id }}"
-#      when: env_project_id is undefined
-
-#    - name: Tag project
-#      include: tasks/updateproject.yml project_tag=basetags
-
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
       with_items:
