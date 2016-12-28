@@ -1,8 +1,0 @@
----
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag={{ tag }}

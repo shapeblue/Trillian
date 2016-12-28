@@ -92,7 +92,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
+    - name: update project - tag Configuring_Mgmt_Server
       include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
 
 - hosts: cloudstack_manager_hosts
@@ -214,7 +214,6 @@
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
     - { role: marvin, when: num_marv_hosts | int != 0  }
 
-
 - hosts: localhost
   connection: local
   gather_facts: no
@@ -256,7 +255,6 @@
     - name: update project - tag System_VMs_up
       include: tasks/updateproject.yml project_tag=System_VMs_up
       when: wait_till_setup
-
 
 ## Wait for services/templates etc
 
