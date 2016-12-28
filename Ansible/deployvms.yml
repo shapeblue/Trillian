@@ -26,6 +26,9 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Capture build date
+      set_fact: env_builddate="{{lookup('pipe','date +%d/%m/%y_%H:%M')}}"
+
     - name: Request and return environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=req
 
@@ -39,6 +42,7 @@
         insertafter="^env_hv.*$"
         line="{{ item }}"
       with_items:
+        - "env_builddate: \"{{ env_builddate }}\""
         - "env_pubvlan: \"{{ env_pubvlan }}\""
         - "env_pubgw: \"{{ env_pubgw }}\""
         - "env_pubmask: \"{{ env_pubmask }}\""
@@ -56,27 +60,8 @@
         - "env_guestnetvlan: \"{{ env_guestnetvlan }}\""
 
 # Create build project if it doesn't exist.
-
     - name: Create project
-      local_action:
-        module: cs_project
-        name: "{{ build_project }}"
-        state: present
-      register: project_retval
-
-    - name: Update group vars file with 
-      lineinfile:
-        dest="group_vars/{{ env_name_clean }}"
-        insertafter="^env_guestnetvlan.*$"
-        line="{{ item }}"
-      with_items:
-        - "env_project_id: \"{{ project_retval.id }}\""
-
-    - set_fact: "env_project_id={{ project_retval.id }}"
-      when: env_project_id is undefined
-
-    - name: Tag project
-      include: tasks/tagproject.yml project_tag=basetags
+      include: tasks/updateproject.yml project_tag=Deploying_VMs
 
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
@@ -88,16 +73,12 @@
     - name: Build VMs
       include: ./tasks/buildvms.yml
 
-## Add dvFilter to interfaces
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-    - include: ./tasks/add_dvfilter.yml
+    - name: Add dvfilter
+      include: ./tasks/add_dvfilter.yml
       when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_MySQL
+
+    - name: Update project - tag Configuring_MySQL
+      include: tasks/updateproject.yml project_tag=Configuring_MySQL
 
 - hosts: mysql_hosts
   gather_facts: no
@@ -111,11 +92,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - include: ./tasks/add_dvfilter.yml
-      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_Mgmt_Server
-
+    - name: update project - tag Configuring_Mgmt_Server
+      include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -134,8 +112,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_Hypervisors
+    - name: update project - tag Configuring_Hypervisors
+      include: tasks/updateproject.yml project_tag=Configuring_Hypervisors
 
 ## Configure Hypervisor hosts
 
@@ -176,8 +154,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_Storage
+    - name: update project - tag Configuring_Storage
+      include: tasks/updateproject.yml project_tag=Configuring_Storage
 
 - hosts: primary_storage_hosts
   gather_facts: no
@@ -205,8 +183,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_Zone
+    - name: update project - tag Configuring_Zone
+      include: tasks/updateproject.yml project_tag=Configuring_Zone
 
 ## Configure Zone on Mgmt Server
 
@@ -220,8 +198,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Configuring_Marvin
+    - name: update project - tag Configuring_Marvin
+      include: tasks/updateproject.yml project_tag=Configuring_Marvin
 
 ## Configure Marvin host
 
@@ -235,7 +213,6 @@
     - { role: cloudmonkey, when: num_marv_hosts | int != 0  }
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
     - { role: marvin, when: num_marv_hosts | int != 0  }
-
 
 - hosts: localhost
   connection: local
@@ -252,8 +229,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Built
+    - name: update project - tag Built
+      include: tasks/updateproject.yml project_tag=Built
 
 
 ## Wait for services/templates etc
@@ -262,8 +239,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Waiting_for_System_VMs
+    - name: update project - tag Waiting_for_System_VMs
+      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: primary_cs_manager
@@ -275,10 +252,9 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=System_VMs_up
+    - name: update project - tag System_VMs_up
+      include: tasks/updateproject.yml project_tag=System_VMs_up
       when: wait_till_setup
-
 
 ## Wait for services/templates etc
 
@@ -286,8 +262,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Waiting_for_builtin_template
+    - name: update project - tag Waiting_for_builtin_template
+      include: tasks/updateproject.yml project_tag=Waiting_for_builtin_template
       when: wait_for_template
 
 - hosts: primary_cs_manager
@@ -301,8 +277,8 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update Tag project
-      include: tasks/tagproject.yml project_tag=Running
+    - name: update project - tag Running
+      include: tasks/updateproject.yml project_tag=Running
       when: wait_for_template
 
 ## Run Marvin Tests
