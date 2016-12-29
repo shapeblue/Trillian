@@ -14,7 +14,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-# rpm -ivh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm 
+# rpm -ivh http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 # yum install -y sshpass jq
 
 
@@ -93,8 +93,8 @@ function getSVMdetails(){
 VRNAME=$1
 export TERM=vt100
 SVMDETAILSA=`cloudmonkey list systemvms name=$VRNAME filter=name,hostname,hostid,hypervisor,privateip,linklocalip | jq '.systemvm[]'`
-HOSTID=`echo $SVMDETAILSA | jq '.hostid'`
-HOSTIP=`cloudmonkey list hosts hostid=$HOSTID filter=ipaddress,hypervisor | jq '.host[]'`
+HOST=`echo $SVMDETAILSA | jq '.hostname'`
+HOSTIP=`cloudmonkey list hosts name=$HOST filter=ipaddress,hypervisor | jq '.host[]'`
 SVMDETAILS=`echo "$SVMDETAILSA $HOSTDETAILS $HOSTIP" | jq -s add`
 echo $SVMDETAILS
 }
@@ -111,7 +111,7 @@ else
   if [[ "${INPUT:0:2}" == "r-" ]]; then
     VRNAME=$INPUT
     echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Virtual Router. Getting IP Address\e[0m"
-    VRIP=`getIPforVR $VRNAME`  
+    VRIP=`getIPforVR $VRNAME`
     echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
     echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
     VRDETAILS=`getVRdetails $VRNAME`
@@ -132,7 +132,7 @@ else
     HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
     HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
   elif [[ "${INPUT:0:2}" == "v-" ]]; then
-    VRNAME=$INPUT 
+    VRNAME=$INPUT
     echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Console Proxy VM. Getting Details\e[0m"
     SVMDETAILS=`getSVMdetails $VRNAME`
     if [[ $SVMDETAILS == *"linklocalip"* ]]; then
@@ -148,7 +148,7 @@ else
     echo -e "\e[92m ----> \e[91m$INPUT\e[92m appears to be a VM.  Finding VR\e[0m"
     VRNAME=`getVRfromVM $INPUT`
     echo -e "\e[92m ----> Virtual Router for \e[91m$INPUT\e[92m is \e[91m$VRNAME\e[92m.  Getting IP Address\e[0m"
-    VRIP=`getIPforVR $VRNAME`  
+    VRIP=`getIPforVR $VRNAME`
     echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
     echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
     VRDETAILS=`getVRdetails $VRNAME`
@@ -162,7 +162,7 @@ fi
 case $HYPERVISOR in
   "VMware")
     echo -e "\e[92m ----> Base hypervisor is \e[91mvSphere\e[92m so connecting directly\e[0m"
-    echo -e "\e[92m ----> Connecting to \e[91m$VRIP\e[0m" 
+    echo -e "\e[92m ----> Connecting to \e[91m$VRIP\e[0m"
     ssh -i /var/cloudstack/management/.ssh/id_rsa -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP
     ;;
   XenServer | KVM)
@@ -194,7 +194,6 @@ case $COMMAND in
     service cloudstack-management restart
   ;;
   "vr")
-    vm_vr $ARG 
+    vm_vr $ARG
   ;;
 esac
-
