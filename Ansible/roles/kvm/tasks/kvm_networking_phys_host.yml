@@ -25,7 +25,7 @@
   template: src=kvm-cloudbr0.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
 - name: Configure eth2 (Advanced Networking)
-  template: src=kvm-eth2_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth2
+  template: src=kvm-p55p1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-p55p1
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
 - name: Configure eth2 (Basic Networking)
