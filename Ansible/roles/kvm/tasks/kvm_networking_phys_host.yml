@@ -15,21 +15,24 @@
 #limitations under the License.
 
 
-- name: Configure eth0
-  template: src=kvm-eth0.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+- name: Configure eth0 (Disable PXE interface)
+  template: src=kvm-eth0_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
 
-- name: Configure bridge 1
+- name: Configure eth1
+  template: src=kvm-kvm-eth1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+
+- name: Configure mgmt/storage bridge
   template: src=kvm-cloudbr0.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
-- name: Configure eth1 (Advanced Networking)
-  template: src=kvm-eth1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+- name: Configure eth2 (Advanced Networking)
+  template: src=kvm-kvm-eth2_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth2
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
-- name: Configure eth1 (Basic Networking)
-  template: src=kvm-eth1-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1.11
+- name: Configure eth2 (Basic Networking)
+  template: src=kvm-eth2-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth2.11
   when: ("{{ env_zonetype | lower }}" == "basic")
 
-- name: Configure bridge 2
+- name: Configure guest/public bridge
   template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"
 
 - name: restart networking
