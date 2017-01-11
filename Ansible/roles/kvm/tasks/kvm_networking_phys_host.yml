@@ -22,7 +22,7 @@
   template: src=kvm-eth1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
 
 - name: Configure mgmt/storage bridge (Physical host)
-  template: src=kvm-cloudbr0_phys_host.j2.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
+  template: src=kvm-cloudbr0_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
 - name: Configure eth2 (Advanced Networking) (Physical host)
   template: src=kvm-p55p1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-p55p1
