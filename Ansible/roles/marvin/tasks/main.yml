@@ -18,7 +18,7 @@
 
 - name: If cloudstack-marvin package does not exist, add fallback repo
   template: src=marvin.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
-  when: not mypackage_available == "false"
+  when: ("{{ mypackage_available }}" == "false")
 
 - name: Install Marvin package
   yum: name=cloudstack-marvin state=present
