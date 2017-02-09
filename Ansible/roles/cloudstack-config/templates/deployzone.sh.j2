@@ -57,7 +57,7 @@ then
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
-  {% if env_zone_secgroups | bool %}
+  {% if not env_zone_secgroups | bool %}
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
