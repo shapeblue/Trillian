@@ -57,6 +57,7 @@ then
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
+  {% if env_zone_secgroups | bool %}
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
@@ -66,6 +67,9 @@ then
   {% endif %}
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }}' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% endif %}
+  {% else %}
+  WriteOutput "Skipping public network - advanced zone with security groups.";
   {% endif %}
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
   {% if env_numversion | version_compare('4.2','>') %}
@@ -127,6 +131,7 @@ then
     cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
   done
   if [ "{{ env_zone_secgroups | bool }}" ];
+  then
     WriteOutput "Configuring zone with security groups.";
     for i in ${SecGrpArrayAdv};
     do
@@ -134,6 +139,7 @@ then
       cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
     done
     NetOffIDSecgrp=`cloudmonkey list networkofferings name="DefaultSharedNetworkOfferingWithSGService" displaytext="Offering for Shared Security group enabled networks" | jq '.networkoffering[] | .id'`;
+    WriteOutput "Creating defaultGuestNetwork";
     cloudmonkey create network zoneid=${ZoneID} networkofferingid=${NetOffIDSecgrp} name=defaultGuestNetwork displaytext=defaultGuestNetwork startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" physicalnetworkid=${PhysNetGuestID} vlan="{{ env_pubvlan }}" | tee -i -a ${DEPLOYLOG};
   else
     WriteOutput "Configuring zone without security groups.";
