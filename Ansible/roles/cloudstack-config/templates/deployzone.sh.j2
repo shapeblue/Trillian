@@ -110,6 +110,7 @@ then
   NetProvArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name!="SecurityGroupProvider") | .id' | tr " " "\n"`;
   IntLBArrayAdv=`cloudmonkey list internalloadbalancerelements filter=name,id | jq '.internalloadbalancerelement[] | .id' | tr " " "\n"`;
   VRArrayAdv=`cloudmonkey list virtualrouterelements filter=name,id | jq '.virtualrouterelement[] | .id' | tr " " "\n"`;
+  SecGrpArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name=="SecurityGroupProvider") | .id' | tr " " "\n"`;
   for i in ${IntLBArrayAdv};
   do
     WriteOutput "Enabling internalloadbalancerelements ${i}";
@@ -125,10 +126,22 @@ then
     WriteOutput "Enabling networkserviceprovider ${i}";
     cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
   done
-  WriteOutput "Creating public range.";
-  cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
-  WriteOutput "Creating Guest VLAN range."
-  cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+  if [ "{{ env_zone_secgroups | bool }}" ];
+    WriteOutput "Configuring zone with security groups.";
+    for i in ${SecGrpArrayAdv};
+    do
+      WriteOutput "Enabling security group provider ${i}";
+      cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
+    done
+    NetOffIDSecgrp=`cloudmonkey list networkofferings name="DefaultSharedNetworkOfferingWithSGService" displaytext="Offering for Shared Security group enabled networks" | jq '.networkoffering[] | .id'`;
+    cloudmonkey create network zoneid=${ZoneID} networkofferingid=${NetOffIDSecgrp} name=defaultGuestNetwork displaytext=defaultGuestNetwork startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" physicalnetworkid=${PhysNetGuestID} vlan="{{ env_pubvlan }}" | tee -i -a ${DEPLOYLOG};
+  else
+    WriteOutput "Configuring zone without security groups.";
+    WriteOutput "Creating public range.";
+    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
+    WriteOutput "Creating Guest VLAN range."
+    cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+  fi
 else
   NetProvArrayBasVR=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
   NetProvArrayBasSG=`cloudmonkey list networkserviceproviders name=SecurityGroupProvider physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
