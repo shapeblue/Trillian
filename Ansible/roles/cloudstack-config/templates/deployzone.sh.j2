@@ -140,7 +140,7 @@ then
     done
     NetOffIDSecgrp=`cloudmonkey list networkofferings name="DefaultSharedNetworkOfferingWithSGService" displaytext="Offering for Shared Security group enabled networks" | jq '.networkoffering[] | .id'`;
     WriteOutput "Creating defaultGuestNetwork";
-    cloudmonkey create network zoneid=${ZoneID} networkofferingid=${NetOffIDSecgrp} name=defaultGuestNetwork displaytext=defaultGuestNetwork startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" physicalnetworkid=${PhysNetGuestID} vlan="{{ env_pubvlan }}" | tee -i -a ${DEPLOYLOG};
+    cloudmonkey create network zoneid=${ZoneID} networkofferingid=${NetOffIDSecgrp} name=defaultGuestNetwork displaytext=defaultGuestNetwork startip="{{ env_guestnetstartip }}" endip="{{ env_guestnetendip }}" gateway="{{ env_guestnetgw }}" netmask="{{ env_guestnetmask }}" physicalnetworkid=${PhysNetGuestID} vlan="{{ env_guestnetvlan }}" | tee -i -a ${DEPLOYLOG};
   else
     WriteOutput "Configuring zone without security groups.";
     WriteOutput "Creating public range.";
