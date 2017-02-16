@@ -130,7 +130,7 @@ then
     WriteOutput "Enabling networkserviceprovider ${i}";
     cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
   done
-  if [ ${SECURITYGROUPENABLED} ];
+  if [ "${SECURITYGROUPENABLED}" == "true" ];
   then
     WriteOutput "Configuring zone with security groups.";
     for i in ${SecGrpArrayAdv};
