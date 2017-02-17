@@ -122,6 +122,14 @@
     register: basguestuuid
   #  when: ("{{ env_zonetype | lower }}" == "basic")
 
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
+    with_items:
+      - "{{ basguestuuid }}"
+      - "{{ basguestuuid.stdout }}"
+      - "{{ guestnic.stdout }}"
+      - "{{ env_guestnetvlan }}"
+
   - name: Set basic guest network vlan
     shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ env_guestnetvlan }}
   #  when: ("{{ env_zonetype |lower }}" == "basic")
