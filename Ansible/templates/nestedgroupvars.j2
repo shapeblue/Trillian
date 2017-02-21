@@ -79,6 +79,8 @@ env_numversion: "{{ numversion }}"
 {% else %}
 {% set osversion = "Management OS not found." %}
 {% endif %}
+env_num_pods: {{ env_num_pods | default( def_env_num_pods ) }}
+env_num_zones: {{ env_num_zones | default( def_env_num_zones ) }}
 env_mgmtos: "{{ osversion }}"
 env_comment: "{{ env_comment }}"
 env_user: "{{ env_user }}"
