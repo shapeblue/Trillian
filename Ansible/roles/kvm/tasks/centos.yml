@@ -58,10 +58,10 @@
   service: name=rpcbind state=started enabled=yes
 
 - include: ./kvm_networking.yml
-  when: not use_external_hv_hosts
+  when: not use_phys_hosts
 
 - include: ./kvm_networking_phys_host.yml
-  when: use_external_hv_hosts
+  when: use_phys_hosts
 
 
 - debug: msg="Set Java on VM"
