@@ -14,8 +14,23 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: update aot-get
-  command: apt-get update -y
+
+- name: set apt repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+  with_items:
+    - "sources.list"
+
+- name: Add specified repository into sources list.
+  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=present
+
+- apt_key: url={{ repohost }}/release.asc state=present
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Ensure NTP packages are installed
+  apt: pkg=openntpd state=present update_cache=true
 
 - name: install setup tools and jq
   apt: pkg={{ item }} state=present

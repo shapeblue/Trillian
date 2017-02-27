@@ -1,0 +1,39 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: Configure eth0 (Disable PXE interface)
+  template: src=kvm-eth0_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+
+- name: Configure eth1 (Physical host)
+  template: src=kvm-eth1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+
+- name: Configure mgmt/storage bridge (Physical host)
+  template: src=kvm-cloudbr0_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
+
+- name: Configure eth2 (Advanced Networking) (Physical host)
+  template: src=kvm-p55p1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-p55p1
+  when: ("{{ env_zonetype | lower }}" == "advanced")
+
+- name: Configure eth2 (Basic Networking) (Physical host)
+  template: src=kvm-eth2-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth2.11
+  when: ("{{ env_zonetype | lower }}" == "basic")
+
+- name: Configure guest/public bridge (Physical host)
+  template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"
+
+- name: restart networking
+  service: name=network state=restarted

@@ -12,12 +12,13 @@
 - name: Determine if Marvin Package availble from this repo
   package_available: PACKAGE=cloudstack-marvin
   register: marvin_package_check
+  ignore_errors: true
 
 - debug: msg="{{ marvin_package_check }}"
 
 - name: If cloudstack-marvin package does not exist, add fallback repo
-  template: src=marvin.repo.j2 dest=/etc/yum.repos.d/marvin.repo
-  when: mypackage_available == "false"
+  template: src=marvin.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+  when: ("{{ mypackage_available }}" == "false")
 
 - name: Install Marvin package
   yum: name=cloudstack-marvin state=present
