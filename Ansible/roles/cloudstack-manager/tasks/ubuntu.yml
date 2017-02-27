@@ -27,8 +27,12 @@
 
 - apt_key: url={{ repohost }}/release.asc state=present
 
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
 - name: Ensure CloudStack packages are installed
-  apt: pkg=cloudstack-management state=present update_cache=true
+  apt: pkg=cloudstack-management state=present
 
 - name: Ensure DB Client is present
   apt: pkg=mysql-client state=present

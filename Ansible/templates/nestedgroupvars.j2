@@ -28,6 +28,8 @@ ssh_retries: {{ ssh_retries | default( def_ssh_retries ) }}
 env_timezone: "{{ env_timezone | default(def_env_timezone) }}"
 use_external_hv_hosts: "{{ use_external_hv_hosts | default(no) }}"
 use_dvfilter: {{ use_dvfilter | default(def_use_dvfilter) }}
+use_phys_hosts: {{ use_phys_hosts | default(def_use_phys_hosts) }}
+
 
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
@@ -79,6 +81,8 @@ env_numversion: "{{ numversion }}"
 {% else %}
 {% set osversion = "Management OS not found." %}
 {% endif %}
+env_num_pods: {{ env_num_pods | default( def_env_num_pods ) }}
+env_num_zones: {{ env_num_zones | default( def_env_num_zones ) }}
 env_mgmtos: "{{ osversion }}"
 env_comment: "{{ env_comment }}"
 env_user: "{{ env_user }}"

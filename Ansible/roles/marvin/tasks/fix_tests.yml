@@ -21,10 +21,10 @@
     - marvin_cfg
     - marvin_fix_tests
 
-- name: Copy files to /var/www/html/CentOS-PXEBoot/
+- name: Copy files to /marvin/tests/smoke/
   copy: src={{ item }} dest=/marvin/tests/smoke/ mode=0755
   with_fileglob:
-    - ./files/smoke/*
+    - ../files/smoke/*
   tags:
     - marvin
     - marvin_cfg
