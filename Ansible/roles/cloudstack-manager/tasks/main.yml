@@ -18,7 +18,7 @@
   shell: "ping {{ ansible_ssh_host }} -c 1"
   register: pong
   until: pong.rc == 0
-  retries: {{ ssh_retries }}
+  retries: "{{ ssh_retries }}"
   
 
 - name: wait for ssh
