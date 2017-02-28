@@ -122,14 +122,19 @@
     register: basguestuuid
   #  when: ("{{ env_zonetype | lower }}" == "basic")
 
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
+    with_items:
+      - "{{ basguestuuid }}"
+      - "{{ basguestuuid.stdout }}"
+    ignore_errors: true
+
   - name: Allow network create to complete
     pause: seconds=10
 
   - name: troubleshoot vlan create
     debug: msg="Item is {{ item }}"
     with_items:
-      - "{{ basguestuuid }}"
-      - "{{ basguestuuid.stdout }}"
       - "{{ guestnic.stdout }}"
       - "{{ env_guestnetvlan }}"
     ignore_errors: true
