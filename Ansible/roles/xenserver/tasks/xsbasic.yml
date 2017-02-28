@@ -125,13 +125,14 @@
   - name: Allow network create to complete
     pause: seconds=10
 
-  - name: Report details before VLAN create
-    debug: msg="Var is {{ item }}."
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
     with_items:
+      - "{{ basguestuuid }}"
       - "{{ basguestuuid.stdout }}"
       - "{{ guestnic.stdout }}"
       - "{{ env_guestnetvlan }}"
-      - "{{ basguestuuid }}"
+    ignore_errors: true
 
   - name: Set basic guest network vlan
     shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ env_guestnetvlan }}
