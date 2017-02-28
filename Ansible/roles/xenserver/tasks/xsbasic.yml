@@ -136,7 +136,18 @@
     debug: msg="Item is {{ item }}"
     with_items:
       - "{{ guestnic.stdout }}"
+    ignore_errors: true
+
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
+    with_items:
       - "{{ env_guestnetvlan }}"
+    ignore_errors: true
+
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
+    with_items:
+      - "{{ xs_guest_network_label }}"
     ignore_errors: true
 
   - name: Set basic guest network vlan
