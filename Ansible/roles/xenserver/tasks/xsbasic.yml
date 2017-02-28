@@ -141,6 +141,13 @@
   - name: troubleshoot vlan create
     debug: msg="Item is {{ item }}"
     with_items:
+      - "{{ env_guestnetstartip }}"
+    ignore_errors: true
+
+
+  - name: troubleshoot vlan create
+    debug: msg="Item is {{ item }}"
+    with_items:
       - "{{ env_guestnetvlan }}"
     ignore_errors: true
 
