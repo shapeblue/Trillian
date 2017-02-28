@@ -127,6 +127,7 @@
 
   - name: Report details before VLAN create
     debug: msg="Creating VLAN {{ env_guestnetvlan }} on network-uuid {{ basguestuuid.stdout }} using pif-uuid {{ guestnic.stdout }}."
+    ignore_errors: true
 
   - name: Set basic guest network vlan
     shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ env_guestnetvlan }}
