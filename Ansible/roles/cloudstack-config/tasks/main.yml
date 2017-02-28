@@ -29,13 +29,14 @@
     - buildzone
 
 - name: Print to screen deployzone file
-  command: /bin/cat /tmp/deployzone.sh
+  command: "/bin/cat /tmp/deployzone.sh"
   register: builddetails
   tags:
     - buildzone
 
-- debug: msg="{{ builddetails.stdout_lines | quote }}"
-
+- debug: msg="{{ builddetails.stdout | quote }}"
+  tags:
+    - buildzone
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh
@@ -44,10 +45,11 @@
     - buildzone
 
 - name: Print to screen deployment log
-  command: /bin/cat /tmp/{{ env_name_clean }}-deployzone.log
+  command: "/bin/cat /tmp/{{ env_name_clean }}-deployzone.log"
   register: logdetails
   tags:
     - buildzone
 
-- debug: msg="{{ logdetails.stdout_lines | quote }}"
-
+- debug: msg="{{ logdetails.stdout | quote }}"
+  tags:
+    - buildzone

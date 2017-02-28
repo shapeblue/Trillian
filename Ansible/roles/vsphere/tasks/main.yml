@@ -14,8 +14,15 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: wait for ssh
+- name: wait for VM to be alive
+  shell: "ping {{ ansible_ssh_host }} -c 1"
+  register: pong
+  until: pong.rc == 0
+  retries: "{{ ssh_retries }}"
+  
+- name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
 
 - name: enable vMotion on VMKernel
   raw: vim-cmd hostsvc/vmotion/vnic_set vmk0
