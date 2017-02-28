@@ -17,6 +17,13 @@
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
+- name: wait for VM to be alive
+  shell: "ping {{ ansible_ssh_host }} -c 1"
+  register: pong
+  until: pong.rc == 0
+  retries: "{{ ssh_retries }}"
+  
+
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 

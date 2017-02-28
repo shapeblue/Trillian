@@ -15,9 +15,6 @@
 #limitations under the License.
 
 
-- name: Wait for SSH
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900
-
 - name: Wait for XenServer completion
   wait_for: path=/tmp/state-built
   retries: 24
