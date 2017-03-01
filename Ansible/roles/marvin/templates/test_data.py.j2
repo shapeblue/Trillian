@@ -973,8 +973,8 @@ test_data = {
         "name": "Test iSCSI"
     },
     "nfs2": {
-        "url": "nfs://10.2.0.16:/acs/primary/nfs2/",
-        "name": "Test nfs2 primary"
+        "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/nfs2",
+	"name": "Test nfs2 primary"
     },
     "volume": {"diskname": "Test Volume",
                "size": 1
