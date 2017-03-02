@@ -26,6 +26,10 @@
 - include: ./add_local_storage.yml
   when: use_local_storage
 
+- name: troubleshoot vlan create
+  debug: msg="VLAN is {{ env_guestnetvlan }}"
+  ignore_errors: true
+
 - name: Configure bridge network backend
   shell: /opt/xensource/bin/xe-switch-network-backend bridge
 
@@ -51,6 +55,10 @@
 - name: Check uptime
   shell: /usr/bin/uptime
   register: xsuptime
+
+- name: troubleshoot vlan create
+  debug: msg="VLAN is {{ env_guestnetvlan }}"
+  ignore_errors: true
 
 - name: Check bridge networking
   shell: cat /etc/xensource/network.conf
@@ -82,6 +90,10 @@
   debug: msg="Host count is {{ hostsinpool.stdout }}."
 
 - block:
+  - name: troubleshoot vlan create start of block
+    debug: msg="VLAN is {{ env_guestnetvlan }}"
+    ignore_errors: true
+
   - name: Get management network NIC
     shell: xe pif-list device={{ xs_mgmt_network_nic }} params=uuid --minimal
     register: mgmtnic
@@ -97,6 +109,11 @@
   - name: Get management network uuid
     shell: xe network-list PIF-uuids={{ mgmtnic.stdout }} params=uuid --minimal
     register: mgmtuuid
+
+  - name: troubleshoot vlan create middle of block
+    debug: msg="VLAN is {{ env_guestnetvlan }}"
+    ignore_errors: true
+
 
   - name: Get guest network uuid
     shell: xe network-list PIF-uuids={{ guestnic.stdout }} params=uuid --minimal
