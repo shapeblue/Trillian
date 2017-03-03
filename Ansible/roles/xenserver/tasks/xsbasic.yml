@@ -70,12 +70,12 @@
 - fail: msg="Bridge networking not configured."
   when: netbackend.stdout != "bridge"
 
-- name: Request and return environment details
-  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
-  register: env_ranges
+#- name: Request and return environment details
+#  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
+#  register: env_ranges
 
-- name: Report returned env data
-  debug: msg="{{ env_ranges }}"
+#- name: Report returned env data
+#  debug: msg="{{ env_ranges }}"
 
 - name: remove orginal timezone symlink
   file: path=/etc/localtime state=absent
@@ -118,7 +118,7 @@
     register: mgmtuuid
 
   - name: troubleshoot vlan create middle of block
-    debug: msg="VLAN is {{ env_guestnetvlan }}"
+    debug: msg="passed VLAN is is {{ basic_vlan }}"
     ignore_errors: true
 
 
@@ -166,6 +166,7 @@
     debug: msg="Item is {{ item }}"
     with_items:
       - "{{ env_guestnetstartip }}"
+      - "{{ basic_vlan }}"
     ignore_errors: true
 
 
@@ -186,7 +187,7 @@
     ignore_errors: true
 
   - name: Set basic guest network vlan
-    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ env_guestnetvlan }}
+    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ basic_vlan }}
   #  when: ("{{ env_zonetype |lower }}" == "basic")
 
   - name: Set public network name
