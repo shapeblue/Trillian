@@ -121,8 +121,10 @@
   gather_facts: no
   vars:
     num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
+    basic_vlan: "{{ env_guestnetvlan }}"
+
   roles:
-    - { role: xenserver, basic_vlan="{{ env_guestnetvlan }}", when: num_xen_hosts | int != 0 }
+    - { role: xenserver, when: num_xen_hosts | int != 0 }
 
 - hosts: kvm_hosts
   gather_facts: no
