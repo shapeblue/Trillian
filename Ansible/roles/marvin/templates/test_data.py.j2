@@ -964,6 +964,10 @@ test_data = {
         "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri1",
         "name": "Marvin Primary Pool"
     },
+    "nfs2": {
+        "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri2",
+        "name": "Marvin Primary Pool2"
+    },
     "iscsi": {
 {% if env_iscsi_test_host == "marvin" %}
         "url": "iscsi://{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}/{{ env_iscsi_test_target }}",
