@@ -141,7 +141,6 @@
     debug: msg="item is {{ item }}"
     with_items:
       - "{{ basic_vlan }}"
-      - "{{ env_guestnetvlan }}"
     ignore_errors: true
 
   - name: Set basic guest network vlan
