@@ -1,0 +1,9 @@
+---
+
+- name: debug what has been passed from middleman
+  debug: msg="item is {{ item }}"
+  with_items:
+    - "{{ basic_vlan_fromdb }}"
+    - "{{ basic_vlan_fromdpl }}"
+    - "{{ env_guestnetvlan }}"
+    - "{{ passingvlan }}"
