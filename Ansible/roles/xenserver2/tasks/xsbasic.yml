@@ -7,3 +7,6 @@
     - "{{ basic_vlan_fromdpl }}"
     - "{{ env_guestnetvlan }}"
     - "{{ passingvlan }}"
+
+- name: get the hostvar
+  debug: msg="hostvar is {{ hostvars['localhost']['env_guestnetvlan'] }}"
