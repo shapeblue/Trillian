@@ -120,16 +120,6 @@
   - name: Allow network create to complete
     pause: seconds=10
 
-#  - name: big debug
-#    debug: msg="{{ hostvars[inventory_hostname] }}"
-#    ignore_errors: true
-
-  - name: debug what has been passed to middleman
-    debug: msg="item is {{ item }}"
-    with_items:
-      - "{{ hostvars['localhost']['env_guestnetvlan'] }}"
-    ignore_errors: true
-
   - name: Set basic guest network vlan
     shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ hostvars['localhost']['env_guestnetvlan'] }}
 
