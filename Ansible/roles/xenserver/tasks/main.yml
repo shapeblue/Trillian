@@ -15,7 +15,15 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- include: ./xsbasic.yml 
+- name: debug what has been passed to middleman
+  debug: msg="item is {{ item }}"
+  with_items:
+    - "{{ basic_vlan }}"
+    - "{{ env_guestnetvlan }}"
+  ignore_errors: true
+
+
+- include: ./xsbasic.yml
   when: ("{{ env_zonetype | lower }}" == "basic")
 
 - include: ./xsadvanced.yml

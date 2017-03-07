@@ -122,7 +122,6 @@
   vars:
     num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
     basic_vlan: "{{ env_guestnetvlan }}"
-
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
 
