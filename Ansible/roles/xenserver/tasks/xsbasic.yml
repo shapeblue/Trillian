@@ -62,13 +62,6 @@
 - fail: msg="Bridge networking not configured."
   when: netbackend.stdout != "bridge"
 
-#- name: Request and return environment details
-#  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
-#  register: env_ranges
-
-#- name: Report returned env data
-#  debug: msg="{{ env_ranges }}"
-
 - name: remove orginal timezone symlink
   file: path=/etc/localtime state=absent
 
@@ -116,19 +109,13 @@
 
   - name: rename guest network when basic networking
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label="na"
-  #  when: ("{{ env_zonetype | lower }}" == "basic")
 
   - name: Set mgmt network name
     shell: xe network-param-set uuid={{ mgmtuuid.stdout }} name-label={{ xs_mgmt_network_label }}
 
-  #- name: Set guest network name (Advanced Networking)
-  #  shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
-  #  when: ("{{ env_zonetype | lower }}" == "advanced")
-
   - name: create basic guest network
     shell: xe network-create name-label={{ xs_guest_network_label }} name-description="Basic zone guest network"
     register: basguestuuid
-  #  when: ("{{ env_zonetype | lower }}" == "basic")
 
   - name: Allow network create to complete
     pause: seconds=10
@@ -140,11 +127,11 @@
   - name: debug what has been passed to middleman
     debug: msg="item is {{ item }}"
     with_items:
-      - "{{ basic_vlan }}"
+      - "{{ hostvars['localhost']['env_guestnetvlans'] }}"
     ignore_errors: true
 
   - name: Set basic guest network vlan
-    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ basic_vlan }}
+    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ hostvars['localhost']['env_guestnetvlans'] }}
 
   - name: Set public network name
     shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}
