@@ -127,11 +127,11 @@
   - name: debug what has been passed to middleman
     debug: msg="item is {{ item }}"
     with_items:
-      - "{{ hostvars['localhost']['env_guestnetvlans'] }}"
+      - "{{ hostvars['localhost']['env_guestnetvlan'] }}"
     ignore_errors: true
 
   - name: Set basic guest network vlan
-    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ hostvars['localhost']['env_guestnetvlans'] }}
+    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ hostvars['localhost']['env_guestnetvlan'] }}
 
   - name: Set public network name
     shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}

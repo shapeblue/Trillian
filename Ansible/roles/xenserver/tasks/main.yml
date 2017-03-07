@@ -18,7 +18,7 @@
 - name: debug what has been passed to middleman
   debug: msg="item is {{ item }}"
   with_items:
-    - "{{ basic_vlan }}"
+    - "{{ hostvars['localhost']['env_guestnetvlan'] }}"
   ignore_errors: true
 
 
