@@ -21,7 +21,7 @@
     - name: Request and return environment details
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=retrieve
     - name: debug up front
-      debug: msg="VLAN up front is "{{ env_guestnetvlan }}"
+      debug: msg="VLAN up front is {{ env_guestnetvlan }}"
 
 
 - hosts: xenserver_hosts
