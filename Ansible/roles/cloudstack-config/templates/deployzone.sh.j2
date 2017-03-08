@@ -45,7 +45,7 @@ fi
 if [ "{{ env_zonetype | lower }}" == "advanced" ];
 then
   WriteOutput "Creating advanced zone - {{ env_name_clean }}";
-  ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled={{ env_zone_secgroups }} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
+  ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled=${SECURITYGROUPENABLED} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network - Management.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
@@ -57,6 +57,7 @@ then
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
+  {% if not env_zone_secgroups | bool %}
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
@@ -66,6 +67,9 @@ then
   {% endif %}
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }}' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  {% endif %}
+  {% else %}
+  WriteOutput "Skipping public network - advanced zone with security groups.";
   {% endif %}
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
   {% if env_numversion | version_compare('4.2','>') %}
@@ -79,7 +83,7 @@ then
   {% endif %}
 else
   WriteOutput "Creating basic zone - {{ env_name_clean }}";
-  ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled={{ env_zone_secgroups }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
+  ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled=${SECURITYGROUPENABLED} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network' | tee -i -a ${DEPLOYLOG};
@@ -110,6 +114,7 @@ then
   NetProvArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name!="SecurityGroupProvider") | .id' | tr " " "\n"`;
   IntLBArrayAdv=`cloudmonkey list internalloadbalancerelements filter=name,id | jq '.internalloadbalancerelement[] | .id' | tr " " "\n"`;
   VRArrayAdv=`cloudmonkey list virtualrouterelements filter=name,id | jq '.virtualrouterelement[] | .id' | tr " " "\n"`;
+  SecGrpArrayAdv=`cloudmonkey list networkserviceproviders filter=name,id | jq '.networkserviceprovider[] | select(.name=="SecurityGroupProvider") | .id' | tr " " "\n"`;
   for i in ${IntLBArrayAdv};
   do
     WriteOutput "Enabling internalloadbalancerelements ${i}";
@@ -125,10 +130,24 @@ then
     WriteOutput "Enabling networkserviceprovider ${i}";
     cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
   done
-  WriteOutput "Creating public range.";
-  cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
-  WriteOutput "Creating Guest VLAN range."
-  cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+  if [ "${SECURITYGROUPENABLED}" == "true" ];
+  then
+    WriteOutput "Configuring zone with security groups.";
+    for i in ${SecGrpArrayAdv};
+    do
+      WriteOutput "Enabling security group provider ${i}";
+      cloudmonkey update networkserviceprovider state='Enabled' id=${i} | tee -i -a ${DEPLOYLOG};
+    done
+    NetOffIDSecgrp=`cloudmonkey list networkofferings name="DefaultSharedNetworkOfferingWithSGService" displaytext="Offering for Shared Security group enabled networks" | jq '.networkoffering[] | .id'`;
+    WriteOutput "Creating defaultGuestNetwork";
+    cloudmonkey create network zoneid=${ZoneID} networkofferingid=${NetOffIDSecgrp} name=defaultGuestNetwork displaytext=defaultGuestNetwork startip="{{ env_guestnetstartip }}" endip="{{ env_guestnetendip }}" gateway="{{ env_guestnetgw }}" netmask="{{ env_guestnetmask }}" physicalnetworkid=${PhysNetGuestID} vlan="{{ env_guestnetvlan }}" | tee -i -a ${DEPLOYLOG};
+  else
+    WriteOutput "Configuring zone without security groups.";
+    WriteOutput "Creating public range.";
+    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
+    WriteOutput "Creating Guest VLAN range."
+    cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+  fi
 else
   NetProvArrayBasVR=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;
   NetProvArrayBasSG=`cloudmonkey list networkserviceproviders name=SecurityGroupProvider physicalnetworkid=${PhysNetMgmtID} | jq '.networkserviceprovider[] | .id'`;

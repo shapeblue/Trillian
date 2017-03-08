@@ -69,6 +69,11 @@
         - "^env_podendip.*$"
         - "^env_podstartip.*$"
         - "^env_builddate.*$"
+        - "^env_guestnetendip.*$"
+        - "^env_guestnetgw.*$"
+        - "^env_guestnetmask.*$"
+        - "^env_guestnetstartip.*$"
+        - "^env_guestnetvlan.*$"
       ignore_errors: true
 
     - name: Delete inventory files

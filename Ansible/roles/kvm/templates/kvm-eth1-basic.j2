@@ -14,7 +14,7 @@
 #limitations under the License.
 
 
-DEVICE=eth1.11
+DEVICE=eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
 VLAN=yes
 ONBOOT=yes
 HOTPLUG=no

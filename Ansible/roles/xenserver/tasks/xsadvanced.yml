@@ -35,6 +35,45 @@
 - include: ./add_local_storage.yml
   when: use_local_storage
 
+- block:
+  - name: Configure bridge network backend
+    shell: /opt/xensource/bin/xe-switch-network-backend bridge
+
+  - name: Update sysctl.conf
+    lineinfile: dest=/etc/sysctl.conf regexp={{ item.regexp }} line={{ item.line }} state=present
+    with_items:
+      - { regexp: "net.bridge.bridge-nf-call-iptables", line: "net.bridge.bridge-nf-call-iptables = 1" }
+      - { regexp: "net.bridge.bridge-nf-call-ip6tables", line: "net.bridge.bridge-nf-call-ip6tables = 0" }
+      - { regexp: "net.bridge.bridge-nf-call-arptables", line: "net.bridge.bridge-nf-call-arptables = 1" }
+
+  #- name: Configure bridge network backend
+  #  shell: sysctl -p /etc/sysctl.conf
+
+  - name: Reboot
+    shell: /sbin/reboot
+
+  - name: Wait for SSH to shut down
+    local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900 state=stopped
+
+  - name: Wait for SSH to come back online
+    local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900
+
+  - name: Check uptime
+    shell: /usr/bin/uptime
+    register: xsuptime
+
+  - name: Check bridge networking
+    shell: cat /etc/xensource/network.conf
+    register: netbackend
+
+  - name: Report reboot and bridge status
+    debug: msg="Backend is {{ netbackend.stdout }} and uptime {{ xsuptime.stdout }}"
+
+  - fail: msg="Bridge networking not configured."
+    when: netbackend.stdout != "bridge"
+
+  when: env_zone_secgroups | bool
+  
 - name: Check if pool already exists
   shell: xe host-list params=uuid | grep -v ^$ | wc -l
   register: hostsinpool

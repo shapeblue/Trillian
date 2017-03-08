@@ -80,6 +80,7 @@
   debug: msg="Host count is {{ hostsinpool.stdout }}."
 
 - block:
+
   - name: Get management network NIC
     shell: xe pif-list device={{ xs_mgmt_network_nic }} params=uuid --minimal
     register: mgmtnic
@@ -106,23 +107,19 @@
 
   - name: rename guest network when basic networking
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label="na"
-  #  when: ("{{ env_zonetype | lower }}" == "basic")
 
   - name: Set mgmt network name
     shell: xe network-param-set uuid={{ mgmtuuid.stdout }} name-label={{ xs_mgmt_network_label }}
 
-  #- name: Set guest network name (Advanced Networking)
-  #  shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
-  #  when: ("{{ env_zonetype | lower }}" == "advanced")
-
   - name: create basic guest network
     shell: xe network-create name-label={{ xs_guest_network_label }} name-description="Basic zone guest network"
     register: basguestuuid
-  #  when: ("{{ env_zonetype | lower }}" == "basic")
+
+  - name: Allow network create to complete
+    pause: seconds=10
 
   - name: Set basic guest network vlan
-    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ env_guestnetvlan }}
-  #  when: ("{{ env_zonetype |lower }}" == "basic")
+    shell: xe vlan-create network-uuid={{ basguestuuid.stdout }} pif-uuid={{ guestnic.stdout }} vlan={{ hostvars['localhost']['env_guestnetvlan'] }}
 
   - name: Set public network name
     shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}
