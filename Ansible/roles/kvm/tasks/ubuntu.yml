@@ -42,9 +42,13 @@
   tags:
     - kvm
 
+- name: Added network instances file
+  template: src=interfaces-adv.j2 dest="/etc/network/interfaces"
+  when: ("{{ env_zonetype | lower }}" == "advanced")
 
 - name: Added network instances file
-  template: src=interfaces.j2 dest="/etc/network/interfaces"
+  template: src=interfaces-bas.j2 dest="/etc/network/interfaces"
+  when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: UFW firerule 22
   shell: "ufw allow proto tcp from any to any port 22"
