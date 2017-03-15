@@ -128,10 +128,10 @@ env_pripools:
 {% endfor %}
 {% endif %}
 {% endif %}
-{% if sec | int > 0 %}
 env_pripoolsmarvin:
   - marvin_pri1
   - nfs2
+{% if sec | int > 0 %}
 env_secpools:
 {% for n in range(1,sec | int + 1) %}
   - {{ env_name_clean }}-sec{{ n }}
