@@ -8,17 +8,20 @@
   tags:
     - marvin
     - marvin_cfg
+  when: not force_fallback
 
 - name: Determine if Marvin Package availble from this repo
   package_available: PACKAGE=cloudstack-marvin
   register: marvin_package_check
   ignore_errors: true
+  when: not force_fallback
 
 - debug: msg="{{ marvin_package_check }}"
+  when: not force_fallback
 
 - name: If cloudstack-marvin package does not exist, add fallback repo
   template: src=marvin.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
-  when: ("{{ mypackage_available }}" == "false")
+  when: ("{{ mypackage_available }}" == "false") or (force_fallback)
 
 - name: Install Marvin package
   yum: name=cloudstack-marvin state=present
