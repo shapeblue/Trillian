@@ -88,6 +88,8 @@ def_env_uuid: "unknown"
 # Environment database settings
 def_env_db_name: "trillian_envs"
 def_env_db_ip: "<IP_ADDRESS_HERE>"
+def_env_num_pods: 1
+def_env_num_zones: 1
 
 
 # Environment summary
