@@ -19,24 +19,24 @@ ansible-playbook deployvms.yml -i ./hosts_trillian-test-env --extra-vars 'env_na
 for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 
  Basic variables:
- +   `env_name` [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
+ +   `env_name` [mandatory]: Environment name, single string, characters, numbers, underscore \_ or dash - only.
  +   `env_version` [mandatory]: Environment CloudStack version (cs45, cs46, cs49, custom, etc).
  +   `mgmt_os` [mandatory]: Management server OS (6, 7, u, custom)
  +   `hvtype` [mandatory]: XenServer (x), KVM (k) or VMware (v)
  +   `hv`: number of hypervisors. Please note if hypervisor type is VMware the assumption is made that a single VC host is also required.                            This does not have to be specified anywhere.
  +   `pri` [mandatory]: number of primary storage pools.
-   
- Required depending on Hypervisor
- kvm_os:
- -	6 = centos6.8
- -	7 = centos7.1
- -	u = ubuntu14.04
- xs_ver:
- -	xs62sp1
- -	xs65sp1
- vmware_ver:
- -	55u3
- -	60u1
+
+  + One of the following three is required depending on the choosen Hypervisor (`hvtype`):
+   + `kvm_os`:
+    -	`6` = centos6.8
+    -	`7` = centos7.1
+    -	`u` = ubuntu14.04
+   + `xs_ver`:
+    -	`xs62sp1`
+    -	`xs65sp1`
+   + `vmware_ver`:
+    -	`55u3`
+    -	`60u1`
 
  When not used they will default to 'custom' to avoid template issues
 
@@ -45,7 +45,7 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 
 
 
- Advanced variables [all optional]`:
+ Advanced variables [all optional]:
  +   `mgmt`: Number of management servers to configure (default is 1)
  +   `sec`: number of secondary storage pools. (default is 1)
  +   `db`: Number of database servers to configure (default is 0 - db is on mgmt host)
@@ -80,8 +80,8 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
  +   `wait_till_setup`: only return once system VMs are running. (default is no)
 
 
- Some example --extra-args`:
+ Some example --extra-args:
 
   * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`
-  * `env_name=cs49-vmw55-pga env_version=cs49 mgmt_os=6 hvtype=v vmware_ver=55u3 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http`://10.2.0.4/shapeblue/cloudstack/testing/`
+  * `env_name=cs49-vmw55-pga env_version=cs49 mgmt_os=6 hvtype=v vmware_ver=55u3 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
   * `env_name=cs49-kvm6-pga env_version=cs49 mgmt_os=6 env_accounts=all hvtype=k kvm_os=6 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
