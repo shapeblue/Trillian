@@ -8,7 +8,15 @@ Trillian leverages ESXi's ability to virtualise the VT-x features allowing the c
 
 #### Trillian uses Ansible 2 to create environment configuration files and deploy those environments. The user can run 2 commandline statements and go from 0 to a running cloudstack environment with multiple hosts. 
 
+```
+ansible-playbook generate-cloudconfig.yml --extra-vars 'env_name=trillian-test-env env_comment='\''example nested cloudstack test environment'\''  use_shared_storage=true env_version=cs410 mgmt=1 db=0 hvtype=k  kvm_os=7 hv=2 env_accounts=all pri=2 sec=1 esxi_use_dvswitch=no build_marvin=yes wait_till_setup=yes wait_for_template=yes mgmt_os=7' -i localhost
+```
+at the end of this the sugestion, `You can now run: ansible-playbook deployvms.yml -i ./hosts_trillian-test-env`, is put on the output, which would trigger you to run something like
+```
+ansible-playbook deployvms.yml -i ./hosts_trillian-test-env --extra-vars 'env_name=trillian-test-env env_version=cs410'
+```
 
+for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 
  Basic variables:
  +   `env_name` [mandatory]: Environment name, single string, characters, numbers, underscore _ or dash - only.
