@@ -39,10 +39,15 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
     -	`55u3`
     -	`60u1`
 
-When not used they will default to 'custom' to avoid template issues
+  In order to avoid template issues, `kvm_os`, `xs_ver`and `vmware_ver` will
+  default to 'custom' when they are not specified.
 
-If you specify KVM as hypervisor  (hvtype=k) you must specify the kvm_os OR set it to custom and set the template to use (kvm_template) in the extra vars (kvm_template="Ubuntu Server 14.04")
- The same applies to the other hypervisor types. For custom VMware you would need to specify both the vCenter and ESXi templates#
+  If you specify KVM as hypervisor (`hvtype=k`) you must specify the `kvm_os`
+  **or** set it to 'custom' and set the template to use (`kvm_template`) in the
+  extra vars (`kvm_template="Ubuntu Server 14.04"`)
+
+  The same applies to the other hypervisor types. For custom VMware you would
+  need to specify both the vCenter and ESXi templates
 
 
 
