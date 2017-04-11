@@ -16,10 +16,6 @@
 ################################################################################
 # Sensitive / Vault vars - move to vault in secure environments
 
-# SSH credentials of the Trillan master host
-def_env_db_user: "root"
-def_env_db_password: "password"
-
 # SSH credentials of the nested management host. For centos images, the user is usually centos
 def_mgmtsrv_username: "root"
 def_mgmtsrv_password: "password"
@@ -117,6 +113,9 @@ def_env_uuid: "unknown"
 # Environment database settings
 def_env_db_name: "trillian_envs"
 def_env_db_ip: "172.31.0.99"
+def_env_db_user: "root"
+def_env_db_password: "password"
+
 
 
 # Environment summary
