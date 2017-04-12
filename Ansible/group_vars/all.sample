@@ -80,7 +80,10 @@ parent_vcenter_dc: "datacenter1"
 
 # For ubuntu this would be http://archive.ubuntu.com
 repohost: "http://mirrorlist.centos.org"
+epelrepohost: "http://dl.fedoraproject.org/pub"
+
 def_env_timezone: "UTC"
+def_env_ssh_key_path=~/.ssh/id_rsa.pub
 
 # Use external hypervisor hosts (physical hosts)
 def_use_external_hv_hosts: no
@@ -115,8 +118,6 @@ def_env_db_name: "trillian_envs"
 def_env_db_ip: "172.31.0.99"
 def_env_db_user: "root"
 def_env_db_password: "password"
-
-
 
 # Environment summary
 def_env_zonetype: "Advanced"
@@ -366,9 +367,9 @@ def_hipchat_cli_client_version: "atlassian-cli-5.4.0"
 
 # cloudmonkey keys:
 
-cm_apikey: "<KEY_HERE>"
-cm_secretkey_enc: "<ENCKEY_HERE>"
-cm_secretkey: "<KEY_HERE>"
+cm_apikey: ""
+cm_secretkey_enc: ""
+cm_secretkey: ""
 
 # global variables
 global_settings:

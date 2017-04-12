@@ -46,6 +46,15 @@
 #  poll: 0
 #  Async removed due to results not parsing, host file not updating as result.
 
+- name: Delete SSH key
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent 
+  when: (removeproject is defined) or destroy_forced
+  ignore_errors: yes
+
 ####################################################################
 # Remove project
 #
