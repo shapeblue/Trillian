@@ -31,6 +31,23 @@
 
 
 
+# Add SSH keys to Cloudstack for this project
+
+- name: Remove previous SSH key if it exists
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent 
+
+- name: Create SSH Key for the project
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: present 
+    public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"  #TODO replace with env_ssh_key_path
+
 ####################################################################
 # First management server
 #
@@ -42,6 +59,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -98,6 +116,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -151,6 +170,7 @@
     service_offering: "{{ dbsrv_service_offering }}"
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
+    ssh_key: "{{env_name_clean}}"
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
@@ -190,6 +210,7 @@
     service_offering: "{{ dbsrv_service_offering }}"
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
+    ssh_key: "{{env_name_clean}}"
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
@@ -230,6 +251,7 @@
     template: "{{ kvm_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -316,6 +338,7 @@
     template: "{{ xs_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -400,6 +423,7 @@
     template: "{{ esxi_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -486,6 +510,7 @@
     template: "{{ vc_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -540,6 +565,7 @@
     template: "{{ marvin_server_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:

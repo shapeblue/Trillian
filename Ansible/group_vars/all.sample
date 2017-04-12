@@ -15,35 +15,52 @@
 #limitations under the License.
 ################################################################################
 # Sensitive / Vault vars - move to vault in secure environments
-def_env_db_user: "<USERNAME_HERE>"
-def_env_db_password: "<PASSWORD_HERE>"
-def_mgmtsrv_username: "<USERNAME_HERE>"
-def_mgmtsrv_password: "<PASSWORD_HERE>"
-def_pri_username: "<USERNAME_HERE>"
-def_pri_password: "<PASSWORD_HERE>"
-def_sec_username: "<USERNAME_HERE>"
-def_sec_password: "<PASSWORD_HERE>"
-def_dbsrv_username: "<USERNAME_HERE>"
-def_dbsrv_password: "<PASSWORD_HERE>"
-def_mysql_root_password: "<PASSWORD_HERE>"
-def_mysql_cloud_password: "<PASSWORD_HERE>"
-def_mysql_replication_password: "<PASSWORD_HERE>"
-def_old_mysql_root_password: "<PASSWORD_HERE>"
-def_marvin_username: "<USERNAME_HERE>"
-def_marvin_password: "<PASSWORD_HERE>"
-def_kvm_username: "<USERNAME_HERE>"
-def_kvm_password: "<PASSWORD_HERE>"
-def_xs_username: "<USERNAME_HERE>"
-def_xs_password: "<PASSWORD_HERE>"
-def_vmware_vcsa_user: "<USERNAME_HERE>"
-def_vmware_vcsa_50_51_user: "<USERNAME_HERE>"
-def_vmware_vcsa_pass: "<PASSWORD_HERE>"
-def_vmware_esxi_username: "<USERNAME_HERE>"
-def_vmware_esxi_password: "<PASSWORD_HERE>"
 
-parent_vcenter_hostname: "<IP_ADDRESS_HERE>"
-parent_vcenter_password: "<PASSWORD_HERE>"
-parent_vcenter_username: "<USERNAME_HERE>"
+# SSH credentials of the nested management host. For centos images, the user is usually centos
+def_mgmtsrv_username: "root"
+def_mgmtsrv_password: "password"
+
+# SSH credentials of the primary NFS host
+def_pri_username: "root"
+def_pri_password: "password"
+
+# SSH credentials of the secondary NFS host
+def_sec_username: "root"
+def_sec_password: "password"
+
+# SSH credentials of the nested Cloudstack Database host
+def_dbsrv_username: "root"
+def_dbsrv_password: "password"
+
+# Mysql credentials of the nested Cloudstack
+def_mysql_root_password: "password"
+def_mysql_cloud_password: "password"
+def_mysql_replication_password: "password"
+def_old_mysql_root_password: "" # The default password when you install mysql (by default it is not set)
+
+# SSH credentials of the marvin host
+def_marvin_username: "root"
+def_marvin_password: "password"
+
+# SSH credentials for nested KVM
+def_kvm_username: "root"
+def_kvm_password: "password"
+
+# SSH credentials for nested XenServer
+def_xs_username: "root"
+def_xs_password: "password"
+
+# Credentials for the nested VMWare
+def_vmware_vcsa_user: "admin"
+def_vmware_vcsa_50_51_user: "admin"
+def_vmware_vcsa_pass: "password"
+def_vmware_esxi_username: "root"
+def_vmware_esxi_password: "password"
+
+# Credentials for the parent VCenter
+parent_vcenter_hostname: "172.31.0.100"
+parent_vcenter_password: "root"
+parent_vcenter_username: "password"
 
 ################################################################################
 # version of this file is checked when running generate or deploy
@@ -52,15 +69,23 @@ parent_vcenter_username: "<USERNAME_HERE>"
 all-file_version: 5
 
 # Environment vars
-def_marvin_network: "<NETWORK_NAME_HERE>"
-def_management_network: "<NETWORK_NAME_HERE>"
-def_guest_public_network: "<NETWORK_NAME_HERE>"
+# Name of the network where marvin tests will be run
+def_marvin_network: "shared-mgt-nw"
+def_management_network: "shared-mgt-nw"
+def_guest_public_network: "shared-guest-nw"
 def_management_vm_hypervisor: "VMware"
-def_build_zone: "<ZONE_NAME_HERE>"
+def_build_zone: "trillian-zone1"
 def_build_keyboard: "uk"
-parent_vcenter_dc: "<PARENT_VC_DC_NAME_HERE>"
-repohost: "http://<IP_ADDRESS_HERE>"
+parent_vcenter_dc: "datacenter1"
+
+# For ubuntu this would be http://archive.ubuntu.com
+repohost: "http://mirrorlist.centos.org"
+epelrepohost: "http://dl.fedoraproject.org/pub"
+
 def_env_timezone: "UTC"
+def_env_ssh_key_path=~/.ssh/id_rsa.pub
+
+# Use external hypervisor hosts (physical hosts)
 def_use_external_hv_hosts: no
 
 # Global URLs - not copied to granular group_vars
@@ -74,7 +99,10 @@ mgmt: 1
 db: 0
 sec: 1
 def_build_marvin: no
+
+# Wait till default templates are downloaded in the nested Cloudstack
 wait_till_setup: no
+
 def_api_retries: 25
 def_sysvms_running_retries: 250
 def_sysvms_up_retries: 100
@@ -87,27 +115,31 @@ def_env_uuid: "unknown"
 
 # Environment database settings
 def_env_db_name: "trillian_envs"
-def_env_db_ip: "<IP_ADDRESS_HERE>"
-
+def_env_db_ip: "172.31.0.99"
+def_env_db_user: "root"
+def_env_db_password: "password"
 
 # Environment summary
 def_env_zonetype: "Advanced"
-# BEING DEPRECATED:
-def_env_use_sec_groups: yes
-def_env_prihost: "<IP_ADDRESS_HERE>"
-def_env_sechost: "<IP_ADDRESS_HERE>"
+def_env_use_sec_groups: yes # BEING DEPRECATED:
+
+# IP of the primary storage pool
+def_env_prihost: "172.31.0.101"
+
+# IP of the primary storage pool
+def_env_sechost: "172.31.0.101"
 def_env_pripath: "/acs/primary/"
 def_env_priprot: "NFS"
 def_env_secpath: "/acs/secondary/"
-# BEING DEPRECATED:
-def_env_zone_secgroups: "false"
+
+def_env_zone_secgroups: "false" # BEING DEPRECATED:
 def_env_zone_secgroups_advanced: "false"
 def_env_zone_secgroups_basic: "true"
-def_env_zone_guestcidr: "<IP_ADDRESS_HERE>/24"
-def_env_zone_dns1: "<IP_ADDRESS_HERE>"
-def_env_zone_dns2: "<IP_ADDRESS_HERE>"
-def_env_zone_intdns1: "<IP_ADDRESS_HERE>"
-def_env_zone_intdns2: "<IP_ADDRESS_HERE>"
+def_env_zone_guestcidr: "10.10.10.0/24"
+def_env_zone_dns1: "8.8.8.8"
+def_env_zone_dns2: "8.8.4.4"
+def_env_zone_intdns1: "8.8.8.8"
+def_env_zone_intdns2: "8.8.4.4"
 def_env_zone_localstorage: "false"
 def_env_zone_podname: "Pod1"
 def_env_zone_clustername: "p1-c1"
@@ -335,9 +367,9 @@ def_hipchat_cli_client_version: "atlassian-cli-5.4.0"
 
 # cloudmonkey keys:
 
-cm_apikey: "<KEY_HERE>"
-cm_secretkey_enc: "<ENCKEY_HERE>"
-cm_secretkey: "<KEY_HERE>"
+cm_apikey: ""
+cm_secretkey_enc: ""
+cm_secretkey: ""
 
 # global variables
 global_settings:
@@ -398,8 +430,8 @@ global_settings:
 def_use_local_templates: true
 
 local_builtin_templates:
-  - {id: "2", url: "http://<IP_ADDRESS_HERE>/builtin_templates/f59f18fb-ae94-4f97-afd2-f84755767aca.vhd.bz2"} #CentOS 5.3(64-bit) no GUI (XenServer)
-  - {id: "4", url: "http://<IP_ADDRESS_HERE>/builtin_templates/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2"} #CentOS 5.5(64-bit) no GUI (KVM)
-  - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos56-x86_64.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
-  - {id: "6", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos6_4_64bit.vhd.bz2"} #CentOS 6.4(64-bit) GUI (Hyperv)
-  - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/CentOS5.3-x86_64.ova"} #CentOS 5.3(64-bit) no GUI (vSphere)
+  - {id: "2", url: "http://dl.openvm.eu/cloudstack/macchinina/x86_64/macchinina-xen.vhd.bz2"} #CentOS 5.3(64-bit) no GUI (XenServer)
+  - {id: "4", url: "http://dl.openvm.eu/cloudstack/macchinina/x86_64/macchinina-kvm.qcow2.bz2"} #CentOS 5.5(64-bit) no GUI (KVM)
+  - {id: "5", url: "http://dl.openvm.eu/cloudstack/macchinina/x86_64/macchinina-xen.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
+  - {id: "6", url: "http://dl.openvm.eu/cloudstack/macchinina/x86_64/macchinina-hyperv.vhd.zip"} #CentOS 6.4(64-bit) GUI (Hyperv)
+  - {id: "7", url: "http://dl.openvm.eu/cloudstack/macchinina/x86_64/macchinina-vmware.ova"} #CentOS 5.3(64-bit) no GUI (vSphere)
