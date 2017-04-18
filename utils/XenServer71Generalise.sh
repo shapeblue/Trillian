@@ -101,7 +101,7 @@ stringZ=`pvdisplay | grep "VG Name"`
 localsruuid=${stringZ: 38}
 xe sr-create uuid=$localsruuid type=lvm name-label="Local Storage" content-type=user device-config:device=/dev/sda3
 sleep 10s
-/opt/xensource/libexec/create_templates
+/usr/bin/create-guest-templates
 
 systemctl disable nestedxengeneralise
 rm -f /tmp/state-secondboot-started
