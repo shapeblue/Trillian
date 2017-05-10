@@ -32,13 +32,14 @@
   yum: name={{ item }} state=present
   with_items:
   - python-setuptools
+  - python-pip
   - jq
 
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
 - name: install cloudmonkey
-  shell: easy_install cloudmonkey
+  shell: pip install --upgrade cloudmonkey
 
 - name: base configuration
   shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
