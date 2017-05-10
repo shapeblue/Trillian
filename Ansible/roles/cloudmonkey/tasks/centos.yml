@@ -35,6 +35,11 @@
   - python-pip
   - jq
 
+- name: Upgrade pip and setuptools for CentOS6
+  shell: pip install --upgrade pip setuptools && easy_install -U setuptools
+  ignore_errors: true
+  when: ansible_distribution_major_version == "6"
+
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
