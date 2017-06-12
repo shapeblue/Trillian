@@ -48,7 +48,7 @@
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-#    public_key: "{{ lookup('file', env_ssh_key_path) }}"
+    public_key: "{{ lookup('file', env_ssh_key_path) }}"
 #  when: pubkey_present.stat.exists == True
 
 ####################################################################
