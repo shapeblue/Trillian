@@ -38,15 +38,18 @@
     project: "{{ build_project }}"
     state: absent
 
+- name: Check if ssh public key present
+  stat: path={{ env_ssh_key_path }}
+  register: pubkey_present
+
 - name: Create SSH Key for the account
   local_action:
     module: cs_sshkeypair
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-    public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-
-
+    public_key: "{{ lookup('file', env_ssh_key_path) }}"
+  when: pubkey_present.stat.exists == True
 
 ####################################################################
 # First management server
@@ -102,7 +105,6 @@
     groups="primary_cs_manager"
     instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrv1_retval.results}}"
-
 
 
 ####################################################################
