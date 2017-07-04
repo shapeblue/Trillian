@@ -22,6 +22,12 @@
   tags:
     - kvm
 
+- include: ./kvm_networking.yml
+  when: not use_phys_hosts
+
+- include: ./kvm_networking_phys_host.yml
+  when: use_phys_hosts
+
 - name: set yum repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
@@ -56,13 +62,6 @@
 
 - name: ensure rpcbind in started
   service: name=rpcbind state=started enabled=yes
-
-- include: ./kvm_networking.yml
-  when: not use_phys_hosts
-
-- include: ./kvm_networking_phys_host.yml
-  when: use_phys_hosts
-
 
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ kvm_java_ver }}"
