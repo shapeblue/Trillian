@@ -16,16 +16,16 @@
 
 
 - name: Configure PXE interface (Disable PXE interface)
-  template: src=kvm-eth0_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_PXE_if }}"
+  template: src=kvm-eth_PXE_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_PXE_if }}"
 
 - name: Configure mgmt interface (Physical host)
-  template: src=kvm-eth1_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_mgmt_if }}"
+  template: src=kvm-eth_mgmt_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_mgmt_if }}"
 
 - name: Configure mgmt/storage bridge (Physical host)
   template: src=kvm-cloudbr0_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
 - name: Configure guest/pub (Advanced Networking) (Physical host)
-  template: src=kvm-p55p1_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}"
+  template: src=kvm-trunked_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}"
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
 - name: Configure guest (Basic Networking) (Physical host)
