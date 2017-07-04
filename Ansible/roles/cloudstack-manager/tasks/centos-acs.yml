@@ -19,7 +19,7 @@
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
 
 - name: Ensure CloudStack packages are installed
-  yum: name=cloudstack-management state=present enablerepo=base
+  yum: name="{{ cloudstack_management_package }}" state=present enablerepo=base
 
 - name: Ensure MySQL Client is present (centos/rhel6)
   yum: name=mysql state=present

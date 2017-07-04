@@ -196,7 +196,15 @@ then
     {% endfor %}
   fi
 fi
-sleep 30
+
+if [ "{{ env_zone_addhosts }}" == "true" ];
+  HOST_STATES="DOWN"
+  while [[ "$HOST_STATES" == "DOWN" ]]; do
+    HOST_CHECK=`cloudmonkey list hosts type=routing | grep '"state":' | grep -i 'alert|disconnected|connecting|down'`
+    if [[ -z $HOST_CHECK ]]; then HOST_STATES="ALL UP"; fi
+    sleep 10
+  done
+fi
 
 {% if use_shared_storage %}
 WriteOutput "Adding Primary Storage pools.";
