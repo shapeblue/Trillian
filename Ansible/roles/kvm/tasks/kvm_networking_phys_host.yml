@@ -35,5 +35,8 @@
 - name: Configure guest/public bridge (Physical host)
   template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"
 
+- name: Add resolv.conf (Physical host)
+  template: src=resolv.conf.j2 dest=/etc/resolv.conf
+
 - name: restart networking
   service: name=network state=restarted
