@@ -205,7 +205,7 @@ then
     if [[ -z $HOST_CHECK ]];
     then
       HOST_STATES="ALL UP";
-    else;
+    else
       WriteOutput "Not all hosts reported Up. Checking again in 10 seconds.";
       sleep 10;
     fi
