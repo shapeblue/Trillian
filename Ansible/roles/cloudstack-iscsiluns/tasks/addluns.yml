@@ -1,0 +1,95 @@
+---
+
+- name: Report action
+  debug: msg="Storage action {{storage_action}}, iSCSI folder {{ env_pripath_iscsi }}."
+
+- name: Check if environments folder exists
+  stat: path="{{ env_pripath_iscsi }}{{ env_name_clean }}"
+  register: pathretval
+
+- name: Report environment path found
+  debug: msg="Storage path {{ env_pripath_iscsi }}{{ env_name_clean }} found{{":"}} {{ pathretval.stat.exists }}"
+
+- name: Check if fingerprint file exists
+  stat: path="{{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }}"
+  register: fprintretval
+
+- name: Report fingerprint file
+  debug: msg="Fingerprint file {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }} found{{":"}} {{ fprintretval.stat.exists }}"
+
+- name: Fail if folder exists but is not owned by this environment
+  fail: msg="Folder {{ env_pripath_iscsi }}{{ env_name_clean }} exists but is owned by a different environment."
+  when: ( pathretval.stat.exists | trim  == "True" ) and ( fprintretval.stat.exists | trim =="False"  )
+
+- block:
+
+  - name: Create environments folder if this doesn't exist
+    file: state=directory path={{ env_pripath_iscsi }}{{ env_name_clean }} mode=0755
+
+  - name: Create fingerprint file
+    file: path={{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }} state=touch
+
+  when: pathretval.stat.exists | trim  == "False"
+
+- name: Targetcli - add iscsi target
+  shell: targetcli iscsi/ create {{ env_iscsi_target }}:{{ env_uuid }}
+
+- name: Targetcli - configuration of tpg
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 set attribute {{ item }}
+  with_items:
+    - "authentication=0"
+    - "generate_node_acls=0"
+    - "cache_dynamic_acls=1"
+##    - "demo_mode_discovery=0"
+##    - "demo_mode_write_protect=0"
+#    - "authentication=0"
+#    - "generate_node_acls=1"
+#    - "cache_dynamic_acls=1"
+#    - "demo_mode_discovery=1"
+#    - "demo_mode_write_protect=0"
+
+- name: Targetcli - ACLs KVM
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['kvm_hosts'] }}"
+  when: env_hv == "kvm"
+
+- name: Targetcli - ACLs XS
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['xenserver_hosts'] }}"
+  when: env_hv == "xenserver"
+
+- name: Targetcli - ACLs ESXi
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  when: env_hv == "vmware"
+
+- name: Targetcli - add KVM quorum backstore
+  shell: targetcli backstores/fileio create {{ env_name_clean }}-quorum {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_name_clean }}-quorum 10M write_back=false
+  when: env_hv == "kvm"
+
+- name: Targetcli - add primary backstores
+  shell: targetcli backstores/fileio create {{ item }} {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ item }} {{ env_iscsilunsize }} write_back=false
+  with_items:
+    - "{{ env_pripools }}"
+
+- name: Targetcli - assign LUNs to target - quorum
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/{{ env_name_clean }}-quorum
+  when: env_hv == "kvm"
+
+- name: Targetcli - assign LUNs to target
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/{{ item }}
+  with_items:
+    - "{{ env_pripools }}"
+
+- name: Targetcli - save config
+  shell: targetcli saveconfig
+
+- name: Targetcli - check config
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls
+  register: targetconfig
+
+- name: Report targetcli configuration
+  debug: msg={{ targetconfig.stdout }}
