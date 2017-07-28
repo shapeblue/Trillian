@@ -9,7 +9,12 @@
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: not destroy_forced }
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( env_priprot | lower == "nfs" ) and not destroy_forced }
+
+- hosts: primary_storage_hosts_iscsi
+  gather_facts: no
+  roles:
+    - { role: cloudstack-iscsiluns, storage_action: 'removeprimary', when: ( env_priprot | lower == "iscsi" ) and not destroy_forced }
 
 - hosts: secondary_storage_hosts
   gather_facts: no
