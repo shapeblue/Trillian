@@ -29,7 +29,7 @@
     - marvin_install
 
 - name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed
+  yum: name="@Development tools" state=installed update_cache=yes
   tags:
     - marvin
     - marvin_cfg
@@ -45,7 +45,7 @@
     - marvin_install
 
 - name: Install other dependancies
-  yum: name={{ item }} state=installed
+  yum: name={{ item }} state=installed update_cache=yes
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
