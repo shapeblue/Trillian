@@ -216,7 +216,7 @@
 
     - name: Check storage protocol versus hypervisor
       fail: msg="iSCSI storage is only implemented for XenServer and VMware"
-      when: hvtype not in [ "v",  "x", "vmware", "xenserver" ] and env_priprot | lower == "iscsi"
+      when: ( hvtype not in [ "v",  "x", "vmware", "xenserver" ] ) and ( env_priprot is defined ) and ( env_priprot | lower == "iscsi" )
 
 ## KVM check required - a bit more complicated
 
