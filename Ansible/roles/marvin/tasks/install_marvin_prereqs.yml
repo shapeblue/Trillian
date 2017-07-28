@@ -100,7 +100,7 @@
     - marvin_install
 
 - name: install pip security components and extras
-  pip: name={{ item }}
+  pip: name={{ item }} extra_args='--upgrade'
   with_items:
   - '"requests[security]"'
   - pyopenssl
