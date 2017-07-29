@@ -40,7 +40,9 @@
 
 - name: remove old keys
   local_action:
-    file: path={{ item }} state=absent force=yes
+    file: path={{ item }}
+    state: absent
+    force: yes
     with_items:
     - "{{ def_env_ssh_key_path }}"
     - "{{ def_env_ssh_key_path }}.pub"
