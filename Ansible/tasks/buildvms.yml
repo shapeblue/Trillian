@@ -39,8 +39,9 @@
     state: absent
 
 - name: remove old keys
-  local_action:
-    file: path={{ item }}
+  local_action: 
+    module: file
+    path: "{{ item }}"
     state: absent
     force: yes
     with_items:
