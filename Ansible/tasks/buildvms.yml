@@ -30,15 +30,16 @@
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
 # Add SSH keys to Cloudstack for this project
+# TODO Add unquieness
 
-- name: Remove previous SSH key if it exists
+- name: Remove previous SSH key from Project if it exists
   local_action:
     module: cs_sshkeypair
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: absent
 
-- name: remove old keys
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
   local_action: 
     module: file
     path: "{{ item }}"
@@ -48,28 +49,33 @@
   - "{{ def_env_ssh_key_path }}"
   - "{{ def_env_ssh_key_path }}.pub"
 
-- name: "Ensure {{ def_env_ssh_key_path | dirname }} exists"
+- name: "Ensure {{ def_env_ssh_key_path | dirname }}/ exists"
   local_action:
     module: file
     path: "{{ def_env_ssh_key_path | dirname }}"
     state: directory
     mode: 0777
 
-
 - name: Generate SSH keys
-  shell: "ssh-keygen -t rsa -N '' -f {{ def_env_ssh_key_path }}"
+  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}"
 
-- name: Register Public Key
-  local_action: "command cat {{env_ssh_key_path}}.pub"
-  register: thesshpubkey
-
-- name: Add SSH Key for the account
+- name: Add new public SSH Key to the project
   local_action:
     module: cs_sshkeypair
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-    public_key: "{{ thesshpubkey }}"
+    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}.pub') }}"
+
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
+  local_action: 
+    module: file
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+  - "{{ def_env_ssh_key_path }}"
+  - "{{ def_env_ssh_key_path }}.pub"
 
 ####################################################################
 # First management server
