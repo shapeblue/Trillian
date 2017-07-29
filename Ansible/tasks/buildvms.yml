@@ -38,13 +38,24 @@
     project: "{{ build_project }}"
     state: absent
 
-- name: Create SSH Key for the account
+- name: remove old keys
+  local_action:
+    file: path={{ item }} state=absent force=yes
+    with_items:
+    - "{{ def_env_ssh_key_path }}"
+    - "{{ def_env_ssh_key_path }}.pub"
+
+- name: Generate SSH keys
+  shell: "ssh-keygen -t rsa -N '' -f {{ def_env_ssh_key_path }}"
+
+
+- name: Add SSH Key for the account
   local_action:
     module: cs_sshkeypair
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-    public_key: "{{ lookup('file', env_ssh_key_path) }}"
+    public_key: "{{ lookup('file', {{env_ssh_key_path}}.pub) }}"
 
 ####################################################################
 # First management server
