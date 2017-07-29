@@ -44,13 +44,24 @@
     path: "{{ item }}"
     state: absent
     force: yes
-    with_items:
-    - "{{ def_env_ssh_key_path }}"
-    - "{{ def_env_ssh_key_path }}.pub"
+  with_items:
+  - "{{ def_env_ssh_key_path }}"
+  - "{{ def_env_ssh_key_path }}.pub"
+
+- name: "Ensure {{ def_env_ssh_key_path | dirname }} exists"
+  local_action:
+    module: file
+    path: "{{ def_env_ssh_key_path | dirname }}"
+    state: directory
+    mode: 0777
+
 
 - name: Generate SSH keys
   shell: "ssh-keygen -t rsa -N '' -f {{ def_env_ssh_key_path }}"
 
+- name: Register Public Key
+  local_action: "command cat {{env_ssh_key_path}}.pub"
+  register: thesshpubkey
 
 - name: Add SSH Key for the account
   local_action:
@@ -58,7 +69,7 @@
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-    public_key: "{{ lookup('file', {{env_ssh_key_path}}.pub) }}"
+    public_key: "{{ thesshpubkey }}"
 
 ####################################################################
 # First management server
