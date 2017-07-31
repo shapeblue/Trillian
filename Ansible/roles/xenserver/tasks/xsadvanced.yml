@@ -29,6 +29,9 @@
 - name: set name-label
   shell: xe host-param-set name-label=`echo $HOSTNAME` uuid=`xe host-list --minimal`
 
+- name: Rewrite initiator
+  shell: echo "InitiatorName={{ env_iscsi_target }}.{{ inventory_hostname }}:{{ env_uuid }}" > /etc/iscsi/initiatorname.iscsi
+
 - name: set iscsi iqn
   shell: 'xe host-param-set other-config:iscsi_iqn=`cat /etc/iscsi/initiatorname.iscsi | cut -d "=" -f 2` uuid=`xe host-list --minimal`'
 
@@ -73,7 +76,7 @@
     when: netbackend.stdout != "bridge"
 
   when: env_zone_secgroups | bool
-  
+
 - name: Check if pool already exists
   shell: xe host-list params=uuid | grep -v ^$ | wc -l
   register: hostsinpool
