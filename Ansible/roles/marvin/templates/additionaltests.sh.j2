@@ -54,7 +54,10 @@ cleanup() {
 
 runtest() {
     file=$1
-    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')_*
+    rm -fr $LOGDIR/$(basename $file).xml
+    TRIMFILE=$file | sed 's/.py$//g'
+    OLDRESULT= ll $LOGDIR | grep -Ew '\<$TRIMFILE_[a-zA-Z0-9]{6}\>'
+    rm -fr $OLDRESULT    
     nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
     cleanup || true
 }
@@ -91,11 +94,12 @@ done
 
 GOOD=0
 BAD=0
-for dir in $LOGDIR/*/; do
-  if [[ -s ${dir}failed_plus_exceptions.txt ]]; then
-    BAD=$((BAD+1))
-  else
-    GOOD=$((GOOD+1))
+for file in $LOGDIR/*.xml; do
+  if grep --q 'errors="0" failures="0"' ${file}
+    then
+      GOOD=$((GOOD+1))
+    else
+      BAD=$((BAD+1))
   fi
 done
 echo "Test completed. $GOOD look ok, $BAD have errors"
