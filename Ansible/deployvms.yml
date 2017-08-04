@@ -144,10 +144,10 @@
   connection: local
   gather_facts: no
   vars:
-    num_esxi_hosts: "{{ groups['vc_hosts'] | length }}"
+    num_vc_hosts: "{{ groups['vc_hosts'] | length }}"
   tasks:
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
-      when: "num_esxi_hosts | int != 0"
+      when: "num_vc_hosts | int != 0"
 
 ## update status
 
