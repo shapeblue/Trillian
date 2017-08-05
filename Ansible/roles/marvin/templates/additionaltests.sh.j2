@@ -17,7 +17,6 @@
 set +e # stop erroneous failures reported by Jenkins
 
 LOGDIR=/marvin/MarvinLogs/AdditionalTests
-
 mkdir -p $LOGDIR
 
 rm -f /marvin/tests/smoke/*.pyc
@@ -56,8 +55,11 @@ runtest() {
     file=$1
     rm -fr $LOGDIR/$(basename $file).xml
     TRIMFILE=$(echo $file | sed 's/.py$//g')
-    OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}')
-    rm -fr $OLDRESULT
+    OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
+    if [[ ! -z $OLDRESULT ]]; then
+        echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
+        rm -fr $LOGDIR/$OLDRESULT
+    fi
     nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
     cleanup || true
 }
