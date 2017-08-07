@@ -47,15 +47,15 @@
   ignore_errors: true
 
 - name: Find SW iSCSI adapter name - not always vmhba33
-  raw: esxcli storage core adapter list | grep -i iscsi | awk '{print $1}' | sed 's/\r//g' | sed 's/\n//g'
+  raw: esxcli storage core adapter list | grep -i iscsi | awk '{print $1}'
   register: iscsihba
   ignore_errors: true
 
 - name: Report iSCSI HBA
-  debug: msg="Software iSCSI adapter detected{{ ":" }} {{ iscsihba.stdout }}"
+  debug: msg="Software iSCSI adapter detected{{ ":" }} {{ iscsihba.stdout | regex_replace('\s+$', '') }}"
 
 - name: Bind software iSCSI adapter
-  raw: esxcli iscsi networkportal add --adapter {{ iscsihba.stdout }} --nic vmk0
+  raw: esxcli iscsi networkportal add --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --nic vmk0
   ignore_errors: true
 
 #- name: Reset Evaluation Timer for new deployment
