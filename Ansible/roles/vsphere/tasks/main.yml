@@ -51,8 +51,11 @@
   register: iscsihba
   ignore_errors: true
 
+- name: Report iSCSI HBA
+  debug: msg="Software iSCSI adapter detected: {{ iscsihba.stdout }}"
+
 - name: Bind software iSCSI adapter
-  raw: esxcli iscsi networkportal add --adapter {{ iscsihba.stdout }} --nic vmk0
+  raw: "esxcli iscsi networkportal add --adapter {{ iscsihba.stdout }} --nic vmk0"
   ignore_errors: true
 
 #- name: Reset Evaluation Timer for new deployment
