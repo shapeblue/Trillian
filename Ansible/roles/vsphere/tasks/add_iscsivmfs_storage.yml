@@ -53,6 +53,9 @@
   raw: esxcli storage core adapter rescan --all
   ignore_errors: true
 
+- name: rescan filesystems
+  raw: esxcli storage filesystem rescan
+
 - name: mount newly created VMFS volumes - not always required
   raw: esxcli storage filesystem mount --volume-label {{ item }}
   ignore_errors: true
