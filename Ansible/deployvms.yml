@@ -136,7 +136,7 @@
 - hosts: esxi_hosts
   gather_facts: no
   vars:
-    num_esxi_hosts: "{{ groups['vc_hosts'] | length }}"
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   roles:
     - { role: vsphere, when: num_esxi_hosts | int != 0 }
 
@@ -165,6 +165,15 @@
   gather_facts: no
   roles:
     - { role: cloudstack-iscsiluns, storage_action: 'addprimary', when: env_priprot | lower == "iscsi" }
+
+- hosts: esxi_hosts
+  gather_facts: no
+  vars:
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
+  tasks:
+    - name: Configure VMFS storage on ESXi hosts
+      include: ./roles/vsphere/tasks/add_iscsivmfs_storage.yml
+      when: ( env_priprot | lower == "iscsi" ) and ( num_esxi_hosts | int != 0 )
 
 ## update status
 
