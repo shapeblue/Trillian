@@ -21,7 +21,7 @@
     ignore_errors: true
 
   - name: Find all partitions
-    raw: esxcli storage core path list -p {{ item }} | grep -i device {{ ":" }} | awk '{print $2}'
+    raw: esxcli storage core path list -p {{ item }} | grep -i device{{ ":" }} | awk '{print $2}'
     register: iscsipartitions
     with_items: "{{ iscsihbapaths.stdout_lines }}"
 
@@ -58,5 +58,5 @@
     ignore_errors: true
     with_items:
       - "{{ env_pripools }}"
-    
+
   when: inventory_hostname != "{{ groups['esxi_hosts'][0] }}"
