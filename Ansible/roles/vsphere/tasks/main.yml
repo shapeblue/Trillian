@@ -43,7 +43,7 @@
   when: not esxi_use_dvswitch
 
 - name: Enable software iSCSI
-  raw: esxcli iscsi software set --enabled=true --name={{ env_iscsi_target }}.{{ inventory_hostname }}:{{ env_uuid }}
+  raw: esxcli iscsi software set --enabled=true
   ignore_errors: true
 
 - name: Find SW iSCSI adapter name - not always vmhba33
@@ -51,8 +51,20 @@
   register: iscsihba
   ignore_errors: true
 
+- name: Set iSCSI initiator name
+  raw: esxcli iscsi adapter set --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --name={{ env_iscsi_target }}.{{ inventory_hostname }}:{{ env_uuid }}
+  ignore_errors: true
+
+- name: Check initiator name
+  raw: esxcli iscsi adapter get --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} | grep -i name | grep -vi driver | awk '{print $2}'
+  register: iscsiininame
+  ignore_errors: true
+
 - name: Report iSCSI HBA
   debug: msg="Software iSCSI adapter detected{{ ":" }} {{ iscsihba.stdout | regex_replace('\s+$', '') }}"
+
+- name: Report iSCSI initiator name
+  debug: msg="Software iSCSI initiator{{ ":" }} {{ iscsiininame.stdout | regex_replace('\s+$', '') }}"
 
 - name: Bind software iSCSI adapter
   raw: esxcli iscsi networkportal add --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --nic vmk0
