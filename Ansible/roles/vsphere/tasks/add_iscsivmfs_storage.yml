@@ -1,0 +1,64 @@
+---
+
+- name: Find SW iSCSI adapter name - not always vmhba33
+  raw: esxcli storage core adapter list | grep -i iscsi | awk '{print $1}'
+  register: iscsihba
+  ignore_errors: true
+
+- name: Add iSCSI target
+  raw: esxcli iscsi adapter discovery sendtarget add --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --address {{ env_prihost_iscsi }}
+  ignore_errors: true
+
+- name: rescan HBAs (RAW for compatibility)
+  raw: esxcli storage core adapter rescan --all
+  ignore_errors: true
+
+- name: detect all iSCSI HBA paths
+  raw: esxcli storage core path list | grep -i runtime | grep -i {{ iscsihba.stdout | regex_replace('\s+$', '') }} | awk '{print $3}'
+  register: iscsihbapaths
+  ignore_errors: true
+  run_once: true
+
+- name: Find all partitions
+  raw: esxcli storage core path list -p {{ item }} | grep -i device{{ ":" }} | awk '{print $2}'
+  register: iscsipartitions
+  with_items: "{{ iscsihbapaths.stdout_lines }}"
+  ignore_errors: true
+  run_once: true
+
+- name: List found partitions
+  debug: msg="Formatting partitions {{ item.0 }} > {{ item.1.stdout | regex_replace('\s+$', '') }}"
+  with_together:
+    - "{{ iscsihbapaths.stdout_lines }}"
+    - "{{ iscsipartitions.results }}"
+  ignore_errors: true
+  run_once: true
+
+- name: Label and partition new disk
+  raw: "DEVICE='/vmfs/devices/disks/{{ item.stdout | regex_replace('\\s+$', '') }}';partedUtil mklabel ${DEVICE} msdos;SECTOR_DATA=$(partedUtil getptbl ${DEVICE} | tail -1);x=$(echo $SECTOR_DATA | awk '{print $1}');y=$(echo $SECTOR_DATA | awk '{print $2}');z=$(echo $SECTOR_DATA | awk '{print $3}');END_SECTOR=`expr $x \\* $y \\* $z - 1`;/sbin/partedUtil \"setptbl\" \"${DEVICE}\" \"gpt\" \"1 2048 ${END_SECTOR} AA31E02A400F11DB9590000C2911D1B8 0\""
+  ignore_errors: true
+  with_items:
+    - "{{ iscsipartitions.results }}"
+  run_once: true
+
+- name: add New disk to as DataStore
+  raw: "DEVICE='/vmfs/devices/disks/{{ item.0.stdout | regex_replace('\\s+$', '') }}';/sbin/vmkfstools -C vmfs5 -b 1m -S {{ item.1 }} ${DEVICE}:1"
+  ignore_errors: true
+  with_together:
+    - "{{ iscsipartitions.results }}"
+    - "{{ env_pripools }}"
+  run_once: true
+
+- name: rescan HBAs (RAW for compatibility)
+  raw: esxcli storage core adapter rescan --all
+  ignore_errors: true
+
+- name: rescan filesystems
+  raw: esxcli storage filesystem rescan
+
+- name: mount newly created VMFS volumes - not always required
+  raw: esxcli storage filesystem mount --volume-label {{ item }}
+  ignore_errors: true
+  with_items:
+    - "{{ env_pripools }}"
+  when: inventory_hostname != "{{ groups['esxi_hosts'][0] }}"

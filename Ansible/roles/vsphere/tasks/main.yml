@@ -14,15 +14,8 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: wait for VM to be alive
-  shell: "ping {{ ansible_ssh_host }} -c 1"
-  register: pong
-  until: pong.rc == 0
-  retries: "{{ ssh_retries }}"
-  
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
-
 
 - name: enable vMotion on VMKernel
   raw: vim-cmd hostsvc/vmotion/vnic_set vmk0
@@ -42,6 +35,34 @@
   raw: esxcli network vswitch standard policy failover set --vswitch-name=vSwitch1 --active-uplinks=vmnic1
   ignore_errors: true
   when: not esxi_use_dvswitch
+
+- name: Enable software iSCSI
+  raw: esxcli iscsi software set --enabled=true
+  ignore_errors: true
+
+- name: Find SW iSCSI adapter name - not always vmhba33
+  raw: esxcli storage core adapter list | grep -i iscsi | awk '{print $1}'
+  register: iscsihba
+  ignore_errors: true
+
+- name: Set iSCSI initiator name
+  raw: esxcli iscsi adapter set --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --name={{ env_iscsi_target }}.{{ inventory_hostname }}:{{ env_uuid }}
+  ignore_errors: true
+
+- name: Check initiator name
+  raw: esxcli iscsi adapter get --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} | grep -i name | grep -vi driver | awk '{print $2}'
+  register: iscsiininame
+  ignore_errors: true
+
+- name: Report iSCSI HBA
+  debug: msg="Software iSCSI adapter detected{{ ":" }} {{ iscsihba.stdout | regex_replace('\s+$', '') }}"
+
+- name: Report iSCSI initiator name
+  debug: msg="Software iSCSI initiator{{ ":" }} {{ iscsiininame.stdout | regex_replace('\s+$', '') }}"
+
+- name: Bind software iSCSI adapter
+  raw: esxcli iscsi networkportal add --adapter {{ iscsihba.stdout | regex_replace('\s+$', '') }} --nic vmk0
+  ignore_errors: true
 
 #- name: Reset Evaluation Timer for new deployment
 #  shell: "rm -r /etc/vmware/license.cfg && cp /etc/vmware/.#license.cfg /etc/vmware/license.cfg && /etc/init.d/vpxa restart"

@@ -1,0 +1,8 @@
+---
+- name: Add iSCSI primary storage luns
+  include: ./addluns.yml
+  when: ( storage_action == "addprimary" ) and ( "primary_storage_hosts_iscsi" in group_names )
+
+- name: Remove iSCSI primary storage luns
+  include: ./removeluns.yml
+  when: ( storage_action == "removeprimary" ) and ( "primary_storage_hosts_iscsi" in group_names )

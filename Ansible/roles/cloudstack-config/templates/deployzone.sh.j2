@@ -221,10 +221,14 @@ sleep 30
 WriteOutput "Adding Primary Storage pools.";
 {% for pool in env_pripools %}
 WriteOutput "Adding Primary Storage pool {{ pool }}.";
-{% if '-esxi-pri' in pool %}
+{% if ('-esxi-pri' in pool) and (env_priprot | lower == "nfs" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_VMW} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
-{% elif '-xs-pri' in pool %}
+{% elif ('-esxi-pri' in pool) and (env_priprot | lower == "iscsi" ) %}
+cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_VMW} name='{{ pool }}' scope='cluster' provider='DefaultPrimary' url="vmfs://dummy/{{ vmware_datacenter_name }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% elif ('-xs-pri' in pool) and (env_priprot | lower == "nfs" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% elif ('-xs-pri' in pool) and (env_priprot | lower == "iscsi" ) %}
+cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' provider='DefaultPrimary' url="{{ env_priprot }}://{% if groups['primary_storage_hosts_iscsi'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ env_iscsi_target }}:{{ env_uuid }}/{{ loop.index0 }}" | tee -i -a ${DEPLOYLOG};
 {% elif '-kvm-pri' in pool %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% endif %}
