@@ -63,11 +63,10 @@
     - marvin
     - marvin_cfg
 
-
 - name: copy and extract nose-json into /marvin
   unarchive:
     src: nose-json.zip
-    dest: /marvin/
+    dest: /marvin/nose-json
   tags:
     - marvin
     - marvin_cfg
