@@ -66,14 +66,14 @@
 
 - name: copy and extract nose-json into /marvin
   unarchive:
-    src: nose-json-master.zip
-    dest: /marvin/nose-json
+    src: nose-json.zip
+    dest: /marvin/
   tags:
     - marvin
     - marvin_cfg
 
 - name: install nose-json
-  command: python /marvin/marvin/nose-json/setup.py install 
+  command: python /marvin/nose-json/setup.py install 
 
 - name: Retrieve cloud SSH keys from mgmt server
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
