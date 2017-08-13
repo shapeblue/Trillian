@@ -152,5 +152,11 @@
     - marvin_cfg
     - mavintest
 
+- name: add extra config data file
+  template: src="additional_test_data.json.j2" dest="/marvin/additional_test_data.json" mode=0644
+  tags:
+    - marvin
+    - marvin_cfg
+
 - include: ./fix_tests.yml
   when: fixtests
