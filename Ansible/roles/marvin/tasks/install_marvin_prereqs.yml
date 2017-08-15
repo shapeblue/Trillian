@@ -74,7 +74,7 @@
   - at
   - vim
   - tmux
-  - pyopenssl
+  - pyOpenSSL
   tags:
     - marvin
     - marvin_install
