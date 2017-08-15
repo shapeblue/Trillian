@@ -416,7 +416,6 @@ test_data = {
             "Vpn": "VirtualRouter",
             "Firewall": "VirtualRouter",
             "Lb": "VirtualRouter",
-            "UserData": "VirtualRouter",
             "StaticNat": "VirtualRouter"
         }
     },
@@ -593,8 +592,8 @@ test_data = {
             },
             "lb": {
                 "SupportedLbIsolation": "dedicated"
-            },
-        },
+            }
+        }
     },
     "nw_offering_isolated_vpc": {
         "name": "Isolated Network for VPC",
@@ -824,9 +823,9 @@ test_data = {
         "displaytext": "Test ISO 2",
         "name": "ISO 2",
         "url": "{{ marvin_images_location }}/dummy.iso",
-        "isextractable": True,
-        "isfeatured": True,
-        "ispublic": True,
+        "isextractable": "True",
+        "isfeatured": "True",
+        "ispublic": "True",
         "ostype": "CentOS 5.6 (64-bit)",
         "mode": "HTTP_DOWNLOAD"
     },
@@ -1007,7 +1006,6 @@ test_data = {
         },
         "securitygroupenabled": "true"
     },
-    "vlan": "10",
     "portableiprange_vlan": {
         "part": ["4090-4091", "4092-4095"],
         "full": "4090-4095"
@@ -1015,10 +1013,6 @@ test_data = {
     "nfs": {
         "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri1",
         "name": "Marvin Primary Pool"
-    },
-    "nfs2": {
-        "url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/marvin_pri2",
-        "name": "Marvin Primary Pool2"
     },
     "iscsi": {
 {% if env_iscsi_test_host == "marvin" %}
@@ -1078,7 +1072,8 @@ test_data = {
         "username": "test",
         "password": "password"
     },
-    "vpc": {
+ # renamed to fix duplication vpc
+   "vpntest_vpc": {
         "name": "vpc_vpn",
         "displaytext": "vpc-vpn",
         "cidr": "10.1.1.0/24"
@@ -1590,14 +1585,13 @@ test_data = {
                 "cpunumber": 1,
                 "cpuspeed": 100,
                 "memory": 128
-            },
+            }
         },
-        "ostype": "CentOS 5.6 (64-bit)",
+        "ostype": "CentOS 5.6 (64-bit)"
     },
     "test_34_DeployVM_in_SecondSGNetwork": {
         "zone": "advsg",
-        "config": "D:\ACS-Repo\setup\dev\\advancedsg.cfg",  #Absolute path to cfg file
-        #For sample configuration please refer to <ACS repo>/setup/dev/advancedsg.cfg
+        "config": "D:/ACS-Repo/setup/dev//advancedsg.cfg", 
         "template": "CentOS 5.3(64-bit) no GUI (Simulator)",
         "dbSvr": {
             "dbSvr": "10.146.0.133",
@@ -1631,7 +1625,7 @@ test_data = {
      {
                               "displaytext": "Windows 8 (64-bit)",
                               "name": "win8withpvxen",
-                              "passwordenabled": False,
+                              "passwordenabled": "False",
                               "url": "http://people.apache.org/~sanjeev/79211594-1d4a-4dee-ae6c-c5c315ded2be.vhd",
                               "format": "VHD" ,
                               "ostype": "Windows 8 (64-bit)",
@@ -1643,7 +1637,7 @@ test_data = {
      {
                               "displaytext": "Windows 8 (64-bit)",
                               "name": "win8withpvvmware",
-                              "passwordenabled": False,
+                              "passwordenabled": "False",
                               "url": "http://pleaseupdateURL/",
                               "format": "OVA" ,
                               "ostype": "Windows 8 (64-bit)",
@@ -1655,7 +1649,7 @@ test_data = {
         "name": "windowsxdtemplate",
         "passwordenabled": "False",
         "ostype": "Windows 8 (64-bit)"
-    },
+    }
 },
 
 
@@ -1709,7 +1703,7 @@ test_data = {
         "checksum": "da997b697feaa2f1f6e0d4785b0cece2",
         "hypervisor":"KVM",
         "ostypeid":"2e02e376-cdf3-11e4-beb3-8aa6272b57ef"
-                },
+                }
                               },
 
 
@@ -1816,21 +1810,11 @@ test_data = {
             "hypervisor": "vmware",
             "format": "OVA",
             "nicadapter": "vmxnet3",
-                "kvm": {
-                        "url": ""
-                    },
-                    "vmware": {
-                        "url": ""
-                    },
-                    "xenserver": {
-                        "url": ""
-                    },
-                    "hyperv": {
-                        "url": ""
-                    },
-                    "ostype": "CentOS 5.3 (64-bit)",
-                    "mode": "HTTP_DOWNLOAD"
-                }
+            "kvm": {"url": ""},
+            "vmware": {"url": ""},
+            "xenserver": {"url": ""},
+            "hyperv": {"url": ""}
+            }
         },
     # Nuage VSP SDN plugin specific test data
     "nuagevsp": {
