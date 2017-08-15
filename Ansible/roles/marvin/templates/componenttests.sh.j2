@@ -15,7 +15,10 @@
 #limitations under the License.
 
 set +e # stop erroneous failures reported by Jenkins
+
 LOGDIR=/marvin/MarvinLogs
+mkdir -p $LOGDIR
+
 rm -f /marvin/tests/component/*.pyc
 rm -f /marvin/tests/component/maint/*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
@@ -50,7 +53,13 @@ cleanup() {
 
 runtest() {
     file=$1
-    rm -fr $LOGDIR/$(basename $file).xml $LOGDIR/$(basename $file | sed 's/.py$//g')_*
+    rm -fr $LOGDIR/$(basename $file).xml
+    TRIMFILE=$(echo $file | sed 's/.py$//g')
+    OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
+    if [ ! -z "${OLDRESULT// }" ]; then
+        echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
+        rm -fr $LOGDIR/$OLDRESULT
+    fi
     nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
     cleanup || true
 }
@@ -114,14 +123,14 @@ done
 
 GOOD=0
 BAD=0
-for dir in $LOGDIR/*/; do
-  if [[ -s ${dir}failed_plus_exceptions.txt ]]; then
-    BAD=$((BAD+1))
-  else
-    GOOD=$((GOOD+1))
-  fi
+for file in $LOGDIR/*.xml; do
+  if grep --q 'errors="0" failures="0"' ${file}
+    then
+      GOOD=$((GOOD+1))
+    else
+      BAD=$((BAD+1))
+  if
 done
-
 echo "Test completed. $GOOD look ok, $BAD have errors"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Component tests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
 

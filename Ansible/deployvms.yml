@@ -30,7 +30,7 @@
       set_fact: env_builddate="{{lookup('pipe','date +%d/%m/%y_%H:%M')}}"
 
     - name: Request and return environment details
-      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=req
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=req
 
     - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
@@ -121,6 +121,7 @@
   gather_facts: no
   vars:
     num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
+    basic_vlan: "{{ env_guestnetvlan }}"
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
 
@@ -135,7 +136,7 @@
 - hosts: esxi_hosts
   gather_facts: no
   vars:
-    num_esxi_hosts: "{{ groups['vc_hosts'] | length }}"
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   roles:
     - { role: vsphere, when: num_esxi_hosts | int != 0 }
 
@@ -143,10 +144,10 @@
   connection: local
   gather_facts: no
   vars:
-    num_esxi_hosts: "{{ groups['vc_hosts'] | length }}"
+    num_vc_hosts: "{{ groups['vc_hosts'] | length }}"
   tasks:
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
-      when: "num_esxi_hosts | int != 0"
+      when: "num_vc_hosts | int != 0"
 
 ## update status
 
@@ -154,13 +155,39 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: update project - tag Configuring_Storage
-      include: tasks/updateproject.yml project_tag=Configuring_Storage
+    - name: update project - tag Configuring_iSCSI_storage
+      include: tasks/updateproject.yml project_tag=Configuring_iSCSI_Storage
+      when: env_priprot | lower == "iscsi"
+
+## Configure iSCSI storage
+
+- hosts: primary_storage_hosts_iscsi
+  gather_facts: no
+  roles:
+    - { role: cloudstack-iscsiluns, storage_action: 'addprimary', when: env_priprot | lower == "iscsi" }
+
+- hosts: esxi_hosts
+  gather_facts: no
+  vars:
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
+  tasks:
+    - name: Configure VMFS storage on ESXi hosts
+      include: ./roles/vsphere/tasks/add_iscsivmfs_storage.yml
+      when: ( env_priprot | lower == "iscsi" ) and ( num_esxi_hosts | int != 0 )
+
+## update status
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update project - tag Configuring_NFS_Storage
+      include: tasks/updateproject.yml project_tag=Configuring_NFS_Storage
 
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addprimary' }
+    - { role: cloudstack-nfsshares, storage_action: 'addprimary', when: env_priprot | lower == "nfs" }
 
 - hosts: secondary_storage_hosts
   gather_facts: no

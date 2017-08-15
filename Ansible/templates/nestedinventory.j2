@@ -119,10 +119,14 @@ secondary_cs_manager
 
 [storage_hosts:children]
 primary_storage_hosts
+primary_storage_hosts_iscsi
 secondary_storage_hosts
 
 [primary_storage_hosts]
 {{ env_prihost | default( def_env_prihost ) }} ansible_ssh_host={{ env_prihost | default( def_env_prihost ) }} ansible_ssh_pass={{ pri_password | default( def_pri_password ) }}
+
+[primary_storage_hosts_iscsi]
+{{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }} ansible_ssh_host={{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }} ansible_ssh_pass={{ pri_password_iscsi | default( def_pri_password_iscsi ) }}
 
 [secondary_storage_hosts]
 {{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}

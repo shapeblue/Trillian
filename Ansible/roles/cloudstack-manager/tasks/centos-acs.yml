@@ -36,12 +36,12 @@
   yum: name=cloudstack-usage state=present
 
 - name: rename CloudStack title in browser
-  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js
+  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js || true
   tags:
     - "rename_browser"
 
 - name: re-gzip file
-  shell: gzip -cf /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js > /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js.gz
+  shell: gzip -cf /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js > /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js.gz || true
   tags:
     - "rename_browser"
 

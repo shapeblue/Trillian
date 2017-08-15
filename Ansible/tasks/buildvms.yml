@@ -29,7 +29,53 @@
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
+# Add SSH keys to Cloudstack for this project
+# TODO Add unquieness
 
+- name: Remove previous SSH key from Project if it exists
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent
+
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
+  local_action: 
+    module: file
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+  - "{{ def_env_ssh_key_path }}"
+  - "{{ def_env_ssh_key_path }}.pub"
+
+- name: "Ensure {{ def_env_ssh_key_path | dirname }}/ exists"
+  local_action:
+    module: file
+    path: "{{ def_env_ssh_key_path | dirname }}"
+    state: directory
+    mode: 0777
+
+- name: Generate SSH keys
+  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}"
+
+- name: Add new public SSH Key to the project
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: present
+    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}.pub') }}"
+
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
+  local_action: 
+    module: file
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+  - "{{ def_env_ssh_key_path }}"
+  - "{{ def_env_ssh_key_path }}.pub"
 
 ####################################################################
 # First management server
@@ -42,6 +88,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -86,7 +133,6 @@
   with_items: "{{mgmtsrv1_retval.results}}"
 
 
-
 ####################################################################
 # Additional management servers
 #
@@ -98,6 +144,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -152,6 +199,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -191,6 +239,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -230,6 +279,7 @@
     template: "{{ kvm_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -540,6 +590,7 @@
     template: "{{ marvin_server_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:

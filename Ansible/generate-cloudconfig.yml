@@ -162,7 +162,7 @@
 
   tasks:
 
-# check incomming args
+# check incoming args
 
     - name: Check returned environment name
       fail: msg="No environment name provided."
@@ -214,7 +214,13 @@
       fail: msg="vmware_ver {{ vmware_ver }} is not recognised"
       when: vmware_ver not in def_vmware_templates
 
-## KVM check required - a bit more complicated
+    - name: Check storage protocol versus hypervisor
+      fail: msg="iSCSI storage is only implemented for XenServer and VMware"
+      when: ( hvtype not in [ "v",  "x", "vmware", "xenserver" ] ) and ( env_priprot is defined ) and ( env_priprot | lower == "iscsi" )
+
+    - name: Check storage protocol versus hypervisor
+      fail: msg="iSCSI storage is only implemented for XenServer and VMware"
+      when: ( hvtype not in [ "v",  "x", "vmware", "xenserver" ] ) and ( env_priprot is undefined ) and ( def_env_priprot | lower == "iscsi" )
 
     - name: Sanitise environment name
       set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-]', '-') | regex_replace('[-]+', '-') }}
@@ -223,23 +229,23 @@
       set_fact: use_external_hv_hosts="{{ def_use_external_hv_hosts }}"
       when: use_external_hv_hosts is not defined
 
-#    - name: Check if inventory file exists
-#      stat: path=./hosts_{{ env_name_clean }}
-#      register: inv_exists
+    - name: Check if inventory file exists
+      stat: path=./hosts_{{ env_name_clean }}
+      register: inv_exists
 
-#    - name: Check if group vars file exists
-#      stat: path=./group_vars/{{ env_name_clean }}
-#      register: vars_exists
+    - name: Check if group vars file exists
+      stat: path=./group_vars/{{ env_name_clean }}
+      register: vars_exists
 
-#    - name: Fail if environment already exists
-#      fail: msg="Environment already exists, please remove or use different environment name."
-#      when: inv_exists.stat.exists or vars_exists.stat.exists
+    - name: Fail if environment already exists
+      fail: msg="Environment files already exists, please remove or use different environment name."
+      when: inv_exists.stat.exists or vars_exists.stat.exists
 
     - name: Check Environment DB
       env_db_manage: DBHOST={{ def_env_db_ip }} DBUSER={{ def_env_db_user }} DBPASS={{ def_env_db_password }} DBNAME={{ def_env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=check
       register: dbcheck
 
-    - name: Fail if environment name exists
+    - name: Fail if environment name exists in database
       fail: msg="{{ env_retmsg }}"
       when: env_return == "error"
 

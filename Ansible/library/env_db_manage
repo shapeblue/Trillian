@@ -20,6 +20,8 @@ ENV_NAME=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_NAME"{print $2}'| tr -d '"
 ENV_COMMENT=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_COMMENT"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 ENV_ACTION=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_ACTION"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 ENV_ZONETYPE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_ZONETYPE"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_SECGROUPS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_SECGROUPS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ENV_SECGROUPS_PARSED=`echo $ENV_SECGROUPS | grep -Ei 'yes|true'`
 
 MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
 ENVTBL="environments";
@@ -389,6 +391,9 @@ case "$ENV_ACTION" in
       if [[ "$ENV_ZONETYPE" == "basic" ]];
       then
         RequestGuestNet;
+      elif [[ -n $ENV_SECGROUPS_PARSED ]];
+      then
+        RequestGuestNet;
       else
         RequestPubNet;
       fi
@@ -405,6 +410,8 @@ case "$ENV_ACTION" in
 	    ReturnFail "${ENV_NAME} With UUID $ENV_UUID not found";
 	  fi
     if [[ "$ENV_ZONETYPE" == "basic" ]];then
+      RequestGuestNet;
+    elif [[ -n $ENV_SECGROUPS_PARSED ]];then
       RequestGuestNet;
     else
       RequestPubNet;

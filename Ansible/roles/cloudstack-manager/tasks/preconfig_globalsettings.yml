@@ -42,8 +42,13 @@
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
 
 - name: test for cloud or cloudstack Usage
-  stat: path=/etc/rc.d/init.d/cloudstack-management
+  stat: path=/etc/init.d/cloudstack-management
   register: path_is_cloudstack
+
+- name: restart mgmt service (inc fix for broken stop) for Ubuntu
+  shell: "service cloudstack-management stop && sleep 10 && service cloudstack-management stop && sleep 10 && service cloudstack-management start"
+  when: (path_is_cloudstack.stat.exists == True) and (ansible_distribution == "Ubuntu")
+  ignore_errors: true
 
 - name: restart mgmt service (inc fix for broken stop)
   shell: "service cloudstack-management stop && sleep 5 && service cloudstack-management stop && sleep 10 && service cloudstack-management start"

@@ -1,6 +1,6 @@
 ---
 
-- pause: minutes=1
+- pause: minutes=2
 
 - name: Setup CloudStack Manager (centos/rhel6)
   command: /usr/bin/cloudstack-setup-management

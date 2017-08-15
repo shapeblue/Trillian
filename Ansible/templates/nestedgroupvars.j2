@@ -41,6 +41,7 @@ env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
 env_uuid: "{{ env_uuid.stdout }}"
 env_name_clean: "{{ env_name_clean | mandatory }}"
 env_version: "{{ env_version }}"
+env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_version[0:2] == "cs" %}
 {% set majorversion = env_version[2:3] %}
 {% set minorversion = env_version[3:6] %}
@@ -104,10 +105,15 @@ env_hv: "kvm"
 env_hv: "other"
 {% endif %}
 env_prihost: "{{ env_prihost | default( def_env_prihost ) }}"
+env_prihost_iscsi: "{{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }}"
 env_sechost: "{{ env_sechost | default( def_env_sechost ) }}"
 env_pripath: "{{ env_pripath | default( def_env_pripath ) }}"
+env_pripath_iscsi: "{{ env_pripath_iscsi | default( def_env_pripath_iscsi ) }}"
+env_iscsilunsize: "{{ env_iscsilunsize | default( def_env_iscsilunsize ) }}"
+env_iscsi_target: "{{ env_iscsi_target | default( def_env_iscsi_target ) }}"
 env_secpath: "{{ env_secpath | default( def_env_secpath ) }}"
 pri_password: "{{ pri_password | default( def_pri_password ) }}"
+pri_password_iscsi: "{{ pri_password_iscsi | default( def_pri_password_iscsi ) }}"
 sec_password: "{{ sec_password | default( def_sec_password ) }}"
 env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
 {% if pri | int > 0 %}
@@ -128,6 +134,9 @@ env_pripools:
 {% endfor %}
 {% endif %}
 {% endif %}
+env_pripoolsmarvin:
+  - marvin_pri1
+  - nfs2
 {% if sec | int > 0 %}
 env_secpools:
 {% for n in range(1,sec | int + 1) %}
