@@ -158,5 +158,13 @@
     - marvin
     - marvin_cfg
 
+- name: add test result collation script
+  copy: src="process_json_results.sh" dest="/marvin/process_json_results.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+    - mavintest
+
+
 - include: ./fix_tests.yml
   when: fixtests
