@@ -152,6 +152,14 @@
     - marvin_cfg
     - mavintest
 
+- name: add upload results to elasticsearch script
+  copy: src="upload_to_es.sh" dest="/marvin/upload_to_es.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+    - mavintest
+
+
 - name: add extra config data file
   template: src="additional_test_data.json.j2" dest="/marvin/additional_test_data.json" mode=0644
   tags:
@@ -159,7 +167,7 @@
     - marvin_cfg
 
 - name: add test result collation script
-  copy: src="process_json_results.sh" dest="/marvin/process_json_results.sh" mode=0755
+  template: src="process_json_results.sh.j2" dest="/marvin/process_json_results.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
