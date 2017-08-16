@@ -36,7 +36,7 @@ sed  's/#.*//g' $TEST_DATA_FILE | sed '/^$/d' | sed 's/test_data = {/{/g' > ./te
 rm -f $TEST_DATA_FILE
 
 echo " -- Inject UUID into test cfg data"
-cat ./test_data_file.clean | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./test_data_file.json
+cat ./test_data_file.clean | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./env_test_data.json
 rm -f ./test_data_file.clean
 
 
@@ -56,6 +56,6 @@ if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
   sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_DATA_FILE
 fi
 rm -f $EXTRA_ENV_DATA_FILE
-mv $TMP_ENV_DATA_FILE $EXTRA_ENV_DATA_FILE
+mv $TMP_ENV_DATA_FILE ./env_extra_data.json
 #zip -ur existing.zip myFolder
 
