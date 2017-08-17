@@ -53,7 +53,7 @@ cleanup() {
 runtest() {
     file=$1
     rm -fr $LOGDIR/$(basename $file).xml
-    TRIMFILE=$(echo $file | sed 's/.py$//g')
+    TRIMFILE=$(echo $(basename $file) | sed 's/.py$//g')
     OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
     if [ ! -z "${OLDRESULT// }" ]; then
         echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
