@@ -74,6 +74,7 @@
   - at
   - vim
   - tmux
+  - pyOpenSSL
   tags:
     - marvin
     - marvin_install
@@ -103,7 +104,6 @@
   pip: name={{ item }} extra_args='--upgrade'
   with_items:
   - '"requests[security]"'
-  - pyopenssl
   - pyasn1
   - wget
   - texttable

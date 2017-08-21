@@ -1,0 +1,87 @@
+#!/bin/bash
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+#ARGs
+CFG_FILE="./{{ env_name_clean }}-advanced-cfg"
+TEST_DATA_FILE="./test_data.py"
+EXTRA_ENV_DATA_FILE="./additional_test_data.json"
+TMP_ENV_DATA_FILE="./additional_test_data.out"
+ENV_EXTRA_DATA="env_extra_data.json"
+
+
+echo " -- Create testrun uuid"
+TESTRUN_UUID=$(uuidgen -r)
+
+
+echo " -- Inject UUID into test results"
+for file in ./test_*.py.json; do
+  cat $file | jq 'del(.stats)' | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./$file.processed
+  rm -f $file
+  mv ./$file.processed $file
+done
+
+
+echo "  --  Inject UUID into cfg data"
+cat $CFG_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > "./$CFG_FILE.uuid"
+
+
+echo " -- Redact sensitive data from cfg data"
+sed 's/\"password\": \".*\"/\"password\": \"------"/g' ./$CFG_FILE.uuid > ./env_cfg_file.json
+sed -i 's/\"passwd\": \".*\"/\"passwd\": \"------"/g' ./env_cfg_file.json
+sed -i 's/\"username\": \".*\"/\"username\": \"------"/g' ./env_cfg_file.json
+sed -i 's/\"mgtSvrIp\": \".*\"/\"mgtSvrIp\": \"------"/g' ./env_cfg_file.json
+sed -i 's/\"user\": \".*\"/\"user\": \"------"/g' ./env_cfg_file.json
+rm -f ./$CFG_FILE.uuid
+rm -f $CFG_FILE
+
+
+echo " -- URL Encode test_data"
+alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
+TEST_DATA=`cat ./test_data.py`
+echo "{\"test_data.py_contents\": \"`urlencode "$TEST_DATA"`\"}"  > ./test_data_file.clean
+rm -f $TEST_DATA_FILE
+
+echo " -- Inject UUID into test cfg data"
+cat ./test_data_file.clean | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./env_test_data.json
+rm -f ./test_data_file.clean
+
+
+
+echo " -- Inject UUID into env data"
+cat $EXTRA_ENV_DATA_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_ENV_DATA_FILE
+
+
+echo " -- convert numbers to strings env cfg data"
+NUMBERS=(`grep '\".*\": [0-9]' ./env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
+UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
+for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do
+ sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" ./env_cfg_file.json
+done
+	
+echo " -- get additional data for env cfg data"
+## TODO - Make more intelligent to pick out correct HV type (in case of mulitple hypervisor types) not just pick from first one in the list
+cloudmonkey set display json
+export TERM=vt100
+HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
+HV_JSON=`cat $TMP_ENV_DATA_FILE | jq -r '.marvin_hypervisor'`
+
+if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
+  HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
+  sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_DATA_FILE
+fi
+rm -f $EXTRA_ENV_DATA_FILE
+mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
+
+
