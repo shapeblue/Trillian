@@ -1,13 +1,12 @@
 #!/bin/bash
 
-#ARGs (static for testing).
+#ARGs
 CFG_FILE="./{{ env_name_clean }}-advanced-cfg"
 TEST_DATA_FILE="./test_data.py"
 EXTRA_ENV_DATA_FILE="./additional_test_data.json"
 TMP_ENV_DATA_FILE="./additional_test_data.out"
 ENV_EXTRA_DATA="env_extra_data.json"
 
-#!/bin/bash
 
 # ----  Create testrun uuid
 TESTRUN_UUID=$(uuidgen -r)
