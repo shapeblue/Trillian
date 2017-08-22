@@ -58,9 +58,21 @@
     - "/marvin/tools"
     - "/marvin/error"
     - "/marvin/pass"
+    - "/marvin/nose-json"
   tags:
     - marvin
     - marvin_cfg
+
+- name: copy and extract nose-json into /marvin
+  unarchive:
+    src: nose-json.zip
+    dest: /marvin/nose-json
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: install nose-json
+  shell: cd /marvin/nose-json && python ./setup.py build && python ./setup.py install 
 
 - name: Retrieve cloud SSH keys from mgmt server
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
@@ -139,6 +151,28 @@
     - marvin
     - marvin_cfg
     - mavintest
+
+- name: add upload results to elasticsearch script
+  copy: src="upload_to_es.sh" dest="/marvin/upload_to_es.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+    - mavintest
+
+
+- name: add extra config data file
+  template: src="additional_test_data.json.j2" dest="/marvin/additional_test_data.json" mode=0644
+  tags:
+    - marvin
+    - marvin_cfg
+
+- name: add test result collation script
+  template: src="process_json_results.sh.j2" dest="/marvin/process_json_results.sh" mode=0755
+  tags:
+    - marvin
+    - marvin_cfg
+    - mavintest
+
 
 - include: ./fix_tests.yml
   when: fixtests
