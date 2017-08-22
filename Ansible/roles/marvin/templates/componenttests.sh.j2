@@ -149,4 +149,5 @@ cp /marvin/test_data.py $TMP_JSON_DIR/
 
 cd $TMP_JSON_DIR
 sh /marvin/process_json_results.sh
-sh /marvin/upload_to_es.sh
+tar -cf test_results.tar.gz *.json
+

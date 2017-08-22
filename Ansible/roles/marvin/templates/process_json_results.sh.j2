@@ -83,7 +83,10 @@ if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
   HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
   sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_DATA_FILE
 fi
+
+echo " -- Add date to additional test run data"
+DATEVAR=$(date)
+sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_DATA_FILE
+
 rm -f $EXTRA_ENV_DATA_FILE
 mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
-
-

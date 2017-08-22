@@ -16,6 +16,7 @@
 set +e # stop erroneous failures reported by Jenkins
 
 LOGDIR=/marvin/MarvinLogs
+TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
 
 rm -f /marvin/smoketests-summary.txt
@@ -111,3 +112,15 @@ echo "Test completed. $GOOD look OK, $BAD have error(s)" >> /marvin/smoketests-s
 echo "" >> /marvin/smoketests-summary.txt
 python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
+
+echo "processing json output"
+mkdir $TMP_JSON_DIR
+mv $LOGDIR/*.json $TMP_JSON_DIR/
+cp /marvin/{{ env_name_clean }}-advanced-cfg $TMP_JSON_DIR/
+cp /marvin/additional_test_data.json $TMP_JSON_DIR/
+cp /marvin/test_data.py $TMP_JSON_DIR/
+
+cd $TMP_JSON_DIR
+sh /marvin/process_json_results.sh
+tar -cf test_results.tar.gz *.json
+
