@@ -15,25 +15,28 @@
 #limitations under the License.
 
 
-- name: Configure eth0 (Disable PXE interface)
-  template: src=kvm-eth0_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+- name: Configure PXE interface (Disable PXE interface)
+  template: src=kvm-eth_PXE_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_PXE_if }}"
 
-- name: Configure eth1 (Physical host)
-  template: src=kvm-eth1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+- name: Configure mgmt interface (Physical host)
+  template: src=kvm-eth_mgmt_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_mgmt_if }}"
 
 - name: Configure mgmt/storage bridge (Physical host)
   template: src=kvm-cloudbr0_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_mgmt_network_label }}"
 
-- name: Configure eth2 (Advanced Networking) (Physical host)
-  template: src=kvm-p55p1_phys_host.j2 dest=/etc/sysconfig/network-scripts/ifcfg-p55p1
+- name: Configure guest/pub (Advanced Networking) (Physical host)
+  template: src=kvm-trunked_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}"
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
-- name: Configure eth2 (Basic Networking) (Physical host)
-  template: src=kvm-eth2-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth2.11
+- name: Configure guest (Basic Networking) (Physical host)
+  template: src=kvm-eth2-basic.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}.11"
   when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: Configure guest/public bridge (Physical host)
   template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"
+
+- name: Add resolv.conf (Physical host)
+  template: src=resolv.conf.j2 dest=/etc/resolv.conf
 
 - name: restart networking
   service: name=network state=restarted

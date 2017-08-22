@@ -185,6 +185,13 @@ mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_se
 mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmt_templates[osversion].mgmtsrv_template ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
+
+{% if explicit_cloudstack_version is not defined %}
+{% set cloudstack_management_package_var = "cloudstack-management" %}
+{% else %}
+{% set cloudstack_management_package_var = "cloudstack-management-"~explicit_cloudstack_version %}
+{% endif %}
+cloudstack_management_package: "{{ cloudstack_management_package_var }}"
 {% if rooturl_cloudstack is defined %}
 {% set baseurl = rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
 {% elif baseurl_cloudstack is defined %}
@@ -292,6 +299,10 @@ kvm_java_ver: "{{ kvmjava }}"
 {% endif %}
 kvm_java_path: "{{ kvmjavapath }}"
 kvm_localstorage_mount: "{{ kvm_localstorage_mount | default( def_kvm_localstorage_mount ) }}"
+phys_host_mgmt_if: "{{ phys_host_mgmt_if | default( def_phys_host_mgmt_if ) }}"
+phys_host_trunked_if: "{{ phys_host_trunked_if | default( def_phys_host_trunked_if ) }}"
+phys_host_PXE_if: "{{ phys_host_PXE_if | default( def_phys_host_PXE_if ) }}"
+
 
 # XS
 xs_ver: "{{ xs_ver }}"
@@ -353,6 +364,7 @@ marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images
 baseurl_marvin: "{{ marvinbaseurl }}"
 fallback_marvin_test_repo: "{{ fallback_marvin_test_repo | default( def_fallback_marvin_test_repo ) }}"
 fixtests: {{ fixtests | default("no") }}
+force_marvin_fallback: {{ force_marvin_fallback | default("no") }}
 
 # Hipchat cli client
 use_hipchat: yes
