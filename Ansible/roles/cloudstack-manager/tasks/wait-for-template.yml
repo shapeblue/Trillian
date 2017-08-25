@@ -13,7 +13,7 @@
     - waitfortemplate
 
 - name: Wait for default template to be ready before returning
-  shell: cloudmonkey list templates listall=true templatefilter=all | jq '.template[]| select(.templatetype=="BUILTIN") | .isready'
+  shell: cloudmonkey list templates listall=true templatefilter=all | jq '.template[]| select(.templatetype=="BUILTIN") | .isready' | sort | uniq
   register: result
   until: result.stdout == "true"
   retries: 300
