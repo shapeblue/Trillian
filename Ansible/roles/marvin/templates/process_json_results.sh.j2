@@ -23,7 +23,15 @@ echo " -- Inject UUID into cfg data"
 cat $CFG_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./$CFG_FILE.uuid
 
 
-echo " -- Redact sensitive data (TODO - convert to function)."
+
+if [[ "${HV,,}" == "kvm" ]]; then
+  HOST1DATA=`cat $CFG_FILE | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="kvm") | .hosts[1]'`
+  HOST1ADDDR=`echo $HOST1DATA | jq -r '.url' | sed 's/http:\/\///g'`
+  HOST1USER=`echo $HOST1DATA | jq -r '.username'`
+  HOST2PASS=`echo $HOST1DATA | jq -r '.password'`
+fi
+
+echo " -- Redact sensitive data from cfg data"
 sed 's/\"password\": \".*\"/\"password\": \"------"/g' ./$CFG_FILE.uuid > ./env_cfg_file.json
 sed -i 's/\"passwd\": \".*\"/\"passwd\": \"------"/g' ./env_cfg_file.json
 sed -i 's/\"username\": \".*\"/\"username\": \"------"/g' ./env_cfg_file.json
@@ -47,6 +55,13 @@ echo " -- Inject UUID into env cfg data"
 cat $EXTRA_ENV_DATA_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_ENV_DATA_FILE
 
 
+echo " -- convert numbers to strings env cfg data"
+NUMBERS=(`grep '\".*\": [0-9]' ./env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
+UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
+{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
+  sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" ./env_cfg_file.json
+done
+
 echo " -- get additional data for env cfg data"
 ## TODO - Make more intelligent to pick out correct HV type (in case of mulitple hypervisor types) not just pick from first one in the list
 cloudmonkey set display json
@@ -55,8 +70,23 @@ HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
 HV_JSON=`cat $TMP_ENV_DATA_FILE | jq -r '.marvin_hypervisor'`
 
 if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
-  HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
-  sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_DATA_FILE
+  if [[ "${HV,,}" == "kvm" ]]; then
+     HOSTYPEDATA=`sshpass -p "$HOST1PASS" ssh -o StrictHostKeyChecking=no $HOST1USER@$HOST1ADDR "cat /etc/*-release"`
+     if [[ -z `echo $HOSTYPEDATA | grep 'CentOS release 6' ]]; then
+       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 6\"/g" $TMP_ENV_DATA_FILE
+     elif [[ -z `echo $HOSTYPEDATA | grep 'CentOS Linux release 7' ]]; then
+       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 7\"/g" $TMP_ENV_DATA_FILE
+     elif[[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 16.04' ]]; then
+       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 16.04\"/g" $TMP_ENV_DATA_FILE
+     elif[[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 14.04' ]]; then
+       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 14.04\"/g" $TMP_ENV_DATA_FILE
+     else
+       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Unknown\"/g" $TMP_ENV_DATA_FILE
+     fi
+  else
+    HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_DATA_FILE
+  fi
 fi
 # rm -f $EXTRA_ENV_DATA_FILE
 mv $TMP_ENV_DATA_FILE ./env_extra_data.json
