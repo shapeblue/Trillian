@@ -90,3 +90,5 @@ sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_DA
 
 rm -f $EXTRA_ENV_DATA_FILE
 mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
+
+tar -cvf ./{{ env_name_clean }}_json.tar.gz ./*.json 
