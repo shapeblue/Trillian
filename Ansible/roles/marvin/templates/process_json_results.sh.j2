@@ -14,8 +14,9 @@ TESTRUN_UUID=$(uuidgen -r)
 echo " -- Inject UUID into test results"
 for file in ./test_*.py.json; do
   cat $file | jq 'del(.stats)' | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./$file.processed
-  rm -f $file
-  mv ./$file.processed $file
+  cat ./$file.processed | sed 0,/\{/{s/|{/\{\"testruns\":\{/} > ./$file
+  echo '}' >> ./$file
+  rm -f $file.processed
 done
 
 
@@ -46,6 +47,7 @@ TEST_DATA=`cat ./test_data.py`
 echo "{\"test_data.py_contents\": \"`urlencode "$TEST_DATA"`\"}"  > ./test_data_file.clean
 # rm -f $TEST_DATA_FILE
 
+
 echo " -- Inject UUID into test cfg data"
 cat ./test_data_file.clean | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./env_test_data.json
 rm -f ./test_data_file.clean
@@ -62,8 +64,10 @@ UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
   sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" ./env_cfg_file.json
 done
 
+
 echo " -- get additional data for env cfg data"
-## TODO - Make more intelligent to pick out correct HV type (in case of mulitple hypervisor types) not just pick from first one in the list
+# TODO - Make more intelligent to pick out correct HV type (in case of mulitple hypervisor types) not just pick from first one in the list
+
 cloudmonkey set display json
 export TERM=vt100
 HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
@@ -92,3 +96,11 @@ fi
 mv $TMP_ENV_DATA_FILE ./env_extra_data.json
 #zip -ur existing.zip myFolder
 
+
+echo " -- Add date to additional test run data"
+DATEVAR=$(date)
+sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_DATA_FILE
+
+rm -f $EXTRA_ENV_DATA_FILE
+mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
+>>>>>>> Stashed changes
