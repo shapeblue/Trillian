@@ -14,10 +14,10 @@
 #limitations under the License.
 
 
-DEVICE=p55p1
-ONBOOT=yes
+DEVICE={{ phys_host_PXE_if }}
+ONBOOT=no
 HOTPLUG=no
 BOOTPROTO=none
 TYPE=Ethernet
-BRIDGE={{ kvm_guest_network_label }}
 NM_CONTROLLED=no
+MTU=1500

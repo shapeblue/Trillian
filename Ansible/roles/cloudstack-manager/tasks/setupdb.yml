@@ -83,8 +83,17 @@
     - setup_db
 
 ## run cloudstack-setup-management
-- include: ./setup-mgmt-primary.yml
+- name: Setup management on primary cloudstack management server
+  include: ./setup-mgmt.yml
   when: ("primary_cs_manager" in group_names)
 
-- include: ./setup-mgmt-secondary.yml
+- name: Test for API on 8080 on primary management host before configuring secondary
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 40
+  run_once: true
+
+- name: Setup management on additional cloudstack management servers
+  include: ./setup-mgmt.yml
   when: ("secondary_cs_manager" in group_names)

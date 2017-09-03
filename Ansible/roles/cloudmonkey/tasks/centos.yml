@@ -28,11 +28,21 @@
   ignore_errors: true
   when: ansible_distribution_major_version == "7"
 
+- name: clean yum cache
+  command: yum clean all
+
+- name: install setup tools and jq
+  yum: name=python-pip state=present
+  when: ansible_distribution_major_version == "6"
+
+- name: install setup tools and jq
+  yum: name=python2-pip state=present
+  when: ansible_distribution_major_version == "7"
+
 - name: install setup tools and jq
   yum: name={{ item }} state=present
   with_items:
   - python-setuptools
-  - python-pip
   - jq
 
 - name: Upgrade pip and setuptools for CentOS6

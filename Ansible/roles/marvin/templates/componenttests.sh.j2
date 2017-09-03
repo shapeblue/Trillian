@@ -17,6 +17,7 @@
 set +e # stop erroneous failures reported by Jenkins
 
 LOGDIR=/marvin/MarvinLogs
+TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
 
 rm -f /marvin/tests/component/*.pyc
@@ -54,7 +55,7 @@ cleanup() {
 runtest() {
     file=$1
     rm -fr $LOGDIR/$(basename $file).xml
-    TRIMFILE=$(echo $file | sed 's/.py$//g')
+    TRIMFILE=$(echo $(basename $file) | sed 's/.py$//g')
     OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
     if [ ! -z "${OLDRESULT// }" ]; then
         echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
@@ -129,8 +130,9 @@ for file in $LOGDIR/*.xml; do
       GOOD=$((GOOD+1))
     else
       BAD=$((BAD+1))
-  if
+  fi
 done
+
 echo "Test completed. $GOOD look ok, $BAD have errors"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Component tests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
 
@@ -138,3 +140,15 @@ echo "Test completed. $GOOD look ok, $BAD have errors" > /marvin/componenttest-s
 echo "" >> /marvin/componenttest-summary.txt
 python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/componenttest-summary.txt
 cat /marvin/componenttest-summary.txt
+
+echo "processing json output"
+mkdir $TMP_JSON_DIR
+mv $LOGDIR/*.json $TMP_JSON_DIR/
+cp /marvin/{{ env_name_clean }}-advanced-cfg $TMP_JSON_DIR/
+cp /marvin/additional_test_data.json $TMP_JSON_DIR/
+cp /marvin/test_data.py $TMP_JSON_DIR/
+
+cd $TMP_JSON_DIR
+sh /marvin/process_json_results.sh
+tar -cf test_results.tar.gz *.json
+
