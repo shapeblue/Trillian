@@ -14,12 +14,14 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-CFG_FILE="./{{ env_name_clean }}-advanced-cfg"
+LOGDIR=/marvin/MarvinLogs
+TMP_JSON_DIR="/marvin/json_results/"
+CFG_FILE="/marvin/{{ env_name_clean }}-advanced-cfg"
 TEST_DATA_FILE="./test_data.py"
 EXTRA_ENV_DATA_FILE="./additional_test_data.json"
 TMP_ENV_DATA_FILE="./additional_test_data.out"
 ENV_EXTRA_DATA="env_extra_data.json"
+
 
 
 echo " -- Create testrun uuid"
@@ -27,7 +29,7 @@ TESTRUN_UUID=$(uuidgen -r)
 
 
 echo " -- Inject UUID into test results"
-for file in ./test_*.py.json; do
+for file in $LOGDIR/test_*.py.json; do
   cat $file | jq 'del(.stats)' | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > ./$file.processed
   cat ./$file.processed | sed 0,/\{/{s/|{/\{\"testruns\":\{/} > ./$file
   echo '}' >> ./$file
@@ -52,14 +54,13 @@ sed -i 's/\"username\": \".*\"/\"username\": \"------"/g' ./env_cfg_file.json
 sed -i 's/\"mgtSvrIp\": \".*\"/\"mgtSvrIp\": \"------"/g' ./env_cfg_file.json
 sed -i 's/\"user\": \".*\"/\"user\": \"------"/g' ./env_cfg_file.json
 rm -f ./$CFG_FILE.uuid
-rm -f $CFG_FILE
 
 
 echo " -- URL Encode test_data"
 alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
-TEST_DATA=`cat ./test_data.py`
+TEST_DATA=`cat /marvin/test_data.py`
 echo "{\"test_data.py_contents\": \"`urlencode "$TEST_DATA"`\"}"  > ./test_data_file.clean
-rm -f $TEST_DATA_FILE
+
 
 
 echo " -- Inject UUID into test cfg data"
@@ -73,7 +74,7 @@ cat $EXTRA_ENV_DATA_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testr
 
 
 echo " -- convert numbers to strings env cfg data"
-NUMBERS=(`grep '\".*\": [0-9]' ./env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
+NUMBERS=(`grep '\".*\": [0-9]' /marvin/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
 UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
 {% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
  sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" ./env_cfg_file.json
