@@ -51,11 +51,9 @@ cat $MARVINDIR/$CFG_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testr
 echo " -- convert numbers to strings env cfg data"
 NUMBERS=(`grep '\".*\": [0-9].*' $TMP_JSON_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
 UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
-#{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
-for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do
-echo ${UNIQUE[$i]}
-sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" $TMP_JSON_DIR/env_cfg_file.json
-sed -i "s/: ${UNIQUE[$i]},/: \"${UNIQUE[$i]}\",/g" $TMP_JSON_DIR/env_cfg_file.json
+{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
+  sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" $TMP_JSON_DIR/env_cfg_file.json
+  sed -i "s/: ${UNIQUE[$i]},/: \"${UNIQUE[$i]}\",/g" $TMP_JSON_DIR/env_cfg_file.json
 done
 
 
