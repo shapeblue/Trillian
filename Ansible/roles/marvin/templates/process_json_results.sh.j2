@@ -20,8 +20,13 @@ TMP_JSON_DIR="/marvin/json_results"
 
 
 CFG_FILE="$MARVINDIR/{{ env_name_clean }}-advanced-cfg"
+MARVINDIR="/marvin"
+LOGDIR="/marvin/MarvinLogs"
+TMP_JSON_DIR="/marvin/json_results"
+
 TEST_DATA_FILE="$MARVINDIR/test_data.py"
 EXTRA_ENV_DATA_FILE="$MARVINDIR/additional_test_data.json"
+TMP_ENV_DATA_FILE="$TMP_JSON_DIR/additional_test_data.json"
 
 ENV_TEST_DATA="env_test_data.json"
 ENV_EXTRA_DATA="env_extra_data.json"
@@ -30,33 +35,50 @@ ENV_EXTRA_DATA="env_extra_data.json"
 echo " -- Create testrun uuid"
 TESTRUN_UUID=$(uuidgen -r)
 
-
+echo " ==== PROCESS TEST RESULTS ==== "
 echo " -- Inject UUID and add testrun json element parent into test results"
 
 for file in $LOGDIR/test_*.py.json; do
   cat $file | jq 'del(.stats)' | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_JSON_DIR/$(basename $file)
-  sed -i 0,/\{/{s/|{/\{\"testruns\":\{/} > $TMP_JSON_DIR/$(basename $file)
+  sed -i '0,/{/s/{/{\"testruns\":{/'  $TMP_JSON_DIR/$(basename $file)
   echo '}' >> $TMP_JSON_DIR/$(basename $file)
 done
 
-
+echo " ==== PROCESS ENV DEFINITION FILE (ADVANCED-CFG) ==== "
 echo "  --  Inject UUID into cfg data"
-cat $CFG_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > "$TMP_JSON_DIR/$CFG_FILE.uuid"
+cat $MARVINDIR/$CFG_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_JSON_DIR/env_cfg_file.json
+
+echo " -- convert numbers to strings env cfg data"
+NUMBERS=(`grep '\".*\": [0-9].*' $TMP_JSON_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
+UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
+#{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
+for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do
+echo ${UNIQUE[$i]}
+sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" $TMP_JSON_DIR/env_cfg_file.json
+sed -i "s/: ${UNIQUE[$i]},/: \"${UNIQUE[$i]}\",/g" $TMP_JSON_DIR/env_cfg_file.json
+done
+
 
 if [[ "${HV,,}" == "kvm" ]]; then
-  HOST1DATA=`cat $CFG_FILE | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="kvm") | .hosts[1]'`
+  HOST1DATA=`cat $TMP_JSON_DIR/env_cfg_file.json | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="xenserver") | .hosts[0]'`
   HOST1ADDDR=`echo $HOST1DATA | jq -r '.url' | sed 's/http:\/\///g'`
   HOST1USER=`echo $HOST1DATA | jq -r '.username'`
-  HOST2PASS=`echo $HOST1DATA | jq -r '.password'`
+  HOST1PASS=`echo $HOST1DATA | jq -r '.password'`
 fi
 
+
+
 echo " -- Redact sensitive data from cfg data"
-sed 's/\"password\": \".*\"/\"password\": \"------"/g' $TMP_JSON_DIR/$CFG_FILE.uuid > $TMP_JSON_DIR/env_cfg_file.json
+sed -i 's/\"password\": \".*\"/\"password\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
 sed -i 's/\"passwd\": \".*\"/\"passwd\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
 sed -i 's/\"username\": \".*\"/\"username\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
 sed -i 's/\"mgtSvrIp\": \".*\"/\"mgtSvrIp\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
 sed -i 's/\"user\": \".*\"/\"user\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
-rm -f $TMP_JSON_DIR/$CFG_FILE.uuid
+
+
+
+
+echo " ==== PROCESS TEST INPUTS FILE (TESTDATA.PY) ==== "
 
 
 echo " -- URL Encode test_data"
@@ -64,25 +86,16 @@ alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.ar
 TEST_DATA=`cat /marvin/test_data.py`
 echo "{\"test_data.py_contents\": \"`urlencode "$TEST_DATA"`\"}"  > $TMP_JSON_DIR/test_data_file.clean
 
-
-
 echo " -- Inject UUID into test cfg data"
 cat $TMP_JSON_DIR/test_data_file.clean | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_JSON_DIR/env_test_data.json
 rm -f $TMP_JSON_DIR/test_data_file.clean
 
-
+echo " ==== PROCESS ADDITIONAL TEST RUN DATA ==== "
 
 echo " -- Inject UUID into env data"
 cat $EXTRA_ENV_DATA_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_ENV_DATA_FILE
 
 
-echo " -- convert numbers to strings env cfg data"
-NUMBERS=(`grep '\".*\": [0-9]' /marvin/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
-UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
-{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
- sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" ./env_cfg_file.json
-done
-	
 echo " -- get additional data for env cfg data"
 
 cloudmonkey set display json
@@ -117,4 +130,7 @@ sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_DA
 rm -f $EXTRA_ENV_DATA_FILE
 mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
 
-tar -cvf ./{{ env_name_clean }}_json.tar.gz ./*.json 
+
+
+tar -c $MARVINDIR/{{ env_name_clean }}_json.tar.gz $TMP_JSON_DIR/*.json 
+
