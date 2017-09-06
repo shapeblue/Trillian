@@ -26,11 +26,9 @@ TMP_JSON_DIR="/marvin/json_results"
 
 TEST_DATA_FILE="$MARVINDIR/test_data.py"
 EXTRA_ENV_DATA_FILE="$MARVINDIR/additional_test_data.json"
-TMP_ENV_DATA_FILE="$TMP_JSON_DIR/additional_test_data.json"
+TMP_ENV_DATA_FILE="$TMP_JSON_DIR/env_extra_data.json"
 
 ENV_TEST_DATA="env_test_data.json"
-ENV_EXTRA_DATA="env_extra_data.json"
-
 
 echo " -- Create testrun uuid"
 TESTRUN_UUID=$(uuidgen -r)
@@ -52,18 +50,22 @@ echo " -- convert numbers to strings env cfg data"
 NUMBERS=(`grep '\".*\": [0-9].*' $TMP_JSON_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
 UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
 {% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
+
   sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" $TMP_JSON_DIR/env_cfg_file.json
   sed -i "s/: ${UNIQUE[$i]},/: \"${UNIQUE[$i]}\",/g" $TMP_JSON_DIR/env_cfg_file.json
 done
 
+cloudmonkey set display json
+export TERM=vt100
+HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
+
 
 if [[ "${HV,,}" == "kvm" ]]; then
-  HOST1DATA=`cat $TMP_JSON_DIR/env_cfg_file.json | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="xenserver") | .hosts[0]'`
-  HOST1ADDDR=`echo $HOST1DATA | jq -r '.url' | sed 's/http:\/\///g'`
+  HOST1DATA=`cat $TMP_JSON_DIR/env_cfg_file.json | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="kvm") | .hosts[0]'`
+  HOST1ADDR=`echo $HOST1DATA | jq -r '.url' | sed 's/http:\/\///g'`
   HOST1USER=`echo $HOST1DATA | jq -r '.username'`
   HOST1PASS=`echo $HOST1DATA | jq -r '.password'`
 fi
-
 
 
 echo " -- Redact sensitive data from cfg data"
@@ -74,10 +76,7 @@ sed -i 's/\"mgtSvrIp\": \".*\"/\"mgtSvrIp\": \"------"/g' $TMP_JSON_DIR/env_cfg_
 sed -i 's/\"user\": \".*\"/\"user\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
 
 
-
-
 echo " ==== PROCESS TEST INPUTS FILE (TESTDATA.PY) ==== "
-
 
 echo " -- URL Encode test_data"
 alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
@@ -92,25 +91,21 @@ echo " ==== PROCESS ADDITIONAL TEST RUN DATA ==== "
 
 echo " -- Inject UUID into env data"
 cat $EXTRA_ENV_DATA_FILE | jq . | jq --arg testrunuuid $TESTRUN_UUID '. + {testrun_uuid: $testrunuuid}' > $TMP_ENV_DATA_FILE
-
+HV_JSON=`cat $TMP_ENV_DATA_FILE | jq -r '.marvin_hypervisor'`
 
 echo " -- get additional data for env cfg data"
 
-cloudmonkey set display json
-export TERM=vt100
-HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
-HV_JSON=`cat $TMP_ENV_DATA_FILE | jq -r '.marvin_hypervisor'`
 
 if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
   if [[ "${HV,,}" == "kvm" ]]; then
      HOSTYPEDATA=`sshpass -p "$HOST1PASS" ssh -o StrictHostKeyChecking=no $HOST1USER@$HOST1ADDR "cat /etc/*-release"`
-     if [[ -z `echo $HOSTYPEDATA | grep 'CentOS release 6' ]]; then
+     if [[ -z `echo $HOSTYPEDATA | grep 'CentOS release 6'` ]]; then
        sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 6\"/g" $TMP_ENV_DATA_FILE
-     elif [[ -z `echo $HOSTYPEDATA | grep 'CentOS Linux release 7' ]]; then
+     elif [[ -z `echo $HOSTYPEDATA | grep 'CentOS Linux release 7'` ]]; then
        sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 7\"/g" $TMP_ENV_DATA_FILE
-     elif[[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 16.04' ]]; then
+     elif [[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 16.04'` ]]; then
        sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 16.04\"/g" $TMP_ENV_DATA_FILE
-     elif[[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 14.04' ]]; then
+     elif [[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 14.04'` ]]; then
        sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 14.04\"/g" $TMP_ENV_DATA_FILE
      else
        sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Unknown\"/g" $TMP_ENV_DATA_FILE
@@ -125,10 +120,6 @@ echo " -- Add date to additional test run data"
 DATEVAR=$(date)
 sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_DATA_FILE
 
-rm -f $EXTRA_ENV_DATA_FILE
-mv $TMP_ENV_DATA_FILE $ENV_EXTRA_DATA
 
-
-
-tar -c $MARVINDIR/{{ env_name_clean }}_json.tar.gz $TMP_JSON_DIR/*.json 
+cd $TMP_JSON_DIR; tar -czf $MARVINDIR/{{ env_name_clean }}_json.tar.gz *.json 
 
