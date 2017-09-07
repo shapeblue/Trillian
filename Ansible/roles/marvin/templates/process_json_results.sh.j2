@@ -119,4 +119,4 @@ echo " ===== create json file ======"
 
 echo "{\"testrun\":{\"testrun_uuid\": \"$TESTRUN_UUID\",\"results\":$TESTOUTPUT,\"env_data\":`cat $TMP_JSON_DIR/env_cfg_file.json`,\"test_metadata\":`cat $TMP_ENV_META_DATA`}}" > $MARVINDIR/test_run.json
 
-tar -c $MARVINDIR/{{ env_name_clean }}_json.tar.gz $MARVINDIR/test_run.json 
+cd $MARVINDIR && tar -czf ./{{ env_name_clean }}_json.tar.gz test_run.json 
