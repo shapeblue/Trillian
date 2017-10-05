@@ -26,6 +26,22 @@
   set_fact: vm_state="expunged"
   when: (expunge is defined) and (not destroy_forced)
 
+- name: Force Stop hosts in project {{ env_name_clean }}
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    project: "{{ build_project }}"
+    state: "{{ vm_state | default( 'stopped' ) }}"
+    force: true
+  with_items:
+    - "{{ groups['vc_hosts'] }}"
+    - "{{ groups['hypervisor_hosts'] }}"
+    - "{{ groups['mysql_hosts'] }}"
+    - "{{ groups['cloudstack_manager_hosts'] }}"
+    - "{{ groups['marvin_host'] }}"
+  ignore_errors: yes
+  when: not destroy_forced
+
 - name: Destroy hosts in project {{ env_name_clean }}
   local_action:
     module: cs_instance
