@@ -15,38 +15,10 @@
 #limitations under the License.
 
 
-#- include: ./vcenterfirewall.yml
-
 - name: get local facts
   local_action: setup
   tags:
     - vc_config
-
-- name: replace vmware python module to fix cert checking  (CentOS/RHEL)
-  local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.py" force=yes mode=0644
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-  tags:
-    - vc_config
-
-- name: remove compiled vmware.py code (Ubuntu)
-  local_action: file path="/usr/lib/python2.7/site-packages/ansible/module_utils/vmware.pyc" state=absent
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-  tags:
-    - vc_config
-
-- name: replace vmware python module to fix cert checking  (CentOS/RHEL)
-  local_action: copy src={{ inventory_dir }}/roles/vsphere/files/vmware-v2.1.py dest="/usr/local/lib/python2.7/dist-packages/ansible/module_utils/vmware.py" force=yes mode=0644
-  when: ansible_distribution == 'Ubuntu'
-  tags:
-    - vc_config
-
-- name: remove compiled vmware.py code (Ubuntu)
-  local_action: file path="/usr/local/lib/python2.7/dist-packages/ansible/module_utils/vmware.pyc" state=absent
-  when: ansible_distribution == 'Ubuntu'
-  tags:
-    - vc_config
-
-
 
 - name: "wait for vCenter API Service to come up"
   shell: "curl --silent -o /dev/null -w '%{http_code}' {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk"
