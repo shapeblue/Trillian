@@ -8,4 +8,4 @@
 # - Avoid rate limiting problems with autoWait - see https://bobswift.atlassian.net/wiki/display/HCLI/Rate+Limiting
 # java -jar `dirname $0`/lib/hipchat-cli-5.4.0.jar --server http://my-server --autoWait --token X1Xt096Pb9wyEf3EOsKkhc91wJ4MYYP0FcRcDFrx "$@"
 
-java -jar /opt/{{ hipchat_cli_client_version }}/lib/{{ hipchat_cli_client_version }}.jar --server {{ hipchat_server }} --autoWait --token {{ hipchat_token }} "$@"
+java -jar /opt/atlassian-cli-{{ hipchat_cli_client_version }}/lib/hipchat-cli-{{ hipchat_cli_client_version }}.jar --server {{ hipchat_server }} --autoWait --token {{ hipchat_token }} "$@"

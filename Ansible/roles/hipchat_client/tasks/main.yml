@@ -57,11 +57,11 @@
     - "hipchat"
 
 - name: configure client  
-  template: src="hipchat.sh.j2" dest="/opt/{{ hipchat_cli_client_version }}/hipchat.sh" mode=0744
+  template: src="hipchat.sh.j2" dest="/opt/atlassian-cli-{{ hipchat_cli_client_version }}/hipchat.sh" mode=0744
   tags:
     - "hipchat"
 
 - name: create symlink for hipchat
-  file: src="/opt/{{ hipchat_cli_client_version }}/hipchat.sh" dest=/usr/bin/hipchat state=link
+  file: src="/opt/atlassian-cli-{{ hipchat_cli_client_version }}/hipchat.sh" dest=/usr/bin/hipchat state=link
   tags:
     - "hipchat"
