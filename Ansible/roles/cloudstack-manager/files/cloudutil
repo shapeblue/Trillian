@@ -19,7 +19,8 @@
 
 
 COMMAND=$1
-ARG=$2
+HOST=$2
+ARG2=$3
 
 function vm_vr()
 {
@@ -99,87 +100,126 @@ SVMDETAILS=`echo "$SVMDETAILSA $HOSTDETAILS $HOSTIP" | jq -s add`
 echo $SVMDETAILS
 }
 
-function svmlogin(){
-INPUT=$1
-export TERM=vt100
-cloudmonkey set display json
-if valid_ip $INPUT; then
-  VRIP=$INPUT
-    echo -e "\e[92m ----> An IP Address detected.\e[0m"
-else
-  echo -e "\e[92m ----> A host name detected. Determining type\e[0m"
-  if [[ "${INPUT:0:2}" == "r-" ]]; then
-    VRNAME=$INPUT
-    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Virtual Router. Getting IP Address\e[0m"
-    VRIP=`getIPforVR $VRNAME`
-    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
-    echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
-    VRDETAILS=`getVRdetails $VRNAME`
-    HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
-    HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
-    HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
-  elif [[ "${INPUT:0:2}" == "s-" ]]; then
-    VRNAME=$INPUT
-    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Secondary Storage VM. Getting Details\e[0m"
-    SVMDETAILS=`getSVMdetails $VRNAME`
-    if [[ $SVMDETAILS == *"linklocalip"* ]]; then
-       VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
-    else
-       VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
-    fi
-    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
-    HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
-    HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
-    HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
-  elif [[ "${INPUT:0:2}" == "v-" ]]; then
-    VRNAME=$INPUT
-    echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Console Proxy VM. Getting Details\e[0m"
-    SVMDETAILS=`getSVMdetails $VRNAME`
-    if [[ $SVMDETAILS == *"linklocalip"* ]]; then
-       VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
-    else
-       VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
-    fi
-    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
-    HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
-    HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
-    HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
+function svmconnect() {
+  CMD_FUNC=$1
+  INPUT=$2
+  ARG=$3
+  export TERM=vt100
+  cloudmonkey set display json
+  if valid_ip $INPUT; then
+    VRIP=$INPUT
+      echo -e "\e[92m ----> An IP Address detected.\e[0m"
   else
-    echo -e "\e[92m ----> \e[91m$INPUT\e[92m appears to be a VM.  Finding VR\e[0m"
-    VRNAME=`getVRfromVM $INPUT`
-    echo -e "\e[92m ----> Virtual Router for \e[91m$INPUT\e[92m is \e[91m$VRNAME\e[92m.  Getting IP Address\e[0m"
-    VRIP=`getIPforVR $VRNAME`
-    echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
-    echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
-    VRDETAILS=`getVRdetails $VRNAME`
-    HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
-    HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
-    HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
+    echo -e "\e[92m ----> A host name detected. Determining type\e[0m"
+    if [[ "${INPUT:0:2}" == "r-" ]]; then
+      VRNAME=$INPUT
+      echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Virtual Router. Getting IP Address\e[0m"
+      VRIP=`getIPforVR $VRNAME`
+      echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+      echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
+      VRDETAILS=`getVRdetails $VRNAME`
+      HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
+      HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
+      HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
+    elif [[ "${INPUT:0:2}" == "s-" ]]; then
+      VRNAME=$INPUT
+      echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Secondary Storage VM. Getting Details\e[0m"
+      SVMDETAILS=`getSVMdetails $VRNAME`
+      if [[ $SVMDETAILS == *"linklocalip"* ]]; then
+         VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
+      else
+         VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
+      fi
+      echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+      HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
+      HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
+      HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
+    elif [[ "${INPUT:0:2}" == "v-" ]]; then
+      VRNAME=$INPUT
+      echo -e "\e[92m ----> \e[91m$VRNAME\e[92m appears to be Console Proxy VM. Getting Details\e[0m"
+      SVMDETAILS=`getSVMdetails $VRNAME`
+      if [[ $SVMDETAILS == *"linklocalip"* ]]; then
+         VRIP=`echo $SVMDETAILS | jq -r '.linklocalip'`
+      else
+         VRIP=`echo $SVMDETAILS | jq -r '.privateip'`
+      fi
+      echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+      HOSTNAME=`echo $SVMDETAILS | jq -r '.hostname'`
+      HYPERVISOR=`echo $SVMDETAILS | jq -r '.hypervisor'`
+      HOSTIPADDRESS=`echo $SVMDETAILS | jq -r '.ipaddress'`
+    else
+      echo -e "\e[92m ----> \e[91m$INPUT\e[92m appears to be a VM.  Finding VR\e[0m"
+      VRNAME=`getVRfromVM $INPUT`
+      echo -e "\e[92m ----> Virtual Router for \e[91m$INPUT\e[92m is \e[91m$VRNAME\e[92m.  Getting IP Address\e[0m"
+      VRIP=`getIPforVR $VRNAME`
+      echo -e "\e[92m ----> IP address for \e[91m$VRNAME\e[92m is \e[91m$VRIP\e[0m"
+      echo -e "\e[92m ----> Getting details for \e[91m$INPUT\e[0m"
+      VRDETAILS=`getVRdetails $VRNAME`
+      HOSTNAME=`echo $VRDETAILS | jq -r '.hostname'`
+      HYPERVISOR=`echo $VRDETAILS | jq -r '.hypervisor'`
+      HOSTIPADDRESS=`echo $VRDETAILS | jq -r '.ipaddress'`
+    fi
   fi
-fi
 
-
-case $HYPERVISOR in
-  "VMware")
-    echo -e "\e[92m ----> Base hypervisor is \e[91mvSphere\e[92m so connecting directly\e[0m"
-    echo -e "\e[92m ----> Connecting to \e[91m$VRIP\e[0m"
-    ssh -i /var/cloudstack/management/.ssh/id_rsa -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP
-    ;;
-  XenServer | KVM)
-    echo -e "\e[92m ----> Base hypervisor is\e[91m XenServer/KVM\e[92m so connecting via host\e[0m"
-    echo -e "\e[92m ----> Host is \e[91m$HOSTNAME, \e[92mIP address is \e[91m$HOSTIPADDRESS \e[0m"
-    echo -e "\e[92m ----> Enter root password for \e[91m$HOSTNAME: \e[0m"; read -s PASSWORD
-    sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "ssh -i /root/.ssh/id_rsa.cloud -p 3922 root@$VRIP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-    ;;
- *)
-    echo "Hypervisor \'$HYPERVISOR\' detected. Not sure what to do. Exiting"
-    ;;
-esac
+  case $HYPERVISOR in
+    "VMware")
+      echo -e "\e[92m ----> Base hypervisor is \e[91mvSphere\e[92m so connecting directly\e[0m"
+      echo -e "\e[92m ----> Connecting to \e[91m$VRIP\e[0m"
+      case $CMD_FUNC in
+        "login")
+          ssh -i /var/cloudstack/management/.ssh/id_rsa -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP
+        ;;
+        "copy")
+          echo "Copying $ARG from $VRIP to $(pwd)"
+          scp -q -i /var/cloudstack/management/.ssh/id_rsa -P 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP:$ARG ./
+        ;;
+        "copyfiles")
+        ;;
+        "tail")
+          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "tailf $ARG2"
+        ;;
+      esac
+      ;;
+    XenServer | KVM)
+      echo -e "\e[92m ----> Base hypervisor is\e[91m XenServer/KVM\e[92m so connecting via host\e[0m"
+      echo -e "\e[92m ----> Host is \e[91m$HOSTNAME, \e[92mIP address is \e[91m$HOSTIPADDRESS \e[0m"
+      echo -e "\e[92m ----> Enter root password for \e[91m$HOSTNAME: \e[0m"; read -s PASSWORD
+      case $CMD_FUNC in
+        "login")
+          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "ssh -i /root/.ssh/id_rsa.cloud -p 3922 root@$VRIP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        ;;
+        "copy")
+          echo "Copying $ARG from $VRIP to $(pwd)"
+          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "scp -q -i /root/.ssh/id_rsa.cloud -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP:$ARG /tmp"
+          sshpass -p $PASSWORD scp -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP:/tmp/$(basename $ARG) ./
+        ;;
+        "copyfiles")
+        ;;
+        "tail")
+          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "ssh -i /root/.ssh/id_rsa.cloud -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP \"tailf $ARG2\""
+        ;;
+      esac
+      ;;
+   *)
+      echo "Hypervisor \'$HYPERVISOR\' detected. Not sure what to do. Exiting"
+      ;;
+  esac
 }
 
+
+
 case $COMMAND in
+  "scp")
+    svmconnect copy $HOST $ARG2
+  ;;
   "ssh")
-    svmlogin $ARG
+    svmconnect login $HOST
+  ;;
+  "getfiles")
+    svmconnect copyfiles $HOST $ARG2
+  ;;
+  "tailremote")
+    svmconnect tail $HOST $ARG2
   ;;
   "tail")
     tail -f /var/log/cloudstack/management/management-server.log
@@ -194,6 +234,6 @@ case $COMMAND in
     service cloudstack-management restart
   ;;
   "vr")
-    vm_vr $ARG
+    vm_vr $HOST
   ;;
 esac
