@@ -39,11 +39,12 @@
   yum: name=python2-pip state=present
   when: ansible_distribution_major_version == "7"
 
-- name: install setup tools and jq
+- name: install setup tools, jq and python-argparse
   yum: name={{ item }} state=present
   with_items:
   - python-setuptools
   - jq
+  - python-argparse
 
 - name: Upgrade pip and setuptools for CentOS6
   shell: pip install --upgrade pip setuptools && easy_install -U setuptools
