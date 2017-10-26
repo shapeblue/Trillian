@@ -29,7 +29,7 @@ env_timezone: "{{ env_timezone | default(def_env_timezone) }}"
 use_external_hv_hosts: "{{ use_external_hv_hosts | default(no) }}"
 use_dvfilter: {{ use_dvfilter | default(def_use_dvfilter) }}
 use_phys_hosts: {{ use_phys_hosts | default(def_use_phys_hosts) }}
-
+setshortname: {{ setshortname | default(def_setshortname) }}
 
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"

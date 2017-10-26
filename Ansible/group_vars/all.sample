@@ -123,6 +123,7 @@ def_use_shared_storage: yes
 def_use_local_storage_systemvms: no
 def_local_storage_disk_offering: "Custom"
 def_local_storage_disk_size: "80"
+def_setshortname: false
 
 java_vers:
   ccp306: java-1.6.0-openjdk
