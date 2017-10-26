@@ -41,6 +41,9 @@
 - include: ./centos-acs.yml
   when: ("{{ env_version[0:2]}}" == "cs")
 
+- include: ./centos-shortname.yml
+  when: ("{{ env_version[0:3]}}" == "ccp") and ({{ setshortname | bool }})
+
 - include: ./centos-ccp.yml
   when: ("{{ env_version[0:3]}}" == "ccp")
 
