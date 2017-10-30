@@ -14,9 +14,15 @@
   tags:
     - setup_mgmt
 
-- name: Setup CloudStack Manager (centos/rhel7 ACS >= 4.6)
+- name: Setup CloudStack Manager (centos/rhel7 ACS >= 4.11)
+  shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
+  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.11','>='))
+  tags:
+    - setup_mgmt
+
+- name: Setup CloudStack Manager (centos/rhel7 ACS 4.6-4.10)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management --tomcat7
-  when: (ansible_distribution_major_version == "7") and ( env_numversion | version_compare('4.6','>='))
+  when: (ansible_distribution_major_version == "7") and ( env_numversion | (version_compare('4.6','>=') and version_compare('4.11','<')))
   tags:
     - setup_mgmt
 
