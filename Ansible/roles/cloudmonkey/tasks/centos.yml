@@ -15,9 +15,6 @@
 #limitations under the License.
 
 
-- name: install setup tools
-  yum: name=python-setuptools state=present
-
 - name: Ensure EPEL is available (centOS6)
   yum: name="{{ epel6 }}" state=present
   ignore_errors: true
@@ -31,31 +28,42 @@
 - name: clean yum cache
   command: yum clean all
 
-- name: install setup tools and jq
-  yum: name=python-pip state=present
+- name: install pip
+  yum: name=python-pip state=latest
   when: ansible_distribution_major_version == "6"
 
-- name: install setup tools and jq
-  yum: name=python2-pip state=present
+- name: install pip
+  yum: name=python2-pip state=latest
   when: ansible_distribution_major_version == "7"
 
-- name: install setup tools, jq and python-argparse
-  yum: name={{ item }} state=present
-  with_items:
-  - python-setuptools
-  - jq
-  - python-argparse
+- name: install jq
+  yum: name=jq state=latest
 
-- name: Upgrade pip and setuptools for CentOS6
-  shell: pip install --upgrade pip setuptools && easy_install -U setuptools
-  ignore_errors: true
+- name: install setuptools version 36.8.0 for centos6 compatibility
+  pip:
+    name: setuptools
+    version: 36.8.0
+    state: present
   when: ansible_distribution_major_version == "6"
+
+- name: install setuptools for centos 7
+  pip:
+    name: setuptools
+    state: latest
+  when: ansible_distribution_major_version == "7"
+
+- name: install argparse
+  pip:
+    name: argparse
+    state: latest
 
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
 - name: install cloudmonkey
-  shell: pip install --upgrade cloudmonkey
+  pip: 
+    name: cloudmonkey
+    state: latest
 
 - name: base configuration
   shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"

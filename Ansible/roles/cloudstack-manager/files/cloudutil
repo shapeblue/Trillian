@@ -22,6 +22,34 @@ COMMAND=$1
 HOST=$2
 ARG2=$3
 
+display_usage(){
+echo "
+This a cloudstack help utility for simplifying a number of management server tasks.
+The available options are:
+
+cloudutil start   --- start mgmt service on localhost
+cloudutil stop    --- stops mgmt service on localhost
+cloudutil restart --- restarts mgmt service on localhost
+cloudutil vr      --- returns VR for specific VM
+cloudutil ssh     --- ssh into remote System VM
+cloudutil scp     --- copies file from remote system vm
+cloudutil tailremote  --- tails log on remote system vm
+cloudutil help    --- display usage
+
+Arguments
+cloudutil vr <instance_name_of_vm>
+cloudutil ssh <instance_name_of_system_vm>   --- user will be prompted for password for intermediary hypervisor in the cases of XenServer and KVM
+cloudutil scp <instance_name_of_system_vm> <path_to_required_file> --- file will be downloaded to current working directory
+cloudutil tailremote <instance_name_of_system_vm> <path_to_required_file_to_be_tailed>
+
+
+utility requires cloudmonkey, jq and askpass to be installed
+"
+
+}
+
+
+
 function vm_vr()
 {
 VMNAME=$1
@@ -215,7 +243,7 @@ case $COMMAND in
   "ssh")
     svmconnect login $HOST
   ;;
-  "getfiles")
+  "getbundle")
     svmconnect copyfiles $HOST $ARG2
   ;;
   "tailremote")
@@ -235,5 +263,8 @@ case $COMMAND in
   ;;
   "vr")
     vm_vr $HOST
+  ;;
+  "*")
+    display_usage
   ;;
 esac

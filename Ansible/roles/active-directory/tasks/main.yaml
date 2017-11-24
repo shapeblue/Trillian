@@ -1,0 +1,14 @@
+---
+
+- hosts: winclient
+  gather_facts: no
+  tasks:
+  - win_domain_controller:
+      dns_domain_name: ansible.vagrant
+      domain_admin_user: testguy@ansible.vagrant
+      domain_admin_password: password123!
+      safe_mode_password: password123!
+      state: domain_controller
+      log_path: c:\ansible_win_domain_controller.txt
+
+- win_reboot:
