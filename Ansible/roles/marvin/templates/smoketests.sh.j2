@@ -60,7 +60,7 @@ runtest() {
         echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
         rm -fr $LOGDIR/$OLDRESULT
     fi
-    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -a tags=advanced $file
+    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags=advanced $file
     cleanup || true
 }
 
@@ -74,7 +74,12 @@ launchtest() {
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
 counter=1
 PASSES=0
-for file in /marvin/tests/smoke/test_*.py; do
+# FIXME: make separate list of `dangerous` tests and those that may be run in parallel
+FILES=$(ls /marvin/tests/smoke/test_*py | grep -v test_hostha_kvm)
+if [ -f /marvin/tests/smoke/test_hostha_kvm.py ]; then
+    FILES="$FILES /marvin/tests/smoke/test_hostha_kvm.py"
+fi
+for file in $FILES; do
     echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
   {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 
