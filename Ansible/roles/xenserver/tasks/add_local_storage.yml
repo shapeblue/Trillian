@@ -1,10 +1,18 @@
 ---
+- name: Check for existing local storage
+  shell: 'xe sr-list name-label=\"Local Storage\" params=PBDs --minimal'
+  register: localstoragepbd
+
+- name: Confirm local storage PBD found
+  debug: msg="Local storage PBD found: {{ localstoragepbd.stdout }}"
 
 - name: unplug existing storage
   shell: 'xe pbd-unplug uuid=`xe sr-list name-label="Local Storage" params=PBDs --minimal`'
+  when: localstoragepbd.stdout != ""
 
 - name: forget existing local storage SR
   shell: 'xe sr-forget uuid=`xe sr-list name-label="Local Storage" --minimal`'
+  when: localstoragepbd.stdout != ""
 
 - name: add local storage SR using new disk (/dev/sdb)
   shell: 'xe sr-create type=lvm name-label="Local Storage" content-type=user device-config:device=/dev/sdb'
