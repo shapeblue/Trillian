@@ -4,7 +4,7 @@
   register: localstoragepbd
 
 - name: Confirm local storage PBD found
-  debug: msg="Local storage PBD found: {{ localstoragepbd.stdout }}"
+  debug: msg="Local storage PBD found {{ localstoragepbd.stdout }}"
 
 - name: unplug existing storage
   shell: 'xe pbd-unplug uuid=`xe sr-list name-label="Local Storage" params=PBDs --minimal`'
