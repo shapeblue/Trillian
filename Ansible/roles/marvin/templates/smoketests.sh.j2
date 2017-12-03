@@ -68,7 +68,7 @@ launchtest() {
     file=$1
     runtest $file
     # Run tests once again on error or failure
-    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Intermitten failure detected: $file" >> /marvin/smoketests-summary.txt
+    #python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Intermitten failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
@@ -83,7 +83,11 @@ for file in $FILES; do
     echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
   {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
 
+    start_time="$(date -u +%s)"
     launchtest $file
+    end_time="$(date -u +%s)"
+    elapsed="$(($end_time-$start_time))"
+    echo "Test $file took $elapsed seconds" >> /marvin/smoketests-summary.txt
 
     LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
     if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
