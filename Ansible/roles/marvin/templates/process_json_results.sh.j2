@@ -29,14 +29,15 @@ ENV_EXTRA_DATA="env_extra_data.json"
 echo " -- Create testrun uuid"
 TESTRUN_UUID=$(uuidgen -r)
 
-LOGDIR=/marvin/MarvinLogs
-
 TESTOUTPUT=""
-for file in $LOGDIR/test_*.py.json; do
+echo "" > $TMP_JSON_DIR/nose_test_ouput.json
+for file in $TMP_JSON_DIR/test_*.py.json; do
+  echo "processing $file"
   cat $file | jq 'del(.stats) | .results[]' > $TMP_JSON_DIR/tmpfile
-  TESTOUTPUT=`echo $TESTOUTPUT|  jq .[] | jq -s --slurpfile tmpfile $TMP_JSON_DIR/tmpfile '. + $tmpfile'`
+  cat $TMP_JSON_DIR/nose_test_ouput.json |  jq .[] | jq -s --slurpfile newfile $TMP_JSON_DIR/tmpfile '. + $newfile' > $TMP_JSON_DIR/nose_test_ouput.json2
+  mv $TMP_JSON_DIR/nose_test_ouput.json2 $TMP_JSON_DIR/nose_test_ouput.json
 done
-echo $TESTOUTPUT > $TMP_JSON_DIR/nose_test_ouput.json
+rm -f $TMP_JSON_DIR/tmpfile
 
 echo " ==== PROCESS ENV DEFINITION FILE (ADVANCED-CFG) ==== "
 
@@ -45,8 +46,7 @@ echo " -- convert numbers to strings env cfg data"
 cp $CFG_FILE $TMP_JSON_DIR/env_cfg_file.json
 NUMBERS=(`grep '\".*\": [0-9].*' $TMP_JSON_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
 UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
-{% raw %}for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do{% endraw %}
-
+for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do
   sed -i "s/: ${UNIQUE[$i]}$/: \"${UNIQUE[$i]}\"/g" $TMP_JSON_DIR/env_cfg_file.json
   sed -i "s/: ${UNIQUE[$i]},/: \"${UNIQUE[$i]}\",/g" $TMP_JSON_DIR/env_cfg_file.json
 done
@@ -55,7 +55,7 @@ echo " -- get additional data for env cfg data"
 cloudmonkey set display json
 export TERM=vt100
 HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
-HV_JSON=`cat $TMP_ENV_META_DATA | jq -r '.marvin_hypervisor'`
+HV_JSON=`cat $TMP_ENV_META_DATA | jq -r '.[] | .marvin_hypervisor'`
 
 if [[ "${HV,,}" == "kvm" ]]; then
   HOST1DATA=`cat $TMP_JSON_DIR/env_cfg_file.json | jq '.zones[] | .pods[] | .clusters[]| select(.hypervisor=="kvm") | .hosts[0]'`
@@ -64,7 +64,6 @@ if [[ "${HV,,}" == "kvm" ]]; then
   HOST1USER=`echo $HOST1DATA | jq -r '.username'`
   HOST1PASS=`echo $HOST1DATA | jq -r '.password'`
 fi
-
 
 echo " -- Redact sensitive data from cfg data"
 sed -i 's/\"password\": \".*\"/\"password\": \"------"/g' $TMP_JSON_DIR/env_cfg_file.json
@@ -81,7 +80,7 @@ cp $EXTRA_ENV_DATA_FILE $TMP_ENV_META_DATA
 cloudmonkey set display json
 export TERM=vt100
 HV=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisor //empty' | head -1)
-HV_JSON=`cat $TMP_ENV_META_DATA | jq -r '.marvin_hypervisor'`
+HV_JSON=`cat $TMP_ENV_META_DATA | jq -r '.[] | .marvin_hypervisor'`
 
 if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
   if [[ "${HV,,}" == "kvm" ]]; then
@@ -109,14 +108,18 @@ DATEVAR=$(date)
 sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_META_DATA
 
 echo " -- URL Encode test_data"
-alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
 TEST_DATA=`cat $TEST_DATA_FILE`
-sed -i "s/\"test_data_py_contents\": \".*\"/\"test_data_py_contents\": \"`urlencode "$TEST_DATA"`\"/g" $TMP_ENV_META_DATA
+TESTDATAPY=`python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])" "$TEST_DATA"`
 
 
 echo " ===== create json file ======"
 
 
-echo "{\"testrun\":{\"testrun_uuid\": \"$TESTRUN_UUID\",\"results\":$TESTOUTPUT,\"env_data\":`cat $TMP_JSON_DIR/env_cfg_file.json`,\"test_metadata\":`cat $TMP_ENV_META_DATA`}}" > $MARVINDIR/test_run.json
+echo "{\"testrun\":
+{\"testrun_uuid\": \"$TESTRUN_UUID\",
+\"test_metadata\":`cat $TMP_ENV_META_DATA`,
+\"results\":`cat $TMP_JSON_DIR/nose_test_ouput.json`,
+\"env_data\":`cat $TMP_JSON_DIR/env_cfg_file.json`,
+\"test_data_py_contents\":\"$TESTDATAPY\"}}" > $MARVINDIR/test_run.json
 
 cd $MARVINDIR && tar -czf ./{{ env_name_clean }}_json.tar.gz test_run.json 
