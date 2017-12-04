@@ -98,10 +98,10 @@ def parse_reports(file_path_list):
                 elif 'error' == children.tag:
                     exit_code = 1
                     status = '`Error`'
-            if status is not 'Success':
+            if status not in ['Success', 'Skipped']:
                 tests.append([name, status, time, filename])
 
-    for test in sorted(tests, key=itemgetter(1,3,0), reverse=True):
+    for test in tests:
         print "%s | %s | %.2f | %s" % (test[0], test[1], float(test[2]), test[3])
     print ""
     return exit_code
