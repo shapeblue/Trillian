@@ -21,6 +21,7 @@ JSON_OUTPUT_DIR="/marvin/json_results"
 mkdir $JSON_OUTPUT_DIR
 
 CFG_FILE="{{ env_name_clean }}-advanced-cfg"
+{% raw %}
 TEST_DATA_FILE="$MARVINDIR/test_data.py"
 EXTRA_ENV_DATA_FILE="$MARVINDIR/additional_test_data.json"
 TMP_ENV_META_DATA="$JSON_OUTPUT_DIR/additional_test_data.json"
@@ -111,4 +112,5 @@ for file in $LOGDIR/test_*.py.json; do
   done
 done
 
+{% endraw %}
 cd $MARVINDIR && tar -czf ./{{ env_name_clean }}_json.tar.gz $JSON_OUTPUT_DIR/*
