@@ -60,7 +60,7 @@ runtest() {
         echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
         rm -fr $LOGDIR/$OLDRESULT
     fi
-    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags=advanced $file
+    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }} $file
     cleanup || true
 }
 
