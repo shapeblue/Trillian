@@ -39,12 +39,10 @@
     - "global_settings"
 
 - name: Boost SSVM offering when using VMWare
-  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.service_offering SET {{ item.field}}='{{ item.value }}' WHERE id='{{ item.id }}';"
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.service_offering SET {{ item.field}}='{{ item.value }}' WHERE vm_type='secondarystoragevm';"
   with_items:
-  - {id: "7", field: "cpu", value: "2"}
-  - {id: "7", field: "ram_size", value: "2048"}
-  - {id: "8", field: "cpu", value: "2"}
-  - {id: "8", field: "ram_size", value: "2048"}
+  - {field: "ram_size", value: "2048"}
+  - {field: "cpu", value: "2"}
   when: ( env_hv == "vmware" )
   tags:
     - "global_settings"
