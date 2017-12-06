@@ -45,7 +45,7 @@
   - {id: "7", field: "ram_size", value: "2048"}
   - {id: "8", field: "cpu", value: "2"}
   - {id: "8", field: "ram_size", value: "2048"}
-  when: "{{ env_hv | lower }}" == "vmware"
+  when: ( env_hv == "vmware" )
   tags:
     - "global_settings"
 
