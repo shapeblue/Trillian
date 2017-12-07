@@ -91,9 +91,11 @@ if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
   fi
 fi
 
-echo " -- Add date to additional test run data"
+echo " -- Add date and testrun_uuid to additional test run data"
 DATEVAR=$(date)
 sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_META_DATA
+sed -i "s/\"testrun_uuid\": \".*\"/\"testrun_uuid\": \"$TESTRUN_UUID\"/g" $TMP_ENV_META_DATA
+
 
 echo " -- URL Encode test_data"
 TEST_DATA=`cat $TEST_DATA_FILE`
