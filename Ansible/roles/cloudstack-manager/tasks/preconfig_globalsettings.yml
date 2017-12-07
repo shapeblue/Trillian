@@ -38,6 +38,23 @@
   tags:
     - "global_settings"
 
+- name: Boost SSVM offering when using VMWare
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.service_offering SET {{ item.field}}='{{ item.value }}' WHERE vm_type='secondarystoragevm';"
+  with_items:
+  - {field: "ram_size", value: "2048"}
+  - {field: "cpu", value: "2"}
+  when: ( env_hv == "vmware" )
+  tags:
+    - "global_settings"
+
+- name: Set SSVM to use jumbo frames when using vmware
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
+  with_items:
+  - {name: "secstorage.vm.mtu.size", value: "4500"}
+  when: ( env_hv == "vmware" )
+  tags:
+    - "global_settings"
+
 - name: add admin keys for cloudmonkey
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
 
