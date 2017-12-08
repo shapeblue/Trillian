@@ -884,10 +884,10 @@ test_data = {
     },
     "coreos_volume": {
         "diskname": "Volume_core",
-        "urlvmware":"http://dl.openvm.eu/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-vmware.ova",
-        "urlxen":"http://dl.openvm.eu/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-xen.vhd.bz2",
-        "urlkvm": "http://dl.openvm.eu/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-kvm.qcow2.bz2",
-        "urlhyperv":"http://dl.openvm.eu/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-hyperv.vhd.zip"
+        "urlvmware":"http://{{ openvm_images_location }}/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-vmware.ova",
+        "urlxen":"http://{{ openvm_images_location }}/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-xen.vhd.bz2",
+        "urlkvm": "http://{{ openvm_images_location }}/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-kvm.qcow2.bz2",
+        "urlhyperv":"http://{{ openvm_images_location }}/cloudstack/coreos/x86_64/coreos_production_cloudstack_image-hyperv.vhd.zip"
         },
     "CentOS6.3template": {
         "displaytext": "Centos",
@@ -904,7 +904,7 @@ test_data = {
         "passwordenabled": "False",
         "isdynamicallyscalable": "True",
         "ostype": "CentOS 7",
-        "url": "http://dl.openvm.eu/cloudstack/centos/vanilla/7/x86_64/CentOS-7-x86_64-vanilla-xen.vhd.bz2",
+        "url": "http://{{ openvm_images_location }}/cloudstack/centos/vanilla/7/x86_64/CentOS-7-x86_64-vanilla-xen.vhd.bz2",
         "format": "VHD",
         "ispublic": "true",
         "hypervisor":"Xenserver"
