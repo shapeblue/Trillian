@@ -35,7 +35,7 @@ echo " ==== PROCESS ENV DEFINITION FILE (ADVANCED-CFG) ==== "
 
 
 echo " -- convert numbers to strings env cfg data"
-cp $MARVINDIR/$CFG_FILE $JSON_OUTPUT_DIR/env_cfg_file.json
+cp $CFG_FILE $JSON_OUTPUT_DIR/env_cfg_file.json
 NUMBERS=(`grep '\".*\": [0-9].*' $JSON_OUTPUT_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
 UNIQUE=(`for i in ${NUMBERS[@]}; do echo $i; done | sort -u | tr " " "\n"`)
 for (( i = 0; i < ${#UNIQUE[@]}; i++ )); do
