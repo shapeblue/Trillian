@@ -109,7 +109,7 @@ for file in $LOGDIR/test_*.py.json; do
   for thetest in `cat $file | jq -r '.results[]|.name'` ; do
     echo " -- Splitting out $thetest"
     cat $file | jq --arg JQVAR $thetest '.results[]|select(.name==$JQVAR)' > $JSON_OUTPUT_DIR/$thetest-tmp.json
-     jq -s '.[0] + .[1] + .[2] +.[3]' $JSON_OUTPUT_DIR/$thetest-tmp.json $TMP_ENV_META_DATA $JSON_OUTPUT_DIR/env_cfg_file.json $ENCODED_TEST_DATA > $JSON_OUTPUT_DIR/$thetest.json
+    echo "{ \"results\": `jq -s '.[0] + .[1] + .[2] +.[3]' $JSON_OUTPUT_DIR/$thetest-tmp.json $TMP_ENV_META_DATA $JSON_OUTPUT_DIR/env_cfg_file.json $ENCODED_TEST_DATA` }" > $JSON_OUTPUT_DIR/$thetest.json
     rm -f $JSON_OUTPUT_DIR/$thetest-tmp.json
   done
 done
