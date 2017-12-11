@@ -178,15 +178,15 @@
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
-      when: ("{{ hvtype }}" in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
+      when: ( hvtype in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
 
     - name: ensure vmware_ver is specified when hypervisor is v
       fail: msg="VMware version (vmware_ver) required when nypervisor is VMware (v)"
-      when: ("{{ hvtype }}" in [ "v", "vmware" ] ) and  ( vmware_ver is undefined )
+      when: ( hvtype in [ "v", "vmware" ] ) and  ( vmware_ver is undefined )
 
     - name: Ensure KVM OS is specified when hypervisor is k
       fail: msg="KVM OS (kvm_os) required when hypervisor is KVM (k)"
-      when: ("{{ hvtype }}" in [ "k", "kvm" ] ) and ( kvm_os is undefined )
+      when: ( hvtype in [ "k", "kvm" ] ) and ( kvm_os is undefined )
 
     - name: set value for hytype when not required
       set_fact: hvtype="na"
@@ -194,15 +194,15 @@
 
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"
-      when: ("{{ hvtype }}" not in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
+      when: ( hvtype not in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
 
     - name: Set kvm_os to custom when KVM not hypervisor
       set_fact: kvm_os="na"
-      when: ("{{ hvtype }}" not in [ "k", "kvm" ] ) and ( kvm_os is undefined )
+      when: ( hvtype not in [ "k", "kvm" ] ) and ( kvm_os is undefined )
 
     - name: Set vmware_ver to custom when VMware not hypervisor
       set_fact: vmware_ver="na"
-      when: ("{{ hvtype }}" not in [ "v", "vmware" ] ) and  ( vmware_ver is undefined )
+      when: ( hvtype not in [ "v", "vmware" ] ) and  ( vmware_ver is undefined )
 
     - debug: msg="vmware_ver={{ vmware_ver }}, xs_ver={{ xs_ver }}, kvm_os={{kvm_os }}"
 
