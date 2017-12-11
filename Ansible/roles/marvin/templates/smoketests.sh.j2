@@ -75,7 +75,10 @@ NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
 counter=1
 PASSES=0
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
-FILES=$(ls /marvin/tests/smoke/test_*py | grep -v test_hostha_kvm)
+FILES=$(ls /marvin/tests/smoke/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+if [ -f /marvin/tests/smoke/test_host_maintenance.py ]; then
+    FILES="$FILES /marvin/tests/smoke/test_host_maintenance.py"
+fi
 if [ -f /marvin/tests/smoke/test_hostha_kvm.py ]; then
     FILES="$FILES /marvin/tests/smoke/test_hostha_kvm.py"
 fi
