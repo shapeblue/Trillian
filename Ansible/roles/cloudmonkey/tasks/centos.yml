@@ -40,10 +40,7 @@
   yum: name=jq state=latest
 
 - name: install setuptools version 36.8.0 for centos6 compatibility
-  pip:
-    name: setuptools
-    version: 36.8.0
-    state: present
+  shell: pip install setuptools==36.8.0
   when: ansible_distribution_major_version == "6"
 
 - name: install setuptools for centos 7
