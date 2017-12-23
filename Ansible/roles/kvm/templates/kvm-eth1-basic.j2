@@ -14,11 +14,9 @@
 #limitations under the License.
 
 
-DEVICE=eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
-VLAN=yes
+DEVICE=eth1
 ONBOOT=yes
 HOTPLUG=no
 BOOTPROTO=none
 TYPE=Ethernet
-BRIDGE={{ kvm_guest_network_label }}
 NM_CONTROLLED=no

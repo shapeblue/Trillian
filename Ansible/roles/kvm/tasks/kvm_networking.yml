@@ -32,7 +32,11 @@
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
 - name: Configure eth1 (Basic Networking)
-  template: src=kvm-eth1-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
+  template: src=kvm-eth1-basic.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+  when: ("{{ env_zonetype | lower }}" == "basic")
+
+- name: Configure eth1.vlan (Basic Networking)
+  template: src=kvm-eth1-basic-vlan.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
   when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: Configure bridge 2
