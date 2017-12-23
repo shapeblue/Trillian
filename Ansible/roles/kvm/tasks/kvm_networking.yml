@@ -16,7 +16,7 @@
 
 - name: stop and disable networkmanager (CentOS7)
   systemd:
-    name: networkmanager
+    name: NetworkManager.service
     state: stopped
     enabled: false
   when: ansible_distribution_major_version == "7"
@@ -40,3 +40,4 @@
 
 - name: restart networking
   service: name=network state=restarted
+	
