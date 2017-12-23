@@ -14,11 +14,11 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: stop and disable networkmanager (CentOS7)
-  systemd:
-    name: NetworkManager.service
+- name: stop and disable networkmanager (CentOS7) 
+  service:
+    name: NetworkManager
     state: stopped
-    enabled: false
+    enabled: false 
   when: ansible_distribution_major_version == "7"
 
 - name: Configure eth0
@@ -40,4 +40,3 @@
 
 - name: restart networking
   service: name=network state=restarted
-	
