@@ -40,3 +40,4 @@
 
 - name: restart networking
   service: name=network state=restarted
+  ignore_errors: true
