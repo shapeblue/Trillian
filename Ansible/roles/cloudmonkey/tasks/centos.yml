@@ -28,12 +28,12 @@
 - name: clean yum cache
   command: yum clean all
 
-- name: install pip
+- name: install pip (Centos6)
   yum: name=python-pip state=latest
   when: ansible_distribution_major_version == "6"
 
-- name: install pip
-  yum: name=python2-pip state=latest
+- name: install pip (centos7)
+  shell: curl "https://bootstrap.pypa.io/get-pip.py" -o "/tmp/get-pip.py" && python /tmp/get-pip.py
   when: ansible_distribution_major_version == "7"
 
 - name: install jq
