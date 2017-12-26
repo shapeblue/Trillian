@@ -29,7 +29,6 @@
     - iptables-persistent
     - qemu-kvm
     - parted
-    - openjdk-8-jdk
 
 - name: set apt repo to local
   template: 
