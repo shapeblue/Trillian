@@ -17,7 +17,7 @@
 DEVICE=eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
 VLAN=yes
 ONBOOT=yes
-HOTPLUG=no
+HOTPLUG=yes
 BOOTPROTO=none
 TYPE=Ethernet
 BRIDGE={{ kvm_guest_network_label }}

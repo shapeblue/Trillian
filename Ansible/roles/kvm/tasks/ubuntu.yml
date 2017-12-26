@@ -16,7 +16,10 @@
 
 
 - name: Install basic utilities and tools
-  apt: pkg={{ item }} state=installed update_cache=yes
+  apt: 
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
   with_items:
     - openntpd
     - openssh-client
@@ -26,23 +29,32 @@
     - iptables-persistent
     - qemu-kvm
     - parted
+    - openjdk-8-jdk
 
 - name: set apt repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+  template: 
+    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
+    dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
 
 - name: Add specified repository into sources list.
-  apt_repository: repo='deb {{ baseurl_kvm }} /' state=present
+  apt_repository: 
+    repo: 'deb {{ baseurl_kvm }} /'
+    state: present
 
-- apt_key: url={{ repohost }}/release.asc state=present
+- apt_key:
+    url: "{{ repohost }}/release.asc"
+    state: present
 
 - apt_key:
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
 - name: Add openjdk-ppa repository into sources list.
-  apt_repository: repo='deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main' state=present
+  apt_repository:
+    repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main'
+    state: present
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
