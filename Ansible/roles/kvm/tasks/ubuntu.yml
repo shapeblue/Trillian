@@ -54,12 +54,20 @@
   apt_repository:
     repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main'
     state: present
+  when: ansible_distribution_release == "trusty"
+
+- name: Add openjdk-ppa repository into sources list.
+  apt_repository:
+    repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu xenial main'
+    state: present
+  when: ansible_distribution_release == "xenial"
+
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
 
-- name: Install basic utilities and tools
+- name: install open-jdk8
   apt: 
     pkg: "{{ item }}"
     state: latest
