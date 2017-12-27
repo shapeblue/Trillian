@@ -71,6 +71,14 @@ env_numversion: "{{ numversion }}"
 {% set osversion = "centos7" %}
 {% set releaseurl = "centos7" %}
 {% set mgmt_os_type = "centos7" %}
+{% elif mgmt_os[0:1] | lower == "u14" %}
+{% set osversion = "debian" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "ubuntu1404" %}
+{% elif mgmt_os[0:1] | lower == "u16" %}
+{% set osversion = "debian" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "ubuntu1604" %}
 {% elif mgmt_os[0:1] | lower == "u" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
@@ -249,6 +257,18 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmosversion = "centos7" %}
 {% set kvmreleaseurl = "centos7" %}
 {% set kvm_os_type = "centos7" %}
+
+{% elif kvm_os[0:1] | lower == "u14" %}
+{% set kvmosversion = "debian" %}
+{% set kvmreleaseurl = "debian" %}
+{% set kvm_os_type = "ubuntu1404" %}
+
+{% elif kvm_os[0:1] | lower == "u16" %}
+{% set kvmosversion = "debian" %}
+{% set kvmreleaseurl = "debian" %}
+{% set kvm_os_type = "ubuntu1604" %}
+
+
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
