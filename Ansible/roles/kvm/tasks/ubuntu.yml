@@ -65,13 +65,16 @@
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
-- name: Install basic utilities and tools
+- name: Install Java8
   apt: 
     pkg: "{{ item }}"
     state: latest
     update_cache: yes
   with_items:
     - openjdk-8-jdk
+
+- name: set export JAVA_HOME
+  shell: "echo JAVA_HOME=$(readlink -f /usr/bin/java | sed 's:bin/java::') >> /etc/environment && source /etc/environment"
 
 - include: ./add_local_storage.yml
   when: use_local_storage
