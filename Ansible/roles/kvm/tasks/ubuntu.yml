@@ -71,7 +71,7 @@
     state: latest
     update_cache: yes
   with_items:
-    - openjdk-8-jdk
+    - openjdk-7-jdk
 
 - name: set export JAVA_HOME
   shell: "echo JAVA_HOME=$(readlink -f /usr/bin/java | sed 's:bin/java::') >> /etc/environment && source /etc/environment"
