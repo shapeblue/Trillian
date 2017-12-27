@@ -62,21 +62,18 @@
     state: present
   when: ansible_distribution_release == "xenial"
 
+
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
-- name: Install Java8
+
+- debug: msg="Java version required is {{ java_ver }}"
+
+- name: Ensure correct open-jdk is installed
   apt: 
-    pkg: "{{ item }}"
+    pkg: "{{ java_ver }}"
     state: latest
     update_cache: yes
-  with_items:
-    - openjdk-7-jdk
-
-- name: set export JAVA_HOME
-  shell: "echo JAVA_HOME=$(readlink -f /usr/bin/java | sed 's:bin/java::') >> /etc/environment && source /etc/environment"
-  args:
-    executable: /bin/bash
 
 - include: ./add_local_storage.yml
   when: use_local_storage
