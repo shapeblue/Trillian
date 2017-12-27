@@ -73,7 +73,7 @@
     state: latest
     update_cache: yes
   with_items:
-    - openjdk-8-jdk
+    - openjdk-7-jdk
 
 - include: ./add_local_storage.yml
   when: use_local_storage
