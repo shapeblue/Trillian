@@ -78,6 +78,14 @@
   args:
     executable: /bin/bash
 
+- name: install open-jdk8
+  apt: 
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openjdk-7-jdk
+
 - include: ./add_local_storage.yml
   when: use_local_storage
   tags:
