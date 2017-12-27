@@ -67,6 +67,8 @@
   apt:
     update_cache: yes
 
+- set_fact: java_ver="{{ kvm_java_ver }}"
+
 - debug: msg="Java version required is {{ java_ver }}"
 
 - name: Ensure correct open-jdk is installed
