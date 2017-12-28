@@ -72,6 +72,7 @@ launchtest() {
 }
 
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
+run_start_time="$(date -u +%s)"
 counter=1
 PASSES=0
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
@@ -90,17 +91,19 @@ for file in $FILES; do
     launchtest $file
     end_time="$(date -u +%s)"
     elapsed="$(($end_time-$start_time))"
+    all_tests_elapsed="$((($end_time-$run_start_time)/1440))"
+    tests_left="$(($NUMTESTS-$counter))"
     echo "$(basename $file): $elapsed seconds" >> $LOGDIR/tests-time.txt
 
     LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
     if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
       echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
-      {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far"{% endif %}
+      {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."{% endif %}
 
     else
       PASSES=$((PASSES+1))
       echo "test $(basename $file) in {{ env_name_clean }} looks OK"
-      {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far."{% endif %}
+      {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."{% endif %}
 
     fi
     counter=$((counter+1))
