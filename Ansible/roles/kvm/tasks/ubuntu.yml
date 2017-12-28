@@ -68,22 +68,15 @@
     update_cache: yes
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
+- set_fact: java_path="{{ kvm_java_path }}"
 
 - debug: msg="Java version required is {{ java_ver }}"
 
 - name: Ensure correct open-jdk is installed
   apt: 
-    pkg: "{{ java_ver }}"
+    pkg: "{{ kvm_java_path }}"
     state: latest
     update_cache: yes
-
-- name: install open-jdk8
-  apt: 
-    pkg: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items:
-    - openjdk-7-jdk
 
 - include: ./add_local_storage.yml
   when: use_local_storage
