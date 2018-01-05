@@ -21,7 +21,10 @@
   when: ansible_distribution_major_version == "6"
 
 - name: Ensure EPEL is available (centOS7)
-  yum: name="{{ epel7 }}" state=present
+  template:
+    src: "{{ inventory_dir }}/templates/epel.repo.j2"
+    dest: /etc/yum.repos.d/epel.repo
+    force: true
   ignore_errors: true
   when: ansible_distribution_major_version == "7"
 
