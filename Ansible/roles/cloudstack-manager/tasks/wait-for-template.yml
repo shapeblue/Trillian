@@ -16,6 +16,6 @@
   shell: cloudmonkey list templates listall=true templatefilter=all | jq '.template[]| select(.templatetype=="BUILTIN") | .isready' | sort | uniq
   register: result
   until: result.stdout == "true"
-  retries: 300
+  retries: 400
   tags:
     - waitfortemplate
