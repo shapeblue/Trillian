@@ -46,8 +46,8 @@
     state: absent
     force: yes
   with_items:
-  - "{{ def_env_ssh_key_path }}"
-  - "{{ def_env_ssh_key_path }}.pub"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub"
 
 - name: "Ensure {{ def_env_ssh_key_path | dirname }}/ exists"
   local_action:
@@ -57,7 +57,7 @@
     mode: 0777
 
 - name: Generate SSH keys
-  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}"
+  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}-{{ env_name_clean }}"
 
 - name: Add new public SSH Key to the project
   local_action:
@@ -65,7 +65,7 @@
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
-    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}.pub') }}"
+    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
   local_action: 
@@ -74,8 +74,8 @@
     state: absent
     force: yes
   with_items:
-  - "{{ def_env_ssh_key_path }}"
-  - "{{ def_env_ssh_key_path }}.pub"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub"
 
 ####################################################################
 # First management server
