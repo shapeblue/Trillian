@@ -182,7 +182,7 @@
 - name: Write testuuid file
   template:
     src: testuuid.j2
-    dest:"/marvin/testuuid"
+    dest: "/marvin/testuuid"
     mode: 0755
   tags:
     - marvin
