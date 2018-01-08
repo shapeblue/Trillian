@@ -18,6 +18,7 @@ set +e # stop erroneous failures reported by Jenkins
 
 LOGDIR=/marvin/MarvinLogs/AdditionalTests
 mkdir -p $LOGDIR
+echo "$(date)" > /marvin/testrunstartdate
 
 rm -f /marvin/tests/smoke/*.pyc
 rm -f /marvin/tests/component/*pyc

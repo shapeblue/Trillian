@@ -27,9 +27,22 @@ EXTRA_ENV_DATA_FILE="$MARVINDIR/additional_test_data.json"
 TMP_ENV_META_DATA="$JSON_OUTPUT_DIR/additional_test_data.json"
 ENV_TEST_DATA="env_test_data.json"
 ENV_EXTRA_DATA="env_extra_data.json"
-ENCODED_TEST_DATA="/$MARVINDIR/encoded_test_data.json"
-echo " -- Create testrun uuid"
-TESTRUN_UUID=$(uuidgen -r)
+ENCODED_TEST_DATA="$MARVINDIR/encoded_test_data.json"
+
+echo " -- Create testrun uuid if not already created"
+if [[ -e "/marvin/testuuid" ]]; then
+  TESTRUN_UUID=`cat /marvin/testuuid`
+else
+  TESTRUN_UUID=$(uuidgen -r)
+  echo $TESTRUN_UUID > $MARVINDIR/testuuid
+fi
+
+if [[ -e "$MARVINDIR/testrunstartdate" ]]; then
+  DATEVAR=$(cat "$MARVINDIR/testrunstartdate")
+else
+  DATEVAR=$(date)
+fi
+
 
 echo " ==== PROCESS ENV DEFINITION FILE (ADVANCED-CFG) ==== "
 
@@ -92,10 +105,17 @@ if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
 fi
 
 echo " -- Add date and testrun_uuid to additional test run data"
-DATEVAR=$(date)
 sed -i "s/\"testrun_date\": \".*\"/\"testrun_date\": \"$DATEVAR\"/g" $TMP_ENV_META_DATA
 sed -i "s/\"testrun_uuid\": \".*\"/\"testrun_uuid\": \"$TESTRUN_UUID\"/g" $TMP_ENV_META_DATA
 
+
+if [[ -e "/marvin/rc_num" ]]; then
+  sed -i "s/\"rc_num\": \".*\"/\"rc_num\": \"`cat /$MARVINDIR/rc_num`\"/g" $TMP_ENV_META_DATA
+fi
+
+if [[ -e "/marvin/pr_id" ]]; then
+  sed -i "s/\"pr_id\": \".*\"/\"pr_id\": \"`cat /$MARVINDIR/pr_id`\"/g" $TMP_ENV_META_DATA
+fi
 
 echo " -- URL Encode test_data"
 TEST_DATA=`cat $TEST_DATA_FILE`
@@ -114,6 +134,7 @@ for file in $LOGDIR/test_*.py.json; do
   done
 done
 
+
 {% endraw %}
 cd $MARVINDIR && tar -czf ./{{ env_name_clean }}_json.tar.gz $JSON_OUTPUT_DIR/*
-echo $TESTRUN_UUID > $MARVINDIR/testuuid
+

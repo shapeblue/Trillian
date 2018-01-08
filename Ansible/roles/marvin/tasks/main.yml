@@ -179,6 +179,14 @@
     - marvin_cfg
     - mavintest
 
+- name: Write testuuid file
+  template:
+    src: testuuid.j2
+    dest:"/marvin/testuuid"
+    mode: 0755
+  tags:
+    - marvin
+    - marvin_cfg
 
 - include: ./fix_tests.yml
   when: fixtests
