@@ -130,5 +130,4 @@ echo "" >> /marvin/smoketests-summary.txt
 python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
 
-cd $TMP_JSON_DIR
 sh /marvin/process_json_results.sh

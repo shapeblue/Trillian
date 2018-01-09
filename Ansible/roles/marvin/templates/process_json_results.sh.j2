@@ -46,7 +46,7 @@ fi
 
 echo " ==== PROCESS ENV DEFINITION FILE (ADVANCED-CFG) ==== "
 
-
+cd $MARVINDIR
 echo " -- convert numbers to strings env cfg data"
 cp $CFG_FILE $JSON_OUTPUT_DIR/env_cfg_file.json
 NUMBERS=(`grep '\".*\": [0-9].*' $JSON_OUTPUT_DIR/env_cfg_file.json | sed 's/.*: //g' | sed 's/,//g'`)
