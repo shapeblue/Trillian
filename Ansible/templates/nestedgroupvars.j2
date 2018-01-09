@@ -386,6 +386,13 @@ baseurl_marvin: "{{ marvinbaseurl }}"
 fallback_marvin_test_repo: "{{ fallback_marvin_test_repo | default( def_fallback_marvin_test_repo ) }}"
 fixtests: {{ fixtests | default("no") }}
 force_marvin_fallback: {{ force_marvin_fallback | default("no") }}
+{% if marvin_test_categories is defined %}
+marvin_test_categories:
+{% set clean_cat = (marvin_test_categories.replace(" ", "")).split(",") %}
+{% for category in clean_cat %}
+  - {{ category }}
+{% endfor %}
+{% endif %}
 
 # Hipchat cli client
 use_hipchat: yes
