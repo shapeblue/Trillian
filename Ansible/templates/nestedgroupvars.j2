@@ -258,12 +258,12 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmreleaseurl = "centos7" %}
 {% set kvm_os_type = "centos7" %}
 
-{% elif kvm_os[0:1] | lower == "u14" %}
+{% elif kvm_os[0:3] | lower == "u14" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "ubuntu1404" %}
 
-{% elif kvm_os[0:1] | lower == "u16" %}
+{% elif kvm_os[0:3] | lower == "u16" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "ubuntu1604" %}
