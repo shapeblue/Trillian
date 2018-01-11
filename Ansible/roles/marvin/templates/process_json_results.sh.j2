@@ -83,25 +83,23 @@ echo " -- get additional data for env cfg data"
 cp $EXTRA_ENV_DATA_FILE $TMP_ENV_META_DATA
 cloudmonkey set display json
 export TERM=vt100
-if [[ "${HV,,}" == "${HV_JSON,,}" ]]; then
-  if [[ "${HV,,}" == "kvm" ]]; then
-     HOSTYPEDATA=`sshpass -p "$HOST1PASS" ssh -o StrictHostKeyChecking=no $HOST1USER@$HOST1ADDR "cat /etc/*-release"`
-     echo HOSTYPEDATA $HOSTYPEDATA
-     if [[ -z `echo $HOSTYPEDATA | grep 'CentOS release 6'` ]]; then
-       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 6\"/g" $TMP_ENV_META_DATA
-     elif [[ -z `echo $HOSTYPEDATA | grep 'CentOS Linux release 7'` ]]; then
-       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 7\"/g" $TMP_ENV_META_DATA
-     elif [[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 16.04'` ]]; then
-       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 16.04\"/g" $TMP_ENV_META_DATA
-     elif [[ -z `echo $HOSTYPEDATA | grep 'Ubuntu 14.04'` ]]; then
-       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 14.04\"/g" $TMP_ENV_META_DATA
-     else
-       sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Unknown\"/g" $TMP_ENV_META_DATA
-     fi
+if [[ "${HV,,}" == "kvm" ]]; then
+  HOSTYPEDATA=`sshpass -p "$HOST1PASS" ssh -o StrictHostKeyChecking=no $HOST1USER@$HOST1ADDR "cat /etc/*-release"`
+  echo HOSTYPEDATA $HOSTYPEDATA
+  if [[ -n `echo $HOSTYPEDATA | grep 'CentOS release 6'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 6\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'CentOS Linux release 7'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 7\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 16.04'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 16.04\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 14.04'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 14.04\"/g" $TMP_ENV_META_DATA
   else
-    HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
-    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_META_DATA
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Unknown\"/g" $TMP_ENV_META_DATA
   fi
+else
+  HV_VER=$(cloudmonkey list hosts | jq -r '.host[] | .hypervisorversion //empty' | head -1)
+  sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"$HV_VER\"/g" $TMP_ENV_META_DATA
 fi
 
 echo " -- Add date and testrun_uuid to additional test run data"
