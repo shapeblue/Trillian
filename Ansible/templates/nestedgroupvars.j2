@@ -258,17 +258,14 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmreleaseurl = "centos7" %}
 {% set kvm_os_type = "centos7" %}
 
-{% elif kvm_os[0:1] | lower == "u14" %}
-{% set kvmosversion = "debian" %}
+{% elif kvm_os | lower == "u14" %}
+{% set kvmosversion = "ubuntu1404" %}
 {% set kvmreleaseurl = "debian" %}
-{% set kvm_os_type = "ubuntu1404" %}
-
-{% elif kvm_os[0:1] | lower == "u16" %}
-{% set kvmosversion = "debian" %}
+{% set kvm_os_type = "debian" %}
+{% elif kvm_os | lower == "u16" %}
+{% set kvmosversion = "ubuntu1604" %}
 {% set kvmreleaseurl = "debian" %}
-{% set kvm_os_type = "ubuntu1604" %}
-
-
+{% set kvm_os_type = "debian" %}
 {% elif kvm_os[0:1] | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
@@ -285,7 +282,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 kvm_os: "{{ kvmosversion }}"
 {% if kvmosversion != "custom" %}
 {% if rooturl_kvm is defined %}
-{% set baseurlkvm = rooturl_kvm~kvmosversion~"/"~numversion~"/" %}
+{% set baseurlkvm = rooturl_kvm~kvmreleaseurl~"/"~numversion~"/" %}
 {% elif baseurl_kvm is defined %}
 {% set baseurlkvm = baseurl_kvm %}
 {% elif rooturl_cloudstack is defined %}
