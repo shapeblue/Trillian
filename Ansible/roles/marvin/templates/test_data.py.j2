@@ -50,6 +50,27 @@ test_data = {
         "vlan": "",
         "zoneid": ""
     },
+   "publiciprange1": {
+        "gateway": "10.200.100.1",
+        "netmask": "255.255.255.0",
+        "startip": "10.200.100.101",
+        "endip": "10.200.100.105",
+        "forvirtualnetwork": "false"
+    },
+    "publiciprange2": {
+        "gateway": "10.219.1.1",
+        "netmask": "255.255.255.0",
+        "startip": "10.219.1.2",
+        "endip": "10.219.1.5",
+        "forvirtualnetwork": "false"
+    },
+    "publiciprange3": {
+        "gateway": "10.200.100.1",
+        "netmask": "255.255.255.0",
+        "startip": "10.200.100.2",
+        "endip": "10.200.100.20",
+        "forvirtualnetwork": "false"
+    },
     "private_gateway": {
         "ipaddress": "172.16.1.2",
         "gateway": "172.16.1.1",
@@ -460,6 +481,20 @@ test_data = {
             "Dns": "VirtualRouter",
             "UserData": "VirtualRouter",
             "SecurityGroup": "SecurityGroupProvider"
+        }
+    },
+    "shared_network_config_drive_offering": {
+        "name": 'shared_network_config_drive_offering',
+        "displaytext": 'shared_network_config_drive_offering',
+        "guestiptype": 'shared',
+        "supportedservices": 'Dhcp,UserData',
+        "traffictype": 'GUEST',
+        "specifyVlan": "True",
+        "specifyIpRanges": "True",
+        "availability": 'Optional',
+        "serviceProviderList": {
+            "Dhcp": "VirtualRouter",
+            "UserData": 'ConfigDrive'
         }
     },
     "shared_network_sg": {
