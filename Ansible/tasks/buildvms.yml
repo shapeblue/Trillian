@@ -35,6 +35,7 @@
 - name: Remove previous SSH key from Project if it exists
   local_action:
     module: cs_sshkeypair
+    api_timeout: 120
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: absent
@@ -65,6 +66,7 @@
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
+    api_timeout: 120
     public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
@@ -98,6 +100,7 @@
     networks:
       - "{{ management_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['primary_cs_manager'] }}"
   register: mgmtsrv1_retval
@@ -154,6 +157,7 @@
     networks:
       - "{{ management_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['secondary_cs_manager'] }}"
   register: mgmtsrvs_retval
@@ -209,6 +213,7 @@
     networks:
       - "{{ management_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['mysql_master_host'] }}"
   register: dbsrv1_retval
@@ -249,6 +254,7 @@
     networks:
       - "{{ management_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['mysql_slave_hosts'] }}"
   register: dbsrvs_retval
@@ -290,6 +296,7 @@
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
     state: stopped
+    api_timeout: 120
   with_items:
     - "{{ groups['kvm_hosts'] }}"
   register: kvm_retval
@@ -339,6 +346,7 @@
     size: "{{ local_storage_disk_size }}"
     vm: "{{ item.name }}"
     state: attached
+    api_timeout: 120
   with_items: "{{kvm_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
@@ -349,6 +357,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     state: started
+    api_timeout: 120
   with_items:
     - "{{ groups['kvm_hosts'] }}"
   when: use_external_hv_hosts|bool == false
@@ -376,6 +385,7 @@
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
     state: stopped
+    api_timeout: 120
   with_items:
     - "{{ groups['xenserver_hosts'] }}"
   register: xs_retval
@@ -425,6 +435,7 @@
     size: "{{ local_storage_disk_size }}"
     vm: "{{ item.name }}"
     state: attached
+    api_timeout: 120
   with_items: "{{xs_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
@@ -435,6 +446,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     state: started
+    api_timeout: 120
   with_items:
     - "{{ groups['xenserver_hosts'] }}"
   when: use_external_hv_hosts|bool == false
@@ -460,6 +472,7 @@
       - "{{ management_network }}"
       - "{{ guest_public_network }}"
     state: stopped
+    api_timeout: 120
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   register: esxi_retval
@@ -509,6 +522,7 @@
     size: "{{ local_storage_disk_size }}"
     vm: "{{ item.name }}"
     state: attached
+    api_timeout: 120
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
@@ -519,6 +533,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     state: started
+    api_timeout: 120
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   when: use_external_hv_hosts|bool == false
@@ -545,6 +560,7 @@
     networks:
       - "{{ management_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['vc_hosts'] }}"
   register: vc_retval
@@ -600,6 +616,7 @@
     networks:
       - "{{ marvin_network }}"
     state: present
+    api_timeout: 120
   with_items:
     - "{{ groups['marvin_host'] }}"
   register: marvin_retval

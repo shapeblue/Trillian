@@ -33,6 +33,7 @@
     project: "{{ build_project }}"
     state: "{{ vm_state | default( 'stopped' ) }}"
     force: true
+    api_timeout: 120
   with_items:
     - "{{ groups['vc_hosts'] }}"
     - "{{ groups['hypervisor_hosts'] }}"
@@ -49,6 +50,7 @@
     project: "{{ build_project }}"
     state: "{{ vm_state | default( 'absent' ) }}"
     force: true
+    api_timeout: 120
   with_items:
     - "{{ groups['vc_hosts'] }}"
     - "{{ groups['hypervisor_hosts'] }}"
@@ -68,6 +70,7 @@
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: absent
+    api_timeout: 120
   when: (removeproject is defined) or destroy_forced
   ignore_errors: yes
 
@@ -80,6 +83,7 @@
     module: cs_project
     name: "{{ build_project }}"
     state: absent
+    api_timeout: 120
   when: (removeproject is defined) or destroy_forced
   ignore_errors: yes
 ####################################################################

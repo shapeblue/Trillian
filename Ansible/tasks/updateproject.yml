@@ -20,6 +20,7 @@
     module: cs_project
     name: "{{ build_project }}"
     state: present
+    api_timeout: 120
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
