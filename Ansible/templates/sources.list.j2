@@ -11,9 +11,18 @@ deb-src {{ repohost }}/ubuntu trusty-security main restricted
 
 {% if ansible_distribution_release == "xenial" %}
 
-deb {{ repohost }}/ubuntu/ xenial main restricted
-deb {{ repohost }}/ubuntu/ xenial-updates main restricted
-deb {{ repohost }}/ubuntu/ xenial universe
-deb {{ repohost }}/ubuntu/ xenial-updates universe
+# deb {{ repohost }}/ubuntu/ xenial main restricted
+# deb {{ repohost }}/ubuntu/ xenial-updates main restricted
+# deb {{ repohost }}/ubuntu/ xenial universe
+# deb {{ repohost }}/ubuntu/ xenial-updates universe
+
+deb http://gb.archive.ubuntu.com/ubuntu/ xenial main restricted
+# deb-src http://gb.archive.ubuntu.com/ubuntu/ xenial main restricted
+
+## Major bug fix updates produced after the final release of the
+## distribution.
+deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted
+# deb-src http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted
+
 
 {% endif %}
