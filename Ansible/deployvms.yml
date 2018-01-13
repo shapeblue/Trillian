@@ -199,9 +199,10 @@
   gather_facts: no
   vars:
     num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
+    num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   tasks:
-    - include: ./tasks/xenserver_builtintemplate_hack.yml
-      when: "num_xen_hosts | int != 0"
+    - include: ./tasks/builtintemplate_hack.yml
 ## REMOVE WHEN SSVM FIXED
 
 ## update status
