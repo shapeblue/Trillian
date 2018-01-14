@@ -1,0 +1,56 @@
+---
+
+
+- name: create builtin xenserver template_dir
+  file:
+    path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5"
+    state: directory
+    mode: 0755
+  when: num_xen_hosts != 0
+
+- name: copy template and properties.template files
+  get_url:
+    url: "{{ repohost }}/builtin_templates/xenserver/{{ item }}"
+    dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5/{{ item }}"
+  with_items:
+    - "b418e433-4ecd-3a1d-a90e-183157a165d5.vhd"
+    - "template.properties"
+  when: num_xen_hosts != 0
+
+- name: create builtin kvm template_dir
+  file: 
+    path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4"
+    state: directory
+    mode: 0755
+  when: num_kvm_hosts != 0
+
+- name: copy template and properties.template files
+  get_url:
+    url: "{{ repohost }}/builtin_templates/kvm/{{ item }}"
+    dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4/{{ item }}"
+  with_items:
+    - "0c364cce-8288-3a92-9234-4ffde372aec7.qcow2"
+    - "template.properties"
+  when: num_kvm_hosts != 0
+
+- name: create builtin esxi template_dir
+  file:
+    path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/7"
+    state: directory
+    mode: 0755
+  when: num_esxi_hosts != 0
+
+- name: copy template and properties.template files
+  get_url:
+    url: "{{ repohost }}/builtin_templates/esxi/{{ item }}"
+    dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/7/{{ item }}"
+  with_items:
+    - "0654e777-1660-3d44-a937-431b53f15ed7.ova"
+    - "CentOS5.3-x86_64.mf"
+    - "CentOS5.3-x86_64.ovf"
+    - "CentOS5.3-x86_64.ovf.orig"
+    - "CentOS5.3-x86_64-disk1.vmdk"
+    - "centos53-x64.ova"
+    - "centos53-x64.ova.meta"
+    - "template.properties"
+  when: num_esxi_hosts != 0
