@@ -20,7 +20,8 @@
 - name: create builtin kvm template_dir
   file: 
     path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4"
-    state: directory mode=0755
+    state: directory
+    mode: 0755
   when: num_kvm_hosts != 0
 
 - name: copy template and properties.template files
