@@ -120,11 +120,15 @@
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#mdns_adv = 1' line='mdns_adv = 0'
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  lineinfile: dest=/etc/libvirt/libvirtd.conf
+  lineinfile:
+    dest: "/etc/libvirt/libvirtd.conf"
     line: 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"'
 
 - name: Updated /etc/default/libvirt-bin
-  lineinfile: dest=/etc/default/libvirt-bin regexp='libvirtd_opts="-d"' line='libvirtd_opts="-d -l"'
+  lineinfile:
+    dest: "/etc/default/libvirt-bin"
+    regexp: 'libvirtd_opts="-d"'
+    line: 'libvirtd_opts="-d -l"'
 
 - name: Updated /etc/init/libvirt-bin.conf
   lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
