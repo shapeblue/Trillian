@@ -39,13 +39,13 @@
     - buildzone
 
 - name: wait for Ubuntu KVM hosts to be alive
-  shell: "ping {{ item }} -c 1"
+  shell: "ping {{ hostvars[item]['ansible_ssh_host'] }} -c 1"
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
   with_items:
-    - "{{ hostvars[groups['kvm_hosts']['ansible_ssh_host']] }}"
-  when: ansible_distribution == 'Ubuntu'
+    - "{{ groups['kvm_hosts'] }}"
+  when: ansible_distribution == 'Ubuntu'	
   tags:
     - kvm
     - buildzone
