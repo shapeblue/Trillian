@@ -129,6 +129,16 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
+  when: ansible_distribution_release == "trusty"
+
+- name: Updated /etc/default/libvirt-bin
+  lineinfile:
+    dest: "/etc/default/libvirt-bin"
+    regexp: '.*libvirtd_opts=*'
+    line: 'libvirtd_opts="-l"'
+  when: ansible_distribution_release == "xenial"
+
+
 
 - name: Updated /etc/init/libvirt-bin.conf
   lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
