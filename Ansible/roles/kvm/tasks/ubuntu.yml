@@ -119,8 +119,29 @@
 - name: Updated /etc/libvirt/libvirtd.conf
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#mdns_adv = 1' line='mdns_adv = 0'
 
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile:
+    dest: "/etc/libvirt/libvirtd.conf"
+    line: 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"'
+
 - name: Updated /etc/default/libvirt-bin
-  lineinfile: dest=/etc/default/libvirt-bin regexp='libvirtd_opts="-d"' line='libvirtd_opts="-d -l"'
+  lineinfile:
+    dest: "/etc/default/libvirt-bin"
+    regexp: 'libvirtd_opts="-d"'
+    line: 'libvirtd_opts="-d -l"'
+  when: ansible_distribution_release == "trusty"
+
+- name: Updated /etc/default/libvirt-bin
+  lineinfile:
+    dest: "/etc/default/libvirt-bin"
+    regexp: '.*libvirtd_opts=*'
+    line: 'libvirtd_opts="-l"'
+  when: ansible_distribution_release == "xenial"
+
+
+
+- name: Updated /etc/init/libvirt-bin.conf
+  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
 
 - name: update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
