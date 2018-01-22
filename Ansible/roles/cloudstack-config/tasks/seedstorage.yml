@@ -55,7 +55,7 @@
 
 - name: update permissions on vmware template
   file: dest="/mnt/secstoragetmp/template/tmpl/1/8" owner=root group=root recurse=yes
-  when: ("{{ env_hv }}" == "vmware")
+  when: env_hv == "vmware"
   ignore_errors: true
   tags:
     - seed_sec_storage

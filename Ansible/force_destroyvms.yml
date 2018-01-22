@@ -51,7 +51,7 @@
 
     - name: Fail if env_name_clean is blank
       fail: msg="env_name_clean is blank - bailing as this is VERY DANGEROUS."
-      when: "({{ env_name_clean |length|int }} == 0)"
+      when: env_name_clean|length|int == 0
     
     - name: Delete environments folder
       file: state=absent path="{{ env_pripath }}{{ env_name_clean }}"
@@ -73,7 +73,7 @@
 
     - name: Fail if env_name_clean is blank
       fail: msg="env_name_clean is blank - bailing as this is VERY DANGEROUS."
-      when: "({{ env_name_clean |length|int }} == 0)"
+      when: env_name_clean|length|int == 0
     
     - name: Delete environments folder
       file: state=absent path="{{ env_secpath }}{{ env_name_clean }}"

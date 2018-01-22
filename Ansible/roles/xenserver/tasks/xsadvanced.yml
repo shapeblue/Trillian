@@ -114,7 +114,7 @@
 
   - name: Set guest network name (Advanced Networking)
     shell: xe network-param-set uuid={{ guestuuid.stdout }} name-label={{ xs_guest_network_label }}
-    when: ("{{ env_zonetype | lower }}" == "advanced")
+    when: env_zonetype|lower == "advanced"
 
   - name: Set public network name
     shell: xe network-param-set uuid={{ publicuuid.stdout }} name-label={{ xs_public_network_label }}
