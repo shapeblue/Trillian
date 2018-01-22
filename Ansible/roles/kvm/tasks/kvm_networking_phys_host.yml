@@ -26,11 +26,11 @@
 
 - name: Configure guest/pub (Advanced Networking) (Physical host)
   template: src=kvm-trunked_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}"
-  when: ("{{ env_zonetype | lower }}" == "advanced")
+  when: env_zonetype|lower == "advanced"
 
 - name: Configure guest (Basic Networking) (Physical host)
   template: src=kvm-eth2-basic.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_trunked_if }}.11"
-  when: ("{{ env_zonetype | lower }}" == "basic")
+  when: env_zonetype|lower == "basic"
 
 - name: Configure guest/public bridge (Physical host)
   template: src=kvm-cloudbr1.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ kvm_guest_network_label }}"

@@ -56,7 +56,7 @@
   tags:
     - vc_config
     - create_vmware_cluster
-  when: ("{{ vmware_ver }}" != "51u1")
+  when: vmware_ver != "51u1"
 
 - name: Ensure Cluster {{ env_zone_clustername }} exists
   local_action: >
@@ -72,7 +72,7 @@
   tags:
     - vc_config
     - create_vmware_cluster
-  when: ("{{ vmware_ver }}" == "51u1")
+  when: vmware_ver == "51u1"
 
 
 - name: add hosts to vCenter
