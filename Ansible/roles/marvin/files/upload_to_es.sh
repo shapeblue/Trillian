@@ -10,9 +10,12 @@ metafile="$JSON_OUTPUT_DIR/additional_test_data.json"
 
 cd /marvin
 
-echo " -- Upload test results"
-for file in $JSON_OUTPUT_DIR/test_*.json; do
-curl -XPOST "$ES_IP:9200/$RESULTS_INDEX/external?pretty" -d @$file
+echo " -- Upload test results -- "
+for file in $JSON_OUTPUT_DIR/*.json; do
+  if [[ "$(basename $file)" != "additional_test_data.json" ]] && [[ "$(basename $file)" != "env_cfg_file.json" ]]; then
+    echo " Uploading $(basename $file)"
+    curl -XPOST "$ES_IP:9200/$RESULTS_INDEX/external?pretty" -d @$file
+  fi
 done
 
 
