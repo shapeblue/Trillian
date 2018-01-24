@@ -18,7 +18,7 @@ set +e # stop erroneous failures reported by Jenkins
 LOGDIR=/marvin/MarvinLogs
 TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
-echo "$(date)" > /marvin/testrunstartdate
+echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 
 rm -f /marvin/smoketests-summary.txt
 rm -f /marvin/tests/smoke/test_*.pyc
