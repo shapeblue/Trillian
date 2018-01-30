@@ -13,8 +13,6 @@
   poll: 0
   ignore_errors: true
 
-- name: wait a little before continuing
-
 - name: waiting 60 secs for server to come back
   become: false
   local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started delay=60 timeout=300
