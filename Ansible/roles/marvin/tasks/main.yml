@@ -5,7 +5,7 @@
   yum: name=libselinux-python state=present
 
 - name: sync time with mgmt server
-  shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=minutes'`
+  shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`
 
 - name: restart machine for clean time application
   command: sleep 2 && /sbin/shutdown -r now "set time"
