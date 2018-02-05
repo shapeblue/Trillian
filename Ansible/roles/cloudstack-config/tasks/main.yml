@@ -45,7 +45,7 @@
   retries: "{{ ssh_retries }}"
   with_items:
     - groups['kvm_hosts']
-  when: ansible_distribution == 'Ubuntu'	
+  when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm
     - buildzone
