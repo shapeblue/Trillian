@@ -29,10 +29,6 @@
     - "global_settings"
     - "rename_browser"
 
-- name: sync time with google time
-  shell: date --set=`date -d "$(curl -s --head http://google.com | grep ^Date: | sed 's/Date: //g')" --iso-8601=seconds`
-  ignore_errors: true
-
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
