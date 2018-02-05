@@ -44,7 +44,7 @@
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
   with_items:
-    - "{{ groups['kvm_hosts'] }}"
+    - groups['kvm_hosts']
   when: ansible_distribution == 'Ubuntu'	
   tags:
     - kvm
