@@ -1,0 +1,28 @@
+---
+
+# prechecks for required vars
+
+- name: Check that mgmt server baseurl is defined
+  fail: msg="upgrade_baseurl_mgmt is required"
+  when: upgradeurl_cloudstack is undefined
+
+- name: Check that kvm baseurl is defined if kvm hosts exist
+  fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
+  when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 )
+
+# Perform upgrade
+
+- hosts: cloudstack_manager_hosts
+  gather_facts: no
+  tasks:
+    - name: Upgrade CloudStack Mgmt Server
+      include: roles/cloudstack-manager/tasks/upgrade_mgmt.yaml
+
+- hosts: kvm_hosts
+  gather_facts: no
+  tasks:
+    - name: Upgrade KVM hosts
+      include: roles/cloudstack-manager/tasks/upgrade_kvm.yaml
+      when: groups['kvm_hosts']|length > 0
+
+

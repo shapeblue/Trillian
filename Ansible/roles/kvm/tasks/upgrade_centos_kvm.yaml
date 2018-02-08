@@ -1,0 +1,27 @@
+---
+
+- name: stop services
+  service:
+    name: cloudstack-agent
+    state: stopped
+
+
+# set upgrade repo 'fact'
+- set_fact:
+    baseurl_kvm: {{ upgrade_baseurl_mgmt }}
+
+- name: update cloudstack repo
+  template:
+    src: cloudstack.repo.j2
+    dest: template: /etc/yum.repos.d/cloudstack.repo
+
+- name: upgrade cloudstack binaries
+  yum:
+    name: cloudstack-agent
+    state: latest
+    enablerepo: base
+
+- name: stop services
+  service:
+    name: cloudstack-agent
+    state: started

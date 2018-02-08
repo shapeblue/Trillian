@@ -1,0 +1,32 @@
+---
+
+- name: stop services
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - cloudstack-management
+    - cloudstack-usage
+
+# set upgrade repo 'fact'
+- set_fact:
+    baseurl_cloudstack: {{ upgradeurl_cloudstack }}
+
+- name: update cloudstack repo
+  template:
+    src: cloudstack.repo.j2
+    dest: template: /etc/yum.repos.d/cloudstack.repo
+
+- name: upgrade cloudstack binaries
+  yum:
+    name: cloudstack-*
+    state: latest
+    enablerepo: base
+
+- name: start services
+  service:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - cloudstack-management
+    - cloudstack-usage
