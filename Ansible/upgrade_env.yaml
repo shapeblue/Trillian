@@ -10,7 +10,41 @@
   fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
   when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 )
 
+- name: Check upgrade version is specified
+  fail: msg="upgrade version is required"
+  when: upgrade_cloudstack_ver is undefined
+
 # Perform upgrade
+
+- local_action:
+    module: cs_template
+    name: def_system_templates.{{ upgrade_cloudstack_ver }}.vmware_url
+    url: def_system_templates.{{ upgrade_cloudstack_ver }}.vmware_systemvm_name
+    hypervisor: VMware
+    format: OVA
+    cross_zones: yes
+    os_type: Debian GNU/Linux 7(64-bit)
+  when: vmware_ver|lower != "na"
+
+- local_action:
+    module: cs_template
+    name: def_system_templates.{{ upgrade_cloudstack_ver }}.xs_url
+    url: def_system_templates.{{ upgrade_cloudstack_ver }}.xs_systemvm_name
+    hypervisor: XenServer
+    format: VHD
+    cross_zones: yes
+    os_type: Debian GNU/Linux 7(64-bit)
+  when: xs_ver|lower != "na"
+
+- local_action:
+    module: cs_template
+    name: def_system_templates.{{ upgrade_cloudstack_ver }}.kvm_url
+    url: def_system_templates.{{ upgrade_cloudstack_ver }}.kvm_systemvm_name
+    hypervisor: KVM
+    format: QCOW2
+    cross_zones: yes
+    os_type: Debian GNU/Linux 7(64-bit)
+  when:  kvm_os|lower != "na"
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
