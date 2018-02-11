@@ -4,6 +4,19 @@
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
+- name: sync time with mgmt server
+  shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`
+
+- name: restart machine for clean time application
+  command: sleep 2 && /sbin/shutdown -r now "set time"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: waiting 60 secs for server to come back
+  become: false
+  local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started delay=60 timeout=300
+
 - include: ./install_marvin_prereqs.yml
 
 - name: Set repo to install PR tests from

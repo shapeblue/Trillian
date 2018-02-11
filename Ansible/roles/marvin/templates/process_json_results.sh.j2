@@ -40,7 +40,7 @@ fi
 if [[ -e "$MARVINDIR/testrunstartdate" ]]; then
   DATEVAR=$(cat "$MARVINDIR/testrunstartdate")
 else
-  DATEVAR=$(date)
+  DATEVAR=$(date --iso-8601=minutes)
 fi
 
 
