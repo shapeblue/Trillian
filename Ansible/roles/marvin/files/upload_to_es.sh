@@ -14,11 +14,11 @@ echo " -- Upload test results -- "
 for file in $JSON_OUTPUT_DIR/*.json; do
   if [[ "$(basename $file)" != "additional_test_data.json" ]] && [[ "$(basename $file)" != "env_cfg_file.json" ]]; then
     echo " Uploading $(basename $file)"
-    curl -XPOST "$ES_IP:9200/$RESULTS_INDEX/external?pretty" -d @$file
+    curl -XPOST "$ES_IP:9200/$RESULTS_INDEX/external?pretty" -H 'Content-Type: application/json' -d @$file
   fi
 done
 
 
 echo " -- Upload test metadata"
-curl -XPOST "$ES_IP:9200/$TESTRUN_INDEX/external?pretty" -d @$metafile
+curl -XPOST "$ES_IP:9200/$TESTRUN_INDEX/external?pretty" -H 'Content-Type: application/json' -d @$metafile
 
