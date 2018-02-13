@@ -19,13 +19,9 @@
 # Released by ShapeBlue <info@shapeblue.com>, April 2014
 
 
-- name: download installer
-  get_url: url="{{ repohost }}/ccp/{{ccp_install_tarball}}.tar.gz" dest="/tmp/{{ ccp_install_tarball }}.tar.gz"
-
-- name: extract tarball
-  unarchive: src="/tmp/{{ ccp_install_tarball }}.tar.gz" dest=/tmp copy=no
-
-- name: run installer -- THIS IS VERY FRAGILE
-  shell: "cd /tmp/{{ ccp_install_tarball }} && ./install.sh -a"
-
-- include: ./centos_qemuimg.yml
+- name: Copy CentOS6.4 qemu-img to /usr/bin/cloud-qemu-img
+  copy: src=cloud-qemu-img dest=/usr/bin/ mode=0775
+  when:
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_version | version_compare('6.4', '>')
+    - ansible_distribution_version | version_compare('7.0', '<')

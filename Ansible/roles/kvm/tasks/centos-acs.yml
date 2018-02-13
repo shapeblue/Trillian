@@ -29,3 +29,5 @@
   tags:
     - kvm
     - kvm-agent
+
+- include: ./centos_qemuimg.yml
