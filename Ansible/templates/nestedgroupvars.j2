@@ -207,6 +207,8 @@ cloudstack_management_package: "{{ cloudstack_management_package_var }}"
 {% else %}
 {% set baseurl = def_rooturl_cloudstack~releaseurl~"/"~numversion~"/" %}
 {% endif %}
+{% set baseurl_mgmt_suffix = releaseurl~"/" %}
+baseurl_mgmt_suffix: "{{ baseurl_mgmt_suffix }}"
 baseurl_cloudstack: "{{ baseurl }}"
 {% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
 create_zone: {{ createzone }}
@@ -295,6 +297,8 @@ kvm_os: "{{ kvmosversion }}"
 {% else %}
 {% set baseurlkvm = baseurl_kvm %}
 {% endif %}
+{% set baseurl_kvm_suffix = kvmreleaseurl~"/" %}
+baseurl_kvm_suffix: "{{ baseurl_kvm_suffix }}"
 baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
 
 kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_template ) }}"

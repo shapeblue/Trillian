@@ -4,7 +4,6 @@
   tags:
     - extra_steps
 
-
 - name: set mysql_master_ip
   set_fact: mysql_master_ip={{ (num_db_hosts | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
   tags:
@@ -15,11 +14,6 @@
     src: "{{ inventory_dir }}/roles/cloudstack-manager/files/update_db_410_to_411.sql"
     dest: /tmp/update_db_410_to_411.sql
   when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
-  tags:
-    - extra_steps
-
-- debug:
-    msg: "-h{{ mysql_master_ip }} -u'root' -p{{ mysql_root_password }} "
   tags:
     - extra_steps
 

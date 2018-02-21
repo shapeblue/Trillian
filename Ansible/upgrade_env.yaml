@@ -8,7 +8,7 @@
     - name: Check that mgmt server baseurl is defined
       fail:
         msg: "upgrade_baseurl_mgmt is required"
-      when: upgrade_baseurl_mgmt is undefined
+      when: upgrade_baseurl_mgmt is undefined and upgrade_rooturl is undefined
     
     - name: Check that kvm baseurl is defined if kvm hosts exist
       fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
@@ -17,7 +17,7 @@
     - name: Check upgrade version is specified
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
-
+    
 # Perform upgrade
     
     - local_action:
@@ -50,17 +50,45 @@
         os_type: Debian GNU/Linux 7(64-bit)
       when:  kvm_os|lower != "na"
 
+
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
+
+    - set_fact:
+        numversion: "{{ upgrade_cloudstack_ver[2:3] }}.{{ upgrade_cloudstack_ver[3:6] }}"
+      when: upgrade_cloudstack_ver[0:2] == "cs"
+    
+    - set_fact:
+        numversion: "{{ upgrade_cloudstack_ver[3:4] }}.{{ upgrade_cloudstack_ver[4:7] }}"
+      when: upgrade_cloudstack_ver[0:3] == "ccp"
+ 
+    - set_fact:
+        upgrade_baseurl_mgmt: "{{ upgrade_rooturl }}{{ baseurl_mgmt_suffix }}{{ numversion }}/"
+      when: upgrade_baseurl_mgmt is undefined
+
     - name: Upgrade CloudStack Mgmt Server
       include: roles/cloudstack-manager/tasks/upgrade_mgmt.yaml
+
 
 - hosts: kvm_hosts
   gather_facts: no
   tasks:
+    - set_fact:
+        upgrade_baseurl_kvm: "{{ upgrade_rooturl }}{{ baseurl_kvm_suffix }}{{ numversion }}/"
+      when: upgrade_baseurl_kvm is undefined
+
     - name: Upgrade KVM hosts
       include: roles/cloudstack-manager/tasks/upgrade_kvm.yaml
       when: groups['kvm_hosts']|length > 0
 
+- hosts: cloudstack_manager_hosts
+  gather_facts: no
+  tasks:
 
+  - name: Test for API on 8080 on primary management host before configuring secondary
+    shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+    register: result
+    until: result.stdout.find("unable to verify user") != -1
+    retries: 50
+    run_once: true

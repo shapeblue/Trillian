@@ -26,6 +26,7 @@
 
 - name: Perform any additional pre-restart upgrade steps
   include: additional_pre-restart_upgrade_steps.yaml
+  run_once: yes
 
 - name: start services
   service:
