@@ -1,5 +1,22 @@
 ---
 
+- name: Ensure VM is alive
+  shell: "ping {{ ansible_ssh_host }} -c 1"
+  register: pong
+  until: pong.rc == 0
+  retries: "{{ ssh_retries }}"
+  
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
+- name: now i'm connected, get facts
+  setup:
+  tags:
+    - "global_settings"
+    - "rename_browser"
+  tags:
+    - extra_steps
+
 - include: upgrade_centos_mgmt.yaml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 

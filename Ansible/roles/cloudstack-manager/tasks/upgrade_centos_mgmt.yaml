@@ -10,18 +10,22 @@
 
 # set upgrade repo 'fact'
 - set_fact:
-    baseurl_cloudstack: {{ upgradeurl_cloudstack }}
+    baseurl_cloudstack: "{{ upgrade_baseurl_mgmt }}"
 
+- debug:
+    msg: "{{baseurl_cloudstack}}"
 - name: update cloudstack repo
   template:
-    src: cloudstack.repo.j2
-    dest: template: /etc/yum.repos.d/cloudstack.repo
+    src: "{{ inventory_dir }}/roles/cloudstack-manager/templates/cloudstack.repo.j2"
+    dest: /etc/yum.repos.d/cloudstack.repo
 
 - name: upgrade cloudstack binaries
   yum:
     name: cloudstack-*
     state: latest
-    enablerepo: base
+
+- name: Perform any additional pre-restart upgrade steps
+  include: additional_pre-restart_upgrade_steps.yaml
 
 - name: start services
   service:
@@ -30,3 +34,7 @@
   with_items:
     - cloudstack-management
     - cloudstack-usage
+
+- name: Perform any additional post-restart upgrade steps
+  include: additional_post-restart_upgrade_steps.yaml
+
