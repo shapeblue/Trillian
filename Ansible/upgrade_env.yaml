@@ -25,6 +25,7 @@
         force: true
       tags:
         - systemvms
+
     - set_fact:
         skip_template: false
       when: skip_template is undefined
@@ -70,6 +71,10 @@
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
+
+    - set_fact:
+        skip_template: false
+      when: skip_template is undefined
 
     - set_fact:
         numversion: "{{ upgrade_cloudstack_ver[2:3] }}.{{ upgrade_cloudstack_ver[3:6] }}"
