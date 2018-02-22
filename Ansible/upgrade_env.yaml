@@ -67,42 +67,6 @@
       tags:
         - systemvms
 
-    - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
-      register: result
-      until: result.stdout == "true"
-      retries: 400
-      when:  kvm_os|lower != "na" and skip_template|bool != "true"
-      tags:
-
-      tags:
-        - waitfortemplate
-        - systemvms
-
-    - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
-      register: result
-      until: result.stdout == "true"
-      retries: 400
-      when: xs_ver|lower != "na" and skip_template|bool != "true"
-      tags:
-
-      tags:
-        - waitfortemplate
-        - systemvms
-
-    - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
-      register: result
-      until: result.stdout == "true"
-      retries: 400
-      when: vmware_ver|lower != "na" and skip_template|bool != "true"
-      tags:
-
-      tags:
-        - waitfortemplate
-        - systemvms
-
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
@@ -118,6 +82,36 @@
     - set_fact:
         upgrade_baseurl_mgmt: "{{ upgrade_rooturl }}{{ baseurl_mgmt_suffix }}{{ numversion }}/"
       when: upgrade_baseurl_mgmt is undefined
+
+    - name: Wait for new system VM template to be ready before returning
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      register: result
+      until: result.stdout == "true"
+      retries: 400
+      when:  kvm_os|lower != "na" and skip_template|bool != "true"
+      tags:
+        - waitfortemplate
+        - systemvms
+
+    - name: Wait for new system VM template to be ready before returning
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      register: result
+      until: result.stdout == "true"
+      retries: 400
+      when: xs_ver|lower != "na" and skip_template|bool != "true"
+      tags:
+        - waitfortemplate
+        - systemvms
+
+    - name: Wait for new system VM template to be ready before returning
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      register: result
+      until: result.stdout == "true"
+      retries: 400
+      when: vmware_ver|lower != "na" and skip_template|bool != "true"
+      tags:
+        - waitfortemplate
+        - systemvms
 
     - name: Upgrade CloudStack Mgmt Server
       include: roles/cloudstack-manager/tasks/upgrade_mgmt.yaml
