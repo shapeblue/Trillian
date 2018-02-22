@@ -1,0 +1,50 @@
+---
+
+- name: stop services
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - cloudstack-management
+    - cloudstack-usage
+
+- name: determine number of db hosts
+  set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+
+- name: set mysql_master_ip
+  set_fact: mysql_master_ip={{ (num_db_hosts | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
+
+- name: backup database
+  shell: mysqldump -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} --databases cloud cloud_usage > /root/db_backup.sql
+
+# set upgrade repo 'fact'
+- set_fact:
+    baseurl_cloudstack: "{{ upgrade_baseurl_mgmt }}"
+
+- debug:
+    msg: "{{baseurl_cloudstack}}"
+- name: update cloudstack repo
+  template:
+    src: "{{ inventory_dir }}/roles/cloudstack-manager/templates/cloudstack.repo.j2"
+    dest: /etc/yum.repos.d/cloudstack.repo
+
+- name: upgrade cloudstack binaries
+  yum:
+    name: cloudstack-*
+    state: latest
+
+- name: Perform any additional pre-restart upgrade steps
+  include: additional_pre-restart_upgrade_steps.yaml
+  run_once: yes
+
+- name: start services
+  service:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - cloudstack-management
+    - cloudstack-usage
+
+- name: Perform any additional post-restart upgrade steps
+  include: additional_post-restart_upgrade_steps.yaml
+
