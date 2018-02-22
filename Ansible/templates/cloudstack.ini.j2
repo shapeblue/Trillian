@@ -1,0 +1,5 @@
+[cloudstack]
+endpoint = http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+key = {{ cm_apikey }}
+secret = {{ cm_secretkey }}
+timeout = 60

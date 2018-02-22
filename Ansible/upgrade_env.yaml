@@ -17,19 +17,32 @@
     - name: Check upgrade version is specified
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
+
+    - name: configure cloudstack.ini
+      template:
+        src: "{{ inventory_dir }}/templates/cloudstack.ini.j2"
+        dest: "{{ inventory_dir }}/cloudstack.ini"
+        force: true
+      tags:
+        - systemvms
+    - set_fact:
+        skip_template: false
+      when: skip_template is undefined
     
 # Perform upgrade
     
     - local_action:
         module: cs_template
-        name: def_system_templates.{{ upgrade_cloudstack_ver }}.vmware_url
-        url: def_system_templates.{{ upgrade_cloudstack_ver }}.vmware_systemvm_name
+        name: "{{ def_system_templates[upgrade_cloudstack_ver].vmware_url }}"
+        url: "{{ def_system_templates[upgrade_cloudstack_ver].vmware_systemvm_name }}"
         hypervisor: VMware
         format: OVA
         cross_zones: yes
-        os_type: Debian GNU/Linux 7(64-bit)
-      when: vmware_ver|lower != "na"
-    
+        os_type: Debian GNU/Linux 5.0 (64-bit)
+      when: vmware_ver|lower != "na" and skip_template|bool != "true"
+      tags:
+        - systemvms
+   
     - local_action:
         module: cs_template
         name: "{{ def_system_templates[upgrade_cloudstack_ver].xs_systemvm_name }}"
@@ -37,18 +50,30 @@
         hypervisor: XenServer
         format: VHD
         cross_zones: yes
-        os_type: Debian GNU/Linux 7(64-bit)
-      when: xs_ver|lower != "na"
+        os_type: Debian GNU/Linux 5.0 (64-bit)
+      when: xs_ver|lower != "na" and skip_template|bool != "true"
+      tags:
+        - systemvms
     
     - local_action:
         module: cs_template
-        name: def_system_templates.{{ upgrade_cloudstack_ver }}.kvm_url
-        url: def_system_templates.{{ upgrade_cloudstack_ver }}.kvm_systemvm_name
+        name: "{{ def_system_templates[upgrade_cloudstack_ver].kvm_url }}"
+        url: "{{ def_system_templates[upgrade_cloudstack_ver].kvm_systemvm_name }}"
         hypervisor: KVM
         format: QCOW2
         cross_zones: yes
-        os_type: Debian GNU/Linux 7(64-bit)
-      when:  kvm_os|lower != "na"
+        os_type: Debian GNU/Linux 5.0 (64-bit)
+      when:  kvm_os|lower != "na" and skip_template|bool != "true"
+      tags:
+        - systemvms
+
+    - name: Wait for default template to be ready before returning
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].kvm_url }}' | jq '.template[].isready' | sort | uniq"
+      register: result
+      until: result.stdout == "true"
+      retries: 400
+      tags:
+        - waitfortemplate
 
 
 - hosts: cloudstack_manager_hosts
@@ -82,6 +107,15 @@
       include: roles/cloudstack-manager/tasks/upgrade_kvm.yaml
       when: groups['kvm_hosts']|length > 0
 
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update project - tag Upgrading_System_VMs
+      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      when: wait_till_setup
+
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
@@ -92,3 +126,36 @@
     until: result.stdout.find("unable to verify user") != -1
     retries: 50
     run_once: true
+
+  - name: determine number of db hosts
+    set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+  
+  - name: set mysql_master_ip
+    set_fact: mysql_master_ip={{ (num_db_hosts | int == 0) | ternary("{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}","{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}") }}
+  
+  - name: upgrade SSVM and CPVM
+    shell: cloudstack-sysvmadm -d {{ mysql_master_ip }} -u cloud -p {{ mysql_cloud_password }} -a -t 3
+    run_once: true
+
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update project - tag Waiting_for_Upgraded_System_VMs
+      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      when: wait_till_setup
+
+- hosts: primary_cs_manager
+  tasks:
+    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
+      when: wait_till_setup
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update project - tag Upgraded_System_VMs_up
+      include: tasks/updateproject.yml project_tag=System_VMs_up
+      when: wait_till_setup
+

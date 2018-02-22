@@ -22,3 +22,12 @@
   when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
   tags:
     - extra_steps
+
+- name: preset some global settings
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
+
+- name: reload cloudstack.unit
+  command: systemctl daemon-reload
+  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
+  tags:
+    - extra_steps
