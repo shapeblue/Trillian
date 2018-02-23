@@ -28,6 +28,6 @@
 
 - name: reload cloudstack.unit
   command: systemctl daemon-reload
-  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
+  when: upgrade_cloudstack_ver == "cs411"
   tags:
     - extra_steps
