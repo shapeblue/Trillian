@@ -114,7 +114,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  all-file_version|int < 4
+      when: all_file_version | version_compare('6', 'lt') 
 
 - hosts: localhost
   connection: local

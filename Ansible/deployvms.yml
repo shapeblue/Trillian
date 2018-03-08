@@ -20,7 +20,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  all-file_version|int < 5
+      when: all_file_version | version_compare('6', 'lt') 
 
 - hosts: localhost
   connection: local
@@ -61,7 +61,7 @@
 
 # Create build project if it doesn't exist.
     - name: Create project
-      include: tasks/updateproject.yml project_tag=Deploying_VMs
+      import_tasks: tasks/updateproject.yml project_tag=Deploying_VMs
 
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
@@ -71,22 +71,31 @@
       poll: 0
 
     - name: Build VMs
-      include: ./tasks/buildvms.yml
+      import_tasks: ./tasks/buildvms.yml
 
     - name: Add dvfilter
-      include: ./tasks/add_dvfilter.yml
+      include_tasks: ./tasks/add_dvfilter.yml
       when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
 
     - name: Update project - tag Configuring_MySQL
-      include: tasks/updateproject.yml project_tag=Configuring_MySQL
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_MySQL
 
 - hosts: mysql_hosts
   gather_facts: no
   vars:
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
-  roles:
-    - { role: timezone, when: num_db_hosts | int != 0 }
-    - { role: mysql, when: num_db_hosts | int != 0 }
+  tasks:
+  - include_role:
+      name: timezone
+    when: num_db_hosts | int != 0
+  - include_role:
+      name: mysql
+    when: num_db_hosts | int != 0
+   
+
+#  roles:
+#    - { role: timezone, when: num_db_hosts | int != 0 }
+#    - { role: mysql, when: num_db_hosts | int != 0 }
 
 - hosts: localhost
   connection: local
@@ -113,7 +122,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_Hypervisors
-      include: tasks/updateproject.yml project_tag=Configuring_Hypervisors
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_Hypervisors
 
 ## Configure Hypervisor hosts
 
@@ -146,7 +155,7 @@
   vars:
     num_vc_hosts: "{{ groups['vc_hosts'] | length }}"
   tasks:
-    - include: ./roles/vsphere/tasks/configure_vcenter.yml
+    - include_tasks: ./roles/vsphere/tasks/configure_vcenter.yml
       when: "num_vc_hosts | int != 0"
 
 ## update status
@@ -156,7 +165,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_iSCSI_storage
-      include: tasks/updateproject.yml project_tag=Configuring_iSCSI_Storage
+      include_tasks: tasks/updateproject.yml project_tag=Configuring_iSCSI_Storage
       when: env_priprot | lower == "iscsi"
 
 ## Configure iSCSI storage
@@ -172,7 +181,7 @@
     num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   tasks:
     - name: Configure VMFS storage on ESXi hosts
-      include: ./roles/vsphere/tasks/add_iscsivmfs_storage.yml
+      include_tasks: ./roles/vsphere/tasks/add_iscsivmfs_storage.yml
       when: ( env_priprot | lower == "iscsi" ) and ( num_esxi_hosts | int != 0 )
 
 ## update status
@@ -182,7 +191,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_NFS_Storage
-      include: tasks/updateproject.yml project_tag=Configuring_NFS_Storage
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_NFS_Storage
 
 - hosts: primary_storage_hosts
   gather_facts: no
@@ -202,7 +211,7 @@
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
     num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   tasks:
-    - include: ./tasks/builtintemplate_hack.yml
+    - import_tasks: ./tasks/builtintemplate_hack.yml
 ## REMOVE WHEN SSVM FIXED
 
 ## update status
@@ -212,7 +221,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_Zone
-      include: tasks/updateproject.yml project_tag=Configuring_Zone
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_Zone
 
 ## Configure Zone on Mgmt Server
 
@@ -227,7 +236,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_Marvin
-      include: tasks/updateproject.yml project_tag=Configuring_Marvin
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_Marvin
 
 ## Configure Marvin host
 
@@ -258,7 +267,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Built
-      include: tasks/updateproject.yml project_tag=Built
+      import_tasks: tasks/updateproject.yml project_tag=Built
 
 
 ## Wait for services/templates etc
@@ -268,12 +277,12 @@
   gather_facts: no
   tasks:
     - name: update project - tag Waiting_for_System_VMs
-      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      include_tasks: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: primary_cs_manager
   tasks:
-    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
+    - include_tasks: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
       when: wait_till_setup
 
 - hosts: localhost
@@ -281,7 +290,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag System_VMs_up
-      include: tasks/updateproject.yml project_tag=System_VMs_up
+      include_tasks: tasks/updateproject.yml project_tag=System_VMs_up
       when: wait_till_setup
 
 ## Wait for services/templates etc
@@ -291,12 +300,12 @@
   gather_facts: no
   tasks:
     - name: update project - tag Waiting_for_builtin_template
-      include: tasks/updateproject.yml project_tag=Waiting_for_builtin_template
+      include_tasks: tasks/updateproject.yml project_tag=Waiting_for_builtin_template
       when: wait_for_template
 
 - hosts: primary_cs_manager
   tasks:
-    - include: ./roles/cloudstack-manager/tasks/wait-for-template.yml
+    - include_tasks: ./roles/cloudstack-manager/tasks/wait-for-template.yml
       when: wait_for_template
   tags:
     - waitfortemplate
@@ -306,7 +315,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Running
-      include: tasks/updateproject.yml project_tag=Running
+      include_tasks: tasks/updateproject.yml project_tag=Running
       when: wait_for_template
 
 ## Run Marvin Tests

@@ -35,16 +35,16 @@
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ mgmt_java_ver }}"
 - set_fact: java_path="{{ mgmt_java_path }}"
-- include: ../../../tasks/set_java.yml
+- include_tasks: ../../../tasks/set_java.yml
   when: force_java
 
-- include: ./centos-acs.yml
+- include_tasks: ./centos-acs.yml
   when: env_version[0:2] == "cs"
 
-- include: ./centos-shortname.yml
+- include_tasks: ./centos-shortname.yml
   when: env_version[0:3] == "ccp" and setshortname|bool
 
-- include: ./centos-ccp.yml
+- include_tasks: ./centos-ccp.yml
   when: env_version[0:3] == "ccp"
 
 - name: ensure rpcbind in started

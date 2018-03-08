@@ -22,13 +22,15 @@
   retries: "{{ ssh_retries }}"
   
 - name: Wait for SSH
-  local_action: wait_for port=22
+  wait_for:
+    port: 22
     host: "{{ ansible_ssh_host }}"
     timeout: "{{ ssh_retries }}"
     connect_timeout: 5
+  connection: local
 
-- include: ./xsbasic.yml
+- include_tasks: ./xsbasic.yml
   when: env_zonetype|lower == "basic"
 
-- include: ./xsadvanced.yml
+- include_tasks: ./xsadvanced.yml
   when: env_zonetype|lower == "advanced"

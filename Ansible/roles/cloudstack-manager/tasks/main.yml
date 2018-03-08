@@ -29,13 +29,13 @@
     - "global_settings"
     - "rename_browser"
 
-- include: ./centos.yml
+- include_tasks: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - "global_settings"
     - "rename_browser"
 
-- include: ./ubuntu.yml
+- include_tasks: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - "global_settings"
@@ -47,4 +47,4 @@
   retries: 48
   when: ("primary_cs_manager" in group_names)
 
-- include: ./preconfig_globalsettings.yml
+- import_tasks: ./preconfig_globalsettings.yml
