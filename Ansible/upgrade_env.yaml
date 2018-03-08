@@ -18,13 +18,13 @@
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
 
-    - name: configure cloudstack.ini
-      template:
-        src: "{{ inventory_dir }}/templates/cloudstack.ini.j2"
-        dest: "{{ inventory_dir }}/cloudstack.ini"
-        force: true
-      tags:
-        - systemvms
+#    - name: configure cloudstack.ini
+#      template:
+#        src: "{{ inventory_dir }}/templates/cloudstack.ini.j2"
+#        dest: "{{ inventory_dir }}/cloudstack.ini"
+#        force: true
+#      tags:
+#        - systemvms
 
     - set_fact:
         skip_template: false
@@ -39,7 +39,11 @@
         hypervisor: VMware
         format: OVA
         cross_zones: yes
-        os_type: Debian GNU/Linux 5.0 (64-bit)
+        os_type: "Other Linux (64-bit)"
+        api_key: {{ cm_apikey }}
+        api_secret: {{ cm_secretkey }}
+        api_timeout: 120
+        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
       when: vmware_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -52,6 +56,10 @@
         format: VHD
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
+        api_key: {{ cm_apikey }}
+        api_secret: {{ cm_secretkey }}
+        api_timeout: 120
+        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
       when: xs_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -64,6 +72,10 @@
         format: QCOW2
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
+        api_key: {{ cm_apikey }}
+        api_secret: {{ cm_secretkey }}
+        api_timeout: 120
+        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
       when:  kvm_os|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -71,6 +83,9 @@
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
+
+    - name: reset CloudMonkey base configuration
+      shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api && cloudmonkey set display json && export TERM=vt100"
 
     - set_fact:
         skip_template: false

@@ -27,7 +27,7 @@
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
 
 - name: reload cloudstack.unit
-  command: systemctl daemon-reload
+  shell: systemctl daemon-reload
   when: upgrade_cloudstack_ver == "cs411"
   tags:
     - extra_steps
