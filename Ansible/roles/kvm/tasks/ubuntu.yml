@@ -78,7 +78,7 @@
     state: latest
     update_cache: yes
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm

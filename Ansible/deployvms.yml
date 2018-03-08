@@ -102,7 +102,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Configuring_Mgmt_Server
-      include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
+      import_tasks: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no

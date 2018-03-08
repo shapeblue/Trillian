@@ -21,7 +21,7 @@
   retries: 24
   when: not use_external_hv_hosts
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
 
 - name: Configure bridge network backend

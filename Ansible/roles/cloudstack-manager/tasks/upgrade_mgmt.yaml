@@ -17,8 +17,8 @@
   tags:
     - extra_steps
 
-- include: upgrade_centos_mgmt.yaml
+- include_tasks: upgrade_centos_mgmt.yaml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 
-- include: upgrade_ubuntu_mgmt.yaml
+- include_tasks: upgrade_ubuntu_mgmt.yaml
   when: ansible_distribution == 'Ubuntu'

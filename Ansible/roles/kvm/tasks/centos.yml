@@ -29,10 +29,10 @@
   tags:
     - kvm
 
-- include: ./kvm_networking.yml
+- include_tasks: ./kvm_networking.yml
   when: not use_phys_hosts
 
-- include: ./kvm_networking_phys_host.yml
+- include_tasks: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
 - name: set yum repo to local
@@ -62,7 +62,7 @@
   tags:
     - kvm
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm
@@ -73,13 +73,13 @@
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
-- include: ../../../tasks/set_java.yml
+- include_tasks: ../../../tasks/set_java.yml
   when: force_java
 
-- include: ./centos-acs.yml
+- include_tasks: ./centos-acs.yml
   when: env_version[0:2] == "cs"
 
-- include: ./centos-ccp.yml
+- include_tasks: ./centos-ccp.yml
   when: env_version[0:3] == "ccp"
 
 - name: Update libvirtd.conf - listen_tls

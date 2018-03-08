@@ -84,7 +84,7 @@
 
 ## run cloudstack-setup-management
 - name: Setup management on primary cloudstack management server
-  include: ./setup-mgmt.yml
+  include_tasks: ./setup-mgmt.yml
   when: ("primary_cs_manager" in group_names)
 
 - name: Test for API on 8080 on primary management host before configuring secondary
@@ -95,5 +95,5 @@
   run_once: true
 
 - name: Setup management on additional cloudstack management servers
-  include: ./setup-mgmt.yml
+  include_tasks: ./setup-mgmt.yml
   when: ("secondary_cs_manager" in group_names)

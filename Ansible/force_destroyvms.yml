@@ -114,4 +114,4 @@
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined
 
-    - include: ./tasks/removeproject.yml
+    - import_tasks: ./tasks/removeproject.yml

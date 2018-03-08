@@ -45,7 +45,7 @@
   tags:
     - "rename_browser"
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: test for cloud or cloudstack Usage
   stat: path=/etc/cloudstack/management/db.properties

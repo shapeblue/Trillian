@@ -28,4 +28,4 @@
 - name: run installer -- THIS IS VERY FRAGILE
   shell: "cd /tmp/{{ ccp_install_tarball }} && ./install.sh -a"
 
-- include: ./centos_qemuimg.yml
+- import_tasks: ./centos_qemuimg.yml
