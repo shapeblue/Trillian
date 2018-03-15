@@ -21,6 +21,10 @@
 - name: remove old interface files
   shell: rm -f /etc/sysconfig/network-scripts/ifcfg-enp*
 
+- name: make sure there is something in resolv.conf
+  shell: 'echo "nameserver   8.8.8.8" >> /etc/resolv.conf'
+
+
 - name: Configure mgmt interface (Physical host)
   template: src=kvm-eth_mgmt_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_mgmt_if }}"
 
