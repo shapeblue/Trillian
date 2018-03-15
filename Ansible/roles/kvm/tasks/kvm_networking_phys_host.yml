@@ -18,6 +18,9 @@
 - name: Configure PXE interface (Disable PXE interface)
   template: src=kvm-eth_PXE_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_PXE_if }}"
 
+- name: remove old interface files
+  shell: rm -f /etc/sysconfig/network-scripts/ifcfg-enp*
+
 - name: Configure mgmt interface (Physical host)
   template: src=kvm-eth_mgmt_phys_host.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ phys_host_mgmt_if }}"
 
