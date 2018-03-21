@@ -14,7 +14,7 @@
 #limitations under the License.
 
 
-DEVICE={{ phys_host_mgmt_if }}.6
+DEVICE={{ phys_host_mgmt_if }}
 ONBOOT=yes
 HOTPLUG=yes
 VLAN=yes
@@ -22,4 +22,4 @@ BOOTPROTO=none
 TYPE=Ethernet
 BRIDGE={{ kvm_mgmt_network_label }}
 NM_CONTROLLED=no
-MTU=1500
+MTU=4500
