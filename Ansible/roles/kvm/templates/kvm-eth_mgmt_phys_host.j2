@@ -16,7 +16,8 @@
 
 DEVICE={{ phys_host_mgmt_if }}
 ONBOOT=yes
-HOTPLUG=no
+HOTPLUG=yes
+VLAN=yes
 BOOTPROTO=none
 TYPE=Ethernet
 BRIDGE={{ kvm_mgmt_network_label }}
