@@ -264,6 +264,12 @@ case $COMMAND in
   "vr")
     vm_vr $HOST
   ;;
+  "encrypt")
+    echo $"`java -classpath /usr/share/cloudstack-common/lib/jasypt-1.9.2.jar  org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI encrypt.sh input="$HOST" password="$(cat /etc/cloudstack/management/key)"`"
+  ;;
+  "decrypt")
+    echo $"`java -classpath /usr/share/cloudstack-common/lib/jasypt-1.9.2.jar org.jasypt.intf.cli.JasyptPBEStringDecryptionCLI decrypt.sh input="$HOST" password="$(cat /etc/cloudstack/management/key)"`"
+  ;;
   "*")
     display_usage
   ;;
