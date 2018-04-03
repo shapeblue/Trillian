@@ -114,7 +114,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  ("{{ all-file_version|int }}" < 4 )
+      when: all_file_version | version_compare('6', 'lt') 
 
 - hosts: localhost
   connection: local
@@ -174,7 +174,7 @@
 
     - name: Check returned hypervisor type
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
-      when:  ( hvtype not in [ "v",  "x", "k", "kvm", "vmware", "xenserver" ] ) and ( hv | int > 0 )
+      when: ( hvtype not in [ "v",  "x", "k", "kvm", "vmware", "xenserver" ] ) and ( hv | int > 0 )
 
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"

@@ -31,12 +31,12 @@
   tags:
     - kvm
 
-- include: ./centos.yml
+- include_tasks: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - kvm
 
-- include: ./ubuntu.yml
+- include_tasks: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm

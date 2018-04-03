@@ -43,7 +43,7 @@
   with_items:
   - {field: "ram_size", value: "2048"}
   - {field: "cpu", value: "2"}
-  when: ( env_hv == "vmware" )
+  when: env_hv == "vmware"
   tags:
     - "global_settings"
 
@@ -51,7 +51,7 @@
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
   with_items:
   - {name: "secstorage.vm.mtu.size", value: "4500"}
-  when: ( env_hv == "vmware" )
+  when: env_hv == "vmware"
   tags:
     - "global_settings"
 

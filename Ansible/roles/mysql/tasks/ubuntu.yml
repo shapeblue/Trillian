@@ -55,7 +55,7 @@
   service: name=mysql state=restarted enabled=yes
   tags: services
 
-- include: ./secure_mysql.yml
+- import_tasks: ./secure_mysql.yml
 
 - name: Ensure Firewall Rules are in place for MySQL
   shell: ufw allow mysql

@@ -34,7 +34,7 @@
     state: latest
 
 - name: Perform any additional pre-restart upgrade steps
-  include: additional_pre-restart_upgrade_steps.yaml
+  include_tasks: additional_pre-restart_upgrade_steps.yaml
   run_once: yes
 
 - name: start services
@@ -46,5 +46,5 @@
     - cloudstack-usage
 
 - name: Perform any additional post-restart upgrade steps
-  include: additional_post-restart_upgrade_steps.yaml
+  include_tasks: additional_post-restart_upgrade_steps.yaml
 

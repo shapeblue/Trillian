@@ -154,7 +154,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Upgrading_System_VMs
-      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      include_tasks: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: cloudstack_manager_hosts
@@ -184,7 +184,7 @@
   gather_facts: no
   tasks:
     - name: update project - tag Waiting_for_Upgraded_System_VMs
-      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      include_tasks: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: primary_cs_manager
@@ -197,6 +197,6 @@
   gather_facts: no
   tasks:
     - name: update project - tag Upgraded_System_VMs_up
-      include: tasks/updateproject.yml project_tag=System_VMs_up
+      include_tasks: tasks/updateproject.yml project_tag=System_VMs_up
       when: wait_till_setup
 

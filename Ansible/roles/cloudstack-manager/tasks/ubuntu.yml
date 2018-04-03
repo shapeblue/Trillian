@@ -53,7 +53,7 @@
 - name: Ensure CloudStack Usage Service is installed
   apt: pkg=cloudstack-usage state=present update_cache=true
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: Ensure CloudStack Usage Service is started
   service: name=cloudstack-usage state=started

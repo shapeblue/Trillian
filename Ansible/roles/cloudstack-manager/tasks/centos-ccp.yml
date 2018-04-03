@@ -55,4 +55,4 @@
 #  tags:
 #    - "rename_browser"
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml

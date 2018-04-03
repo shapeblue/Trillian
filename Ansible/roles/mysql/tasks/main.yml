@@ -33,16 +33,16 @@
     - mysql
     - mysqlconf
 
-- include: ./centos.yml
+- include_tasks: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - mysql
     - mysqlconf
 
-- include: ./ubuntu.yml
+- include_tasks: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
-- include: ./mysql_replication.yml
+- include_tasks: ./mysql_replication.yml
   when: num_db_hosts | int > 1
   tags:
     - mysql_replication

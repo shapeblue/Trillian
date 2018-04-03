@@ -30,4 +30,4 @@
     - kvm
     - kvm-agent
 
-- include: ./centos_qemuimg.yml
+- import_tasks: ./centos_qemuimg.yml

@@ -5,4 +5,4 @@
   gather_facts: no
   tasks:
     - name: update Tag project
-      include: tasks/updateproject.yml project_tag={{ tag }}
+      import_tasks: tasks/updateproject.yml project_tag={{ tag }}
