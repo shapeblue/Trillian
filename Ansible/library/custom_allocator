@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 ##############################################################
 #
 #Returns host
@@ -6,12 +6,13 @@
 # Vars
 #
 
+
 ARGS="(`cat $1`)"
 
 ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ALGORITHM"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="CLUSTERID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 PODID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="PODID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
-
+METRIC=`echo $ARGS | tr " " "\n"| awk -F= '$1=="METRIC"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 
 function least_cluster()
 {
@@ -38,10 +39,30 @@ function least_host()
 
 function least_host_in_cluster()
 {
-  HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
+  HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$LOWESTCLUSTERID| jq '.host[]' | sed 's/\%//'`
   LOWESTHOSTID=`echo $HOSTUSE | jq -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
   echo $LOWESTHOSTID
 }
+
+
+################################################################################
+# ReturnFact:
+# Return parsed environment info
+#
+function ReturnFact()
+{
+cat << EOF
+{
+"ansible_facts": {
+  "host_id": "${LOWESTHOSTID}",
+  "env_return": "success",
+  "env_retmsg": "Host with lowest use returned."
+ }
+}
+EOF
+WriteOutput "ReturnFact - returning facts to Ansible."
+}
+
 
 
 ## DO STUFF
@@ -58,9 +79,14 @@ case "$ALGORITHM" in
     WriteOutput "finding least used host";
     least_host;
     ReturnFact;
-    fi
-    ;;
-
+  ;;
+  least_host_least_cluster)
+    WriteOutput "finding least used cluster";
+    least_cluster;
+    WriteOutput "finding least used host in least used cluster";
+    least_host_in_cluster;
+    ReturnFact;
+  ;;
 
 esac
 exit
