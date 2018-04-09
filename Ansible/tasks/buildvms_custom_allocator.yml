@@ -169,7 +169,7 @@
     msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
 
 - name: Start KVM hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -259,7 +259,7 @@
     msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
 
 - name: Start XenServer hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{xs_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -348,7 +348,7 @@
     msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
 
 - name: Start ESXi hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
