@@ -32,14 +32,14 @@ function least_cluster()
 function least_host()
 {
   HOSTUSE=`cloudmonkey list hosts type=routing | jq '.host[]' | sed 's/\%//'`
-  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
-  LOWESTCLUSTERID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .clusterid'`
+  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
+  LOWESTCLUSTERID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .clusterid'`
 }
 
 function least_host_in_cluster()
 {
   HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
-  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
+  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
 }
 
 
