@@ -253,10 +253,11 @@
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster
+  register: allocator_output
   when: use_external_hv_hosts|bool == false
 
 - debug:
-    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
+    msg: "{{ allocator_output }}"
 
 - name: Start XenServer hosts
   include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
