@@ -9,7 +9,7 @@
   register: allocator_output
 
 - debug:
-    msg: {{ allocator_output }}
+    msg: "{{ allocator_output }}"
       
 
 - name: Start VM
