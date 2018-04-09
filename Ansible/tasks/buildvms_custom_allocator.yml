@@ -165,9 +165,11 @@
     algorithm: least_cluster
   when: use_external_hv_hosts|bool == false
 
+- debug:
+    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
 
 - name: Start KVM hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -253,10 +255,11 @@
     algorithm: least_cluster
   when: use_external_hv_hosts|bool == false
 
-- set_fact:
-    allocator_cluster_id: "{{ allocator_cluster_id }}"
-- name: Start KVM hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+- debug:
+    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
+
+- name: Start XenServer hosts
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
   with_items:
     - "{{xs_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -341,10 +344,11 @@
     algorithm: least_cluster
   when: use_external_hv_hosts|bool == false
 
-- set_fact:
-    allocator_cluster_id: "{{ allocator_cluster_id }}"
-- name: Start KVM hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+- debug:
+    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
+
+- name: Start ESXi hosts
+  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
