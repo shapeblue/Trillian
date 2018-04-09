@@ -49,6 +49,8 @@ function least_host_in_cluster()
 #
 function ReturnFact()
 {
+
+MSG=`cloudmonkey sync`
 cat << EOF
 {
 "ansible_facts": {
@@ -61,6 +63,11 @@ cat << EOF
 }
 EOF
 }
+
+export TERM=vt100
+cloudmonkey set display json
+cloudmonkey set color false
+
 
 LOWESTCLUSTERID=""
 LOWESTHOSTID=""
