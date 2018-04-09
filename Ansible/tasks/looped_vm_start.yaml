@@ -6,6 +6,10 @@
   custom_allocator: 
     algorithm: least_host_in_cluster
     clusterid: "{{ lowestclusterid }}"
+  register: allocator_output
+
+- debug:
+    msg: {{ allocator_output }}
       
 
 - name: Start VM
