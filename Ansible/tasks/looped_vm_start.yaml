@@ -1,0 +1,12 @@
+---
+
+- debug: msg="clusterid={{ lowestclusterid }} vmid={{ item.id }}"
+
+- name: Get least used host
+  custom_allocator: 
+    algorithm: least_host_in_cluster
+    clusterid: "{{ lowestclusterid }}"
+      
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"

@@ -72,6 +72,15 @@
 
     - name: Build VMs
       include: ./tasks/buildvms.yml
+      when: not use_custom_allocator
+
+    - name: Build VMs
+      include: ./tasks/buildvms_custom_allocator.yml
+      when: use_custom_allocator
+
+    - name: Build VMs
+      include: ./tasks/buildvms.yml
+      when: use_custom_allocator|bool == false
 
     - name: Add dvfilter
       include: ./tasks/add_dvfilter.yml

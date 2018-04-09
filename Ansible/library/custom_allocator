@@ -9,10 +9,11 @@
 
 ARGS="(`cat $1`)"
 
-ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ALGORITHM"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="CLUSTERID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-PODID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="PODID"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
-METRIC=`echo $ARGS | tr " " "\n"| awk -F= '$1=="METRIC"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
+ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="algorithm"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="clusterid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+PODID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="podid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
+METRIC=`echo $ARGS | tr " " "\n"| awk -F= '$1=="metric"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
+ZONEID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="zoneid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 
 function least_cluster()
 {
@@ -26,22 +27,19 @@ function least_cluster()
       LOWESTCLUSTERID=${CLUSTERLID_ARRAY[$i]}
     fi
   done
-
-  echo $LOWESTCLUSTERID
 }
 
 function least_host()
 {
   HOSTUSE=`cloudmonkey list hosts type=routing | jq '.host[]' | sed 's/\%//'`
-  LOWESTHOSTID=`echo $HOSTUSE | jq -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
-  echo $LOWESTHOSTID
+  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
+  LOWESTCLUSTERID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .clusterid'`
 }
 
 function least_host_in_cluster()
 {
-  HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$LOWESTCLUSTERID| jq '.host[]' | sed 's/\%//'`
-  LOWESTHOSTID=`echo $HOSTUSE | jq -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
-  echo $LOWESTHOSTID
+  HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
+  LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[1] | .id'`
 }
 
 
@@ -54,37 +52,43 @@ function ReturnFact()
 cat << EOF
 {
 "ansible_facts": {
-  "host_id": "${LOWESTHOSTID}",
+  "allocator_host_id": "${LOWESTHOSTID}",
+  "allocator_cluster_id": "${LOWESTCLUSTERID}",
+  "allocator_pod_id": "${LOWESTPODID}",
   "env_return": "success",
-  "env_retmsg": "Host with lowest use returned."
+  "env_retmsg": "${MSG}"
  }
 }
 EOF
-WriteOutput "ReturnFact - returning facts to Ansible."
 }
 
-
-
+LOWESTCLUSTERID=""
+LOWESTHOSTID=""
+LOWESTPODID=""
 ## DO STUFF
-
-if [[ "$ALGORITHM" == "least_host" ]]; then
-  HOSTUSE=`cloudmonkey list hosts type=routing | jq '.host[]'`
-  HOSTUSE_SORTED=`echo $HOSTUSE | jq -s -c 'sort_by(.cpuused) | .[]'`
-fi
-
-
 
 case "$ALGORITHM" in
   least_host)
-    WriteOutput "finding least used host";
     least_host;
+    MSG="Returning lowest used host in zone"
     ReturnFact;
   ;;
   least_host_least_cluster)
-    WriteOutput "finding least used cluster";
     least_cluster;
-    WriteOutput "finding least used host in least used cluster";
+    CLUSTERID=${LOWESTCLUSTERID}
     least_host_in_cluster;
+    MSG="Returning lowest used host in lowest used cluster in zone"
+    ReturnFact;
+  ;;
+  least_cluster)
+    least_cluster;
+    MSG="Returning lowest used cluster in zone"
+    ReturnFact;
+  ;;
+  least_host_in_cluster)
+    least_host_in_cluster;
+    LOWESTCLUSTERID=${CLUSTERID}
+    MSG="Returning lowest used host in given cluster"
     ReturnFact;
   ;;
 

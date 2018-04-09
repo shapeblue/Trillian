@@ -1,0 +1,763 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+####################################################################
+# Role carries out following:
+# - Creates the build project if not already present.
+# - For each inventory group (management, esxi hosts etc):
+#   - Builds servers based on details provided.
+#   - Updates the inventory file with the IP addresses provided by CloudStack.
+#   - Updates the in-memory inventory with the same IP addresses. This
+#     allows the playbook calling this role to immediately carry out additional
+#     tasks against the inventory.
+
+####################################################################
+
+- name: determine number of db hosts
+  set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+
+# Add SSH keys to Cloudstack for this project
+# TODO Add unquieness
+
+- name: Remove previous SSH key from Project if it exists
+  local_action:
+    module: cs_sshkeypair
+    api_timeout: 120
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent
+
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
+  local_action: 
+    module: file
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub"
+
+- name: "Ensure {{ def_env_ssh_key_path | dirname }}/ exists"
+  local_action:
+    module: file
+    path: "{{ def_env_ssh_key_path | dirname }}"
+    state: directory
+    mode: 0777
+
+- name: Generate SSH keys
+  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+
+- name: Add new public SSH Key to the project
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: present
+    api_timeout: 120
+    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
+
+- name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
+  local_action: 
+    module: file
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+  - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub"
+
+####################################################################
+# Start hosts
+# Start hypervisors first as they need to go in same cluster as each other
+# then start other VMs on least used hosts (regardless of cluster usage)
+
+####################################################################
+# KVM hosts
+#
+- name: build KVM hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ kvm_service_offering }}"
+    template: "{{ kvm_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['kvm_hosts'] }}"
+  register: kvm_retval
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with KVM host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with KVM host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="kvm_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with KVM host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with KVM host instance names
+  add_host:
+    name={{ item.name }}
+    groups="kvm_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+    api_timeout: 120
+  with_items: "{{kvm_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: find least used cluster
+  custom_allocator:
+    algorithm: least_cluster
+  when: use_external_hv_hosts|bool == false
+
+
+- name: Start KVM hosts
+  include_tasks: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  with_items:
+    - "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+
+####################################################################
+# XenServer hosts
+#
+- name: build XenServer hosts (do not start)
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ xs_service_offering }}"
+    template: "{{ xs_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['xenserver_hosts'] }}"
+  register: xs_retval
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with XenServer host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with XenServer host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="xenserver_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with XenServer host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with XenServer host instance names
+  add_host:
+    name={{ item.name }}
+    groups="xenserver_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+    api_timeout: 120
+  with_items: "{{xs_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: find least used cluster
+  custom_allocator:
+    algorithm: least_cluster
+  when: use_external_hv_hosts|bool == false
+
+- set_fact:
+    allocator_cluster_id: "{{ allocator_cluster_id }}"
+- name: Start KVM hosts
+  include_tasks: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  with_items:
+    - "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+####################################################################
+# VMware ESXi hosts
+#
+- name: build ESXi hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ esxi_service_offering }}"
+    template: "{{ esxi_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  register: esxi_retval
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with ESXi host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with ESXi host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="esxi_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update inventory file with ESXi host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Update in memory inventory with ESXi host instance names
+  add_host:
+    name={{ item.name }}
+    groups="esxi_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+- name: Add data disk for local storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ local_storage_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+    api_timeout: 120
+  with_items: "{{esxi_retval.results}}"
+  when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+- name: find least used cluster
+  custom_allocator:
+    algorithm: least_cluster
+  when: use_external_hv_hosts|bool == false
+
+- set_fact:
+    allocator_cluster_id: "{{ allocator_cluster_id }}"
+- name: Start KVM hosts
+  include_tasks: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  with_items:
+    - "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+
+####################################################################
+# VMware VC hosts
+#
+- name: build VC hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ vc_service_offering }}"
+    template: "{{ vc_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['vc_hosts'] }}"
+  register: vc_retval
+
+- name: Update inventory file with VC host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{vc_retval.results}}"
+
+- name: Update inventory file with VC host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC Mgt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{vc_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{vc_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+
+####################################################################
+# First management server
+#
+
+- name: Build first management hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ mgmtsrv_service_offering }}"
+    template: "{{ mgmtsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['primary_cs_manager'] }}"
+  register: mgmtsrv1_retval
+
+- name: Update inventory file with first management server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: Update in memory inventory with first management server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="primary_cs_manager"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: Update inventory file with mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: Update in memory inventory with Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="primary_cs_manager"
+    instance_name={{ item.instance_name }}
+  with_items: "{{mgmtsrv1_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{mgmtsrv1_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+####################################################################
+# Additional management servers
+#
+- name: Build additional management hosts
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ mgmtsrv_service_offering }}"
+    template: "{{ mgmtsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['secondary_cs_manager'] }}"
+  register: mgmtsrvs_retval
+
+- name: Update inventory file with additional management server IP addresseses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional management server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="secondary_cs_manager"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update inventory file with addtional mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="secondary_cs_manager"
+    instance_name={{ item.instance_name }}
+  with_items: "{{mgmtsrvs_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{mgmtsrvs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+
+####################################################################
+# First DB server
+#
+- name: Build first DB server
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ dbsrv_service_offering }}"
+    template: "{{ dbsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['mysql_master_host'] }}"
+  register: dbsrv1_retval
+
+- name: Update inventory file with first DB server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{dbsrv1_retval.results}}"
+
+- name: Update in memory inventory with first DB server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="mysql_master_host"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{dbsrv1_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{dbsrv1_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+####################################################################
+# Additional DB servers
+#
+- name: Build additional DB servers
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ dbsrv_service_offering }}"
+    template: "{{ dbsrv_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['mysql_slave_hosts'] }}"
+  register: dbsrvs_retval
+
+- name: Update inventory file with additional DB server IP addresseses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{dbsrvs_retval.results}}"
+
+- name: Update in memory inventory with additional DB server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="mysql_slave_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{dbsrvs_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{dbsrvs_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+####################################################################
+# Marvin Server
+#
+- name: Build Marvin server
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ marvin_service_offering }}"
+    template: "{{ marvin_server_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    ssh_key: "{{env_name_clean}}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ marvin_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items:
+    - "{{ groups['marvin_host'] }}"
+  register: marvin_retval
+
+- name: Update inventory file with Marvin server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{marvin_retval.results}}"
+
+- name: Update in memory inventory with Marvin server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="marvin_host"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{marvin_retval.results}}"
+
+
+- name: Update inventory file with addtional mgmt host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{marvin_retval.results}}"
+
+- name: Update in memory inventory with additional Mgmt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="marvin_host"
+    instance_name={{ item.instance_name }}
+  with_items: "{{marvin_retval.results}}"
+
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  when: use_external_hv_hosts|bool == false
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{marvin_retval.results}}"
+  when: use_external_hv_hosts|bool == false
+
+####################################################################
+# Work out lists of hosts to be used in zone create script
+#
+- name: Determine primary hypervisor
+  set_fact:
+    iplistgroup: |
+      {%- if env_hv == "vmware" -%}
+      vc_hosts
+      {%- elif env_hv  == "xenserver" -%}
+      xenserver_hosts
+      {%- elif env_hv  == "kvm" -%}
+      kvm_hosts
+      {%- endif -%}
+
+- name: List hypervisor host IP addresses
+  set_fact:
+    iplist: |
+      {%- for item in groups[ iplistgroup | trim ] -%}
+        {{ hostvars[item]['ansible_ssh_host'] }}
+        {%- if not loop.last -%},{%- else -%}{%- endif -%}
+      {%- endfor -%}
+
+- name: Update group vars file with HV host IP addresses
+  lineinfile:
+    dest="group_vars/{{ env_name_clean }}"
+    insertafter="^env_hv.*$"
+    line='env_hviplist{{ ":" }} \"{{ iplist | trim }}\"'
+
+
+####################################################################
+# Report updates
+#
+- name: Report updated hosts in in-memory and host file inventory
+  debug: msg="{{ item }} ansible_ssh_host={{ hostvars[item]['ansible_ssh_host'] | default( '<undefined>' ) }}"
+  with_items:
+    - "{{ groups[ env_name_clean ] }}"
