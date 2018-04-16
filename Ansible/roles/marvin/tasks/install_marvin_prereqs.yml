@@ -106,7 +106,7 @@
     state: absent
 
 - name: Install pyOpenSSL with pip
-  pip: name=pyOpenSSL extra_args='--upgrade' state:installed
+  pip: name=pyOpenSSL extra_args='--upgrade'
   with_items:
   - pyopenssl
   tags:
