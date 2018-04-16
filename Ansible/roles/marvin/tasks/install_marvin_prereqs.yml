@@ -100,6 +100,11 @@
     - marvin
     - marvin_install
 
+- name: remove yum openSSL package
+  yum:
+    name: pyOpenSSL
+    state: absent
+
 - name: install pip security components and extras
   pip: name={{ item }} extra_args='--upgrade'
   with_items:
