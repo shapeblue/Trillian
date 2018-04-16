@@ -105,6 +105,14 @@
     name: pyOpenSSL
     state: absent
 
+- name: Install pyOpenSSL with pip
+  pip: name=pyOpenSSL extra_args='--upgrade' state:installed
+  with_items:
+  - pyopenssl
+  tags:
+    - marvin
+    - maring_install
+
 - name: install pip security components and extras
   pip: name={{ item }} extra_args='--upgrade'
   with_items:
