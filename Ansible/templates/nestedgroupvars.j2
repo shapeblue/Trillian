@@ -256,11 +256,14 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmosversion = "centos64" %}
 {% set kvmreleaseurl = "centos" %}
 {% set kvm_os_type = "centos" %}
-{% elif kvm_os[0:1] | lower == "7" %}
+{% elif kvm_os | lower == "73" %}
+{% set kvmosversion = "centos73" %}
+{% set kvmreleaseurl = "centos7" %}
+{% set kvm_os_type = "centos7" %}
+{% elif kvm_os | lower == "7" %}
 {% set kvmosversion = "centos7" %}
 {% set kvmreleaseurl = "centos7" %}
 {% set kvm_os_type = "centos7" %}
-
 {% elif kvm_os | lower == "u14" %}
 {% set kvmosversion = "ubuntu1404" %}
 {% set kvmreleaseurl = "debian" %}
