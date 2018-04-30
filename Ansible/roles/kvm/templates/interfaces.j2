@@ -19,23 +19,25 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0 inet manual
-
+    mtu 4500
 auto eth1
 iface eth1 inet manual
 
-# Public network
-auto {{ kvm_mgmt_network_label }}
-iface {{ kvm_mgmt_network_label }} inet dhcp
+
+# Private network
+auto cloudbr0
+iface cloudbr0 inet dhcp
     bridge_ports eth0
     bridge_fd 5
     bridge_stp off
     bridge_maxwait 1
+    mtu 4500
 
-# Private network
-auto {{ kvm_guest_network_label }}
-iface {{ kvm_guest_network_label }} inet  manual
+# Public network
+auto cloudbr1
+iface cloudbr1 inet  manual
     bridge_ports eth1
     bridge_fd 5
     bridge_stp off
     bridge_maxwait 1
-    MTU 4500
+ 
