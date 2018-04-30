@@ -22,6 +22,7 @@ iface eth0 inet manual
 
 auto eth1
 iface eth1 inet manual
+    MTU 4500
 
 # Public network
 auto {{ kvm_mgmt_network_label }}
