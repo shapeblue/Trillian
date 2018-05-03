@@ -37,6 +37,8 @@ env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
 env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
 env_db_user: "{{ env_db_user | default( def_env_db_user ) }}"
 env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
+xs_apply_license: {{ xs_apply_license | default( def_xs_apply_license ) }}
+
 
 # Environment summary
 env_uuid: "{{ env_uuid.stdout }}"
