@@ -1,5 +1,14 @@
 ---
 
+# Deregister XenServers
+
+- hosts: xenserver_hosts
+  gather_facts: no
+  tasks:
+    - name: Deregister Licensed XenServers
+      shell: xe host-license-remove host-uuid=`xe host-list --minimal hostname=$HOSTNAME` 
+      ignore_errors: true
+
 - hosts: localhost
   connection: local
   gather_facts: no
