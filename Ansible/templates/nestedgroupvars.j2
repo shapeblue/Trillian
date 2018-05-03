@@ -341,6 +341,10 @@ xs_public_network_nic: "{{ xs_public_network_nic | default( def_xs_public_networ
 xs_public_network_label: "{{ xs_public_network_label | default( def_xs_public_network_label ) }}"
 xs_username: "{{ xs_username | default( def_xs_username ) }}"
 xs_password: "{{ xs_password | default( def_xs_password ) }}"
+xs_license_server: "{{ xs_license_server | default( def_xs_license_server ) }}"
+xs_license_server_port: "{{ xs_license_server_port | default( def_xs_license_server_port ) }}"
+xs_apply_license: "{{ xs_apply_license | default( def_xs_apply_license) }}"
+xs_license_edition: "{{ xs_license_edition | default( def_xs_license_edition ) }}"
 
 # VMware
 vmware: "{{ vmware_ver }}"  ##-- LEGACY REMOVE SOONEST
