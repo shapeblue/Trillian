@@ -126,11 +126,11 @@
       private: no
       when: env_name is undefined
 
-    - name: "env_version"
-      prompt: "CloudStack version (cs45 / cs46 / custom)"
-      private: no
-      default: "cs45"
-      when: env_version is undefined
+#    - name: "env_version"
+#      prompt: "CloudStack version (cs45 / cs46 / custom)"
+#      private: no
+#      default: "cs45"
+#      when: (env_version is undefined) and (env_dotted_version is undefined)
 
     - name: "mgmt_os"
       prompt: "Management OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u)"
@@ -163,6 +163,14 @@
   tasks:
 
 # check incoming args
+
+    - name: decode verion string
+      cs_version_facts:
+        versionstring: "{{ env_dotted_version }}"
+      register: cs_version_data
+      when: env_dotted_version is defined
+      
+    - debug: msg="{{ cs_version_data }}"
 
     - name: Check returned environment name
       fail: msg="No environment name provided."

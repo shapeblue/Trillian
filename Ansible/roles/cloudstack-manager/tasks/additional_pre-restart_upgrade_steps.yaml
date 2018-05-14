@@ -9,17 +9,14 @@
   tags:
     - extra_steps
 
-- name: copy upgrade script to mgmt.
-  copy:
-    src: "{{ inventory_dir }}/roles/cloudstack-manager/files/update_db_410_to_411.sql"
-    dest: /tmp/update_db_410_to_411.sql
-  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
-  tags:
-    - extra_steps
 
-- name: run missing sql commands
-  shell: "mysql -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} < /tmp/update_db_410_to_411.sql"
-  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410"
+- name: copy upgrade script to mgmt.
+  block:
+    - copy:
+        src: "{{ inventory_dir }}/roles/cloudstack-manager/files/update_db_410_to_411.sql"
+        dest: /tmp/update_db_410_to_411.sql
+    - shell: "mysql -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} < /tmp/update_db_410_to_411.sql"
+  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410" and upgrade_cloudstack_ver != "cs4111"
   tags:
     - extra_steps
 
@@ -28,6 +25,6 @@
 
 - name: reload cloudstack.unit
   shell: systemctl daemon-reload
-  when: upgrade_cloudstack_ver == "cs411"
+  when: upgrade_cloudstack_ver == "cs411" or upgrade_cloudstack_ver == "cs4111"
   tags:
     - extra_steps
