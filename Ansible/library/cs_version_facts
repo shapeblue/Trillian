@@ -1,0 +1,66 @@
+#!/bin/bash
+
+ARGS="(`cat $1`)"
+INPUTSTRING=`echo $ARGS | tr " " "\n"| awk -F= '$1=="versionstring"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+
+if [ -z $INPUTSTRING ]; then
+echo "nothing to do"
+else
+  if [[ "${INPUTSTRING}" == *"-"* ]]; then
+    VERSIONSTRING="$INPUTSTRING"
+  else
+    VERSIONSTRING=`echo $INPUTSTRING | awk -F "-" '{print $1}'`
+  fi
+  
+  
+  if [[ "$VERSIONSTRING" == "CCP"* ]] | [[ "$VERSIONSTRING" == "ACP"* ]]; then
+    DISTRIBUTION="ccp"
+    VERSIONNUM="${VERSIONSTRING:3}"
+  else
+    DISTRIBUTION="cs"
+    if [[ "${VERSIONSTRING,,}" == "cs"* ]]; then
+      VERSIONNUM="${VERSIONSTRING:2}"
+    else
+      VERSIONNUM="${VERSIONSTRING:3}"
+    fi
+  fi
+  
+  VERSIONDEPTH=$((`echo "${VERSIONNUM}" | awk -F "." '{print NF-1}'`))
+  L_ONE=`echo $VERSIONNUM | awk -F "." '{print $1}'`
+  L_TWO=`echo $VERSIONNUM | awk -F "." '{print $2}'`
+  NUMERIC_VERSION=`echo $L_ONE.$L_TWO`
+  L_THREE=""
+  L_FOUR=""
+
+  if [[ "$VERSIONDEPTH" == "2" ]]; then
+    L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
+    NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE`
+    L_FOUR=""
+  fi
+
+  if [[ "$VERSIONDEPTH" == "3" ]]; then
+    L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
+    L_FOUR=`echo $VERSIONNUM | awk -F "." '{print $4}'`
+    NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE.$L_FOUR`
+  fi
+fi
+
+cat << EOF
+{
+"ansible_facts": {
+  "env_cs_distribution": "${DISTRIBUTION}",
+  "env_cs_numeric_version": "${NUMERIC_VERSION}",
+  "env_cs_major_version": "${L_ONE}",
+  "env_cs_minor_version": "${L_TWO}",
+  "env_cs_minor_subversion": "${L_THREE}",
+  "env_cs_security_version": "${L_FOUR}",
+  "env_version": "${DISTRIBUTION}${L_ONE}${L_TWO}${L_THREE}${L_FOUR}",
+  "env_repo_version_var": "${L_ONE}.${L_TWO}",
+  "env_cs_minor_version_string": "${DISTRIBUTION}${L_ONE}${L_TWO}",
+  "env_return": "success",
+  "env_retmsg": "Data successfully returned."
+ }
+}
+EOF
+
+exit
