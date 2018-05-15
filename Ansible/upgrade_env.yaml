@@ -18,6 +18,15 @@
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
 
+    - name: decode verion string
+      cs_version_facts:
+        versionstring: "{{ env_dotted_version }}"
+        isupgrade: true
+      register: cs_upgrade_data
+      when: env_dotted_version is defined
+      
+    - debug: msg="{{ cs_upgrade_data }}"
+      
 #    - name: configure cloudstack.ini
 #      template:
 #        src: "{{ inventory_dir }}/templates/cloudstack.ini.j2"

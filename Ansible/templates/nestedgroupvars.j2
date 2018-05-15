@@ -37,16 +37,15 @@ env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
 env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
 env_db_user: "{{ env_db_user | default( def_env_db_user ) }}"
 env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
-xs_apply_license: {{ xs_apply_license | default( def_xs_apply_license ) }}
 
 
 # Environment summary
 env_uuid: "{{ env_uuid.stdout }}"
 env_name_clean: "{{ env_name_clean | mandatory }}"
-env_version: "{{ env_version }}"
 env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_dotted_version is not defined %} 
 # -- this is old version b4 dotted notation of version
+env_version: "{{ env_version }}"
 {% if env_version[0:2] == "cs" %}
 {% set majorversion = env_version[2:3] %}
 {% set minorversion = env_version[3:6] %}
@@ -64,10 +63,16 @@ env_repo_version_var:  "{{ env_repo_version_var }}"
 
 {% if env_dotted_version is defined %} 
 env_numversion: "{{ env_cs_numeric_version }}"
+env_cs_distribution: "{{ env_cs_distribution }}"
+env_cs_numeric_version: "{{ env_cs_numeric_version }}"
+env_cs_major_version: "{{ env_cs_major_version }}"
+env_cs_minor_version: "{{ env_cs_minor_version }}"
+env_cs_subminor_version: "{{ env_cs_subminor_version }}"
+env_cs_security_version:  "{{ env_cs_security_version }}"
+env_version: "{{ env_version }}"
+env_repo_version_var: "{{ env_repo_version_var }}"
+env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% endif %}
-
-
-
 {% if mgmt_os | lower == "6" %}
 {% set osversion = "centos" %}
 {% set mgmt_os_type = "centos" %}
