@@ -9,6 +9,11 @@
   tags:
     - extra_steps
 
+- name: decode verion string
+  cs_version_facts:
+    versionstring: "{{ upgrade_cloudstack_ver }}"
+    isupgrade: true
+  register: cs_upgrade_data
 
 - name: copy upgrade script to mgmt.
   block:

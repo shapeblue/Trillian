@@ -2,9 +2,9 @@
 
 ARGS="(`cat $1`)"
 INPUTSTRING=`echo $ARGS | tr " " "\n"| awk -F= '$1=="versionstring"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-ISUPGRADE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="versionstring"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+ISUPGRADE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="isupgrade"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 
-if [[ "${ISUPGRADE,,}" == "true" ]] | [[ "${ISUPGRADE,,}" == "yes" ]]; then
+if [[ "${ISUPGRADE,,}" == "true" ]] || [[ "${ISUPGRADE,,}" == "yes" ]]; then
   PREFIX_STR="upgrade"
 else
   PREFIX_STR="env"
@@ -20,7 +20,7 @@ else
   fi
   
   
-  if [[ "$VERSIONSTRING" == "CCP"* ]] | [[ "$VERSIONSTRING" == "ACP"* ]]; then
+  if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
     DISTRIBUTION="ccp"
     VERSIONNUM="${VERSIONSTRING:3}"
   else
@@ -36,12 +36,15 @@ else
   L_ONE=`echo $VERSIONNUM | awk -F "." '{print $1}'`
   L_TWO=`echo $VERSIONNUM | awk -F "." '{print $2}'`
   NUMERIC_VERSION=`echo $L_ONE.$L_TWO`
+  DOT_THREE=""
   L_THREE=""
   L_FOUR=""
 
   if [[ "$VERSIONDEPTH" == "2" ]]; then
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE`
+    DOT_THREE="."
+    DOT_FOUR=""
     L_FOUR=""
   fi
 
@@ -49,6 +52,7 @@ else
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
     L_FOUR=`echo $VERSIONNUM | awk -F "." '{print $4}'`
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE.$L_FOUR`
+    DOT_FOUR="."
   fi
 fi
 
@@ -59,8 +63,8 @@ cat << EOF
   "${PREFIX_STR}_cs_numeric_version": "${NUMERIC_VERSION}",
   "${PREFIX_STR}_cs_major_version": "${L_ONE}",
   "${PREFIX_STR}_cs_minor_version": "${L_ONE}.${L_TWO}",
-  "${PREFIX_STR}_cs_subminor_version": "${L_ONE}.${L_TWO}.${L_THREE}",
-  "${PREFIX_STR}_cs_security_version": "${L_ONE}.${L_TWO}.${L_THREE}.${L_FOUR}",
+  "${PREFIX_STR}_cs_subminor_version": "${L_ONE}.${L_TWO}${DOT_THREE}${L_THREE}",
+  "${PREFIX_STR}_cs_security_version": "${L_ONE}.${L_TWO}${DOT_THREE}${L_THREE}${DOT_FOUR}${L_FOUR}",
   "${PREFIX_STR}_version": "${DISTRIBUTION}${L_ONE}${L_TWO}${L_THREE}${L_FOUR}",
   "${PREFIX_STR}_repo_version_var": "${L_ONE}.${L_TWO}",
   "${PREFIX_STR}_cs_minor_version_string": "${DISTRIBUTION}${L_ONE}${L_TWO}",
