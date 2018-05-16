@@ -40,10 +40,10 @@
         format: OVA
         cross_zones: yes
         os_type: "Other Linux (64-bit)"
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when: vmware_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -56,10 +56,10 @@
         format: VHD
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when: xs_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -72,10 +72,10 @@
         format: QCOW2
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when:  kvm_os|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
