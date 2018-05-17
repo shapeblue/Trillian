@@ -176,6 +176,15 @@
     - add_vwmare_hosts
     - add_dvswitch
 
+- name: List ESXi host IP addresses
+  set_fact:
+    esxilist: |
+      {%- for item in groups[ 'esxi_hosts' ] -%}
+        {{ hostvars[item]['ansible_ssh_host'] }}
+        {%- if not loop.last -%},{%- else -%}{%- endif -%}
+      {%- endfor -%}
+  when: esxi_use_mgmt_dvswitch
+
 - name: Move host management networking to dvSwitch
-  local_action: shell "pwsh {{ inventory_dir }}/roles/vsphere/files/esxi-dvs-mgmt.ps1 -vchost {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }} -vcuser {{ vmware_vcsa_user }} -vcpass {{ vmware_vcsa_pass }} -esxihosts {{ env_hviplist }} -dvswitchname {{ esxi_mgmt_dvs_network_label }}"
+  local_action: shell /usr/bin/pwsh {{ inventory_dir }}/roles/vsphere/files/esxi-dvs-mgmt.ps1 -vchost "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" -vcuser "{{ vmware_vcsa_user }}" -vcpass "{{ vmware_vcsa_pass }}" -esxihosts "{{ esxilist | trim }}" -dvswitchname "{{ esxi_mgmt_dvs_network_label }}"
   when: esxi_use_mgmt_dvswitch
