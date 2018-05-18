@@ -405,6 +405,9 @@ def_esxi_use_mgmt_dvswitch: no
 def_esxi_mgmt_network_label: "vSwitch0"
 def_esxi_guest_network_label: "vSwitch1"
 def_esxi_public_network_label: "vSwitch1"
+def_esxi_mgmt_dvs_network_label: "dvSwitch0"
+def_esxi_guest_dvs_network_label: "dvSwitch1"
+def_esxi_public_dvs_network_label: "dvSwitch1"
 
 # Hyper-V
 
