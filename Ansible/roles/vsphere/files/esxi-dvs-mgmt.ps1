@@ -6,6 +6,9 @@ param(
 [String] $dvswitchname
 )
 
+# Stop spam
+Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false
+
 # Ignore certs
 Set-PowerCLIConfiguration -InvalidCertificateAction ignore -confirm:$false
 
