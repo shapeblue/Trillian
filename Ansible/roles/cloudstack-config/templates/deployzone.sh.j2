@@ -61,7 +61,7 @@ then
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='dvswitch0,,vmwaredvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
@@ -74,7 +74,7 @@ then
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='dvswitch0,,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
@@ -98,7 +98,11 @@ else
 fi
 WriteOutput "Adding Traffic Type - Management";
 {% if env_numversion | version_compare('4.2','>') %}
+{% if esxi_use_mgmt_dvswitch %}
+cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
+{% else %}
 cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
+{% endif %}
 {% else %}
 cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_network_label }}' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
 {% endif %}
