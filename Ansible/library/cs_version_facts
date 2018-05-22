@@ -68,17 +68,6 @@ cat << EOF
   "${PREFIX_STR}_version": "${DISTRIBUTION}${L_ONE}${L_TWO}${L_THREE}${L_FOUR}",
   "${PREFIX_STR}_repo_version_var": "${L_ONE}.${L_TWO}",
   "${PREFIX_STR}_cs_minor_version_string": "${DISTRIBUTION}${L_ONE}${L_TWO}",
-  "${PREFIX_STR}_return": "success",
-  "${PREFIX_STR}_retmsg": "Data successfully returned."
-  "env_cs_distribution": "${DISTRIBUTION}",
-  "env_cs_numeric_version": "${NUMERIC_VERSION}",
-  "env_cs_major_version": "${L_ONE}",
-  "env_cs_minor_version": "${L_TWO}",
-  "env_cs_minor_subversion": "${L_THREE}",
-  "env_cs_security_version": "${L_FOUR}",
-  "env_version": "${DISTRIBUTION}${L_ONE}${L_TWO}${L_THREE}${L_FOUR}",
-  "env_repo_version_var": "${L_ONE}.${L_TWO}",
-  "env_cs_minor_version_string": "${DISTRIBUTION}${L_ONE}${L_TWO}",
   "env_return": "success",
   "env_retmsg": "Data successfully returned."
  }
