@@ -12,13 +12,13 @@
     
     - name: Check that kvm baseurl is defined if kvm hosts exist
       fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
-      when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 )
+      when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 ) and upgrade_rooturl is undefined
     
     - name: Check upgrade version is specified
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
 
-    - name: decode verion string
+    - name: decode version string
       cs_version_facts:
         versionstring: "{{ upgrade_cloudstack_ver }}"
         isupgrade: true
