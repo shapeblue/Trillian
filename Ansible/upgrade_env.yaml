@@ -12,70 +12,74 @@
     
     - name: Check that kvm baseurl is defined if kvm hosts exist
       fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
-      when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 )
+      when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 ) and upgrade_rooturl is undefined
     
     - name: Check upgrade version is specified
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined
 
-#    - name: configure cloudstack.ini
-#      template:
-#        src: "{{ inventory_dir }}/templates/cloudstack.ini.j2"
-#        dest: "{{ inventory_dir }}/cloudstack.ini"
-#        force: true
-#      tags:
-#        - systemvms
-
+    - name: decode version string
+      cs_version_facts:
+        versionstring: "{{ upgrade_cloudstack_ver }}"
+        isupgrade: true
+      register: cs_upgrade_data
+      
+    - debug: msg="{{ cs_upgrade_data }}"
+      
     - set_fact:
         skip_template: false
       when: skip_template is undefined
     
 # Perform upgrade
-    
+    - debug:
+        msg: "Upgrade System VMs to {{ upgrade_version }}"
+
     - local_action:
         module: cs_template
-        name: "{{ def_system_templates[upgrade_cloudstack_ver].vmware_systemvm_name }}"
-        url: "{{ def_system_templates[upgrade_cloudstack_ver].vmware_url }}"
+        name: "{{ def_system_templates[upgrade_version].vmware_systemvm_name }}"
+        url: "{{ def_system_templates[upgrade_version].vmware_url }}"
         hypervisor: VMware
         format: OVA
         cross_zones: yes
         os_type: "Other Linux (64-bit)"
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when: vmware_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
    
     - local_action:
         module: cs_template
-        name: "{{ def_system_templates[upgrade_cloudstack_ver].xs_systemvm_name }}"
-        url: "{{ def_system_templates[upgrade_cloudstack_ver].xs_url }}"
+        name: "{{ def_system_templates[upgrade_version].xs_systemvm_name }}"
+        url: "{{ def_system_templates[upgrade_version].xs_url }}"
         hypervisor: XenServer
         format: VHD
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when: xs_ver|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
-    
+
+
+
     - local_action:
         module: cs_template
-        name: "{{ def_system_templates[upgrade_cloudstack_ver].kvm_systemvm_name }}"
-        url: "{{ def_system_templates[upgrade_cloudstack_ver].kvm_url }}"
+        name: "{{ def_system_templates[upgrade_version].kvm_systemvm_name }}"
+        url: "{{ def_system_templates[upgrade_version].kvm_url }}"
         hypervisor: KVM
         format: QCOW2
         cross_zones: yes
         os_type: Debian GNU/Linux 5.0 (64-bit)
-        api_key: {{ cm_apikey }}
-        api_secret: {{ cm_secretkey }}
+        api_key: "{{ cm_apikey }}"
+        api_secret: "{{ cm_secretkey }}"
         api_timeout: 120
-        api_url: http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api
+        api_url: "http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
       when:  kvm_os|lower != "na" and skip_template|bool != "true"
       tags:
         - systemvms
@@ -83,6 +87,12 @@
 - hosts: cloudstack_manager_hosts
   gather_facts: no
   tasks:
+
+    - name: decode verion string
+      cs_version_facts:
+        versionstring: "{{ upgrade_cloudstack_ver }}"
+        isupgrade: true
+      register: cs_upgrade_data
 
     - name: reset CloudMonkey base configuration
       shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api && cloudmonkey set display json && export TERM=vt100"
@@ -92,19 +102,11 @@
       when: skip_template is undefined
 
     - set_fact:
-        numversion: "{{ upgrade_cloudstack_ver[2:3] }}.{{ upgrade_cloudstack_ver[3:6] }}"
-      when: upgrade_cloudstack_ver[0:2] == "cs"
-    
-    - set_fact:
-        numversion: "{{ upgrade_cloudstack_ver[3:4] }}.{{ upgrade_cloudstack_ver[4:7] }}"
-      when: upgrade_cloudstack_ver[0:3] == "ccp"
- 
-    - set_fact:
-        upgrade_baseurl_mgmt: "{{ upgrade_rooturl }}{{ baseurl_mgmt_suffix }}{{ numversion }}/"
+        upgrade_baseurl_mgmt: "{{ upgrade_rooturl }}{{ baseurl_mgmt_suffix }}{{ upgrade_repo_version_var }}/"
       when: upgrade_baseurl_mgmt is undefined
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
@@ -114,7 +116,7 @@
         - systemvms
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
@@ -124,7 +126,7 @@
         - systemvms
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_cloudstack_ver].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
@@ -141,11 +143,11 @@
   gather_facts: no
   tasks:
     - set_fact:
-        upgrade_baseurl_kvm: "{{ upgrade_rooturl }}{{ baseurl_kvm_suffix }}{{ numversion }}/"
+        upgrade_baseurl_kvm: "{{ upgrade_rooturl }}{{ baseurl_kvm_suffix }}{{ upgrade_repo_version_var }}/"
       when: upgrade_baseurl_kvm is undefined
 
     - name: Upgrade KVM hosts
-      include: roles/cloudstack-manager/tasks/upgrade_kvm.yaml
+      include: roles/kvm/tasks/upgrade_kvm.yaml
       when: groups['kvm_hosts']|length > 0
 
 

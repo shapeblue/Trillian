@@ -17,12 +17,14 @@
 - name: backup database
   shell: mysqldump -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} --databases cloud cloud_usage > /root/db_backup.sql
 
+
+- debug:
+    msg: "{{upgrade_baseurl_mgmt}}"
+
 # set upgrade repo 'fact'
 - set_fact:
     baseurl_cloudstack: "{{ upgrade_baseurl_mgmt }}"
 
-- debug:
-    msg: "{{baseurl_cloudstack}}"
 - name: update cloudstack repo
   template:
     src: "{{ inventory_dir }}/roles/cloudstack-manager/templates/cloudstack.repo.j2"
@@ -30,7 +32,7 @@
 
 - name: upgrade cloudstack binaries
   yum:
-    name: cloudstack-*
+    name: "cloudstack-management-{{ upgrade_cs_numeric_version }}"
     state: latest
 
 - name: Perform any additional pre-restart upgrade steps

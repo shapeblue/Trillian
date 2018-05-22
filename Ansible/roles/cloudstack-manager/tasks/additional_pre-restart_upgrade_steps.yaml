@@ -9,6 +9,17 @@
   tags:
     - extra_steps
 
+- name: decode version string
+  cs_version_facts:
+    versionstring: "{{ upgrade_cloudstack_ver }}"
+    isupgrade: true
+  register: cs_upgrade_data
+
+- debug: msg="upgrade_cs_subminor_version {{ upgrade_cs_subminor_version }}"
+  
+- debug: msg="upgrade_cs_minor_version {{ upgrade_cs_minor_version }}"
+
+- debug: msg="env_numversion {{ env_numversion }}"
 
 - name: copy upgrade script to mgmt.
   block:
@@ -16,9 +27,8 @@
         src: "{{ inventory_dir }}/roles/cloudstack-manager/files/update_db_410_to_411.sql"
         dest: /tmp/update_db_410_to_411.sql
     - shell: "mysql -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} < /tmp/update_db_410_to_411.sql"
-  when: upgrade_cloudstack_ver == "cs411" and env_version == "cs410" and upgrade_cloudstack_ver != "cs4111"
-  tags:
-    - extra_steps
+  when: upgrade_cs_minor_version is version('4.11', '==') and env_numversion is version('4.10', '==') and upgrade_cs_subminor_version is not version('4.11.1', '>')
+
 
 - name: preset some global settings
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='8096' WHERE name='integration.api.port';"
