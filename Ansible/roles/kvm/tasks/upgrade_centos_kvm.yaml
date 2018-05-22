@@ -8,20 +8,28 @@
 
 # set upgrade repo 'fact'
 - set_fact:
-    baseurl_kvm: {{ upgrade_baseurl_mgmt }}
+    baseurl_cloudstack: "{{ upgrade_baseurl_kvm }}"
+
+- name: decode version string
+  cs_version_facts:
+    versionstring: "{{ upgrade_cloudstack_ver }}"
+    isupgrade: true
+  register: cs_upgrade_data
+
+- debug:
+    msg: "Installing {{upgrade_baseurl_kvm}}cloudstack-agent-{{ upgrade_cs_numeric_version }}"
 
 - name: update cloudstack repo
   template:
-    src: cloudstack.repo.j2
-    dest: template: /etc/yum.repos.d/cloudstack.repo
+    src: "{{ inventory_dir }}/roles/cloudstack-manager/templates/cloudstack.repo.j2"
+    dest: /etc/yum.repos.d/cloudstack.repo
 
 - name: upgrade cloudstack binaries
   yum:
-    name: cloudstack-agent
+    name: "cloudstack-agent-{{ upgrade_cs_numeric_version }}"
     state: latest
-    enablerepo: base
 
-- name: stop services
+- name: start services
   service:
     name: cloudstack-agent
     state: started

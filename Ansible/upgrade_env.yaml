@@ -31,6 +31,8 @@
       when: skip_template is undefined
     
 # Perform upgrade
+    - debug:
+        msg: "Upgrade System VMs to {{ upgrade_version }}"
 
     - local_action:
         module: cs_template
@@ -145,7 +147,7 @@
       when: upgrade_baseurl_kvm is undefined
 
     - name: Upgrade KVM hosts
-      include: roles/cloudstack-manager/tasks/upgrade_kvm.yaml
+      include: roles/kvm/tasks/upgrade_kvm.yaml
       when: groups['kvm_hosts']|length > 0
 
 

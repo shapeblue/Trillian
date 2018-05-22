@@ -15,6 +15,12 @@
     isupgrade: true
   register: cs_upgrade_data
 
+- debug: msg="upgrade_cs_subminor_version {{ upgrade_cs_subminor_version }}"
+  
+- debug: msg="upgrade_cs_minor_version {{ upgrade_cs_minor_version }}"
+
+- debug: msg="env_numversion {{ env_numversion }}"
+
 - name: copy upgrade script to mgmt.
   block:
     - copy:
