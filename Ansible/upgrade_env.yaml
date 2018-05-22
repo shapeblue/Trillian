@@ -68,8 +68,8 @@
 
     - local_action:
         module: cs_template
-        name: "{{ def_system_templates[upgrade_version][kvm_systemvm_name] }}"
-        url: "{{ def_system_templates[upgrade_version][kvm_url] }}"
+        name: "{{ def_system_templates[upgrade_version].kvm_systemvm_name }}"
+        url: "{{ def_system_templates[upgrade_version].kvm_url }}"
         hypervisor: KVM
         format: QCOW2
         cross_zones: yes
