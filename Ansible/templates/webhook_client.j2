@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# data should be formated as markdown. headings do not work. 
+# < > and & must be urlencoded
+
+curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$1\"}" {{ marvin_notifi_webhook_url }}

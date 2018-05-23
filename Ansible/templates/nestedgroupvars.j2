@@ -441,8 +441,13 @@ marvin_test_categories:
 {% endif %}
 
 # Hipchat cli client
-use_hipchat: yes
+use_hipchat: {{ use_hipchat | default( def_use_hipchat) }}
 hipchat_server: "{{ hipchat_server | default( def_hipchat_server ) }}"
 hipchat_token: "{{ hipchat_token | default ( def_hipchat_token ) }}"
 hipchat_cli_client_location: "{{ hipchat_cli_client_location | default ( def_hipchat_cli_client_location ) }}"
 hipchat_cli_client_version: "{{ hipchat_cli_client_version | default ( def_hipchat_cli_client_version ) }}"
+
+# webhook client
+use_webhooks: {{ use_webhooks | default( def_use_webhooks ) }}
+marvin_notifi_webhook_url: "{{ marvin_notifi_webhook_url | default( def_marvin_notifi_webhook_url ) }}"
+
