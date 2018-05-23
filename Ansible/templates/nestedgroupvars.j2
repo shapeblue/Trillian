@@ -45,6 +45,7 @@ env_name_clean: "{{ env_name_clean | mandatory }}"
 env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_dotted_version is not defined %}
 # -- this is old version b4 dotted notation of version
+env_version: "{{ env_version }}"
 {% if env_version[0:2] == "cs" %}
 {% set majorversion = env_version[2:3] %}
 {% set minorversion = env_version[3:6] %}
