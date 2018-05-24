@@ -34,12 +34,15 @@ function least_host()
   HOSTUSE=`cloudmonkey list hosts type=routing | jq '.host[]' | sed 's/\%//'`
   LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
   LOWESTCLUSTERID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .clusterid'`
+  LOWESTHOSTNAME=`cloudmonkey list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
+  LOWESTCLUSTERNAME=`cloudmonkey list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
 function least_host_in_cluster()
 {
   HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
   LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
+  LOWESTHOSTNAME=`cloudmonkey list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
 }
 
 
@@ -56,6 +59,8 @@ cat << EOF
   "allocator_host_id": "${LOWESTHOSTID}",
   "allocator_cluster_id": "${LOWESTCLUSTERID}",
   "allocator_pod_id": "${LOWESTPODID}",
+  "allocator_cluster_name": "${LOWESTCLUSTERNAME}",
+  "allocator_host_name": "${LOWESTHOSTNAME}",  
   "env_return": "success",
   "env_retmsg": "${MSG}"
  }

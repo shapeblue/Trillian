@@ -163,10 +163,11 @@
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster
+  register: alg_output
   when: use_external_hv_hosts|bool == false
 
 - debug:
-    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
+    msg: {{ alg_output }}
 
 - name: Start KVM hosts
   include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
@@ -654,7 +655,11 @@
 - name: find least used host
   custom_allocator:
     algorithm: least_host
+  register: alg_output
   when: use_external_hv_hosts|bool == false
+
+- debug:
+    msg: {{ alg_output }}
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
