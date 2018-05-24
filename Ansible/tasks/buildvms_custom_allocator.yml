@@ -167,7 +167,7 @@
   when: use_external_hv_hosts|bool == false
 
 - debug:
-    msg: {{ alg_output }}
+    msg: "{{ alg_output }}"
 
 - name: Start KVM hosts
   include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
@@ -659,7 +659,7 @@
   when: use_external_hv_hosts|bool == false
 
 - debug:
-    msg: {{ alg_output }}
+    msg: "{{ alg_output }}"
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
