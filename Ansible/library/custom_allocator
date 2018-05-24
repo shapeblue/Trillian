@@ -17,16 +17,8 @@ ZONEID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="zoneid"{print $2}'| tr -d '"' | 
 
 function least_cluster()
 {
-  CLUSTERLID_ARRAY=(`cloudmonkey list clusters | jq -r '.cluster[]|.id'`)
-  LOWESTCLUSTERID=""
-  LOWESTMETRIC=9999999
-  for (( i = 0; i < ${#CLUSTERLID_ARRAY[@]}; i++ )); do
-    THISMETRIC=`cloudmonkey list capacity clusterid=${CLUSTERLID_ARRAY[$i]} type=1 | jq -r '.capacity[]|.percentused'`
-    if [[ `echo $THISMETRIC'<'$LOWESTMETRIC | bc -l` = 1 ]]; then
-      LOWESTMETRIC=$THISMETRIC
-      LOWESTCLUSTERID=${CLUSTERLID_ARRAY[$i]}
-    fi
-  done
+  LOWESTCLUSTERID=`cloudmonkey list clustersmetrics | jq -r '.cluster | sort_by(.cpuused|rtrimstr("%")|tonumber) | .[0]|.id'`
+  LOWESTCLUSTERNAME=`cloudmonkey list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
 function least_host()
