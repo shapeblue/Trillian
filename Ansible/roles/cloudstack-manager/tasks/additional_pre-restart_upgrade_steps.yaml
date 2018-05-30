@@ -19,7 +19,7 @@
   
 - debug: msg="upgrade_cs_minor_version {{ upgrade_cs_minor_version }}"
 
-- debug: msg="env_numversion {{ env_numversion }}"
+- debug: msg="env_cs_minor_version {{ env_cs_minor_version }}"
 
 - name: copy upgrade script to mgmt.
   block:
@@ -27,7 +27,7 @@
         src: "{{ inventory_dir }}/roles/cloudstack-manager/files/update_db_410_to_411.sql"
         dest: /tmp/update_db_410_to_411.sql
     - shell: "mysql -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} < /tmp/update_db_410_to_411.sql"
-  when: upgrade_cs_minor_version is version('4.11', '==') and env_numversion is version('4.10', '==') and upgrade_cs_subminor_version is not version('4.11.1', '>')
+  when: upgrade_cs_subminor_version is version('4.11.0', '==') and env_cs_minor_version is version('4.10', '==')
 
 
 - name: preset some global settings
@@ -35,6 +35,6 @@
 
 - name: reload cloudstack.unit
   shell: systemctl daemon-reload
-  when: upgrade_cloudstack_ver == "cs411" or upgrade_cloudstack_ver == "cs4111"
+  when: upgrade_cs_minor_version is version('4.11','==')
   tags:
     - extra_steps
