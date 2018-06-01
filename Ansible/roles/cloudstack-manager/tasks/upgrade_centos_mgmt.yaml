@@ -1,7 +1,7 @@
 ---
 
 - name: get pre-upgrade CloudStack version from server
-  shell: "cloudmonkey list capabilities | jq -r '.capability[] | .cloudstackversion'"
+  shell: "cloudmonkey list capabilities | jq -r '.capability | .cloudstackversion'"
   register: CloudStack_original_version
 
 - name: set get original version vars
