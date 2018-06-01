@@ -10,6 +10,9 @@
     isupgrade: false
   register: cs_orginal_version
 
+- debug:
+    msg: "{{ cs_orginal_version }} "
+
 - name: stop services
   service:
     name: "{{ item }}"
