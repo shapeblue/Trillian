@@ -41,7 +41,7 @@
 
 - name: upgrade cloudstack binaries
   yum:
-    name: "cloudstack-management-{{ upgrade_cs_numeric_version }}"
+    name: "cloudstack-management-{{ upgrade_cs_numeric_version }}*"
     state: latest
 
 - name: Perform any additional pre-restart upgrade steps
