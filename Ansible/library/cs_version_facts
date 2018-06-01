@@ -42,16 +42,17 @@ else
 
   if [[ "$VERSIONDEPTH" == "2" ]]; then
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
+    L_FOUR=""
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE`
     DOT_THREE="."
     DOT_FOUR=""
-    L_FOUR=""
   fi
 
   if [[ "$VERSIONDEPTH" == "3" ]]; then
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
     L_FOUR=`echo $VERSIONNUM | awk -F "." '{print $4}'`
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE.$L_FOUR`
+    DOT_THREE="."
     DOT_FOUR="."
   fi
 fi
