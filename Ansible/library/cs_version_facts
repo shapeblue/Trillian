@@ -19,19 +19,24 @@ else
     VERSIONSTRING=`echo $INPUTSTRING | awk -F "-" '{print $1}'`
   fi
   
-  
-  if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
-    DISTRIBUTION="ccp"
-    VERSIONNUM="${VERSIONSTRING:3}"
+  re='[a-zA-Z]'
+  if [[ ${VERSIONSTRING:2} =~ $re ]]; then 
+    if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
+      DISTRIBUTION="ccp"
+      VERSIONNUM="${VERSIONSTRING:3}"
+    else
+      DISTRIBUTION="cs"
+      if [[ "${VERSIONSTRING,,}" == "cs"* ]]; then
+        VERSIONNUM="${VERSIONSTRING:2}"
+      else
+        VERSIONNUM="${VERSIONSTRING:3}"
+      fi
+    fi
   else
     DISTRIBUTION="cs"
-    if [[ "${VERSIONSTRING,,}" == "cs"* ]]; then
-      VERSIONNUM="${VERSIONSTRING:2}"
-    else
-      VERSIONNUM="${VERSIONSTRING:3}"
-    fi
+    VERSIONNUM=${VERSIONSTRING}
   fi
-  
+
   VERSIONDEPTH=$((`echo "${VERSIONNUM}" | awk -F "." '{print NF-1}'`))
   L_ONE=`echo $VERSIONNUM | awk -F "." '{print $1}'`
   L_TWO=`echo $VERSIONNUM | awk -F "." '{print $2}'`
