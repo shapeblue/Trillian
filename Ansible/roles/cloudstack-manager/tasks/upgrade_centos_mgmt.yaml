@@ -50,7 +50,7 @@
 - name: Perform any additional pre-restart upgrade steps
   include: additional_pre-restart_upgrade_steps.yaml
   vars: 
-    env_cs_minor_version: "{{ env_cs_minor_version }}"
+    old_cs_minor_version: "{{ env_cs_minor_version }}"
   run_once: yes
 
 - name: start services
