@@ -6,7 +6,7 @@
 
 - name: set get original version vars
   cs_version_facts:
-    versionstring: "cs{{ CloudStack_original_version }}"
+    versionstring: "cs{{ CloudStack_original_version.stdout }}"
     isupgrade: false
   register: cs_orginal_version
 
