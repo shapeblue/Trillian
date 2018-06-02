@@ -35,6 +35,6 @@
 
 - name: reload cloudstack.unit
   shell: systemctl daemon-reload
-  when: upgrade_cs_minor_version is version('4.11','==')
+  when: upgrade_cs_minor_version is version_compare('4.11','==')
   tags:
     - extra_steps
