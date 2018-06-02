@@ -20,7 +20,7 @@ else
   fi
   
   re='[a-zA-Z]'
-  if [[ ${VERSIONSTRING:2} =~ $re ]]; then 
+  if [[ "${VERSIONSTRING:1}" =~ $re ]]; then 
     if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
       DISTRIBUTION="ccp"
       VERSIONNUM="${VERSIONSTRING:3}"
