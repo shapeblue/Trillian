@@ -48,9 +48,9 @@
     state: latest
 
 - name: Perform any additional pre-restart upgrade steps
-  vars: 
-    - env_cs_minor_version: "{{ env_cs_minor_version }}"
   include: additional_pre-restart_upgrade_steps.yaml
+  vars: 
+    env_cs_minor_version: "{{ env_cs_minor_version }}"
   run_once: yes
 
 - name: start services
