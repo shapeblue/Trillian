@@ -26,7 +26,7 @@
 
 - name: upgrade cloudstack binaries
   yum:
-    name: "cloudstack-agent-{{ upgrade_cs_numeric_version }}"
+    name: "cloudstack-agent-{{ upgrade_cs_numeric_version }}*"
     state: latest
 
 - name: start services

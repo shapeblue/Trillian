@@ -1,5 +1,18 @@
 ---
 
+- name: get pre-upgrade CloudStack version from server
+  shell: "cloudmonkey list capabilities | jq -r '.capability | .cloudstackversion'"
+  register: CloudStack_original_version
+
+- name: set get original version vars
+  cs_version_facts:
+    versionstring: "cs{{ CloudStack_original_version.stdout }}"
+    isupgrade: false
+  register: cs_orginal_version
+
+- debug:
+    msg: "{{ cs_orginal_version }} "
+
 - name: stop services
   service:
     name: "{{ item }}"
@@ -17,7 +30,6 @@
 - name: backup database
   shell: mysqldump -h'{{ mysql_master_ip }}' -u'root' -p{{ mysql_root_password }} --databases cloud cloud_usage > /root/db_backup.sql
 
-
 - debug:
     msg: "{{upgrade_baseurl_mgmt}}"
 
@@ -32,11 +44,13 @@
 
 - name: upgrade cloudstack binaries
   yum:
-    name: "cloudstack-management-{{ upgrade_cs_numeric_version }}"
+    name: "cloudstack-management-{{ upgrade_cs_numeric_version }}*"
     state: latest
 
 - name: Perform any additional pre-restart upgrade steps
   include: additional_pre-restart_upgrade_steps.yaml
+  vars: 
+    old_cs_minor_version: "{{ env_cs_minor_version }}"
   run_once: yes
 
 - name: start services

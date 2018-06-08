@@ -25,7 +25,10 @@
     - kvm-agent
 
 - name: Ensure CloudStack packages are installed
-  yum: name=cloudstack-agent state=present enablerepo=base
+  yum:
+    name: "{{ cloudstack_agent_package}}*"
+    state: present
+    enablerepo: base
   tags:
     - kvm
     - kvm-agent

@@ -19,19 +19,24 @@ else
     VERSIONSTRING=`echo $INPUTSTRING | awk -F "-" '{print $1}'`
   fi
   
-  
-  if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
-    DISTRIBUTION="ccp"
-    VERSIONNUM="${VERSIONSTRING:3}"
+  re='[a-zA-Z]'
+  if [[ "${VERSIONSTRING:1}" =~ $re ]]; then 
+    if [[ "$VERSIONSTRING" == "CCP"* ]] || [[ "$VERSIONSTRING" == "ACP"* ]]; then
+      DISTRIBUTION="ccp"
+      VERSIONNUM="${VERSIONSTRING:3}"
+    else
+      DISTRIBUTION="cs"
+      if [[ "${VERSIONSTRING,,}" == "cs"* ]]; then
+        VERSIONNUM="${VERSIONSTRING:2}"
+      else
+        VERSIONNUM="${VERSIONSTRING:3}"
+      fi
+    fi
   else
     DISTRIBUTION="cs"
-    if [[ "${VERSIONSTRING,,}" == "cs"* ]]; then
-      VERSIONNUM="${VERSIONSTRING:2}"
-    else
-      VERSIONNUM="${VERSIONSTRING:3}"
-    fi
+    VERSIONNUM=${VERSIONSTRING}
   fi
-  
+
   VERSIONDEPTH=$((`echo "${VERSIONNUM}" | awk -F "." '{print NF-1}'`))
   L_ONE=`echo $VERSIONNUM | awk -F "." '{print $1}'`
   L_TWO=`echo $VERSIONNUM | awk -F "." '{print $2}'`
@@ -42,16 +47,17 @@ else
 
   if [[ "$VERSIONDEPTH" == "2" ]]; then
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
+    L_FOUR=""
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE`
     DOT_THREE="."
     DOT_FOUR=""
-    L_FOUR=""
   fi
 
   if [[ "$VERSIONDEPTH" == "3" ]]; then
     L_THREE=`echo $VERSIONNUM | awk -F "." '{print $3}'`
     L_FOUR=`echo $VERSIONNUM | awk -F "." '{print $4}'`
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE.$L_FOUR`
+    DOT_THREE="."
     DOT_FOUR="."
   fi
 fi
