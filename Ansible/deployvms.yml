@@ -62,6 +62,7 @@
 # Create build project if it doesn't exist.
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
+      when: not additional_zone 
 
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
@@ -69,6 +70,7 @@
         - "{{ env_accounts.split(',') }}"
       async: 60
       poll: 0
+      when: not additional_zone 
 
     - name: Build VMs
       include: ./tasks/buildvms.yml
@@ -88,6 +90,7 @@
 
     - name: Update project - tag Configuring_MySQL
       include: tasks/updateproject.yml project_tag=Configuring_MySQL
+      when: not additional_zone 
 
 - hosts: mysql_hosts
   gather_facts: no
@@ -96,6 +99,7 @@
   roles:
     - { role: timezone, when: num_db_hosts | int != 0 }
     - { role: mysql, when: num_db_hosts | int != 0 }
+  when: not additional_zone 
 
 - hosts: localhost
   connection: local
@@ -103,6 +107,7 @@
   tasks:
     - name: update project - tag Configuring_Mgmt_Server
       include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
+  when: not additional_zone 
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -114,6 +119,7 @@
     - { role: mysql, when: num_db_hosts | int == 0 }
     - cloudstack-manager
     - cloudmonkey
+  when: not additional_zone 
 
 ## update status
 

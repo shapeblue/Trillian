@@ -200,6 +200,15 @@
       set_fact: hvtype="na"
       when: hv | int == 0
 
+    - name: ensure Region Mgmt server ip is given when env is an additional zone
+      fail: msg="VMware version (vmware_ver) required when nypervisor is VMware (v)"
+      when: additional_zone and region_mgmt_ip is undefined
+
+    - name: set value for additional zone if not defined
+      set_fact:
+        additional_zone: false 
+      when: additional_zone is not defined
+
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"
       when: ( hvtype not in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
@@ -262,7 +271,7 @@
 # now do stuff
 
     - name: Capture account name
-      shell: cs listAccounts
+      shell:  cs listAccounts
       register: acct_retval
 
     - name: Capture all accounts in domain
