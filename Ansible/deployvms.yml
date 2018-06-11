@@ -97,9 +97,8 @@
   vars:
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: timezone, when: num_db_hosts | int != 0 }
-    - { role: mysql, when: num_db_hosts | int != 0 }
-  when: not additional_zone 
+    - { role: timezone, when: num_db_hosts | int != 0 and not additional_zone }
+    - { role: mysql, when: num_db_hosts | int != 0 and not additional_zone }
 
 - hosts: localhost
   connection: local
@@ -107,7 +106,7 @@
   tasks:
     - name: update project - tag Configuring_Mgmt_Server
       include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
-  when: not additional_zone 
+      when: not additional_zone 
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -115,11 +114,10 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - timezone
-    - { role: mysql, when: num_db_hosts | int == 0 }
-    - cloudstack-manager
-    - cloudmonkey
-  when: not additional_zone 
+    - { role: timezone, when: not additional_zone }
+    - { role: mysql, when: num_db_hosts | int == 0 and not additional_zone }
+    - { role: cloudstack-manager, when: not additional_zone }
+    - { role: cloudmonkey, when: not additional_zone  }
 
 ## update status
 
