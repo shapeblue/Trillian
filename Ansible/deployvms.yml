@@ -62,7 +62,6 @@
 # Create build project if it doesn't exist.
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
-      when: not additional_zone 
 
     - name: Add accounts to project
       shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
@@ -70,7 +69,6 @@
         - "{{ env_accounts.split(',') }}"
       async: 60
       poll: 0
-      when: not additional_zone 
 
     - name: Build VMs
       include: ./tasks/buildvms.yml
