@@ -70,9 +70,9 @@
       async: 60
       poll: 0
 
-    - name: Build VMs
-      include: ./tasks/buildvms.yml
-      when: not use_custom_allocator
+#    - name: Build VMs
+#      include: ./tasks/buildvms.yml
+#      when: not use_custom_allocator
 
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
