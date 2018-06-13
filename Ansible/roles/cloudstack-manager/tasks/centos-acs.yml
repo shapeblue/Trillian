@@ -38,12 +38,17 @@
 - name: Ensure CloudStack Usage Service is installed
   yum: name=cloudstack-usage state=present
 
-- name: rename CloudStack title in browser
+- name: rename CloudStack title in browser (pre 4.11 location)
   shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js || true
   tags:
     - "rename_browser"
 
-- name: re-gzip file
+- name: rename CloudStack title in browser (post 4.11 location)
+  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/scripts/cloudStack.js || true
+  tags:
+    - "rename_browser"
+
+- name: re-gzip file (pre 4.11)
   shell: gzip -cf /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js > /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js.gz || true
   tags:
     - "rename_browser"
