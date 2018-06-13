@@ -33,7 +33,7 @@ else
 fi
 
 WriteOutput "Checking if zone exists."
-ZoneCheck=`cloudmonkey list zones`;
+ZoneCheck=`cloudmonkey list zones name={{ env_name_clean }}`;
 if [ -z ${ZoneCheck} ];
 then
   WriteOutput "No zone exists. Good to go."
