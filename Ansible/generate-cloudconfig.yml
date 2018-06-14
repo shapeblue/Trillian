@@ -200,14 +200,14 @@
       set_fact: hvtype="na"
       when: hv | int == 0
 
-    - name: ensure Region Mgmt server ip is given when env is an additional zone
-      fail: msg="VMware version (vmware_ver) required when nypervisor is VMware (v)"
-      when: additional_zone and region_mgmt_ip is undefined
-
     - name: set value for additional zone if not defined
       set_fact:
         additional_zone: false 
       when: additional_zone is not defined
+
+    - name: ensure Region Mgmt server ip is given when env is an additional zone
+      fail: msg="Region Mgmt server ip is required when env is an additional zone"
+      when: additional_zone and region_mgmt_ip is undefined
 
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"
