@@ -170,8 +170,9 @@ fi
 
 WriteOutput "Creating 1st Pod.";
 WriteOutput "Adding mgmt for physical hosts"
-PodID=`cloudmonkey create pod zoneid=${ZoneID} name="{{ env_zone_podname }}" gateway="{{ env_podgw }}" netmask="{{ env_podmask }}" startip="{{ env_podstartip }}" endip="{{ env_podendip }}"`;
-WriteOutput "First Pod created with ID = ${PodID}";
+cloudmonkey create pod zoneid=${ZoneID} name="{{ env_zone_podname }}" gateway="{{ env_podgw }}" netmask="{{ env_podmask }}" startip="{{ env_podstartip }}" endip="{{ env_podendip }}" | tee -i -a ${DEPLOYLOG};
+
+PodID=`cloudmonkey list pods name={{ env_zone_podname }} zoneid=${ZoneID} filter=id | jq '.pod[] | .id'`;
 
 if [ "{{ env_zonetype | lower }}" == "basic" ]; then
   cloudmonkey create vlaniprange podid=${PodID} networkid=${NETIDBAS} gateway="{{ env_guestnetgw }}" netmask="{{ env_guestnetmask }}" startip="{{ env_guestnetstartip }}" endip="{{ env_guestnetendip }}" forvirtualnetwork=false zoneid=${ZoneID} | tee -i -a ${DEPLOYLOG};
