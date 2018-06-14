@@ -30,7 +30,7 @@
   yum: name=rng-tools state=present
 
 - name: install nfs helpers
-  yum: {{ item }}
+  yum: "{{ item }}"
   with_items:
     - nfs-utils
 
