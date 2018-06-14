@@ -48,10 +48,12 @@ then
   ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled=${SECURITYGROUPENABLED} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network - Management.";
-  PhysNetMgmtID=`cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN'`;
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
   WriteOutput "Creating Physical Network - Guest / Public.";
-  PhysNetPubID=`cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VLAN'`;
-  PhysNetGuestID=${PhysNetPubID};
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" zoneid=${ZoneID} | jq '.physicalnetwork[] | .id'`;
+  PhysNetPubID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq '.physicalnetwork[] | .id'`;
+  PhysNetGuestID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq '.physicalnetwork[] | .id'`;
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
@@ -84,7 +86,8 @@ else
   ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled=${SECURITYGROUPENABLED} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network.";
-  PhysNetMgmtID=`cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network'`;
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network' | tee -i -a ${DEPLOYLOG};
+  PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network" zoneid=${ZoneID} | jq '.physicalnetwork[] | .id'`;
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Adding Traffic Type - Guest( Basic Network)";
   {% if env_numversion | version_compare('4.2','>') %}
@@ -162,7 +165,7 @@ else
     NetOffIDBas=`cloudmonkey list networkofferings name="DefaultSharedNetworkOffering" displaytext="Offering for Shared networks" | jq '.networkoffering[] | .id'`;
   fi
 cloudmonkey create network zoneid=${ZoneID} name=defaultGuestNetwork displaytext=defaultGuestNetwork networkofferingid=${NetOffIDBas} | tee -i -a ${DEPLOYLOG};
-NETIDBAS=`cloudmonkey list networks | jq '.network[] | select(.name=="defaultGuestNetwork") | .id'`;
+NETIDBAS=`cloudmonkey list networks zoneid=${ZoneID} | jq '.network[] | select(.name=="defaultGuestNetwork") | .id'`;
 fi
 
 WriteOutput "Creating 1st Pod.";
@@ -188,7 +191,7 @@ then
     {% else %}
     cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' podid=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" password='{{ vmware_vcsa_pass }}' username='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
     {% endif %}
-    ClusterID_VMW=`cloudmonkey list clusters clustername="{{ env_zone_clustername }}" | jq '.cluster[] | .id'`;
+    ClusterID_VMW=`cloudmonkey list clusters clustername="{{ env_zone_clustername }}" zoneid=${ZoneID} | jq '.cluster[] | .id'`;
     NEXTCLUSTER=$((NEXTCLUSTER+1))
   fi
 fi
@@ -221,7 +224,7 @@ if [ "{{ env_zone_addhosts }}" == "true" ];
 then
   HOST_STATES="DOWN"
   while [[ "$HOST_STATES" == "DOWN" ]]; do
-    HOST_CHECK=`cloudmonkey list hosts type=routing | grep '"state":' | grep -i 'alert|disconnected|connecting|down'`
+    HOST_CHECK=`cloudmonkey list hosts type=routing zoneid=${ZoneID} | grep '"state":' | grep -i 'alert|disconnected|connecting|down'`
     if [[ -z $HOST_CHECK ]];
     then
       HOST_STATES="ALL UP";
