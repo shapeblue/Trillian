@@ -29,6 +29,11 @@
 - name: install rng-tools to get entropy
   yum: name=rng-tools state=present
 
+- name: install nfs helpers
+  yum: {{ item }}
+  with_items:
+    - nfs-utils
+
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   yum: name=lvm2 state=latest
 
