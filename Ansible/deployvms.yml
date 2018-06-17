@@ -70,10 +70,6 @@
       async: 60
       poll: 0
 
-#    - name: Build VMs
-#      include: ./tasks/buildvms.yml
-#      when: not use_custom_allocator
-
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
       when: use_custom_allocator
@@ -88,15 +84,15 @@
 
     - name: Update project - tag Configuring_MySQL
       include: tasks/updateproject.yml project_tag=Configuring_MySQL
-      when: not additional_zone 
+      when: additional_zone|bool == false and additional_pod|bool == false
 
 - hosts: mysql_hosts
   gather_facts: no
   vars:
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: timezone, when: num_db_hosts | int != 0 and additional_zone|bool == false }
-    - { role: mysql, when: num_db_hosts | int != 0 and additional_zone|bool == false }
+    - { role: timezone, when: num_db_hosts | int != 0 and additional_zone|bool == false and additional_pod|bool == false}
+    - { role: mysql, when: num_db_hosts | int != 0 and additional_zone|bool == false and additional_pod|bool == false}
 
 - hosts: localhost
   connection: local
@@ -104,7 +100,7 @@
   tasks:
     - name: update project - tag Configuring_Mgmt_Server
       include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
-      when: not additional_zone 
+      when: additional_zone|bool == false and additional_pod|bool == false
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -112,10 +108,10 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: timezone, when: additional_zone|bool == false }
-    - { role: mysql, when: num_db_hosts | int == 0 and additional_zone|bool == false }
-    - { role: cloudstack-manager, when: additional_zone|bool == false }
-    - { role: cloudmonkey, when: additional_zone|bool == false  }
+    - { role: timezone, when: additional_zone|bool == false and additional_pod|bool == false }
+    - { role: mysql, when: num_db_hosts | int == 0 and additional_zone|bool == false and additional_pod|bool == false }
+    - { role: cloudstack-manager, when: additional_zone|bool == false andadditional_pod|bool == false }
+    - { role: cloudmonkey, when: additional_zone|bool == false and additional_pod|bool == false }
 
 ## update status
 
@@ -204,6 +200,7 @@
   gather_facts: no
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
+  when: additional_pod|bool == false
 
 ## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
 - hosts: secondary_storage_hosts
@@ -214,6 +211,7 @@
     num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   tasks:
     - include: ./tasks/builtintemplate_hack.yml
+  when: additional_pod|bool == false
 ## REMOVE WHEN SSVM FIXED
 
 ## update status
@@ -248,10 +246,10 @@
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
 
-    - { role: timezone, when: num_marv_hosts | int != 0 }
-    - { role: cloudmonkey, when: num_marv_hosts | int != 0  }
-    - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) }
-    - { role: marvin, when: num_marv_hosts | int != 0  }
+    - { role: timezone, when: num_marv_hosts | int != 0 and additional_pod|bool == false}
+    - { role: cloudmonkey, when: num_marv_hosts | int != 0 and additional_pod|bool == false }
+    - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) and additional_pod|bool == false }
+    - { role: marvin, when: num_marv_hosts | int != 0  and additional_pod|bool == false }
 
 - hosts: localhost
   connection: local
@@ -280,12 +278,12 @@
   tasks:
     - name: update project - tag Waiting_for_System_VMs
       include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
-      when: wait_till_setup
+      when: wait_till_setup and additional_pod|bool == false
 
 - hosts: primary_cs_manager
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
-      when: wait_till_setup
+      when: wait_till_setup and additional_pod|bool == false
 
 - hosts: localhost
   connection: local
@@ -293,7 +291,7 @@
   tasks:
     - name: update project - tag System_VMs_up
       include: tasks/updateproject.yml project_tag=System_VMs_up
-      when: wait_till_setup
+      when: wait_till_setup and additional_pod|bool == false
 
 ## Wait for services/templates etc
 

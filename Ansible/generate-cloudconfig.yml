@@ -205,9 +205,22 @@
         additional_zone: false 
       when: additional_zone is not defined
 
-    - name: ensure Region Mgmt server ip is given when env is an additional zone
-      fail: msg="Region Mgmt server ip is required when env is an additional zone"
-      when: additional_zone and region_mgmt_ip is undefined
+    - name: set value for additional pod if not defined
+      set_fact:
+        additional_zone: false 
+      when: additional_pod is not defined
+
+    - name: ensure existing_zone is given when env is an additional pod
+      fail: msg="Region Mgmt server ip is required when env is an additional zone or pod"
+      when: existing_zone is undefined and additional_pod
+
+    - name: ensure Region Mgmt server ip is given when env is an additional zone or pod
+      fail: msg="Region Mgmt server ip is required when env is an additional zone or pod"
+      when: region_mgmt_ip is undefined and ( additional_zone or additianal_pod )
+
+    - name: ensure vcenter server ip is given when env is an additional pod
+      fail: msg="Region Mgmt server ip is required when env is an additional zone or pod"
+      when: vcenter_ip is undefined and additianal_pod and vmware_ver is defined
 
     - name: Set xs_ver to custom when XenServer not hypervisor
       set_fact: xs_ver="na"
@@ -280,10 +293,6 @@
 
     - name: Register authenticating account
       set_fact: env_user={{ (acct_retval.stdout|from_json ).account[0].name }}
-
-    #- name: Generate account tagged project name
-    #  set_fact: build_project="{{ (acct_retval.stdout|from_json ).account[0].name | capitalize }}-NestedClouds"
-    #  when: build_project is undefined
 
     - name: set component auto test
       set_fact: run_component_tests=no

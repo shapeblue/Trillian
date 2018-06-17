@@ -39,13 +39,13 @@
   when: force_java
 
 - include: ./centos-acs.yml
-  when: ("{{ env_version[0:2]}}" == "cs")
+  when: env_cs_distribution == "cs"
 
 - include: ./centos-shortname.yml
-  when: ("{{ env_version[0:3]}}" == "ccp") and ({{ setshortname | bool }})
+  when: env_cs_distribution == "ccp" and setshortname|bool
 
 - include: ./centos-ccp.yml
-  when: ("{{ env_version[0:3]}}" == "ccp")
+  when: env_cs_distribution == "ccp"
 
 - name: ensure rpcbind in started
   service: name=rpcbind state=started enabled=yes

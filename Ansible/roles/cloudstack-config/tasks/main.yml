@@ -1,6 +1,8 @@
 ---
+
 - name: Seed secondary storage
   include: ./seedstorage.yml
+  when: additional_pod|bool == false
 
 - name: Request and return environment details
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
@@ -19,6 +21,14 @@
   tags:
     - buildzone
     - create_script
+  when: additional_pod|bool == false
+ 
+- name: Copy Cloudmonkey pod addition script to mgmt server
+  template: src="addpod.sh.j2" dest="/tmp/addpod-{{ env_name_clean }}.sh" mode=0744
+  tags:
+    - buildzone
+    - create_script
+  when: additional_pod
 
 - name: "wait for ACS Management Service to come up"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
@@ -33,6 +43,16 @@
   register: builddetails
   tags:
     - buildzone
+  when: additional_pod|bool == false
+
+- name: Print to screen deployzone file
+  command: "/bin/cat /tmp/addpod-{{ env_name_clean }}.sh"
+  register: builddetails
+  tags:
+    - buildzone
+  when: additional_pod
+
+
 
 - debug: msg="{{ builddetails.stdout | quote }}"
   tags:
@@ -52,15 +72,30 @@
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh
-  when: create_zone
+  when: create_zone and additional_pod|bool == false
   tags:
     - buildzone
 
-- name: Print to screen deployment log
+- name: Add pod (Run Cloudmonkey add pod script)
+  shell: /tmp/addpod-{{ env_name_clean }}.sh
+  when: create_zone and additional_pod
+  tags:
+    - buildzone
+
+- name: Print to screen zone deployment log
   command: "/bin/cat /tmp/{{ env_name_clean }}-deployzone.log"
   register: logdetails
   tags:
     - buildzone
+  when: additional_pod|bool == false
+
+
+- name: Print to screen pod addition log
+  command: "/bin/cat /tmp/addpod-{{ env_name_clean }}.log"
+  register: logdetails
+  tags:
+    - buildzone
+  when: additional_pod
 
 - debug: msg="{{ logdetails.stdout | quote }}"
   tags:
