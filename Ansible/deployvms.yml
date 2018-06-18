@@ -110,11 +110,10 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - cloudmonkey
     - timezone
     - { role: mysql, when: num_db_hosts | int == 0 }
     - cloudstack-manager
-
+    - cloudmonkey
 
 ## update status
 

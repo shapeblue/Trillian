@@ -21,14 +21,18 @@
 - name: install setup tools and jq
   apt: pkg={{ item }} state=present
   with_items:
-  - python-pip
   - jq
 
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
-- name: update pip
-  command: pip install --upgrade pip
+- name: download pip installer
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp/get-pip.py
+
+- name: install pip
+  shell: python /tmp/get-pip.py
 
 - name: install cloudmonkey
   command: pip install cloudmonkey
