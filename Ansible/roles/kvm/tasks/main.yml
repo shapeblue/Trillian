@@ -31,12 +31,14 @@
   tags:
     - kvm
 
-- include: ./centos.yml
+- name: Configure CentOS VMs for KVM
+  include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - kvm
 
-- include: ./ubuntu.yml
+- name: Configure KVM VMs for KVM
+  include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm
