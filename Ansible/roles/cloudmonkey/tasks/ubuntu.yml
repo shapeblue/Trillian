@@ -35,14 +35,14 @@
 
 - name: add apt repo for python
   command: add-apt-repository ppa:jonathonf/python-2.7
-  when: ansible_distribution_major_version = "14"
+  when: ansible_distribution_major_version == "14"
 
 - name: update python
   apt: 
     name: python2.7
     state: latest
     update_cache: yes
-  when: ansible_distribution_major_version = "14"
+  when: ansible_distribution_major_version == "14"
 
 - name: install cloudmonkey
   command: pip install cloudmonkey
