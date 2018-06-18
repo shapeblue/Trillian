@@ -38,6 +38,9 @@
   tags:
     - buildzone
 
+- debug:
+    msg: "{{ hostvars[item][0]['ansible_ssh_host'] }}"
+
 - name: wait for Ubuntu KVM hosts to be alive
   shell: "ping {{ hostvars[item]['ansible_ssh_host'] }} -c 1"
   register: pong
