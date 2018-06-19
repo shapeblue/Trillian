@@ -447,7 +447,7 @@
   with_items:
     - "{{ groups['primary_cs_manager'] }}"
   register: mgmtsrv1_retval
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update inventory file with first management server IP addresses
   replace:
@@ -456,7 +456,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with first management server IP addresses
   add_host:
@@ -464,7 +464,7 @@
     groups="primary_cs_manager"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update inventory file with mgmt host instance names
   replace:
@@ -473,7 +473,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with Mgmt host instance names
   add_host:
@@ -481,18 +481,18 @@
     groups="primary_cs_manager"
     instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: find least used host
   custom_allocator:
     algorithm: least_host
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{mgmtsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 ####################################################################
 # Additional management servers
@@ -519,7 +519,7 @@
   with_items:
     - "{{ groups['secondary_cs_manager'] }}"
   register: mgmtsrvs_retval
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update inventory file with additional management server IP addresseses
   replace:
@@ -528,7 +528,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{mgmtsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with additional management server IP addresses
   add_host:
@@ -536,7 +536,7 @@
     groups="secondary_cs_manager"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{mgmtsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update inventory file with addtional mgmt host instance names
   replace:
@@ -545,7 +545,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{mgmtsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with additional Mgmt host instance names
   add_host:
@@ -553,18 +553,18 @@
     groups="secondary_cs_manager"
     instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: find least used host
   custom_allocator:
     algorithm: least_host
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{mgmtsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 
 ####################################################################
@@ -592,7 +592,7 @@
   with_items:
     - "{{ groups['mysql_master_host'] }}"
   register: dbsrv1_retval
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update inventory file with first DB server IP addresses
   replace:
@@ -601,7 +601,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{dbsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with first DB server IP addresses
   add_host:
@@ -609,18 +609,18 @@
     groups="mysql_master_host"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{dbsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: find least used host
   custom_allocator:
     algorithm: least_host
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{dbsrv1_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 
 ####################################################################
@@ -648,7 +648,7 @@
   with_items:
     - "{{ groups['mysql_slave_hosts'] }}"
   register: dbsrvs_retval
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 
 - name: Update inventory file with additional DB server IP addresseses
@@ -658,7 +658,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{dbsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: Update in memory inventory with additional DB server IP addresses
   add_host:
@@ -666,13 +666,13 @@
     groups="mysql_slave_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{dbsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - name: find least used host
   custom_allocator:
     algorithm: least_host
   register: alg_output
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - debug:
     msg: "{{ alg_output }}"
@@ -681,7 +681,7 @@
   shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{dbsrvs_retval.results}}"
-  when: "(additional_zone|bool == false) and (additional_pod|bool == false)"
+  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 
 ####################################################################
