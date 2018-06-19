@@ -84,15 +84,15 @@
 
     - name: Update project - tag Configuring_MySQL
       include: tasks/updateproject.yml project_tag=Configuring_MySQL
-      when: additional_zone|bool == false and additional_pod|bool == false
+      when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - hosts: mysql_hosts
   gather_facts: no
   vars:
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: timezone, when: num_db_hosts | int != 0 and additional_zone|bool == false and additional_pod|bool == false}
-    - { role: mysql, when: num_db_hosts | int != 0 and additional_zone|bool == false and additional_pod|bool == false}
+    - { role: timezone, when: num_db_hosts | int != 0 and (additional_zone|bool == "false") and (additional_pod|bool == "false")}
+    - { role: mysql, when: num_db_hosts | int != 0 and (additional_zone|bool == "false") and (additional_pod|bool == "false")}
 
 - hosts: localhost
   connection: local
@@ -100,7 +100,7 @@
   tasks:
     - name: update project - tag Configuring_Mgmt_Server
       include: tasks/updateproject.yml project_tag=Configuring_Mgmt_Server
-      when: additional_zone|bool == false and additional_pod|bool == false
+      when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
 
 - hosts: cloudstack_manager_hosts
   gather_facts: no
@@ -108,10 +108,10 @@
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
-    - { role: timezone, when: additional_zone|bool == false and additional_pod|bool == false }
-    - { role: mysql, when: num_db_hosts | int == 0 and additional_zone|bool == false and additional_pod|bool == false }
+    - { role: timezone, when: (additional_zone|bool == "false") and (additional_pod|bool == "false") }
+    - { role: mysql, when: num_db_hosts | int == 0 and (additional_zone|bool == "false") and (additional_pod|bool == "false") }
     - { role: cloudstack-manager, when: additional_zone|bool == false andadditional_pod|bool == false }
-    - { role: cloudmonkey, when: additional_zone|bool == false and additional_pod|bool == false }
+    - { role: cloudmonkey, when: (additional_zone|bool == "false") and (additional_pod|bool == "false") }
 
 ## update status
 
