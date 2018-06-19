@@ -199,7 +199,7 @@
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: additional_pod|bool == false }
+    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: additional_pod|bool == "false" }
 
 
 ## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
@@ -248,10 +248,10 @@
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
   roles:
 
-    - { role: timezone, when: num_marv_hosts | int != 0 and additional_pod|bool == false}
-    - { role: cloudmonkey, when: num_marv_hosts | int != 0 and additional_pod|bool == false }
-    - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) and additional_pod|bool == false }
-    - { role: marvin, when: num_marv_hosts | int != 0  and additional_pod|bool == false }
+    - { role: timezone, when: num_marv_hosts | int != 0 and additional_pod|bool == "false"}
+    - { role: cloudmonkey, when: num_marv_hosts | int != 0 and additional_pod|bool == "false" }
+    - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) and additional_pod|bool == "false" }
+    - { role: marvin, when: num_marv_hosts | int != 0  and additional_pod|bool == "false" }
 
 - hosts: localhost
   connection: local
@@ -280,12 +280,12 @@
   tasks:
     - name: update project - tag Waiting_for_System_VMs
       include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
-      when: wait_till_setup and additional_pod|bool == false
+      when: wait_till_setup and additional_pod|bool == "false"
 
 - hosts: primary_cs_manager
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
-      when: wait_till_setup and additional_pod|bool == false
+      when: wait_till_setup and additional_pod|bool == "false"
 
 - hosts: localhost
   connection: local
@@ -293,7 +293,7 @@
   tasks:
     - name: update project - tag System_VMs_up
       include: tasks/updateproject.yml project_tag=System_VMs_up
-      when: wait_till_setup and additional_pod|bool == false
+      when: wait_till_setup and additional_pod|bool == "false"
 
 ## Wait for services/templates etc
 
