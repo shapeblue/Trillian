@@ -39,19 +39,19 @@
     - buildzone
 
 - debug:
-    msg: "{{ hostvars[groups['kvm_hosts']][0]['ansible_ssh_host'] }}"
+    msg: "{{ hostvars[groups['kvm_hosts'][0]]['ansible_ssh_host'] }}"
 
-- name: wait for Ubuntu KVM hosts to be alive
-  shell: "ping {{ hostvars[item]['ansible_ssh_host'] }} -c 1"
-  register: pong
-  until: pong.rc == 0
-  retries: "{{ ssh_retries }}"
-  with_items:
-    - groups['kvm_hosts']
-  when: hostvars[groups['kvm_hosts'][0]]['ansible_distribution'] == 'Ubuntu'
-  tags:
-    - kvm
-    - buildzone
+#- name: wait for Ubuntu KVM hosts to be alive
+#  shell: "ping {{ hostvars[groups['kvm_hosts'][0]]['ansible_distribution'] }} -c 1"
+#  register: pong
+#  until: pong.rc == 0
+#  retries: "{{ ssh_retries }}"
+#  with_items:
+#    - groups['kvm_hosts']		
+#  when: hostvars[groups['kvm_hosts'][0]]['ansible_distribution'] == 'Ubuntu'
+#  tags:
+#    - kvm
+#    - buildzone
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh

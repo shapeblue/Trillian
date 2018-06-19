@@ -37,6 +37,12 @@
   command: add-apt-repository ppa:jonathonf/python-2.7
   when: ansible_distribution_major_version == "14"
 
+- name: remove python-chardet
+  apt: 
+    name: python-chardet
+    state: absent
+  when: ansible_distribution_major_version == "14"
+
 - name: update python
   apt: 
     name: python2.7
