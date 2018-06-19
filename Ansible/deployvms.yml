@@ -199,8 +199,8 @@
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addsecondary' }
-  when: additional_pod|bool == false
+    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: additional_pod|bool == false }
+
 
 ## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
 - hosts: secondary_storage_hosts
@@ -210,8 +210,10 @@
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
     num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   tasks:
-    - include: ./tasks/builtintemplate_hack.yml
-  when: additional_pod|bool == false
+    - name: pre-upload templates
+      include: ./tasks/builtintemplate_hack.yml
+      when: additional_pod|bool == false)
+
 ## REMOVE WHEN SSVM FIXED
 
 ## update status
