@@ -58,7 +58,7 @@ secondary_cs_manager
 {% endif %}
 
 [mysql_master_host]
-{% if db | int > 0 and not ( (additional_zone | bool or additional_pod | bool) ) (%}
+{% if db | int > 0 and not ( (additional_zone | bool or additional_pod | bool) ) %}
 {{ env_name_clean }}-db1 ansible_ssh_host={{ env_name_clean }}-db1-ip ansible_ssh_pass={{ dbsrv_password | default( def_dbsrv_password ) }} serverid=1
 {% endif %}
 
