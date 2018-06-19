@@ -42,7 +42,7 @@ secondary_cs_manager
 
 
 [primary_cs_manager]
-{% if additional_zone|bool or additional_pod|bool %}
+{% if additional_zone | bool or additional_pod | bool %}
 {{ env_name_clean }}-mgmt1 ansible_ssh_host={{ region_mgmt_ip }} ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
 {% else %}
 {% if mgmt | int > 0 %}
@@ -51,26 +51,26 @@ secondary_cs_manager
 {% endif %}
 
 [secondary_cs_manager]
-{% ( if mgmt | int > 1 ) and not ( additional_zone|bool or additional_pod|bool ) %}
+{% ( if mgmt | int > 1 ) and not ( (additional_zone | bool) or (additional_pod | bool) ) %}
 {% for n in range(2,mgmt | int + 1) %}
 {{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }} instance_name={{ env_name_clean }}-mgmt{{ n }}-instance_name
 {% endfor %}
 {% endif %}
 
 [mysql_master_host]
-{% if db | int > 0 and not ( additional_zone|bool or additional_pod|bool ) (%}
+{% if db | int > 0 and not ( (additional_zone | bool or additional_pod | bool) ) (%}
 {{ env_name_clean }}-db1 ansible_ssh_host={{ env_name_clean }}-db1-ip ansible_ssh_pass={{ dbsrv_password | default( def_dbsrv_password ) }} serverid=1
 {% endif %}
 
 [mysql_slave_hosts]
-{% if db | int > 1 and not ( additional_zone|bool or additional_pod|bool ) %}
+{% if db | int > 1 and not ( (additional_zone | bool) or (additional_pod | bool) ) %}
 {% for n in range(2,db | int + 1) %}
 {{ env_name_clean }}-db{{ n }} ansible_ssh_host={{ env_name_clean }}-db{{ n }}-ip ansible_ssh_pass={{ dbsrv_password | default( def_dbsrv_password ) }} serverid={{ n }}
 {% endfor %}
 {% endif %}
 
 [vc_hosts]
-{% if vmware_ver | lower != "na" and not additional_pod|bool %}
+{% if vmware_ver | lower != "na" and not (additional_pod | bool) %}
 {{ env_name_clean }}-vc1 ansible_ssh_host={{ env_name_clean }}-vc1-ip instance_name={{ env_name_clean }}-vc1-instance_name
 {% endif %}
 
@@ -118,7 +118,7 @@ secondary_cs_manager
 {% endif %}
 
 [marvin_host]
-{% if build_marvin | bool and not additional_pod|bool %}
+{% if (build_marvin | bool) and not (additional_pod | bool) %}
 {{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }} instance_name={{ env_name_clean }}-marvin-instance_name
 {% endif %}
 
