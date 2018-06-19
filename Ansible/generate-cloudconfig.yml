@@ -216,7 +216,7 @@
 
     - name: ensure Region Mgmt server ip is given when env is an additional zone or pod
       fail: msg="Region Mgmt server ip is required when env is an additional zone or pod"
-      when: region_mgmt_ip is undefined and ( additional_zone or additianal_pod )
+      when: region_mgmt_ip is undefined and ( additional_zone or additional_pod )
 
     - name: ensure vcenter server ip is given when env is an additional pod
       fail: msg="Region Mgmt server ip is required when env is an additional zone or pod"
