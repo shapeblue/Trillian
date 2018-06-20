@@ -199,7 +199,7 @@
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: additional_pod|bool == false }
+    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: (additional_pod|bool == "false" }
 
 
 ## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE
