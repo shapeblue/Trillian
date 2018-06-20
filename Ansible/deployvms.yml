@@ -70,6 +70,7 @@
       async: 60
       poll: 0
 
+
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
       when: use_custom_allocator
@@ -199,7 +200,7 @@
 - hosts: secondary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: (additional_pod|bool == "false" }
+    - { role: cloudstack-nfsshares, storage_action: 'addsecondary',  when: (additional_pod | bool == "false") }
 
 
 ## NASTY HACK TO ENABLE XENSERVER TO USE BUILT-IN TEMPLATE

@@ -38,6 +38,14 @@
   tags:
     - buildzone
 
+- name: preset some global settings
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
+  with_items:
+  - "{{ global_settings.addpod }}"
+  when: additional_pod
+  tags:
+    - "global_settings"
+
 - name: Print to screen deployzone file
   command: "/bin/cat /tmp/deployzone.sh"
   register: builddetails
@@ -51,8 +59,6 @@
   tags:
     - buildzone
   when: additional_pod
-
-
 
 - debug: msg="{{ builddetails.stdout | quote }}"
   tags:
