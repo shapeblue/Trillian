@@ -41,6 +41,11 @@ env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
 
 # Environment summary
 env_uuid: "{{ env_uuid.stdout }}"
+additional_zone: {{ additional_zone }}
+additional_pod: {{ additional_pod }}
+existing_zone: "{{ existing_zone | default("NA") }}"
+region_mgmt_ip: "{{ region_mgmt_ip | default("NA") }}"
+vcenter_ip:  "{{ vcenter_ip | default("NA") }}"
 env_name_clean: "{{ env_name_clean | mandatory }}"
 env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_dotted_version is not defined %}

@@ -77,10 +77,10 @@
   when: force_java
 
 - include: ./centos-acs.yml
-  when: ("{{ env_version[0:2]}}" == "cs")
+  when: env_cs_distribution == "cs"
 
 - include: ./centos-ccp.yml
-  when: ("{{ env_version[0:3]}}" == "ccp")
+  when: env_cs_distribution == "ccp"
 
 - name: Update libvirtd.conf - listen_tls
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
