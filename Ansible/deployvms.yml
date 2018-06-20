@@ -212,7 +212,7 @@
   tasks:
     - name: pre-upload templates
       include: ./tasks/builtintemplate_hack.yml
-      when: additional_pod|bool == "false"
+      when: "additional_pod|bool == false"
 
 ## REMOVE WHEN SSVM FIXED
 
