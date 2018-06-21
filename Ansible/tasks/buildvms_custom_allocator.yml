@@ -433,7 +433,7 @@
 
 
 - debug:
-    msg: "evaluating ({{additional_zone|bool}} == "False") and ({{additional_pod|bool}} == "False")"
+    msg: "evaluating ({{additional_zone|bool}} == 'False') and ({{additional_pod|bool}} == 'False')"
 
 
 - name: Build first management hosts
