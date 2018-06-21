@@ -48,7 +48,7 @@
   when: env_cs_distribution == "ccp"
 
 - name: ensure rpcbind in installed
-  service:
+  yum:
     name: rpcbind
     state: present
 
