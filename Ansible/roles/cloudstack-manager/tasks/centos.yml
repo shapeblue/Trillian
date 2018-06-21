@@ -47,8 +47,16 @@
 - include: ./centos-ccp.yml
   when: env_cs_distribution == "ccp"
 
+- name: ensure rpcbind in installed
+  service:
+    name: rpcbind
+    state: present
+
 - name: ensure rpcbind in started
-  service: name=rpcbind state=started enabled=yes
+  service:
+    name: rpcbind
+    state: started
+    enabled: yes
 
 - name: copy cloudutil script to /usr/bin
   copy: src=cloudutil dest=/usr/bin/ mode=0755
