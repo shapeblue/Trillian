@@ -26,7 +26,7 @@
 
 - name: Apply license to XenServer
   shell: "xe host-apply-edition edition={{ xs_license_edition }} license-server-address={{ xs_license_server }} host-uuid=`xe host-list --minimal` license-server-port={{ xs_license_server_port }}"
-  when:  xs_apply_license and ( xs_ver == "xs72" or xs_ver == "xs73" or xs_ver == "xs74" )
+  when:  xs_apply_license and ( xs_ver == "xs71" or xs_ver == "xs72" or xs_ver == "xs73" or xs_ver == "xs74" )
 
 
 - include: ./xsbasic.yml
