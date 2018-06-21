@@ -54,7 +54,9 @@ env_version: "{{ env_version }}"
 {% if env_version[0:2] == "cs" %}
 {% set majorversion = env_version[2:3] %}
 {% set minorversion = env_version[3:6] %}
+env_cs_distribution: {{ env_cs_distribution | default("cs") }}"
 {% else %}
+env_cs_distribution: {{ env_cs_distribution | default("ccp") }}"
 {% set majorversion = env_version[3:4] %}
 {% set minorversion = env_version[4:7] %}
 {% endif %}
