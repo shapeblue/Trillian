@@ -85,6 +85,12 @@
 # then start other VMs on least used hosts (regardless of cluster usage)
 
 ####################################################################
+- name: Create Nested VMs (Using Custom Allocator) 
+  debug:
+    msg: "Is addtional pod- {{ additional_pod|bool }}. Is addtional zone- {{ additional_zone|bool }}."
+
+
+
 # KVM hosts
 #
 - name: build KVM hosts
