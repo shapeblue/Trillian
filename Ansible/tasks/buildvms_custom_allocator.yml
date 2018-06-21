@@ -431,6 +431,11 @@
 # First management server
 #
 
+
+- debug:
+    msg: "evaluating ({{additional_zone|bool}} == "False") and ({{additional_pod|bool}} == "False")"
+
+
 - name: Build first management hosts
   local_action:
     module: cs_instance
