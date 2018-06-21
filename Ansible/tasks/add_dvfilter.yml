@@ -59,6 +59,6 @@
         validate_certs: no
   with_items:
     - "{{ groups['cloudstack_manager_hosts'] }}"
-  when: (additional_zone|bool == "false") and (additional_pod|bool == "false")
+  when: (additional_zone|bool == "False") and (additional_pod|bool == "False")
   tags:
     - add_dvfilter
