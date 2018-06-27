@@ -44,7 +44,7 @@
     - "rename_browser"
 
 - name: rename CloudStack title in browser (post 4.11 location)
-  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/scripts/cloudStack.js || true
+  shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapp/scripts/cloudStack.js || true
   tags:
     - "rename_browser"
 
