@@ -112,7 +112,7 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
 {% set mgmt_os_type = "debian" %}
-{% elif mgmt_os lower == "custom" %}
+{% elif mgmt_os | lower == "custom" %}
 {% set osversion = "custom" %}
 {% set releaseurl = "custom" %}
 {% set mgmt_os_type = "unknown" %}
