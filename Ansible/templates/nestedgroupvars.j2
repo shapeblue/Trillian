@@ -96,23 +96,23 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% set osversion = "centos64" %}
 {% set releaseurl = "centos" %}
 {% set mgmt_os_type = "centos" %}
-{% elif mgmt_os[0:1] | lower == "7" %}
+{% elif mgmt_os | lower == "7" %}
 {% set osversion = "centos7" %}
 {% set releaseurl = "centos7" %}
 {% set mgmt_os_type = "centos7" %}
-{% elif mgmt_os[0:1] | lower == "u14" %}
+{% elif mgmt_os | lower == "u14" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
 {% set mgmt_os_type = "ubuntu1404" %}
-{% elif mgmt_os[0:1] | lower == "u16" %}
+{% elif mgmt_os | lower == "u16" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
 {% set mgmt_os_type = "ubuntu1604" %}
-{% elif mgmt_os[0:1] | lower == "u" %}
+{% elif mgmt_os | lower == "u" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
 {% set mgmt_os_type = "debian" %}
-{% elif mgmt_os[0:1] | lower == "c" %}
+{% elif mgmt_os lower == "custom" %}
 {% set osversion = "custom" %}
 {% set releaseurl = "custom" %}
 {% set mgmt_os_type = "unknown" %}
@@ -308,7 +308,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmosversion = "ubuntu1604" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "debian" %}
-{% elif kvm_os[0:1] | lower == "u" %}
+{% elif kvm_os | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "debian" %}
