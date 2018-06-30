@@ -128,7 +128,7 @@ function ReleaseID()
   then
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${ENVTBL} set removed=now() where envuuid='${ENV_UUID}' and removed is NULL";
   fi
-  WriteOutput "RequestID - environment id for ${ENV_NAME} is ${envid}"
+  env_retmsg="$env_retmsg RequestID - environment id for ${ENV_NAME} is ${envid}."
 }
 
 ################################################################################
@@ -146,21 +146,21 @@ function RequestPodNet()
   WriteOutput "RequestPodNet - podnetid found: ${podnetid}"
   if [ -z ${podnetid} ];
   then # no existing found, request new
-    WriteOutput "RequestPodNet - no podnetid found."
+    env_retmsg="$env_retmsg RequestPodNet - no podnetid found."
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     podnetid=`${MYSQLCOMMAND} "SELECT idpod FROM ${DBNAME}.${PODTBL} WHERE envid='${envid}' and inuse='TRUE'"`
-    WriteOutput "RequestPodNet - podnetid assigned is ${podnetid}"
+    env_retmsg="$env_retmsg RequestPodNet - podnetid assigned is ${podnetid}."
     if [ -z ${podnetid} ];
     then #no free pod network blocks
       ReleaseNetworks;
       ReturnFail "No free pod network blocks.";
-      WriteOutput "RequestPodNet - no free pod networks found - failing."
+      env_retmsg="$env_retmsg RequestPodNet - no free pod networks found - failing."
       exit;
     fi
   fi
   podnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${PODTBL} WHERE idpod = '${podnetid}'" | sed -e "s/\t/|/g"`
-  WriteOutput "RequestPodNet - details returned: ${podnetdetails}"
+  env_retmsg="$env_retmsg RequestPodNet - details returned: ${podnetdetails}"
   env_podstartip=`echo ${podnetdetails} | awk -F'|' '{print $2}'`
   env_podendip=`echo ${podnetdetails} | awk -F'|' '{print $3}'`
   env_podmask=`echo ${podnetdetails} | awk -F'|' '{print $4}'`
@@ -181,28 +181,28 @@ function RequestGuestNet()
 
   # Check if guest network has already been assigned
   guestnetid=`${MYSQLCOMMAND} "SELECT idguest FROM ${DBNAME}.${GUESTTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
-  WriteOutput "RequestGuestNet - guestnetid for envid ${envid} found is: ${guestnetid}";
+  env_retmsg="$env_retmsg RequestGuestNet - guestnetid for envid ${envid} found is: ${guestnetid}".;
 
   if [ -z ${guestnetid} ];
   then # no existing found, request new
-    WriteOutput "RequestGuestNet - guestnetid not found - requesting new.";
+    env_retmsg="$env_retmsg RequestGuestNet - guestnetid not found - requesting new.";
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     # bug possibly here guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
 
     guestnetid=`${MYSQLCOMMAND} "SELECT idguest FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
-    WriteOutput "RequestGuestNet - guestnetid for envid ${envid} assigned is: ${guestnetid}";
+    env_retmsg="$env_retmsg RequestGuestNet - guestnetid for envid ${envid} assigned is: ${guestnetid}";
 
     if [ -z ${guestnetid} ];
     then #no free pod network blocks
       ReleaseNetworks;
       ReturnFail "No free guest network blocks.";
-      WriteOutput "RequestGuestNet - no free guest networks found - failing.";
+      env_retmsg="$env_retmsg "RequestGuestNet - no free guest networks found - failing.";
       exit;
     fi
   fi
   guestnetdetails=`${MYSQLCOMMAND} "SELECT * FROM ${DBNAME}.${GUESTTBL} WHERE idguest = '${guestnetid}'" | sed -e "s/\t/|/g"`
-  WriteOutput "RequestGuestNet - details returned: ${guestnetdetails}"
+  env_retmsg="$env_retmsg RequestGuestNet - details returned: ${guestnetdetails}."
   env_guestnetstartip=`echo ${guestnetdetails} | awk -F'|' '{print $2}'`
   env_guestnetendip=`echo ${guestnetdetails} | awk -F'|' '{print $3}'`
   env_guestnetmask=`echo ${guestnetdetails} | awk -F'|' '{print $4}'`
@@ -226,7 +226,7 @@ function ReleaseNetworks()
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
-  WriteOutput "ReleaseNetworks - ${envid} released in all tables."
+  env_retmsg="$env_retmsg ReleaseNetworks - ${envid} released in all tables."
 }
 
 ################################################################################
@@ -241,20 +241,20 @@ function RequestPubNet()
 
   # Check if pub network has already been assigned
   pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE inuse = 'TRUE' and envid = '${envid}'"`
-  WriteOutput "RequestGuestNet - guestnetid for envid ${envid} found is: ${pubnetid}";
+  env_retmsg="$env_retmsg RequestGuestNet - guestnetid for envid ${envid} found is: ${pubnetid}.";
 
   if [ -z ${pubnetid} ];
   then #no existing found, request new
-    WriteOutput "RequestPubNet - pubnetid not found - requesting new.";
+    env_retmsg="$env_retmsg RequestPubNet - pubnetid not found - requesting new.";
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
-    WriteOutput "RequestPubNet - pubnetid for envid ${envid} assigned is: ${pubnetid}";
+    env_retmsg="$env_retmsg RequestPubNet - pubnetid for envid ${envid} assigned is: ${pubnetid}.";
     if [ -z ${pubnetid} ];
     then #no free public networks
       ReleaseNetworks;
       ReturnFail "No free public network blocks.";
-      WriteOutput "RequestPubNet - no free pub networks found - failing.";
+      env_retmsg="$env_retmsg RequestPubNet - no free pub networks found - failing.";
       exit;
     fi
   fi
@@ -301,7 +301,7 @@ cat << EOF
   "env_pubgw": "${env_pubgw}",
   "env_pubvlan": "${env_pubvlan}",
   "env_return": "success",
-  "env_retmsg": "Networks successfully reserved."
+  "env_retmsg": "${env_retmsg}"
  }
 }
 EOF
@@ -377,7 +377,7 @@ WriteOutput "------------------------------------------------------";
 WriteOutput "env_db_manage called with arguments: ${ARGS}";
 case "$ENV_ACTION" in
 	req)
-    WriteOutput "Request process started.";
+    env_retmsg="$env_retmsg Request process started.";
 	  checkNameExisting;
     if [[ ${env_name_count} -gt 0 ]];
     then
@@ -393,7 +393,7 @@ case "$ENV_ACTION" in
         RequestGuestNet;
       elif [[ -n $ENV_SECGROUPS_PARSED ]];
       then
-        RequestGuestNet;
+        RequestGuestNet; 
       else
         RequestPubNet;
       fi
@@ -405,7 +405,7 @@ case "$ENV_ACTION" in
   retrieve)
     WriteOutput "Retrieve process started.";
 	  QueryID;
-    if [ ${envid} == "notfound" ];
+    if [[ "${envid}" == "notfound" ]];
 	  then
 	    ReturnFail "${ENV_NAME} With UUID $ENV_UUID not found";
 	  fi
@@ -421,7 +421,7 @@ case "$ENV_ACTION" in
     ;;
 
   rel)
-    WriteOutput "Release process started.";
+    env_retmsg="Release process started.";
     QueryID;
     if [ ${envid} != "notfound" ];
       then
