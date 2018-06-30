@@ -200,7 +200,7 @@ function RequestGuestNet()
     then #no free pod network blocks
       ReleaseNetworks;
       ReturnFail "No free guest network blocks.";
-      env_retmsg="$env_retmsg "RequestGuestNet - no free guest networks found - failing.";
+      env_retmsg="$env_retmsg RequestGuestNet - no free guest networks found - failing.";
       exit;
     fi
   fi
@@ -226,9 +226,9 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   env_retmsg="$env_retmsg ReleaseNetworks - ${envid} released in all tables."
 }
 
@@ -249,7 +249,7 @@ function RequestPubNet()
   if [ -z ${pubnetid} ];
   then #no existing found, request new
     env_retmsg="$env_retmsg RequestPubNet - pubnetid not found - requesting new.";
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now\(\), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     env_retmsg="$env_retmsg RequestPubNet - pubnetid for envid ${envid} assigned is: ${pubnetid}.";
@@ -355,7 +355,7 @@ echo "
 {
 \"ansible_facts\": {
   \"env_return\": \"success\",
-  \"env_retmsg\": \"env_name not in use and environment ranges are currently available\","
+  \"env_retmsg\": \"env_name not in use and environment ranges are currently available\",
 else
 echo "
 {
@@ -370,7 +370,7 @@ echo "  \"available_env_pods_count\": \"$COUNTPODENVS\",
 }"
 WriteOutput "ReturnAvailableCount - returning count."
 }
-
+~"
 
 ################################################################################
 
