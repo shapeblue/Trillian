@@ -1,4 +1,5 @@
 #!/bin/bash
+
 ##############################################################
 # Queries the environments database and returns network
 # details. Returns existing network details if known, otherwise
@@ -225,10 +226,10 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
-  echo "${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'\" " >> /tmp/db_log.log
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  echo "${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'\" " >> /tmp/db_log.log
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   env_retmsg="$env_retmsg ReleaseNetworks - ${envid} released in all tables."
 }
 
