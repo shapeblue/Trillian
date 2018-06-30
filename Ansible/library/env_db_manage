@@ -384,7 +384,7 @@ case "$ENV_ACTION" in
 	  checkNameExisting;
     if [[ ${env_name_count} -gt 0 ]];
     then
-      ReturnFail "The environment ${ENV_NAME} is currently in use with a different UUID ($ENV_UUID). Please rename this environment or remove existing environment ";
+      ReturnFail "The environment ${ENV_NAME} is currently in use with a different UUID $ENV_UUID. Please rename this environment or remove existing environment ";
 	  else
 	    QueryID;
     	if [ ${envid} == "notfound" ];
