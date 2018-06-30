@@ -226,7 +226,6 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
-  echo "${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'\" " >> /tmp/db_log.log
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now\(\), removed=now\(\), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
@@ -250,7 +249,7 @@ function RequestPubNet()
   if [ -z ${pubnetid} ];
   then #no existing found, request new
     env_retmsg="$env_retmsg RequestPubNet - pubnetid not found - requesting new.";
-    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
+    ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='TRUE', envid='${envid}', updated=now\(\), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     pubnetid=`${MYSQLCOMMAND} "SELECT idpub FROM ${DBNAME}.${PUBTBL} WHERE envid='${envid}' and inuse='TRUE'"`
     env_retmsg="$env_retmsg RequestPubNet - pubnetid for envid ${envid} assigned is: ${pubnetid}.";
