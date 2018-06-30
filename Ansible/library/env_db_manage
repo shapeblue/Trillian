@@ -351,26 +351,25 @@ function returnAvailableCount()
 {
 
 if [[ $COUNTPODENVS -gt 0 ]] && [[ $COUNTPUBLICENVS -gt 0 ]] && [[ ${env_name_count} -eq 0 ]]  && [[ ${COUNTGUESTENVS} -gt 0 ]]; then
-echo "
-{
-\"ansible_facts\": {
-  \"env_return\": \"success\",
-  \"env_retmsg\": \"env_name not in use and environment ranges are currently available\",
+  returnmsg="success"
+  env_retmsg="$env_retmsg env_name not in use and environment ranges are currently available."
 else
+  returnmsg="warning"
+  env_retmsg="$env_retmsg WARNING !! There are currently not enough environments in the DB to create this environment right now."
+fi
 echo "
 {
 \"ansible_facts\": {
-  \"env_return\": \"warning\",
-  \"env_retmsg\": \"WARNING !! There are currently not enough environments in the DB to create this environment right now.\","
-fi
-echo "  \"available_env_pods_count\": \"$COUNTPODENVS\",
+  \"env_return\": \"$returnmsg\",
+  \"env_retmsg\": \"$env_retmsg\",
+  \"available_env_pods_count\": \"$COUNTPODENVS\",
   \"available_env_pubips_count\": \"$COUNTPUBLICENVS\",
   \"available_env_guestips_count\": \"$COUNTGUESTENVS\"
   }
 }"
 WriteOutput "ReturnAvailableCount - returning count."
 }
-fi
+
 
 ################################################################################"
 
