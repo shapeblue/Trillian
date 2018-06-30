@@ -24,6 +24,8 @@ ENV_SECGROUPS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_SECGROUPS"{print $2}'
 ENV_SECGROUPS_PARSED=`echo $ENV_SECGROUPS | grep -Ei 'yes|true'`
 
 MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+echo $MYSQLCOMMAND > /tmp/db_log.log
+
 ENVTBL="environments";
 PODTBL="podnetworks";
 PUBTBL="pubnetworks";
@@ -223,7 +225,7 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
-  echo ${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'\" > /tmp/db_log.log
+  echo "${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'\" " >> /tmp/db_log.log
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
