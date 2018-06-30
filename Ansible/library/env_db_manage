@@ -432,7 +432,7 @@ case "$ENV_ACTION" in
     else
       ReturnFail "The environment ID for ${ENV_UUID} not found";
     fi
-    ReturnSuccess "Environment ${ENV_NAME} (${ENV_UUID}) and all networks removed from database.";
+    ReturnSuccess "Environment ${ENV_NAME} ${ENV_UUID} and all networks removed from database.";
     ;;
 
   check)
