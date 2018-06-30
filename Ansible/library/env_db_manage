@@ -11,7 +11,6 @@
 #
 
 ARGS="(`cat $1`)"
-echo $ARGS > /tmp/db_log.log
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
@@ -25,7 +24,6 @@ ENV_SECGROUPS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_SECGROUPS"{print $2}'
 ENV_SECGROUPS_PARSED=`echo $ENV_SECGROUPS | grep -Ei 'yes|true'`
 
 MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
-echo $MYSQLCOMMAND > /tmp/db_log.log
 
 ENVTBL="environments";
 PODTBL="podnetworks";
@@ -370,9 +368,9 @@ echo "  \"available_env_pods_count\": \"$COUNTPODENVS\",
 }"
 WriteOutput "ReturnAvailableCount - returning count."
 }
-~"
+fi
 
-################################################################################
+################################################################################"
 
 # Main script
 #
@@ -382,20 +380,16 @@ case "$ENV_ACTION" in
 	req)
     env_retmsg="$env_retmsg Request process started.";
 	  checkNameExisting;
-    if [[ ${env_name_count} -gt 0 ]];
-    then
+    if [[ ${env_name_count} -gt 0 ]]; then
       ReturnFail "The environment ${ENV_NAME} is currently in use with a different UUID $ENV_UUID. Please rename this environment or remove existing environment ";
-	  else
-	    QueryID;
-    	if [ ${envid} == "notfound" ];
-	    then
-	      RequestID;
-	    fi
-      if [[ "$ENV_ZONETYPE" == "basic" ]];
-      then
+    else
+      QueryID;
+      if [ ${envid} == "notfound" ]; then
+	RequestID;
+      fi
+      if [[ "$ENV_ZONETYPE" == "basic" ]]; then
         RequestGuestNet;
-      elif [[ -n $ENV_SECGROUPS_PARSED ]];
-      then
+      elif [[ -n $ENV_SECGROUPS_PARSED ]]; then
         RequestGuestNet; 
       else
         RequestPubNet;
@@ -408,13 +402,12 @@ case "$ENV_ACTION" in
   retrieve)
     WriteOutput "Retrieve process started.";
 	  QueryID;
-    if [[ "${envid}" == "notfound" ]];
-	  then
-	    ReturnFail "${ENV_NAME} With UUID $ENV_UUID not found";
-	  fi
-    if [[ "$ENV_ZONETYPE" == "basic" ]];then
+    if [[ "${envid}" == "notfound" ]]; then
+      ReturnFail "${ENV_NAME} With UUID $ENV_UUID not found";
+    fi
+    if [[ "$ENV_ZONETYPE" == "basic" ]]; then
       RequestGuestNet;
-    elif [[ -n $ENV_SECGROUPS_PARSED ]];then
+    elif [[ -n $ENV_SECGROUPS_PARSED ]]; then
       RequestGuestNet;
     else
       RequestPubNet;
@@ -438,14 +431,13 @@ case "$ENV_ACTION" in
   check)
     WriteOutput "Check process started.";
 	  checkNameExisting;
-    if [[ ${env_name_count} -gt 0 ]];
-    then
+    if [[ ${env_name_count} -gt 0 ]]; then
       ReturnFail "The environment ${ENV_NAME} is currently in use. Please rename this environment or remove existing environment ";
-	  else
+    else
       countEnvAvailable;
       returnAvailableCount;
     fi
-	  ;;
+    ;;
 
   forced_rel)
     WriteOutput "Forced release process started.";
