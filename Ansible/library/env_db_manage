@@ -185,7 +185,7 @@ function RequestGuestNet()
 
   if [ -z ${guestnetid} ];
   then # no existing found, request new
-    env_retmsg="$env_retmsg RequestGuestNet - guestnetid not found - requesting new.";
+    WriteOutput "$env_retmsg RequestGuestNet - guestnetid not found - requesting new.";
     ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='TRUE', envid='${envid}', updated=now(), removed=NULL, environmentname='${ENV_NAME}' WHERE inuse='FALSE' limit 1";
     # Check if update made
     # bug possibly here guestnetid=`${MYSQLCOMMAND} "SELECT idguestnet FROM ${DBNAME}.${GUESTTBL} WHERE envid='${envid}' and inuse='TRUE'"`
@@ -223,6 +223,7 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
+  echo ${MYSQLCOMMAND} \"UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'\";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
@@ -423,13 +424,14 @@ case "$ENV_ACTION" in
   rel)
     env_retmsg="Release process started.";
     QueryID;
-    if [ ${envid} != "notfound" ];
-      then
-        ReleaseNetworks;
-        ReleaseID;
-      fi
-      ReturnSuccess "Environment ${ENV_NAME} (${ENV_UUID}) and all networks removed from database.";
-      ;;
+    if [[ "${envid}" != "notfound" ]]; then
+      ReleaseNetworks;
+      ReleaseID;
+    else
+      ReturnFail "The environment ID for ${ENV_UUID} not found";
+    fi
+    ReturnSuccess "Environment ${ENV_NAME} (${ENV_UUID}) and all networks removed from database.";
+    ;;
 
   check)
     WriteOutput "Check process started.";
