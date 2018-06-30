@@ -42,7 +42,7 @@
       when: not destroy_forced
 
     - debug:
-        msg: {{ db_manage_output }}
+        msg: "{{ db_manage_output }}"
 
     - name: Check for environments db failure
       fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
