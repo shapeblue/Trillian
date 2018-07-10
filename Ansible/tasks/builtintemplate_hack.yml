@@ -1,5 +1,7 @@
 ---
 
+- name: Report hv counts before template hack
+  debug: msg="HV count is {{ num_xen_hosts }} XS, {{ num_kvm_hosts }} KVM, {{ num_esxi_hosts }} ESXi"
 
 - name: create builtin xenserver template_dir
   file:
@@ -18,7 +20,7 @@
   when: num_xen_hosts != 0
 
 - name: create builtin kvm template_dir
-  file: 
+  file:
     path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4"
     state: directory
     mode: 0755
