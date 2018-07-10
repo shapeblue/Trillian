@@ -17,7 +17,7 @@
   debug: msg="Fingerprint file {{ nfs_rootpath }}{{ env_name_clean }}/{{ env_uuid }} found{{":"}} {{ fprintretval.stat.exists }}"
 
 - name: Fail if folder exists but is not owned by this environment
-  fail: msg="Folder {{ nfs_rootpath }}{{ env_name_clean }} exists but is owned by a different environment."
+  debug: msg="Folder {{ nfs_rootpath }}{{ env_name_clean }} exists but is owned by a different environment."
   when: ( pathretval.stat.exists | trim  == "True" ) and ( fprintretval.stat.exists | trim =="False"  )
 
 - block:
