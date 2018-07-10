@@ -226,9 +226,9 @@ function RequestGuestNet()
 #
 function ReleaseNetworks()
 {
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envuuid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envuuid='${envid}'";
-  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envuuid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PODTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${PUBTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
+  ${MYSQLCOMMAND} "UPDATE ${DBNAME}.${GUESTTBL} SET inuse='FALSE', envid=NULL, updated=now(), removed=now(), comment=NULL, environmentname=NULL WHERE envid='${envid}'";
   env_retmsg="$env_retmsg ReleaseNetworks - ${envid} released in all tables."
 }
 
@@ -391,7 +391,7 @@ case "$ENV_ACTION" in
       if [[ "$ENV_ZONETYPE" == "basic" ]]; then
         RequestGuestNet;
       elif [[ -n $ENV_SECGROUPS_PARSED ]]; then
-        RequestGuestNet; 
+        RequestGuestNet;
       else
         RequestPubNet;
       fi
