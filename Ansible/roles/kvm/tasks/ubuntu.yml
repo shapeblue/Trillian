@@ -14,12 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: set apt repo to local
-  template:
-    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
-    dest: "/etc/apt/{{item}}"
-  with_items:
-    - "sources.list"
+# Following commented out until local repositories available and sources.list exists
+#- name: set apt repo to local
+#  template:
+#    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
+#    dest: "/etc/apt/{{item}}"
+#  with_items:
+#    - "sources.list"
 
 - name: Add specified repository into sources list.
   apt_repository:
