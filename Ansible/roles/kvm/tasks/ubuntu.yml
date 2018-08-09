@@ -64,7 +64,7 @@
 
 - name: Add 18.04 repos to bionic
   apt_repository:
-    repo: {{ item }}
+    repo: "{{ item }}"
     state: present
   with_items:
     - "deb http://archive.ubuntu.com/ubuntu bionic main universe restricted multiverse"
