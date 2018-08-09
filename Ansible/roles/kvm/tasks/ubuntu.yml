@@ -22,11 +22,6 @@
 #  with_items:
 #    - "sources.list"
 
-- name: Add specified repository into sources list.
-  apt_repository:
-    repo: 'deb {{ baseurl_kvm }} /'
-    state: present
-
 - apt_key:
     url: "{{ repohost }}/release.asc"
     state: present
@@ -34,6 +29,11 @@
 - apt_key:
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
+
+- name: Add specified repository into sources list.
+  apt_repository:
+    repo: 'deb {{ baseurl_kvm }} /'
+    state: present
 
 - name: Add openjdk-ppa repository into sources list (trusty)
   apt_repository:
