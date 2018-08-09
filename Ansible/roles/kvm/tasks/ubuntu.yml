@@ -14,22 +14,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-- name: Install basic utilities and tools
-  apt:
-    pkg: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items:
-    - openntpd
-    - openssh-client
-    - telnet
-    - tcpdump
-    - traceroute
-    - iptables-persistent
-    - qemu-kvm
-    - parted
-
 - name: set apt repo to local
   template:
     src: "{{ inventory_dir }}/templates/{{ item }}.j2"
@@ -67,15 +51,38 @@
     repo: "{{ item }}"
     state: present
   with_items:
-    - "deb http://archive.ubuntu.com/ubuntu bionic main universe restricted multiverse"
-    - "deb http://security.ubuntu.com/ubuntu/ bionic-security restricted multiverse main universe"
-    - "deb http://archive.ubuntu.com/ubuntu bionic-updates restricted multiverse main universe"
+    - "deb http://archive.ubuntu.com/ubuntu bionic universe restricted multiverse"
+    - "deb http://security.ubuntu.com/ubuntu/ bionic-security restricted multiverse universe"
+    - "deb http://archive.ubuntu.com/ubuntu bionic-updates restricted multiverse universe"
     - "deb http://archive.canonical.com/ bionic partner"
   when: ansible_distribution_release == "bionic"
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
+
+- name: Install basic utilities and tools - all OS versions
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openssh-client
+    - telnet
+    - tcpdump
+    - qemu-kvm
+    - parted
+
+- name: Install basic utilities and tools
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openntpd
+    - traceroute
+    - iptables-persistent
+  when: ansible_distribution_release != "bionic"
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
