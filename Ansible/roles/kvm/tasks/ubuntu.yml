@@ -50,19 +50,19 @@
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
-- name: Add openjdk-ppa repository into sources list.
+- name: Add openjdk-ppa repository into sources list (trusty)
   apt_repository:
     repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main'
     state: present
   when: ansible_distribution_release == "trusty"
 
-- name: Add openjdk-ppa repository into sources list.
+- name: Add openjdk-ppa repository into sources list (xenial)
   apt_repository:
     repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu xenial main'
     state: present
   when: ansible_distribution_release == "xenial"
 
-- name: Add 18.04 repos
+- name: Add 18.04 repos to bionic
   apt_repository:
     repo: {{ item }}
     state: present
@@ -99,8 +99,11 @@
         (ansible_distribution_release == "trusty" ) or
         (ansible_distribution_release == "xenial")
 
-- name: Added network instances file
-  template: src=netplan.j2 dest="/etc/netplan/50-cloud-init.yaml"
+- name: Added Netplan instances file bionic
+  template:
+    src: netplan.j2
+    dest: /etc/netplan/50-cloud-init.yaml
+    force: yes
   when: ansible_distribution_release == "bionic"
 
 - name: UFW firerules
@@ -135,21 +138,21 @@
     dest: "/etc/libvirt/libvirtd.conf"
     line: 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"'
 
-- name: Updated /etc/default/libvirt-bin
+- name: Updated /etc/default/libvirt-bin in trusty
   lineinfile:
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
   when: ansible_distribution_release == "trusty"
 
-- name: Updated /etc/default/libvirt-bin
+- name: Updated /etc/default/libvirt-bin in xenial
   lineinfile:
     dest: "/etc/default/libvirt-bin"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
   when: ansible_distribution_release == "xenial"
 
-- name: Update /etc/default/libvirtd
+- name: Update /etc/default/libvirtd in bionic
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
@@ -175,6 +178,10 @@
 - name: Apparmor parser libvirt helper
   shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
   ignore_errors: yes
+
+- name: Delete DHCP leases file in bionic
+  file: path: /var/lib/dhcp/dhclient.leases state=absent
+  when: ansible_distribution_release == "bionic"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
