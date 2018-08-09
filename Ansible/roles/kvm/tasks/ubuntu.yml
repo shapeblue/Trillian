@@ -180,7 +180,7 @@
   ignore_errors: yes
 
 - name: Delete DHCP leases file in bionic
-  file: path: /var/lib/dhcp/dhclient.leases state=absent
+  file: path=/var/lib/dhcp/dhclient.leases state=absent
   when: ansible_distribution_release == "bionic"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
