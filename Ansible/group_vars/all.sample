@@ -340,6 +340,7 @@ def_kvm_templates:
 def_kvm_mgmt_network_label: "cloudbr0"
 def_kvm_guest_network_label: "cloudbr1"
 def_kvm_public_network_label: "cloudbr1"
+def_kvm_network_mode: "bridge"
 def_kvm_localstorage_mount: "/localstorage"
 def_phys_host_mgmt_if: "eth1"
 def_phys_host_trunked_if: "p55p1"

@@ -74,7 +74,7 @@
     - qemu-kvm
     - parted
 
-- name: Install basic utilities and tools
+- name: Install basic utilities and tools - pre bionic
   apt:
     pkg: "{{ item }}"
     state: latest
@@ -101,7 +101,7 @@
   tags:
     - kvm
 
-- name: Added network instances file
+- name: Added network instances file to precise/trusty/xenial
   template: src=interfaces.j2 dest="/etc/network/interfaces"
   when: (ansible_distribution_release == "precise") or
         (ansible_distribution_release == "trusty" ) or
@@ -187,7 +187,7 @@
   shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
   ignore_errors: yes
 
-- name: Delete DHCP leases file in bionic
+- name: Delete DHCP leases file - bionic
   file: path=/var/lib/dhcp/dhclient.leases state=absent
   when: ansible_distribution_release == "bionic"
 

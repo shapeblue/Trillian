@@ -354,6 +354,7 @@ kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_te
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
+kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 {% if kvm_java_ver is not defined %}
