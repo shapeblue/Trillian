@@ -35,8 +35,13 @@ DEVICETYPE=ovs
 TYPE=OVSBridge
 BOOTPROTO={{ item.bootproto }}
 {% if item.bootproto == "static" %}
+{% if item.bridge == "cloud0" %}
+IPADDR=169.254.0.1
+NETMASK=255.255.0.0
+{% else %}
 IPADDR={{ ansible_eth0.ipv4.address }}
 NETMASK={{ ansible_eth0.ipv4.netmask }}
 GATEWAY={{ ansible_default_ipv4.gateway }}
+{% endif %}
 {% endif %}
 HOTPLUG=no
