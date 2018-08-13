@@ -63,6 +63,7 @@
     - python-argparse
     - rpcbind
     - parted
+    - vim
   tags:
     - kvm
 
