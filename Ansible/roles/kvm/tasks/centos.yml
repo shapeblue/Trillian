@@ -36,6 +36,14 @@
 - include: ./kvm_networking_ovs.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
 
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
+
+- name: Now I'm connected, get facts
+  setup:
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
+
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
