@@ -21,3 +21,6 @@ BOOTPROTO=none
 ONBOOT=yes
 NM_CONTROLLED=no
 HOTPLUG=no
+{% if item.interface == "eth0" %}
+MTU=4500
+{% endif %}

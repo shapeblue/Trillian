@@ -47,6 +47,9 @@
     - { bridge: "{{ kvm_guest_network_label }}", bootproto: none }
     - { bridge: "cloud0", bootproto: static }
 
+- name: Set static hostname
+  shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
+
 - name: Configure sysctl.conf for OVS
   lineinfile:
     path: /etc/sysctl.conf
