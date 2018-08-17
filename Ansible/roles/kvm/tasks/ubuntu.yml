@@ -135,7 +135,7 @@
 
   - name: Updated /etc/cloud/cloud.cfg
     lineinfile:
-      dest=/etc/libvirt/libvirtd.conf
+      dest=/etc/cloud/cloud.cfg
       regexp='preserve_hostname{{ ':' }} false'
       line='preserve_hostname{{ ':' }} true'
 
