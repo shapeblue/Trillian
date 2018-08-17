@@ -136,8 +136,8 @@
   - name: Updated /etc/cloud/cloud.cfg
     lineinfile:
       dest=/etc/libvirt/libvirtd.conf
-      regexp='preserve_hostname: false'
-      line='preserve_hostname: true'
+      regexp='preserve_hostname{{ ':' }} false'
+      line='preserve_hostname{{ ':' }} true'
 
   - name: Purge netplan
     apt: pkg=nplan state=absent purge=yes
