@@ -275,8 +275,18 @@
     - "/run/systemd/netif/leases"
   when: ansible_distribution_release == "bionic"
 
+- name: Configure OVS bridges and reboot
+  shell: /usr/bin/ovs-vsctl {{ item }}
+  with_items:
+    - "add-br {{ kvm_mgmt_network_label }}"
+    - "add-br {{ kvm_guest_network_label }}"
+    - "add-port {{ kvm_guest_network_label }} eth1"
+    - "add-port {{ kvm_mgmt_network_label }} eth0 && reboot"
+  when: kvm_network_mode == "ovs"
+
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
   async: 0
   poll: 0
   ignore_errors: true
+  when: kvm_network_mode == "bridge"
