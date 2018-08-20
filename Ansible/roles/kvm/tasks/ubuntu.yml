@@ -139,15 +139,15 @@
       regexp='preserve_hostname{{ ':' }} false'
       line='preserve_hostname{{ ':' }} true'
 
-  - name: Purge netplan
-    apt: pkg={{ item }} state=absent purge=yes
+  - name: Purge netplan - shell as apt module doesn't work
+    shell: /usr/bin/apt-get remove {{ item }} --purge
     with_item:
       - nplan
       - netplan
+    ignore_errors: true
 
   - name: Delete netplan startup file
-    file: path={{ item }} state=absent
-    with_fileglob: "/etc/netplan/*"
+    shell: rm -f /etc/netplan/*
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
@@ -269,7 +269,10 @@
   ignore_errors: yes
 
 - name: Delete DHCP leases file - bionic
-  file: path=/var/lib/dhcp/dhclient.leases state=absent
+  file: path={{ item }} state=absent
+  with_items:
+    - "/var/lib/dhcp/dhclient.leases"
+    - "/run/systemd/netif/leases"
   when: ansible_distribution_release == "bionic"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
