@@ -281,7 +281,7 @@
     - "add-br {{ kvm_mgmt_network_label }}"
     - "add-br {{ kvm_guest_network_label }}"
     - "add-port {{ kvm_guest_network_label }} eth1"
-    - "add-port {{ kvm_mgmt_network_label }} eth0 && reboot"
+    - "add-port {{ kvm_mgmt_network_label }} eth0"
   when: kvm_network_mode == "ovs"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
@@ -289,4 +289,4 @@
   async: 0
   poll: 0
   ignore_errors: true
-  when: kvm_network_mode == "bridge"
+  #when: kvm_network_mode == "bridge"
