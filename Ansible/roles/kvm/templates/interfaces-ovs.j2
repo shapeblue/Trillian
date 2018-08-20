@@ -24,11 +24,6 @@ iface eth0 inet manual
 auto eth1
 iface eth1 inet manual
 
-allow-{{ kvm_mgmt_network_label }} eth0
-iface eth0 inet manual
-  ovs_bridge {{ kvm_mgmt_network_label }}
-  ovs_type OVSport
-
 auto {{ kvm_mgmt_network_label }}
 allow-ovs {{ kvm_mgmt_network_label }}
 iface {{ kvm_mgmt_network_label }} inet static
@@ -38,11 +33,18 @@ iface {{ kvm_mgmt_network_label }} inet static
   ovs_type OVSBridge
   ovs_ports eth0
 
-allow-{{ kvm_guest_network_label }} eth1
-iface eth1 inet manual
-  ovs_bridge {{ kvm_guest_network_label }}
+allow-{{ kvm_mgmt_network_label }} eth0
+iface eth0 inet manual
+  ovs_bridge {{ kvm_mgmt_network_label }}
   ovs_type OVSport
 
 auto {{ kvm_guest_network_label }}
 allow-ovs {{ kvm_guest_network_label }}
 iface {{ kvm_guest_network_label }} inet manual
+  ovs_type OVSBridge
+  ovs_ports eth1
+
+allow-{{ kvm_guest_network_label }} eth1
+iface eth1 inet manual
+  ovs_bridge {{ kvm_guest_network_label }}
+  ovs_type OVSport

@@ -140,8 +140,8 @@
       line='preserve_hostname{{ ':' }} true'
 
   - name: Purge netplan - shell as apt module doesn't work
-    shell: /usr/bin/apt-get remove {{ item }} --purge
-    with_item:
+    shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
+    with_items:
       - nplan
       - netplan
     ignore_errors: true
