@@ -275,6 +275,12 @@
     - "/run/systemd/netif/leases"
   when: ansible_distribution_release == "bionic"
 
+# Note - Ubuntu18 startup of OVS bridges is not robust and does
+# sometime lead to race conditions where bridges don't come online
+# after reboot. In addition the bridges require to be defined - they
+# will not come up just based on config files, possibly
+# due to issues or bugs with the ifupdown.sh U18 startup script.
+# More info: https://github.com/openvswitch/ovs/blob/master/debian/openvswitch-switch.README.Debian
 - name: Configure OVS bridges and reboot
   shell: /usr/bin/ovs-vsctl {{ item }}
   with_items:
