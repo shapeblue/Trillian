@@ -289,4 +289,3 @@
   async: 0
   poll: 0
   ignore_errors: true
-  #when: kvm_network_mode == "bridge"
