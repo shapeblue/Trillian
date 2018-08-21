@@ -1,0 +1,17 @@
+network:
+    ethernets:
+        eth0:
+            dhcp4: no
+        eth1:
+            dhcp4: no
+    bridges:
+        cloudbr0:
+            dhcp4: yes
+            interfaces:
+                - eth0
+            macaddress: {{ ansible_eth0.macaddress }}
+        cloudbr1:
+            dhcp4: no
+            interfaces:
+                - eth1
+    version: 2

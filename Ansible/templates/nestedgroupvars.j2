@@ -67,7 +67,7 @@ env_numversion: "{{ numversion }}"
 env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 env_repo_version_var:  "{{ env_repo_version_var }}"
 {% endif %}
-{% if env_dotted_version is defined %} 
+{% if env_dotted_version is defined %}
 env_numversion: "{{ env_cs_numeric_version }}"
 env_cs_distribution: "{{ env_cs_distribution }}"
 env_cs_numeric_version: "{{ env_cs_numeric_version }}"
@@ -308,6 +308,10 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmosversion = "ubuntu1604" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "debian" %}
+{% elif kvm_os | lower == "u18" %}
+{% set kvmosversion = "ubuntu1804" %}
+{% set kvmreleaseurl = "debian" %}
+{% set kvm_os_type = "debian" %}
 {% elif kvm_os | lower == "u" %}
 {% set kvmosversion = "debian" %}
 {% set kvmreleaseurl = "debian" %}
@@ -350,6 +354,8 @@ kvm_template: "{{ kvm_template | default( def_kvm_templates[kvmosversion].kvm_te
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
+kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
+kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 {% if kvm_java_ver is not defined %}
@@ -457,4 +463,3 @@ hipchat_cli_client_version: "{{ hipchat_cli_client_version | default ( def_hipch
 # webhook client
 use_webhooks: {{ use_webhooks | default( def_use_webhooks ) }}
 marvin_notifi_webhook_url: "{{ marvin_notifi_webhook_url | default( def_marvin_notifi_webhook_url ) }}"
-

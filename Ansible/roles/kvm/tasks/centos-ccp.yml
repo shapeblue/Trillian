@@ -28,4 +28,13 @@
 - name: run installer -- THIS IS VERY FRAGILE
   shell: "cd /tmp/{{ ccp_install_tarball }} && ./install.sh -a"
 
+- name: Configure agent.properties for OVS
+  lineinfile:
+    path: /etc/cloudstack/agent/agent.properties
+    line: "{{ item }}"
+  with_items:
+    - "network.bridge.type=openvswitch"
+    - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
+  when: kvm_network_mode == "ovs"
+
 - include: ./centos_qemuimg.yml

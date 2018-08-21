@@ -14,33 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-- name: Install basic utilities and tools
-  apt: 
-    pkg: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items:
-    - openntpd
-    - openssh-client
-    - telnet
-    - tcpdump
-    - traceroute
-    - iptables-persistent
-    - qemu-kvm
-    - parted
-
-- name: set apt repo to local
-  template: 
-    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
-    dest: "/etc/apt/{{item}}"
-  with_items:
-    - "sources.list"
-
-- name: Add specified repository into sources list.
-  apt_repository: 
-    repo: 'deb {{ baseurl_kvm }} /'
-    state: present
+# Following commented out until local repositories available and sources.list exists
+#- name: set apt repo to local
+#  template:
+#    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
+#    dest: "/etc/apt/{{item}}"
+#  with_items:
+#    - "sources.list"
 
 - apt_key:
     url: "{{ repohost }}/release.asc"
@@ -50,22 +30,60 @@
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
-- name: Add openjdk-ppa repository into sources list.
+- name: Add specified repository into sources list.
+  apt_repository:
+    repo: 'deb {{ baseurl_kvm }} /'
+    state: present
+
+- name: Add openjdk-ppa repository into sources list (trusty)
   apt_repository:
     repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main'
     state: present
   when: ansible_distribution_release == "trusty"
 
-- name: Add openjdk-ppa repository into sources list.
+- name: Add openjdk-ppa repository into sources list (xenial)
   apt_repository:
     repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu xenial main'
     state: present
   when: ansible_distribution_release == "xenial"
 
+- name: Add 18.04 repos to bionic
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+  with_items:
+    - "deb http://archive.ubuntu.com/ubuntu bionic universe restricted multiverse"
+    - "deb http://security.ubuntu.com/ubuntu/ bionic-security restricted multiverse universe"
+    - "deb http://archive.ubuntu.com/ubuntu bionic-updates restricted multiverse universe"
+    - "deb http://archive.canonical.com/ bionic partner"
+  when: ansible_distribution_release == "bionic"
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
+
+- name: Install basic utilities and tools - all OS versions
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openssh-client
+    - telnet
+    - tcpdump
+    - qemu-kvm
+    - parted
+
+- name: Install basic utilities and tools - pre bionic
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openntpd
+    - traceroute
+    - iptables-persistent
+  when: ansible_distribution_release != "bionic"
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -73,7 +91,7 @@
 - debug: msg="Java version required is {{ java_ver }}"
 
 - name: Ensure correct open-jdk is installed
-  apt: 
+  apt:
     pkg: "{{ kvm_java_path }}"
     state: latest
     update_cache: yes
@@ -83,26 +101,111 @@
   tags:
     - kvm
 
-- name: Added network instances file
-  template: src=interfaces.j2 dest="/etc/network/interfaces"
+- name: Ubuntu linux bridge
+  block:
 
-- name: UFW firerule 22
-  shell: "ufw allow proto tcp from any to any port 22"
+  - name: Added network instances file to precise/trusty/xenial
+    template: src=interfaces.j2 dest="/etc/network/interfaces"
+    when: (ansible_distribution_release == "precise") or
+          (ansible_distribution_release == "trusty" ) or
+          (ansible_distribution_release == "xenial")
 
-- name: UFW firerule 1798
-  shell: "ufw allow proto tcp from any to any port 1798"
+  - name: Added Netplan instances file bionic
+    template:
+      src: netplan.j2
+      dest: /etc/netplan/50-cloud-init.yaml
+      force: yes
+    when: ansible_distribution_release == "bionic"
 
-- name: UFW firerule 16509
-  shell: "ufw allow proto tcp from any to any port 16509"
+  when: kvm_network_mode == "bridge"
 
-- name: UFW firerule vnc
-  shell: ufw allow proto tcp from any to any port 5900:6100
+- name: OVS on Ubuntu 18 onwards
+  block:
+  - name: Revert U18 from netplan to legacy networking due to no OVS support
+    replace:
+      path=/etc/default/grub
+      regexp='ipv6.disable=1'
+      replace='ipv6.disable=1 netcfg/do_not_use_netplan=true'
 
-- name: UFW firerule 49152
-  shell: ufw allow proto tcp from any to any port 49152:49216
+  - name: Rebuild grub
+    shell: /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+
+  - name: Set static hostname
+    shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
+
+  - name: Updated /etc/cloud/cloud.cfg
+    lineinfile:
+      dest=/etc/cloud/cloud.cfg
+      regexp='preserve_hostname{{ ':' }} false'
+      line='preserve_hostname{{ ':' }} true'
+
+  - name: Purge netplan - shell as apt module doesn't work
+    shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
+    with_items:
+      - nplan
+      - netplan
+    ignore_errors: true
+
+  - name: Delete netplan startup file
+    shell: rm -f /etc/netplan/*
+
+  - name: Install OVS
+    apt: pkg={{ item }} state=present
+    with_items:
+      - openvswitch-switch
+      - ifupdown
+
+  - name: Configure sysctl.conf for OVS
+    lineinfile:
+      path: /etc/sysctl.conf
+      line: "{{ item }}"
+    with_items:
+      - "net.bridge.bridge-nf-call-ip6tables=0"
+      - "net.bridge.bridge-nf-call-iptables=0"
+      - "net.bridge.bridge-nf-call-arptables=0"
+      - "net.ipv6.conf.all.disable_ipv6=1"
+      - "net.ipv6.conf.default.disable_ipv6=1"
+      - "net.ipv6.conf.lo.disable_ipv6=1"
+
+  - name: Start OVS
+    systemd:
+      name: openvswitch-switch
+      state: started
+      enabled: yes
+
+  - name: New interfaces file
+    template:
+      src=interfaces-ovs.j2
+      dest="/etc/network/interfaces"
+
+  when: kvm_network_mode == "ovs"
+
+- name: UFW firerules
+  shell: "ufw allow proto tcp from any to any port {{ item }}"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900:6100"
+    - "49152:49216"
 
 - name: Installs cloudstack-agent
   apt: pkg=cloudstack-agent state=installed update_cache=true
+
+- name: Configure agent.properties for OVS
+  lineinfile:
+    path: /etc/cloudstack/agent/agent.properties
+    line: "{{ item }}"
+  with_items:
+    - "network.bridge.type=openvswitch"
+    - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
+  when: kvm_network_mode == "ovs"
+
+- name: Blacklist bridge module post agent install
+  template:
+    src=bridge-blacklist.j2
+    dest="/etc/modprobe.d/bridge-blacklist.conf"
+  when: kvm_network_mode == "ovs"
 
 - name: Updated /etc/libvirt/libvirtd.conf
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp="#listen_tls = 0" line="listen_tls = 0"
@@ -124,32 +227,37 @@
     dest: "/etc/libvirt/libvirtd.conf"
     line: 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"'
 
-- name: Updated /etc/default/libvirt-bin
+- name: Updated /etc/default/libvirt-bin in trusty
   lineinfile:
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
   when: ansible_distribution_release == "trusty"
 
-- name: Updated /etc/default/libvirt-bin
+- name: Updated /etc/default/libvirt-bin in xenial
   lineinfile:
     dest: "/etc/default/libvirt-bin"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
   when: ansible_distribution_release == "xenial"
 
+- name: Update /etc/default/libvirtd in bionic
+  lineinfile:
+    dest: "/etc/default/libvirtd"
+    regexp: '.*libvirtd_opts=*'
+    line: 'libvirtd_opts="-l"'
+  when: ansible_distribution_release == "bionic"
 
-
-- name: Updated /etc/init/libvirt-bin.conf
-  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
+#- name: Updated /etc/init/libvirt-bin.conf
+#  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
 
 - name: update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
 
-- name: Synlink to disable
+- name: Symlink to disable
   file: src=/etc/apparmor.d/usr.sbin.libvirtd dest=/etc/apparmor.d/disable/usr.sbin.libvirtd state=link
 
-- name: Synlink to disable
+- name: Symlink to disable
   file: src=/etc/apparmor.d/usr.lib.libvirt.virt-aa-helper dest=/etc/apparmor.d/disable/usr.lib.libvirt.virt-aa-helper state=link
 
 - name: Apparmor parser libvirt
@@ -159,6 +267,28 @@
 - name: Apparmor parser libvirt helper
   shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
   ignore_errors: yes
+
+- name: Delete DHCP leases file - bionic
+  file: path={{ item }} state=absent
+  with_items:
+    - "/var/lib/dhcp/dhclient.leases"
+    - "/run/systemd/netif/leases"
+  when: ansible_distribution_release == "bionic"
+
+# Note - Ubuntu18 startup of OVS bridges is not robust and does
+# sometime lead to race conditions where bridges don't come online
+# after reboot. In addition the bridges require to be defined - they
+# will not come up just based on config files, possibly
+# due to issues or bugs with the ifupdown.sh U18 startup script.
+# More info: https://github.com/openvswitch/ovs/blob/master/debian/openvswitch-switch.README.Debian
+- name: Configure OVS bridges and reboot
+  shell: /usr/bin/ovs-vsctl {{ item }}
+  with_items:
+    - "add-br {{ kvm_mgmt_network_label }}"
+    - "add-br {{ kvm_guest_network_label }}"
+    - "add-port {{ kvm_guest_network_label }} eth1"
+    - "add-port {{ kvm_mgmt_network_label }} eth0"
+  when: kvm_network_mode == "ovs"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
