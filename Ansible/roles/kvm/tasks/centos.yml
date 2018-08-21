@@ -55,7 +55,7 @@
   tags:
     - kvm
 
-- name: Install basic utilities and tools
+- name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
   with_items:
     - bind-utils
@@ -72,9 +72,16 @@
     - rpcbind
     - parted
     - vim
+  tags:
+    - kvm
+
+- name: Install basic utilities and tools - C7
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
     - firewalld
   tags:
     - kvm
+  when: ansible_distribution_major_version == "7"
 
 - include: ./add_local_storage.yml
   when: use_local_storage
