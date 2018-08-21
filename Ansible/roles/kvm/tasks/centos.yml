@@ -59,6 +59,7 @@
     - python-argparse
     - rpcbind
     - parted
+    - firewalld
   tags:
     - kvm
 
