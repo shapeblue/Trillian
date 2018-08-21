@@ -72,6 +72,7 @@
     - rpcbind
     - parted
     - vim
+    - firewalld
   tags:
     - kvm
 
@@ -134,15 +135,38 @@
     - "16509"
     - "5900:6100"
     - "49152:49216"
+  when: ansible_distribution_major_version == "6"
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Add iptables rules
+  shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900-6100"
+    - "49152-49216"
+  when: ansible_distribution_major_version == "7"
   tags:
     - kvm
     - kvm-agent
 
 - name: IPtables save config
   shell: "iptables-save > /etc/sysconfig/iptables"
+  when: ansible_distribution_major_version == "6"
   tags:
     - kvm
     - kvm-agent
+
+- name: load updated config
+  shell: "firewall-cmd --reload"
+  when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+    - kvm-agent
+
 
 - name: KVM libvirtd restarted
   service: name=libvirtd state=restarted

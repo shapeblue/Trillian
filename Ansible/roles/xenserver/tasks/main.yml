@@ -20,9 +20,18 @@
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
+  delay: 1
+  ignore_errors: yes
   
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  ignore_errors: yes
+
+- name: Wait for XenServer completion
+  wait_for: path=/tmp/state-built
+  retries: "{{ ssh_retries }}"
+  when: not use_external_hv_hosts
+  ignore_errors: yes
 
 - name: Apply license to XenServer
   shell: "xe host-apply-edition edition={{ xs_license_edition }} license-server-address={{ xs_license_server }} host-uuid=`xe host-list --minimal` license-server-port={{ xs_license_server_port }}"
