@@ -1,0 +1,72 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: stop and disable networkmanager (CentOS7)
+  service:
+    name: NetworkManager
+    state: stopped
+    enabled: false
+  when: ansible_distribution_major_version == "7"
+  ignore_errors: true
+
+- name: Blacklist bridge module
+  template: src=bridge-blacklist.j2 dest="/etc/modprobe.d/bridge-blacklist.conf"
+
+- name: Install OVS RPM
+  yum: name={{ kvm_centos_ovsrpm }} state=present validate_certs=no
+
+- name: Start OVS
+  systemd:
+    name: openvswitch
+    state: started
+    enabled: yes
+
+- name: Configure eths
+  template: src=kvm-ovs-eth.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.interface }}
+  with_items:
+    - { interface: eth0, bridge: "{{ kvm_mgmt_network_label }}" }
+    - { interface: eth1, bridge: "{{ kvm_guest_network_label }}" }
+
+- name: Configure bridges - advanced networking
+  template: src=kvm-ovs-bridges.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.bridge }}
+  with_items:
+    - { bridge: "{{ kvm_mgmt_network_label }}", bootproto: static }
+    - { bridge: "{{ kvm_guest_network_label }}", bootproto: none }
+    - { bridge: "cloud0", bootproto: static }
+
+- name: Set static hostname
+  shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
+
+- name: Configure sysctl.conf for OVS
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: "{{ item }}"
+  with_items:
+    - "net.ipv4.ip_forward=1"
+    - "net.ipv4.conf.default.rp_filter=0"
+    - "net.ipv4.conf.all.rp_filter=0"
+    - "net.ipv6.conf.all.disable_ipv6=1"
+    - "net.ipv6.conf.default.disable_ipv6=1"
+
+#- name: restart networking
+#  service: name=network state=restarted
+#  ignore_errors: true
+
+- name: Reboot KVM host to implement new networking
+  shell: /sbin/reboot
+  async: 0
+  poll: 0
+  ignore_errors: true

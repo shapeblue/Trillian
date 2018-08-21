@@ -28,9 +28,21 @@
     - bridge-utils
   tags:
     - kvm
+  when: kvm_network_mode == "bridge"
 
-- include: ./kvm_networking.yml
-  when: not use_phys_hosts
+- include: ./kvm_networking_bridge.yml
+  when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
+
+- include: ./kvm_networking_ovs.yml
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
+
+- name: Now I'm connected, get facts
+  setup:
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
 
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
@@ -43,7 +55,7 @@
   tags:
     - kvm
 
-- name: Install basic utilities and tools
+- name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
   with_items:
     - bind-utils
@@ -59,8 +71,17 @@
     - python-argparse
     - rpcbind
     - parted
+    - vim
   tags:
     - kvm
+
+- name: Install basic utilities and tools - C7
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
+    - firewalld
+  tags:
+    - kvm
+  when: ansible_distribution_major_version == "7"
 
 - include: ./add_local_storage.yml
   when: use_local_storage
@@ -121,15 +142,38 @@
     - "16509"
     - "5900:6100"
     - "49152:49216"
+  when: ansible_distribution_major_version == "6"
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Add iptables rules
+  shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900-6100"
+    - "49152-49216"
+  when: ansible_distribution_major_version == "7"
   tags:
     - kvm
     - kvm-agent
 
 - name: IPtables save config
   shell: "iptables-save > /etc/sysconfig/iptables"
+  when: ansible_distribution_major_version == "6"
   tags:
     - kvm
     - kvm-agent
+
+- name: load updated config
+  shell: "firewall-cmd --reload"
+  when: ansible_distribution_major_version == "7"
+  tags:
+    - kvm
+    - kvm-agent
+
 
 - name: KVM libvirtd restarted
   service: name=libvirtd state=restarted
