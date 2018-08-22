@@ -18,23 +18,56 @@
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
+
+- name: Ensure EPEL is available (centOS6)
+  yum: name="{{ epel6 }}" state=present
+  ignore_errors: true
+  when: ansible_distribution_major_version == "6"
+
+- name: Ensure EPEL is available (centOS7)
+  template:
+    src: "{{ inventory_dir }}/templates/epel.repo.j2"
+    dest: /etc/yum.repos.d/epel.repo
+    force: true
+  ignore_errors: true
+  when: ansible_distribution_major_version == "7"
+
+- name: clean yum cache
+  command: yum clean all
+
+- name: install pip (Centos6)
+  yum: name=python-pip state=latest
+  when: ansible_distribution_major_version == "6"
+
+- name: install pip (centos7)
+  shell: curl "https://bootstrap.pypa.io/get-pip.py" -o "/tmp/get-pip.py" && python /tmp/get-pip.py
+  when: ansible_distribution_major_version == "7"
+
 - name: install jq
   yum: name=jq state=latest
+
+- name: install setuptools version 36.8.0 for centos6 compatibility
+  shell: pip install setuptools==36.8.0
+  when: ansible_distribution_major_version == "6"
+
+- name: install setuptools for centos 7
+  pip:
+    name: setuptools
+    state: latest
+  when: ansible_distribution_major_version == "7"
+
+- name: install argparse
+  pip:
+    name: argparse
+    state: latest
 
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
-- name: copy CloudMonkey to host
-  get_url:
-    url: "{{ def_linux_cm_url }}"
-    dest: /usr/bin/cmk
-    mode: 0755
-
-- name: link cmk to cloudmonkey
-  file:
-    src: /usr/bin/cmk
-    dest: /usr/bin/cloudmonkey
-    state: link
+- name: install cloudmonkey
+  pip: 
+    name: cloudmonkey
+    state: latest
 
 - name: base configuration
   shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
