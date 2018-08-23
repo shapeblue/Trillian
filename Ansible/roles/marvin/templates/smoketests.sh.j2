@@ -19,6 +19,12 @@ LOGDIR=/marvin/MarvinLogs
 TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
+export SLACK_CLI_TOKEN="{{ slack_token }}"
+if [ -e /marvin/joburl ]; then
+  jenkinslink="`cat /marvin/joburl`"
+else
+  jenkinslink=""
+fi
 
 rm -f /marvin/smoketests-summary.txt
 rm -f /marvin/tests/smoke/test_*.pyc
@@ -71,6 +77,17 @@ launchtest() {
     # Run tests once again on error or failure
     python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Intermitten failure detected: $file" >> /marvin/smoketests-summary.txt
 }
+slackmsg() {
+   messagebody=$1
+   messagecolor=$2
+   slack chat send \
+  --image "{{ def_marvin_icon_url }}" \
+  --channel "#testing" \
+  --color $messagecolor \
+  --text "$messagebody" \
+  --title "Smoke tests update for {{ env_name_clean }}" \
+  --title_link "$jenkinslink"
+}
 
 NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
 run_start_time="$(date -u +%s)"
@@ -86,8 +103,8 @@ if [ -f /marvin/tests/smoke/test_hostha_kvm.py ]; then
 fi
 for file in $FILES; do
     echo -e "\e[92m ---->  Starting $(basename $file) on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
-  {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
-
+    {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"{% endif %}
+    {% if use_slack %}slackmsg "Starting *$(basename $file)* on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"{% endif %}
     start_time="$(date -u +%s)"
     launchtest $file
     end_time="$(date -u +%s)"
@@ -100,12 +117,12 @@ for file in $FILES; do
     if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
       echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
       {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."{% endif %}
-
+      {% if use_slack %}slackmsg "Test $(basename $file) looks OK.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"{% endif %}
     else
       PASSES=$((PASSES+1))
       echo "test $(basename $file) in {{ env_name_clean }} looks OK"
       {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $(basename $file) in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."{% endif %}
-
+      {% if use_slack %}slackmsg "Test $(basename $file) looks to errors.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"{% endif %}
     fi
     counter=$((counter+1))
 
@@ -123,6 +140,7 @@ for file in $LOGDIR/*.xml; do
 done
 echo "Test completed. $GOOD look ok, $BAD have errors"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "Smoketests for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify{% endif %}
+{% if use_slack %}slackmsg "Smoketests completed.\n*$GOOD* look ok, *$BAD* have errors" "good"{% endif %}
 
 echo "Smoke tests completed. $GOOD look OK, $BAD have error(s)" >> /marvin/smoketests-summary.txt
 echo "Only failed tests results shown below:" >> /marvin/smoketests-summary.txt

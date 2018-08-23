@@ -463,3 +463,14 @@ hipchat_cli_client_version: "{{ hipchat_cli_client_version | default ( def_hipch
 # webhook client
 use_webhooks: {{ use_webhooks | default( def_use_webhooks ) }}
 marvin_notifi_webhook_url: "{{ marvin_notifi_webhook_url | default( def_marvin_notifi_webhook_url ) }}"
+
+# slack client
+use_slack: {{ use_slack | default( def_use_slack) }}
+slackcli_url: "{{ slackcli_url | default( def_slackcli_url }}"
+slack_token: "{{ slack_token | default( def_slack_token) }}"
+slack_channel: "{{ slack_channel | default( def_slack_channel) }}"
+slack_username: "{{ slack_username | default( def_slack_username) }}"
+slack_icon_url: "{{ slack_icon_url | default( def_slack_icon_url) }}"
+slack_color: "{{ slack_color | default( def_slack_color) }}"
+slack_webhook: "{{ slack_webhook | default( def_slack_webhook ) }}"
+
