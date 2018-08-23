@@ -75,12 +75,19 @@
   tags:
     - kvm
 
-- name: Install basic utilities and tools - C7
+- name: Firewalld for CentOS7
   yum: name={{ item }} state=present enablerepo=base
   with_items:
     - firewalld
   tags:
     - kvm
+  when: ansible_distribution_major_version == "7"
+
+- name: Start firewalld CentOS7
+  service:
+    name=firewalld
+    state=started
+    enabled=yes
   when: ansible_distribution_major_version == "7"
 
 - include: ./add_local_storage.yml
