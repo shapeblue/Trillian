@@ -81,14 +81,14 @@
     - firewalld
   tags:
     - kvm
-  when: ansible_distribution_major_version == "7"
+  when: ( ansible_distribution_major_version == "7" ) and use_phys_hosts
 
 - name: Start firewalld CentOS7
   service:
     name=firewalld
     state=started
     enabled=yes
-  when: ansible_distribution_major_version == "7"
+  when: ( ansible_distribution_major_version == "7" ) and use_phys_hosts
 
 - include: ./add_local_storage.yml
   when: use_local_storage
@@ -162,7 +162,7 @@
     - "16509"
     - "5900-6100"
     - "49152-49216"
-  when: ansible_distribution_major_version == "7"
+  when: ( ansible_distribution_major_version == "7" ) and use_phys_hosts
   tags:
     - kvm
     - kvm-agent
