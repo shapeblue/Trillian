@@ -15,4 +15,8 @@
     dest: "/usr/bin/slack"
     mode: 0777
 
-
+- name: add token to /etc/environment
+  lineinfile:
+    path: /etc/environment
+    regexp: '^SLACK_CLI_TOKEN='
+    line: "SLACK_CLI_TOKEN='{{ slack_token }}'"
