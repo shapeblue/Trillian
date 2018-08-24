@@ -176,12 +176,10 @@
 
 - name: load updated config
   shell: "firewall-cmd --reload"
-  when: ansible_distribution_major_version == "7"
+  when: ( ansible_distribution_major_version == "7" ) and use_phys_hosts
   tags:
     - kvm
     - kvm-agent
-  when: ( ansible_distribution_major_version == "7" ) and use_phys_hosts
-
 
 - name: KVM libvirtd restarted
   service: name=libvirtd state=restarted
