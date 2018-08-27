@@ -189,6 +189,8 @@ echo "Component tests completed. $GOOD look ok, $BAD have errors"
 {% endif %}
 
 echo "Test completed. $GOOD look ok, $BAD have errors" > /marvin/componenttest-summary.txt
+echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
+
 echo "Only failed tests results shown below:" >> /marvin/componenttest-summary.txt
 echo "" >> /marvin/componenttest-summary.txt
 python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/componenttest-summary.txt
