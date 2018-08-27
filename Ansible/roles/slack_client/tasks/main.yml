@@ -1,0 +1,22 @@
+---
+
+- name: wait for VM to be alive
+  shell: "ping {{ ansible_ssh_host }} -c 1"
+  register: pong
+  until: pong.rc == 0
+  retries: "{{ ssh_retries }}"
+  
+- name: Wait for SSH
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
+- name: install slack cli client dist
+  get_url: 
+    url: "{{ slackcli_url }}"
+    dest: "/usr/bin/slack"
+    mode: 0777
+
+- name: add token to /etc/environment
+  lineinfile:
+    path: /etc/environment
+    regexp: '^SLACK_CLI_TOKEN='
+    line: "SLACK_CLI_TOKEN='{{ slack_token }}'"

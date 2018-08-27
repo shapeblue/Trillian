@@ -251,6 +251,7 @@
     - { role: timezone, when: num_marv_hosts | int != 0 and (additional_pod|bool == False) }
     - { role: cloudmonkey, when: num_marv_hosts | int != 0 and (additional_pod|bool == False) }
     - { role: hipchat_client, when: (num_marv_hosts | int != 0) and (use_hipchat) and (additional_pod|bool == False) }
+    - { role: slack_client, when: (num_marv_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
     - { role: marvin, when: num_marv_hosts | int != 0  and (additional_pod|bool == False) }
 
 - hosts: localhost
