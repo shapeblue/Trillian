@@ -47,6 +47,12 @@
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
+- name: disable yum plugins
+  lineinfile: 
+    path: /etc/yum.conf
+    regexp: '^plugins='
+    line: 'plugins=0'
+
 - name: set yum repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
