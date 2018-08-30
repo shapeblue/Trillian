@@ -1,6 +1,22 @@
 ---
 
 
+- name: wait for VM to be alive
+  shell: "ping {{ ansible_ssh_host }} -c 1"
+  register: pong
+  until: pong.rc == 0
+  retries: "{{ ssh_retries }}"
+  
+- name: Wait for SSH
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  tags:
+    - kvm
+
+- name: Now I'm connected, get facts
+  setup:
+  tags:
+    - kvm
+
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
