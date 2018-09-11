@@ -12,6 +12,11 @@ if [[ -n $SECGROUP ]]; then
 else
   SECURITYGROUPENABLED="false"
 fi
+
+cloudmonkey set display json
+cloudmonkey set color false
+export TERM=vt100
+
 ################################################################################
 # Write to log file + console
 function WriteOutput()
