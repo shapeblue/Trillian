@@ -21,9 +21,9 @@
     - vc_config
 
 - name: "wait for vCenter API Service to come up"
-  shell: "curl --silent -o /dev/null -w '%{http_code}' {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk"
+  shell: "curl https://{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk/vimService.wsdl  --insecure"
   register: result
-  until: result.stdout.find("301") != -1
+  until: result.stdout.find("vim25Service") != -1
   retries: 60
   delay: 10
   delegate_to: localhost
