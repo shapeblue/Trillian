@@ -217,9 +217,12 @@ function svmconnect() {
           sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "ssh -i /root/.ssh/id_rsa.cloud -p 3922 root@$VRIP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         ;;
         "copy")
-          echo "Copying $ARG from $VRIP to $(pwd)"
-          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "scp -q -i /root/.ssh/id_rsa.cloud -p 3922 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP:$ARG /tmp"
-          sshpass -p $PASSWORD scp -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VRIP:/tmp/$(basename $ARG) ./
+          HERE=$(pwd)
+          echo "Copy $ARG from $VRIP to $HERE"
+          echo "Copying $ARG from $VRIP to Host"
+          sshpass -p $PASSWORD ssh root@$HOSTIPADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -t "scp -i /root/.ssh/id_rsa.cloud -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 3922 root@$VRIP:$ARG /tmp/$(basename $ARG)"
+          echo "Copying $(basename $ARG) from host to $HERE"
+          sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no root@$HOSTIPADDRESS:/tmp/$(basename $ARG) $HERE
         ;;
         "copyfiles")
         ;;
