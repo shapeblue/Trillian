@@ -12,20 +12,28 @@
     - marvin_fix_tests
 
 - name: copy locally fixed tests
-  copy: src={{ item.src }} dest={{ item.dest }}
-  with_items:
-    - {src: "common.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/common.py"}
-    - {src: "base.py", dest: "/usr/lib/python2.7/site-packages/marvin/lib/base.py"}
+  copy: 
+    src: "{{ item }}"
+    dest: /usr/lib/python2.7/site-packages/marvin/lib/
+    mode:v0755
+  with_fileglob:
+    - ../files/marvin_lib/*
   tags:
     - marvin
     - marvin_cfg
     - marvin_fix_tests
 
 - name: Copy files to /marvin/tests/smoke/
-  copy: src={{ item }} dest=/marvin/tests/smoke/ mode=0755
+  copy:
+    src: "{{ item }}"
+    dest: /marvin/tests/smoke/
+    mode: 0755
   with_fileglob:
     - ../files/smoke/*
   tags:
     - marvin
     - marvin_cfg
     - marvin_fix_tests
+
+
+
