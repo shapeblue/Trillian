@@ -15,7 +15,7 @@
   copy: 
     src: "{{ item }}"
     dest: /usr/lib/python2.7/site-packages/marvin/lib/
-    mode:v0755
+    mode: 0755
   with_fileglob:
     - ../files/marvin_lib/*
   tags:
