@@ -922,7 +922,7 @@ class TestSecuredVmMigration(cloudstackTestCase):
                       sed -i '/.*_file=.*/d' /etc/libvirt/libvirtd.conf && \
                       echo 'key_file="/etc/pki/libvirt/private/serverkey.pem"' >> /etc/libvirt/libvirtd.conf && \
                       echo 'cert_file="/etc/pki/libvirt/servercert.pem"' >> /etc/libvirt/libvirtd.conf && \
-                      echo 'ca_file="/etc/pki/CA/cacert.pem"' >> /etc/libvirt/libvirtd.conf
+                      echo 'ca_file="/etc/pki/CA/cacert.pem"' >> /etc/libvirt/libvirtd.conf && \
                       service libvirtd restart && \
                       sleep 20 && \
                       service cloudstack-agent restart")
