@@ -909,25 +909,13 @@ class TestSecuredVmMigration(cloudstackTestCase):
                       service libvirtd restart && \
                       sleep 20 && \
                       service cloudstack-agent restart")
-
+ 
         time.sleep(30)
         self.check_connection(host=host, secured='false')
         return host
 
     def secure_all_hosts(self):
         for host in self.hosts:
-            SshClient(host.ipaddress, port=22, user=self.hostConfig["username"], passwd=self.hostConfig["password"])\
-            .execute("sed -i 's/listen_tls.*/listen_tls=1/g' /etc/libvirt/libvirtd.conf && \
-                      sed -i 's/listen_tcp.*/listen_tcp=0/g' /etc/libvirt/libvirtd.conf && \
-                      sed -i '/.*_file=.*/d' /etc/libvirt/libvirtd.conf && \
-                      echo 'key_file=\"/etc/pki/libvirt/private/serverkey.pem"' >> /etc/libvirt/libvirtd.conf && \
-                      echo 'cert_file=\"/etc/pki/libvirt/servercert.pem"' >> /etc/libvirt/libvirtd.conf && \
-                      echo 'ca_file=\"/etc/pki/CA/cacert.pem"' >> /etc/libvirt/libvirtd.conf && \
-                      service libvirtd restart && \
-                      sleep 20 && \
-                      service cloudstack-agent restart")
-            time.sleep(30)
-
             cmd = provisionCertificate.provisionCertificateCmd()
             cmd.hostid = host.id
             cmd.reconnect = True
