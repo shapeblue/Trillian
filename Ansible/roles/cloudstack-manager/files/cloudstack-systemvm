@@ -1,0 +1,105 @@
+#!/bin/bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+#<APP_NAME> option source destination
+#
+#options:
+#
+#- pack
+#
+#unpack source:  systemvm411.iso
+#unpack destination: dir to unpack to
+#
+#- unpack
+#pack source: root dir of files to go into systemvm (in requiered directoty structure)
+#pack destination: filename of systemvm.iso to be created.
+
+#set -x
+set -e
+
+TMP=/tmp
+MOUNTPATH=${HOME}/systemvm_mnt
+umask 022
+
+clean_up() {
+  $SUDO umount $MOUNTPATH
+}
+
+unpack_iso() {
+  local tmpiso=${TMP}/$1
+  mkdir -p $MOUNTPATH
+
+  [ ! -f $source_iso ] && echo "$(basename $0): Could not find systemvm iso patch file $source_iso" && return 1
+  [ -n "$(ls -A $dest_dir)" ] && echo "$dest_dir exists but is not empty" && return 1
+  $SUDO mount -o loop $source_iso $MOUNTPATH 
+  [ $? -ne 0 ] && echo "$(basename $0): Failed to mount iso $source_iso" && clean_up && return 1
+  [ ! -d $dest_dir ] && mkdir -p $dest_dir/iso
+  [ ! -d $dest_dir  ] && echo "$(basename $0): Could not find/create $dest_dir" && clean_up && return 1
+  $SUDO mkdir -p $dest_dir/cloud-scripts
+  $SUDO cp -fr $MOUNTPATH/* $dest_dir/iso/
+  [ $? -ne 0 ] && echo "$(basename $0): Failed to copy from $source_iso to $dest_dir" && clean_up && return 1
+  $SUDO umount $MOUNTPATH
+  [ $? -ne 0 ] && echo "$(basename $0): Failed to unmount iso from $MOUNTPATH" && return 1
+  echo "$source_iso unpacked to $dest_dir/iso"
+  $SUDO tar -xzf $dest_dir/iso/cloud-scripts.tgz -C $dest_dir/cloud-scripts
+  [ $? -ne 0 ] && echo "$tar -xzf $dest_dir/iso/cloud-scripts.tgz -C $dest_dir/cloud-scripts" && return 1
+  echo "$(basename $0): cloud-scripts.tgz extracted to $dest_dir/cloud-scripts" && return 0
+}
+
+pack_iso() {
+  [ ! -d $source_dir  ] && echo "$(basename $0): Could not find source directory $source_dir" && return 1
+  rm -rf $source_dir/iso/cloud-scripts.tgz
+  tar -czf $source_dir/iso/cloud-scripts.tgz -C $source_dir/cloud-scripts .
+  mkisofs -quiet -r -o $dest_iso $source_dir/iso
+  [ $? -ne 0 ] && echo "$(basename $0): Failed to create new iso $dest_iso from $source_dir" && return 1
+  echo "$dest_iso created from $source_dir" && return 0
+}
+
+if [[ "$EUID" -ne 0  ]]
+then
+   SUDO="sudo -n "
+fi
+
+$SUDO mkdir -p $MOUNTPATH
+
+command -v mkisofs > /dev/null   || (echo "$(basename $0): mkisofs not found, please install or ensure PATH is accurate" ; exit 4)
+
+if [[ "$1" == "pack" ]]; then
+  source_dir="$2"
+  dest_iso="$3"
+  pack_iso
+elif [[ "$1" == "unpack" ]]; then
+  source_iso="$2"
+  dest_dir="$3"
+  unpack_iso
+else
+  echo "Unknown command: $1
+Usage: cloudstack-systemvmiso option source destination
+
+options:
+
+- pack
+unpack source:  systemvm411.iso
+unpack destination: dir to unpack to
+
+- unpack
+pack source: root dir of files to go into systemvm (in requiered directoty structure)
+pack destination: filename of systemvm.iso to be created.
+"
+fi
+
