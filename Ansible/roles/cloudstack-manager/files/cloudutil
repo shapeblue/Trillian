@@ -34,6 +34,8 @@ cloudutil vr      --- returns VR for specific VM
 cloudutil ssh     --- ssh into remote System VM
 cloudutil scp     --- copies file from remote system vm
 cloudutil tailremote  --- tails log on remote system vm
+cloudutil encrypt --- get encrypted value from input string 
+cloudutil decrypt --- decrypt input string
 cloudutil help    --- display usage
 
 Arguments
@@ -41,7 +43,8 @@ cloudutil vr <instance_name_of_vm>
 cloudutil ssh <instance_name_of_system_vm>   --- user will be prompted for password for intermediary hypervisor in the cases of XenServer and KVM
 cloudutil scp <instance_name_of_system_vm> <path_to_required_file> --- file will be downloaded to current working directory
 cloudutil tailremote <instance_name_of_system_vm> <path_to_required_file_to_be_tailed>
-
+cloudutil encrypt <value_to_encrypt>
+cloudutil decrypt <value_to_decrypt>
 
 utility requires cloudmonkey, jq and askpass to be installed
 "
