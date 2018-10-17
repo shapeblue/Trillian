@@ -61,9 +61,6 @@
     state: started
     enabled: yes
 
-- name: copy cloudutil script to /usr/bin
-  copy: src=cloudutil dest=/usr/bin/ mode=0755
-
 - debug: msg="Some Marvin Stuff"
   when: (num_marv_hosts > 0)
 

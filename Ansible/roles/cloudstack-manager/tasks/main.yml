@@ -40,6 +40,19 @@
   tags:
     - "global_settings"
 
+
+- name: copy cloudutil script to /usr/bin
+  copy: 
+    src: cloudutil
+    dest: /usr/bin/
+    mode: 0755
+
+- name: copy cloudstack-systemvm script to /usr/bin
+  copy: 
+    src: cloudstack-systemvm
+    dest: /usr/bin/
+    mode: 0755
+
 - name: "wait for ACS Management Service to come up before appying additional global settings"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
