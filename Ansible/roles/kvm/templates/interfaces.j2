@@ -21,8 +21,11 @@ auto eth0
 iface eth0 inet manual
     mtu 4500
 auto eth1
+{% if env_zonetype | lower == "advanced" %}
 iface eth1 inet manual
-
+{% else %}
+iface eth1.{{ env_guestnetvlan }} inet manual
+{% endif %}
 
 # Private network
 auto cloudbr0
@@ -36,7 +39,11 @@ iface cloudbr0 inet dhcp
 # Public network
 auto cloudbr1
 iface cloudbr1 inet  manual
+{% if env_zonetype | lower == "advanced" %}
     bridge_ports eth1
+{% else %}
+    bridge_ports eth1.{{ env_guestnetvlan }}
+{% endif %}
     bridge_fd 5
     bridge_stp off
     bridge_maxwait 1
