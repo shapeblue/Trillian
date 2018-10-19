@@ -13,6 +13,18 @@
 ARGS="(`cat $1`)"
 echo $ARGS > /tmp/db_log.log
 
+DBHOST=""
+DBUSER=""
+DBPASS=""
+DBNAME=""
+ENV_UUID=""
+ENV_NAME=""
+ENV_COMMENT=""
+ENV_ACTION=""
+ENV_ZONETYPE=""
+ENV_SECGROUPS=""
+ENV_SECGROUPS_PARSED=""
+
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
@@ -100,7 +112,7 @@ function QueryID()
   else
     envid=${id}
   fi
-  WriteOutput "QueryID - environment id for ${ENV_NAME} is ${envid}"
+  WriteOutput "QueryID - environment id for ${ENV_NAME} (uuid: ${ENV_UUID}) is ${envid}"
 }
 
 ################################################################################
