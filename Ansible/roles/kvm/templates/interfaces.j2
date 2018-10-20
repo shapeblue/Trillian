@@ -24,7 +24,7 @@ auto eth1
 {% if env_zonetype | lower == "advanced" %}
 iface eth1 inet manual
 {% else %}
-iface eth1.{{ env_guestnetvlan }} inet manual
+iface eth1.{{ hostvars['localhost']['env_guestnetvlan'] }} inet manual
 {% endif %}
 
 # Private network
