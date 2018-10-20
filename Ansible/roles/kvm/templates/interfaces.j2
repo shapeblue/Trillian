@@ -42,7 +42,7 @@ iface cloudbr1 inet  manual
 {% if env_zonetype | lower == "advanced" %}
     bridge_ports eth1
 {% else %}
-    bridge_ports eth1.{{ env_guestnetvlan }}
+    bridge_ports eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
 {% endif %}
     bridge_fd 5
     bridge_stp off
