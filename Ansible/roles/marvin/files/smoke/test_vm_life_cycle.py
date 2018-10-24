@@ -839,7 +839,6 @@ class TestSecuredVmMigration(cloudstackTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        time.sleep(120)
         cls.apiclient = super(TestSecuredVmMigration, cls).getClsTestClient().getApiClient()
         try:
             cleanup_resources(cls.apiclient, cls._cleanup)
@@ -867,9 +866,7 @@ class TestSecuredVmMigration(cloudstackTestCase):
         self.updateConfiguration("ca.plugin.root.auth.strictness", "false")
 
     def tearDown(self):
-        time.sleep(120)
         self.secure_all_hosts()
-        time.sleep(120)
         self.updateConfiguration("ca.plugin.root.auth.strictness", "true")
         try:
             cleanup_resources(self.apiclient, self.cleanup)
@@ -903,6 +900,23 @@ class TestSecuredVmMigration(cloudstackTestCase):
         vm_response = VirtualMachine.list(self.apiclient, id=vm.id)[0]
         self.assertEqual(vm_response.hostid, dest_host.id, "Check destination host ID of migrated VM")
 
+    def waitUntilHostInState(self, hostId, state="Up", interval=5, retries=20):
+        while retries > -1:
+            print("Waiting for host: %s to be %s. %s retries left." % (hostId, state, retries))
+            time.sleep(interval)
+            host = Host.list(
+                self.apiclient,
+                hostid=hostId,
+                type='Routing'
+            )[0]
+            if host.state != state:
+                if retries >= 0:
+                    retries = retries - 1
+                    continue
+            else:
+                print("Host %s now showing as %s" % (hostId, state))
+                return
+
     def unsecure_host(self, host):
         SshClient(host.ipaddress, port=22, user=self.hostConfig["username"], passwd=self.hostConfig["password"])\
             .execute("rm -f /etc/cloudstack/agent/cloud* && \
@@ -912,8 +926,8 @@ class TestSecuredVmMigration(cloudstackTestCase):
                       service libvirtd restart && \
                       sleep 30 && \
                       service cloudstack-agent restart")
- 
-        time.sleep(120)
+        print("Unsecuring Host: %s" % (host.name))
+        self.waitUntilHostInState(hostId=host.id, state="Up") 
         self.check_connection(host=host, secured='false')
         return host
 
@@ -925,6 +939,8 @@ class TestSecuredVmMigration(cloudstackTestCase):
             self.apiclient.provisionCertificate(cmd)
 
         for host in self.hosts:
+            print("Securing Host %s" % host.name)
+            self.waitUntilHostInState(hostId=host.id, state="Up")
             self.check_connection(secured='true', host=host)
 
     def deploy_vm(self, origin_host):
@@ -975,6 +991,7 @@ class TestSecuredVmMigration(cloudstackTestCase):
         vm = self.deploy_vm(src_host)
         self.cleanup.append(vm)
 
+        self.debug("Securing Host(s)")
         dest_host = self.get_target_host(secured='true', virtualmachineid=vm.id)
         self.migrate_and_check(vm, src_host, dest_host)
 
