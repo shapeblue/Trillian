@@ -44,11 +44,11 @@ import time
 import re
 
 _multiprocess_shared_ = True
-class TestDeployVM(cloudstackTestCase):
+class Test01DeployVM(cloudstackTestCase):
 
     @classmethod
     def setUpClass(cls):
-        testClient = super(TestDeployVM, cls).getClsTestClient()
+        testClient = super(Test01DeployVM, cls).getClsTestClient()
         cls.apiclient = testClient.getApiClient()
         cls.services = testClient.getParsedTestDataConfig()
 
@@ -116,9 +116,8 @@ class TestDeployVM(cloudstackTestCase):
         self.dbclient = self.testClient.getDbConnection()
         self.cleanup = []
 
-
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_deploy_vm(self):
+    def test_01_deploy_vm(self):
         """Test Deploy Virtual Machine
         """
         # Validate the following:
@@ -164,7 +163,7 @@ class TestDeployVM(cloudstackTestCase):
 
 
     @attr(tags = ["advanced"], required_hardware="false")
-    def test_advZoneVirtualRouter(self):
+    def test_02_advZoneVirtualRouter(self):
         #TODO: SIMENH: duplicate test, remove it
         """
         Test advanced zone virtual router
@@ -187,7 +186,7 @@ class TestDeployVM(cloudstackTestCase):
 
 
     @attr(mode = ["basic"], required_hardware="false")
-    def test_basicZoneVirtualRouter(self):
+    def test_03_basicZoneVirtualRouter(self):
         #TODO: SIMENH: duplicate test, remove it
         """
         Tests for basic zone virtual router
@@ -203,7 +202,7 @@ class TestDeployVM(cloudstackTestCase):
         self.assertEqual(router.account, self.account.name, msg="Router does not belong to the account")
 
     @attr(tags = ['advanced','basic','sg'], required_hardware="false")
-    def test_deploy_vm_multiple(self):
+    def test_04_deploy_vm_multiple(self):
         """Test Multiple Deploy Virtual Machine
 
         # Validate the following:
@@ -255,11 +254,11 @@ class TestDeployVM(cloudstackTestCase):
             raise Exception("Warning: Exception during cleanup : %s" % e)
 
 
-class TestVMLifeCycle(cloudstackTestCase):
+class Test02VMLifeCycle(cloudstackTestCase):
 
     @classmethod
     def setUpClass(cls):
-        testClient = super(TestVMLifeCycle, cls).getClsTestClient()
+        testClient = super(Test02VMLifeCycle, cls).getClsTestClient()
         cls.apiclient = testClient.getApiClient()
         cls.services = testClient.getParsedTestDataConfig()
         cls.hypervisor = testClient.getHypervisorInfo()
@@ -339,7 +338,7 @@ class TestVMLifeCycle(cloudstackTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.apiclient = super(TestVMLifeCycle, cls).getClsTestClient().getApiClient()
+        cls.apiclient = super(Test02VMLifeCycle, cls).getClsTestClient().getApiClient()
         try:
             cleanup_resources(cls.apiclient, cls._cleanup)
         except Exception as e:
@@ -361,7 +360,7 @@ class TestVMLifeCycle(cloudstackTestCase):
 
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_01_stop_vm(self):
+    def test_05_stop_vm(self):
         """Test Stop Virtual Machine
         """
 
@@ -377,7 +376,7 @@ class TestVMLifeCycle(cloudstackTestCase):
 
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_01_stop_vm_forced(self):
+    def test_06_stop_vm_forced(self):
         """Test Force Stop Virtual Machine
         """
         try:
@@ -410,7 +409,7 @@ class TestVMLifeCycle(cloudstackTestCase):
 
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_02_start_vm(self):
+    def test_07_start_vm(self):
         """Test Start Virtual Machine
         """
         # Validate the following
@@ -448,7 +447,7 @@ class TestVMLifeCycle(cloudstackTestCase):
         return
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_03_reboot_vm(self):
+    def test_08_reboot_vm(self):
         """Test Reboot Virtual Machine
         """
 
@@ -485,7 +484,7 @@ class TestVMLifeCycle(cloudstackTestCase):
 
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_06_destroy_vm(self):
+    def test_09_destroy_vm(self):
         """Test destroy Virtual Machine
         """
 
@@ -521,7 +520,7 @@ class TestVMLifeCycle(cloudstackTestCase):
         return
 
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_07_restore_vm(self):
+    def test_10_restore_vm(self):
         #TODO: SIMENH: add another test the data on the restored VM.
         """Test recover Virtual Machine
         """
@@ -562,7 +561,7 @@ class TestVMLifeCycle(cloudstackTestCase):
         return
 
     @attr(tags = ["advanced", "advancedns", "smoke", "basic", "sg", "multihost"], required_hardware="false")
-    def test_08_migrate_vm(self):
+    def test_11_migrate_vm(self):
         """Test migrate VM
         """
         # Validate the following
@@ -640,7 +639,7 @@ class TestVMLifeCycle(cloudstackTestCase):
     @attr(configuration = "expunge.interval")
     @attr(configuration = "expunge.delay")
     @attr(tags = ["devcloud", "advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="false")
-    def test_09_expunge_vm(self):
+    def test_12_expunge_vm(self):
         """Test destroy(expunge) Virtual Machine
         """
         # Validate the following
@@ -685,7 +684,7 @@ class TestVMLifeCycle(cloudstackTestCase):
         return
 
     @attr(tags = ["advanced", "advancedns", "smoke", "basic", "sg"], required_hardware="true")
-    def test_10_attachAndDetach_iso(self):
+    def test_13_attachAndDetach_iso(self):
         """Test for attach and detach ISO to virtual machine"""
 
         # Validate the following
@@ -786,11 +785,11 @@ class TestVMLifeCycle(cloudstackTestCase):
                          )
         return
 
-class TestSecuredVmMigration(cloudstackTestCase):
+class Test03SecuredVmMigration(cloudstackTestCase):
 
     @classmethod
     def setUpClass(cls):
-        testClient = super(TestSecuredVmMigration, cls).getClsTestClient()
+        testClient = super(Test03SecuredVmMigration, cls).getClsTestClient()
         cls.apiclient = testClient.getApiClient()
         cls.services = testClient.getParsedTestDataConfig()
         cls.hypervisor = testClient.getHypervisorInfo()
@@ -839,11 +838,20 @@ class TestSecuredVmMigration(cloudstackTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.apiclient = super(TestSecuredVmMigration, cls).getClsTestClient().getApiClient()
+        cls.apiclient = super(Test03SecuredVmMigration, cls).getClsTestClient().getApiClient()
+        cls.hosts = Host.list(
+            cls.apiclient,
+            zoneid=cls.zone.id,
+            type='Routing',
+            hypervisor='KVM')
+        for cls.host in cls.hosts:
+                Test03SecuredVmMigration.secure_host(cls.host)
+
         try:
             cleanup_resources(cls.apiclient, cls._cleanup)
         except Exception as e:
             raise Exception("Warning: Exception during cleanup : %s" % e)
+
 
     def setUp(self):
         self.apiclient = self.testClient.getApiClient()
@@ -857,16 +865,15 @@ class TestSecuredVmMigration(cloudstackTestCase):
             self.apiclient,
             zoneid=self.zone.id,
             type='Routing',
-            hypervisor='KVM')
+            hypervisor='KVM',
+            state='Up')
 
         if len(self.hosts) < 2:
             self.skipTest("Requires at least two hosts for performing migration related tests")
 
-        self.secure_all_hosts()
         self.updateConfiguration("ca.plugin.root.auth.strictness", "false")
 
     def tearDown(self):
-        self.secure_all_hosts()
         self.updateConfiguration("ca.plugin.root.auth.strictness", "true")
         try:
             cleanup_resources(self.apiclient, self.cleanup)
@@ -885,10 +892,10 @@ class TestSecuredVmMigration(cloudstackTestCase):
 
     def check_migration_protocol(self, protocol, host):
         resp = SshClient(host.ipaddress, port=22, user=self.hostConfig["username"],passwd=self.hostConfig["password"])\
-            .execute("grep -a listen_%s=1 /etc/libvirt/libvirtd.conf | tail -1" % protocol)
+            .execute("grep -a listen_%s.*=.*1 /etc/libvirt/libvirtd.conf | tail -1" % protocol)
 
         if protocol not in resp[0]:
-            cloudstackTestCase.fail(self, "Libvirt listen protocol expected: '" + protocol + "\n"
+            cloudstackTestCase.fail(self, "Libvirt listen protocol expected: '" + protocol + "\n"  
                                     "does not match actual: " + resp[0])
 
     def migrate_and_check(self, vm, src_host, dest_host, proto='tls'):
@@ -900,15 +907,17 @@ class TestSecuredVmMigration(cloudstackTestCase):
         vm_response = VirtualMachine.list(self.apiclient, id=vm.id)[0]
         self.assertEqual(vm_response.hostid, dest_host.id, "Check destination host ID of migrated VM")
 
+    @classmethod
     def waitUntilHostInState(self, hostId, state="Up", interval=5, retries=20):
         while retries > -1:
-            print("Waiting for host: %s to be %s. %s retries left." % (hostId, state, retries))
             time.sleep(interval)
             host = Host.list(
                 self.apiclient,
                 hostid=hostId,
                 type='Routing'
             )[0]
+            print("Waiting for host: %s to be %s. Currently %s. %s retries left." % (hostId, state, host.details.secured, retries))
+            print("Host state is: %s" % host.state)
             if host.state != state:
                 if retries >= 0:
                     retries = retries - 1
@@ -917,31 +926,47 @@ class TestSecuredVmMigration(cloudstackTestCase):
                 print("Host %s now showing as %s" % (hostId, state))
                 return
 
+    @classmethod
     def unsecure_host(self, host):
-        SshClient(host.ipaddress, port=22, user=self.hostConfig["username"], passwd=self.hostConfig["password"])\
-            .execute("rm -f /etc/cloudstack/agent/cloud* && \
-                      sed -i 's/listen_tls.*/listen_tls=0/g' /etc/libvirt/libvirtd.conf && \
-                      sed -i 's/listen_tcp.*/listen_tcp=1/g' /etc/libvirt/libvirtd.conf && \
-                      sed -i '/.*_file=.*/d' /etc/libvirt/libvirtd.conf && \
-                      service libvirtd restart && \
-                      sleep 30 && \
-                      service cloudstack-agent restart")
-        print("Unsecuring Host: %s" % (host.name))
-        self.waitUntilHostInState(hostId=host.id, state="Up") 
-        self.check_connection(host=host, secured='false')
-        return host
+        print("host %s secured parameter is: %s and should be 'false'" % (host.name, host.details.secured))
+        if "false" not in host.details.secured:
+            print("Unsecuring Host: %s" % host.name)
+            SshClient(host.ipaddress, port=22, user=self.hostConfig["username"], passwd=self.hostConfig["password"])\
+                .execute("rm -f /etc/cloudstack/agent/cloud* && \
+                        service cloudstack-agent stop ; \
+                        service libvirtd stop ; \
+                        sed -i '/listen_tls.*/ c\listen_tls = 0' /etc/libvirt/libvirtd.conf ; \
+                        sed -i '/listen_tcp.*/ c\listen_tcp = 1' /etc/libvirt/libvirtd.conf ; \
+                        sed -i '/.*_file.*=.*/d' /etc/libvirt/libvirtd.conf ; \
+                        service libvirtd start ; \
+                        sleep 30 ; \
+                        service cloudstack-agent start")
+            print("Allowing quiet time to allow CloudStack to see host %s state" % host.name)
+            time.sleep(30)
+            self.waitUntilHostInState(hostId=host.id, state="Up") 
+            self.check_connection(secured='false', host=host)
+            return host
+        else:
+            print("Host %s already unsecure, continuing" % (host.name))
+            return host
 
-    def secure_all_hosts(self):
-        for host in self.hosts:
+    @classmethod
+    def secure_host(self, host):
+        print("host %s secured parameter is: %s and should be 'true'" % (host.name, host.details.secured))
+        if "true" in host.details.secured:
+            print ("Host %s already secure, continuing" % (host.name))
+            return host
+        else:
+            print("Securing Host %s" % host.name)
             cmd = provisionCertificate.provisionCertificateCmd()
             cmd.hostid = host.id
             cmd.reconnect = True
             self.apiclient.provisionCertificate(cmd)
-
-        for host in self.hosts:
-            print("Securing Host %s" % host.name)
+            print("Allowing quiet time to allow CloudStack to see host %s state" % host.name)
+            time.sleep(30)
             self.waitUntilHostInState(hostId=host.id, state="Up")
             self.check_connection(secured='true', host=host)
+            return host
 
     def deploy_vm(self, origin_host):
         return VirtualMachine.create(
@@ -953,8 +978,9 @@ class TestSecuredVmMigration(cloudstackTestCase):
             mode=self.services["mode"],
             hostid=origin_host.id)
 
+    @classmethod
     def check_connection(self, secured, host, retries=20, interval=6):
-
+        print("Checking connection for host: %s" % host.name)
         while retries > -1:
             time.sleep(interval)
             host = Host.list(
@@ -963,7 +989,8 @@ class TestSecuredVmMigration(cloudstackTestCase):
                 hostid=host.id,
                 type='Routing'
             )[0]
-            if host.details.secured != secured:
+
+            if 'secured' in host.details.secured:
                 if retries >= 0:
                     retries = retries - 1
                     continue
@@ -971,7 +998,7 @@ class TestSecuredVmMigration(cloudstackTestCase):
                 return
 
         raise Exception("Host detail 'secured' was expected: " + secured +
-                        ", actual is: " + host.details.secured)
+                        ", actual is: " + host.details.secured.rstrip())
 
     def updateConfiguration(self, name, value):
         cmd = updateConfiguration.updateConfigurationCmd()
@@ -980,42 +1007,27 @@ class TestSecuredVmMigration(cloudstackTestCase):
         self.apiclient.updateConfiguration(cmd)
 
     @attr(tags=["devcloud", "advanced", "advancedns", "smoke", "basic", "sg", "security"], required_hardware="false")
-    def test_01_secure_vm_migration(self):
+    def test_14_secure_to_secure_vm_migration(self):
         """Test secure VM migration"""
         # Validate the following
         # 1. Environment has enough hosts for migration
         # 2. DeployVM on suitable host (with another host in the cluster)
         # 3. Migrate the VM and assert migration successful
 
+        for host in self.hosts:
+            print("Test requires host %s to be secure" % (host.name))
+            self.secure_host(host)
+            self.waitUntilHostInState(hostId=host.id, state="Up")
+
         src_host = self.hosts[0]
         vm = self.deploy_vm(src_host)
         self.cleanup.append(vm)
 
-        self.debug("Securing Host(s)")
         dest_host = self.get_target_host(secured='true', virtualmachineid=vm.id)
         self.migrate_and_check(vm, src_host, dest_host)
 
     @attr(tags=["devcloud", "advanced", "advancedns", "smoke", "basic", "sg", "security"], required_hardware="false")
-    def test_02_unsecure_vm_migration(self):
-        """Test Non-secured VM Migration
-        """
-        # Validate the following
-        # 1. Prepare 2 hosts to run in non-secured more
-        # 2. DeployVM on suitable host (with another host in the cluster)
-        # 3. Migrate the VM and assert migration successful
-
-        for host in self.hosts:
-            self.unsecure_host(host)
-
-        src_host = self.hosts[0]
-        vm = self.deploy_vm(src_host)
-        self.cleanup.append(vm)
-
-        dest_host = self.get_target_host(secured='false', virtualmachineid=vm.id)
-        self.migrate_and_check(vm, src_host, dest_host, proto='tcp')
-
-    @attr(tags=["devcloud", "advanced", "advancedns", "smoke", "basic", "sg", "security"], required_hardware="false")
-    def test_03_secured_to_nonsecured_vm_migration(self):
+    def test_15_secured_to_nonsecured_vm_migration(self):
         """Test destroy Virtual Machine
         """
         # Validate the following
@@ -1023,8 +1035,10 @@ class TestSecuredVmMigration(cloudstackTestCase):
         # 2. Deploys a VM to a Secured host
         # 3. Migrates the VM to the non-secured host via TLS, and ensure exception
 
+        print("Test requires host %s to be unsecure" % (self.hosts[0].name))
         unsecure_host = self.unsecure_host(self.hosts[0])
-        secure_host = self.hosts[1]
+        print("Test requires host %s to be secure" % (self.hosts[1].name))
+        secure_host = self.secure_host(self.hosts[1])
 
         vm = self.deploy_vm(secure_host)
         self.cleanup.append(vm)
@@ -1036,7 +1050,7 @@ class TestSecuredVmMigration(cloudstackTestCase):
         else: self.fail("Migration succeeded, instead it should fail")
 
     @attr(tags=["devcloud", "advanced", "advancedns", "smoke", "basic", "sg", "security"], required_hardware="false")
-    def test_04_nonsecured_to_secured_vm_migration(self):
+    def test_16_nonsecured_to_secured_vm_migration(self):
         """Test Non-secured VM Migration
         """
         # Validate the following
@@ -1044,15 +1058,14 @@ class TestSecuredVmMigration(cloudstackTestCase):
         # 2. Deploys a VM to the non-secured host
         # 3. Migrates the VM to the non-secured host via TCP, and ensure exception
 
+
+        print("Test requires host %s to be unsecure" % (self.hosts[0].name))
         unsecure_host = self.unsecure_host(self.hosts[0])
-        secure_host = self.hosts[1]
+        print("Test requires host %s to be secure" % (self.hosts[1].name))
+        secure_host = self.secure_host(self.hosts[1])
 
         vm = self.deploy_vm(unsecure_host)
         self.cleanup.append(vm)
 
         try:
-            self.migrate_and_check(vm, unsecure_host, secure_host, proto='tcp')
-        except Exception:
-            pass
-        else: self.fail("Migration succeeded, instead it should fail")
-
+            self.migrate_and_check(vm, unsecure_ho
