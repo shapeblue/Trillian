@@ -935,10 +935,12 @@ class Test03SecuredVmMigration(cloudstackTestCase):
                 .execute("rm -f /etc/cloudstack/agent/cloud* && \
                         service cloudstack-agent stop ; \
                         service libvirtd stop ; \
+                        service libvirt-bin stop ; \
                         sed -i '/listen_tls.*/ c\listen_tls = 0' /etc/libvirt/libvirtd.conf ; \
                         sed -i '/listen_tcp.*/ c\listen_tcp = 1' /etc/libvirt/libvirtd.conf ; \
                         sed -i '/.*_file.*=.*/d' /etc/libvirt/libvirtd.conf ; \
                         service libvirtd start ; \
+                        service libvirt-bin start ; \
                         sleep 30 ; \
                         service cloudstack-agent start")
             print("Allowing quiet time to allow CloudStack to see host %s state" % host.name)

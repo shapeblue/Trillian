@@ -1,0 +1,229 @@
+#!/bin/bash
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+set +e # stop erroneous failures reported by Jenkins
+
+TESTTYPE="smoketests"
+LOGDIR="/marvin/MarvinLogs"
+TESTDIR="/marvin/tests/teststorun"
+TMP_JSON_DIR="/marvin/json_results"
+TESTTRIES=3
+mkdir -p $LOGDIR
+echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
+export SLACK_CLI_TOKEN="{{ slack_token }}"
+if [ -e /marvin/joburl ]; then
+  jenkinslink="`cat /marvin/jenkins_build_url`console/"
+else
+  jenkinslink=""
+fi
+
+rm -f /marvin/$TESTTYPE-summary.txt
+rm -f $TESTDIR/test_*.pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
+
+cleanup() {
+    cloudmonkey set asyncblock false
+    cloudmonkey set display default
+    # TODO: destroy accounts, domains, templates
+    # Destroy vms
+    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
+    done
+    # Destroy routers
+    for rid in $(cloudmonkey list routers listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey destroy router id=$rid || true
+    done
+    # Destroy networks
+    for netid in $(cloudmonkey list networks listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete network id=$netid || true
+    done
+    # Destroy vpcs
+    for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete vpc id=$vid || true
+    done
+    # Destroy alerts
+    for id in $(cloudmonkey list alerts listall=true keyword=auth-error filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete alerts ids=$id || true
+    done
+}
+
+slackmsg() {
+   messagebody=$1
+   messagecolor=$2
+   slack chat send \
+  --channel "#testing" \
+  --color $messagecolor \
+  --text "$messagebody" \
+  --title "$TESTTYPE update for {{ env_name_clean }}" \
+  --title-link "$jenkinslink"
+}
+
+hosts_precheck() {
+  cloudmonkey set asyncblock true
+  cloudmonkey set display json
+  HOSTS_NOT_UP=""
+  echo "Checking hosts are all up"
+  HOSTS_NOT_UP=`cloudmonkey list hosts type=routing filter='name,state' | jq '.host[] | select(.state != "Up") | .name'`
+  if [[ "$HOSTS_NOT_UP" != "" ]]; then
+    echo "Hosts:\n$HOSTS_NOT_UP\nare not up, waiting 2 mins"
+    sleep 120
+    HOSTS_NOT_UP=(`cloudmonkey list hosts type=routing filter='name,state' | jq '.host[] | select(.state != "Up") | .name'`)
+    if [ "$HOSTS_NOT_UP" != "" ]; then
+      echo "Hosts\n$HOSTS_NOT_UP\nstill not up, rebooting them"
+      HOST_LOGIN=root
+      HOST_PASS='P@ssword123'
+      for HYP_HOST in $HOSTS_NOT_UP; do
+        HOST_IP=`cloudmonkey list hosts filter=ipaddress type=routing name=$HYP_HOST| jq -r '.host[].ipaddress'`
+        echo "Rebooting $HYP_HOST at $HOST_IP"
+        sshpass -p $HOST_PASS ssh -o StrictHostKeyChecking=no $HOST_LOGIN@$HOST_IP 'echo b > /proc/sysrq-trigger | at now'
+      done
+      echo "Waiting 2 mins to check hosts again"
+      sleep 120
+      HOSTS_NOT_UP=(`cloudmonkey list hosts type=routing filter='name,state' | jq '.host[] | select(.state != "Up") | .name'`)
+      if [ "$HOSTS_NOT_UP" != "" ]; then
+        echo "Waiting a little longer for\n$HOSTS_NOT_UP\nBefore giving up"
+        sleep 120
+        HOSTS_NOT_UP=(`cloudmonkey list hosts type=routing filter='name,state' | jq '.host[] | select(.state != "Up") | .name'`)
+        echo "Cannot get all hosts into 'Up' state. bailing out"
+        exit 1
+      else
+        echo "Rebooting fixed it, continuing"
+      fi
+    else
+      echo "Hosts up after waiting, continuing"
+    fi
+  else
+    echo "Hosts all up, continuing"
+  fi
+}
+
+determine_last_test_outcome() {
+  LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
+  if [[ -n `cat ${LASTUPDATEDIR}results.txt| grep 'Ran 0 tests'` ]]; then
+    NOTRUN_SKIPPED=$((NOTRUN_SKIPPED+1))
+    echo "test $(basename $file) in {{ env_name_clean }} skipped or failed to run"
+    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+    slackmsg "Test $TESTFILENAME looks to have not been run.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
+  else
+    if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
+      FAILS=$((FAILS+1))
+      echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
+      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      slackmsg "Test $TESTFILENAME looks to have *errors*.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
+    else
+      PASSES=$((PASSES+1))
+      echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
+      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      slackmsg "Test $TESTFILENAME looks *OK*.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
+    fi
+  fi
+}
+
+cleanoldrunlog() {
+    file=$1
+    rm -fr $LOGDIR/$(basename $file).xml
+    TRIMFILE=$(echo $(basename $file) | sed 's/.py$//g')
+    OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
+    if [ ! -z "${OLDRESULT// }" ]; then
+        echo "Found old test results, archiving:" $LOGDIR/$OLDRESULT
+        tar -czf $LOGDIR/$(basename $file)_failed.tgz $LOGDIR/$OLDRESULT/*
+        rm -fr $LOGDIR/$OLDRESULT
+    fi
+}
+
+
+
+runtest() {
+    file=$1
+    testcount=0
+    while [ $testcount -lt $TESTTRIES ]; do
+      cleanoldrunlog $file
+      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+      TESTERRORS=`cat $LOGDIR$(basename $file).json | jq '.stats.failures'`
+      TESTFAILURES=`cat $LOGDIR$(basename $file).json | jq '.stats.errors'`
+      if [ "$((TESTERRORS+TESTERRORS))" -gt "0" ]; then
+        echo "Intermittent failure detected: $file" >> /marvin/$TESTTYPE-summary.txt
+        testcount=$((testcount+1))
+      else
+        testcount=$((TESTTRIES))
+      fi
+      cleanup || true
+    done
+}
+
+NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
+run_start_time="$(date -u +%s)"
+counter=1
+PASSES=0
+# FIXME: make separate list of `dangerous` tests and those that may be run in parallel
+FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+if [ -f $TESTDIR/test_host_maintenance.py ]; then
+    FILES="$FILES $TESTDIR/test_host_maintenance.py"
+fi
+if [ -f $TESTDIR/test_hostha_kvm.py ]; then
+    FILES="$FILES $TESTDIR/test_hostha_kvm.py"
+fi
+for file in $FILES; do
+
+    hosts_precheck
+
+    TESTFILENAME="$(basename $file)"
+    echo -e "\e[92m ---->  Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
+    {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
+    {% endif %}
+    {% if use_slack %}    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
+    {% endif %}
+    start_time="$(date -u +%s)"
+    launchtest $file
+    end_time="$(date -u +%s)"
+    elapsed="$(($end_time-$start_time))"
+    all_tests_elapsed="$((($end_time-$run_start_time)/1440))"
+    tests_left="$(($NUMTESTS-$counter))"
+    echo "$(basename $file): $elapsed seconds" >> $LOGDIR/tests-time.txt
+
+
+
+    determine_last_test_outcome
+
+    counter=$((counter+1))
+
+done
+
+GOOD=0
+BAD=0
+for file in $LOGDIR/*.xml; do
+  if grep --q 'errors="0" failures="0"' ${file}
+    then
+      GOOD=$((GOOD+1))
+    else
+      BAD=$((BAD+1))
+  fi
+done
+echo "Test completed. $GOOD look ok, $BAD have errors"
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$$TESTTYPE for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify
+{% endif %}
+{% if use_slack %}slackmsg "$TESTTYPE completed.\n*$GOOD* looks ok, *$BAD* have errors" "good"
+{% endif %}
+
+echo "Smoke tests completed. $GOOD look OK, $BAD have error(s)" >> /marvin/$TESTTYPE-summary.txt
+echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
+echo "Only failed tests results shown below:" >> /marvin/$TESTTYPE-summary.txt
+echo "" >> /marvin/$TESTTYPE-summary.txt
+python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/$TESTTYPE-summary.txt
+cat /marvin/$TESTTYPE-summary.txt
+
+bash /marvin/process_json_results.sh
