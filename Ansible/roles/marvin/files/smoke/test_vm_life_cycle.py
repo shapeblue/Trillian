@@ -1068,4 +1068,7 @@ class Test03SecuredVmMigration(cloudstackTestCase):
         self.cleanup.append(vm)
 
         try:
-            self.migrate_and_check(vm, unsecure_ho
+            self.migrate_and_check(vm, unsecure_host, secure_host, proto='tcp')
+        except Exception:
+            pass
+        else: self.fail("Migration succeeded, instead it should fail")
