@@ -17,6 +17,7 @@ set +e # stop erroneous failures reported by Jenkins
 
 TESTTYPE="Smoke tests"
 LOGDIR=/marvin/MarvinLogs
+TESTDIR="/marvin/tests/smoke"
 TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
@@ -28,7 +29,7 @@ else
 fi
 
 rm -f /marvin/smoketests-summary.txt
-rm -f /marvin/tests/smoke/test_*.pyc
+rm -f $TESTDIR/test_*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
@@ -94,12 +95,12 @@ run_start_time="$(date -u +%s)"
 counter=1
 PASSES=0
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
-FILES=$(ls /marvin/tests/smoke/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
-if [ -f /marvin/tests/smoke/test_host_maintenance.py ]; then
-    FILES="$FILES /marvin/tests/smoke/test_host_maintenance.py"
+FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+if [ -f /$TESTDIR/test_host_maintenance.py ]; then
+    FILES="$FILES $TESTDIR/test_host_maintenance.py"
 fi
-if [ -f /marvin/tests/smoke/test_hostha_kvm.py ]; then
-    FILES="$FILES /marvin/tests/smoke/test_hostha_kvm.py"
+if [ -f $TESTDIR/test_hostha_kvm.py ]; then
+    FILES="$FILES $TESTDIR/test_hostha_kvm.py"
 fi
 for file in $FILES; do
     TESTFILENAME="$(basename $file)"
