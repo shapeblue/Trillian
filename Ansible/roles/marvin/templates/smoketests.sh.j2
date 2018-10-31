@@ -90,7 +90,7 @@ slackmsg() {
   --title-link "$jenkinslink"
 }
 
-NUMTESTS=`find /marvin/tests/smoke/test_*.py | wc -l`
+NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
 run_start_time="$(date -u +%s)"
 counter=1
 PASSES=0
