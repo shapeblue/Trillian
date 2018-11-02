@@ -58,6 +58,11 @@ cleanup() {
     for id in $(cloudmonkey list alerts listall=true keyword=auth-error filter=id | grep '^id' | awk '{print $3}'); do
         cloudmonkey delete alerts ids=$id || true
     done
+   # Destroy tepla
+    for templateid in $(list templates templatefilter=self filter=id | grep '^id' | awk '{print $3}'); do
+        cloudmonkey delete template id=$templateid || true
+    done
+
 }
 
 runtest() {
@@ -77,7 +82,7 @@ launchtest() {
     file=$1
     runtest $file
     # Run tests once again on error or failure
-    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
+    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup || true && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 slackmsg() {
    messagebody=$1
