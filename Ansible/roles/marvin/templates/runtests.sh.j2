@@ -154,12 +154,16 @@ set_arg_val
   default=${3}
 
   if [[ "${argval}" == "" ]]; then
-    export "${argnm}=${default}"
+    if [[ "${default}" != "" ]]; then
+      export "${argnm}=${default}"
+    else
+      echo "Cannot continue without $argnm being specified"
+      exit 1
   else
     export "${argnm}=${argval}"
   fi
 }
-
+ 
 
 set +e # stop erroneous failures reported by Jenkins
 
