@@ -59,7 +59,7 @@ cleanup() {
         cloudmonkey delete alerts ids=$id || true
     done
    # Destroy tepla
-    for templateid in $(list templates templatefilter=self filter=id | grep '^id' | awk '{print $3}'); do
+    for templateid in $(cloudmonkey list templates templatefilter=self filter=id | grep '^id' | awk '{print $3}'); do
         cloudmonkey delete template id=$templateid || true
     done
 
