@@ -838,19 +838,20 @@ class Test03SecuredVmMigration(cloudstackTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.apiclient = super(Test03SecuredVmMigration, cls).getClsTestClient().getApiClient()
-        cls.hosts = Host.list(
-            cls.apiclient,
-            zoneid=cls.zone.id,
-            type='Routing',
-            hypervisor='KVM')
-        for cls.host in cls.hosts:
-                Test03SecuredVmMigration.secure_host(cls.host)
-
-        try:
-            cleanup_resources(cls.apiclient, cls._cleanup)
-        except Exception as e:
-            raise Exception("Warning: Exception during cleanup : %s" % e)
+        if cls.hypervisor.lower() in ["kvm"]:
+            cls.apiclient = super(Test03SecuredVmMigration, cls).getClsTestClient().getApiClient()
+            cls.hosts = Host.list(
+                cls.apiclient,
+                zoneid=cls.zone.id,
+                type='Routing',
+                hypervisor='KVM')
+            for cls.host in cls.hosts:
+                    Test03SecuredVmMigration.secure_host(cls.host)
+    
+            try:
+                cleanup_resources(cls.apiclient, cls._cleanup)
+            except Exception as e:
+                raise Exception("Warning: Exception during cleanup : %s" % e)
 
 
     def setUp(self):
