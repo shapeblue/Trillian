@@ -82,7 +82,7 @@ launchtest() {
     file=$1
     runtest $file
     # Run tests once again on error or failure
-    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup || true && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
+    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 slackmsg() {
    messagebody=$1
