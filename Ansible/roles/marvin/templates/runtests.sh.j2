@@ -13,28 +13,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-set +e # stop erroneous failures reported by Jenkins
-
-TESTTYPE="smoketests"
-LOGDIR="/marvin/MarvinLogs"
-TESTDIR="/marvin/tests/teststorun"
-TMP_JSON_DIR="/marvin/json_results"
-TESTTRIES=3
-mkdir -p $LOGDIR
-echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
-export SLACK_CLI_TOKEN="{{ slack_token }}"
-if [ -e /marvin/joburl ]; then
-  jenkinslink="`cat /marvin/jenkins_build_url`console/"
-else
-  jenkinslink=""
-fi
-
-rm -f /marvin/$TESTTYPE-summary.txt
-rm -f $TESTDIR/test_*.pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
-
 cleanup() {
     cloudmonkey set asyncblock false
     cloudmonkey set display default
@@ -72,7 +50,7 @@ slackmsg() {
   --channel "#testing" \
   --color $messagecolor \
   --text "$messagebody" \
-  --title "$TESTTYPE update for {{ env_name_clean }}" \
+  --title "$TESTTYPE update for $ENV_NAME" \
   --title-link "$jenkinslink"
 }
 
@@ -119,19 +97,19 @@ determine_last_test_outcome() {
   LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
   if [[ -n `cat ${LASTUPDATEDIR}results.txt| grep 'Ran 0 tests'` ]]; then
     NOTRUN_SKIPPED=$((NOTRUN_SKIPPED+1))
-    echo "test $(basename $file) in {{ env_name_clean }} skipped or failed to run"
-    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+    echo "test $(basename $file) in $ENV_NAME skipped or failed to run"
+    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in $ENV_NAME looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
     slackmsg "Test $TESTFILENAME looks to have not been run.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
   else
     if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
       FAILS=$((FAILS+1))
-      echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
-      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      echo "test $(basename $file) in $ENV_NAME looks to have errors"
+      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in $ENV_NAME looks to have <span style="color:#FF0000">errors</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
       slackmsg "Test $TESTFILENAME looks to have *errors*.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
     else
       PASSES=$((PASSES+1))
-      echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
-      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      echo "test $TESTFILENAME in $ENV_NAME looks OK"
+      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in $ENV_NAME looks <span style="color:#2F962F">OK</span>. Currently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
       slackmsg "Test $TESTFILENAME looks *OK*.\nCurrently; $PASSES passes, $FAILS fails and $NOTRUN_SKIPPED not run.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
     fi
   fi
@@ -156,7 +134,7 @@ runtest() {
     testcount=0
     while [ $testcount -lt $TESTTRIES ]; do
       cleanoldrunlog $file
-      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=$MARVIN_CONFIG_FILE --hypervisor=$HYPERVISOR -s -a tags=${ZONE_TYPE}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
       TESTERRORS=`cat $LOGDIR$(basename $file).json | jq '.stats.failures'`
       TESTFAILURES=`cat $LOGDIR$(basename $file).json | jq '.stats.errors'`
       if [ "$((TESTERRORS+TESTERRORS))" -gt "0" ]; then
@@ -168,6 +146,74 @@ runtest() {
       cleanup || true
     done
 }
+
+set_arg_val
+{
+  argnm=${1}
+  argval=${2}
+  default=${3}
+
+  if [[ "${argval}" == "" ]]; then
+    export "${argnm}=${default}"
+  else
+    export "${argnm}=${argval}"
+  fi
+}
+
+
+set +e # stop erroneous failures reported by Jenkins
+
+while getopts "TESTTYPE:LOGDIR:TMP_JSON_DIR:TESTTRIES:TESTDIR:MARVIN_CONFIG:ENV_NAME:HYPERVISOR:ZONE_TYPE:" arg_val; do
+    case $arg_val in
+        TESTTYPE)
+          set_arg_val TESTTYPE ${OPTARG} "smoketests"
+        ;;
+        LOGDIR)
+          set_arg_val LOGDIR ${OPTARG} "/marvin/MarvinLogs"
+        ;;
+        TMP_JSON_DIR)
+          set_arg_val TMP_JSON_DIR ${OPTARG} "/marvin/json_results"
+        ;;
+       TESTTRIES)
+         set_arg_val TESTTRIES ${OPTARG} 3
+       ;;
+       TESTDIR)
+         set_arg_val TESTDIR ${OPTARG} "/marvin/tests/teststorun"
+       ;;
+       MARVIN_CONFIG_FILE)
+	 set_arg_val MARVIN_CONFIG_FILE ${OPTARG} "/marvin/{{ env_name_clean }}-advanced-cfg"
+       ;;
+       ENV_NAME)
+         set_arg_val ENV_NAME ${OPTARG} "{{ env_name_clean }}"
+       ;;
+       HYPERVISOR)
+         set_arg_val HYPERVISOR ${OPTARG} "{{ env_hv }}"
+       ;;
+       ZONE_TYPE)
+	 set_arg_val ZONE_TYPE ${OPTARG} "{{ env_zonetype | lower }}"
+       ;;
+       MARVIN_HOST)
+         set_arg_val MARVIN_HOST ${OPTARG} "{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}"
+       ;;
+    esac
+done
+
+
+mkdir -p $LOGDIR
+echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
+export SLACK_CLI_TOKEN="{{ slack_token }}"
+if [ -e /marvin/joburl ]; then
+  jenkinslink="`cat /marvin/jenkins_build_url`console/"
+else
+  jenkinslink=""
+fi
+
+rm -f /marvin/$TESTTYPE-summary.txt
+rm -f $TESTDIR/test_*.pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
+
 
 NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
 run_start_time="$(date -u +%s)"
@@ -186,10 +232,10 @@ for file in $FILES; do
     hosts_precheck
 
     TESTFILENAME="$(basename $file)"
-    echo -e "\e[92m ---->  Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
-    {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
+    echo -e "\e[92m ---->  Starting $TESTFILENAME on $MARVIN_HOST in: $ENV_NAME\e[0m"
+    {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on $MARVIN_HOST in: <br><b>$ENV_NAME</b> - test ($counter of $NUMTESTS)"
     {% endif %}
-    {% if use_slack %}    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
+    {% if use_slack %}    slackmsg "Starting $TESTFILENAME on $MARVIN_HOST.\nTest ($counter of $NUMTESTS) " "#808080"
     {% endif %}
     start_time="$(date -u +%s)"
     launchtest $file
@@ -216,7 +262,7 @@ for file in $LOGDIR/*.xml; do
   fi
 done
 echo "Test completed. $GOOD look ok, $BAD have errors"
-{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$$TESTTYPE for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify
+{% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$$TESTTYPE for <b>$ENV_NAME</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify
 {% endif %}
 {% if use_slack %}slackmsg "$TESTTYPE completed.\n*$GOOD* looks ok, *$BAD* have errors" "good"
 {% endif %}
