@@ -46,6 +46,8 @@
   yum:
     name: "cloudstack-management-{{ upgrade_cs_numeric_version }}*"
     state: latest
+    update_cache: yes 
+
 
 - name: Perform any additional pre-restart upgrade steps
   include: additional_pre-restart_upgrade_steps.yaml
