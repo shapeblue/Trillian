@@ -25,36 +25,23 @@
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent
 
-- name: download pip installer
+- name: copy CloudMonkey to host
   get_url:
-    url: https://bootstrap.pypa.io/get-pip.py
-    dest: /tmp/get-pip.py
+    url: "{{ def_linux_cm_url }}"
+    dest: /usr/bin/cmk
+    mode: 0755
 
-- name: install pip
-  shell: python /tmp/get-pip.py
+- name: link cmk to cloudmonkey
+  file:
+    src: /usr/bin/cmk
+    dest: /usr/bin/cloudmonkey
+    state: link
 
-- name: add apt repo for python
-  command: add-apt-repository ppa:jonathonf/python-2.7
-  when: ansible_distribution_major_version == "14"
-
-- name: remove python-chardet
-  apt: 
-    name: python-chardet
-    state: absent
-  when: ansible_distribution_major_version == "14"
-
-- name: update python
-  apt: 
-    name: python2.7
-    state: latest
-    update_cache: yes
-  when: ansible_distribution_major_version == "14"
-
-- name: install cloudmonkey
-  command: pip install cloudmonkey
-
-- name: install cloudmonkey
-  command: pip install cloudmonkey --upgrade
+- name: create .cmk directory
+  file:
+    path: /root/.cmk
+    state: directory
+    mode: 0755
 
 - name: base configuration
-  shell: cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json
+  shell: "cloudmonkey set prompt 'SBCM5>' && cloudmonkey set history_file /usr/share/cloudmonkey_history && cloudmonkey set log_file /var/log/cloudmonkey && cloudmonkey set log_file /var/log/cloud-cli.log && cloudmonkey set display json && cloudmonkey set apikey {{ cm_apikey }} && cloudmonkey set secretkey {{ cm_secretkey }} && cloudmonkey set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
