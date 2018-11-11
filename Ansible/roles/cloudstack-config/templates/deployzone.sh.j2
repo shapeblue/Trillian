@@ -29,7 +29,7 @@ function WriteOutput()
 
 WriteOutput "Checking login.";
 AccountCheck=`cloudmonkey list accounts name=admin | grep -i error`;
- ${AccountCheck} ];
+if [ -z ${AccountCheck} ];
 then
   WriteOutput "Admin account found. Good to go.";
 else
@@ -39,7 +39,7 @@ fi
 
 WriteOutput "Checking if zone exists."
 ZoneCheck=`cloudmonkey list zones name={{ env_name_clean }}| jq .[]`;
- ${ZoneCheck} ];
+if [ -z ${ZoneCheck} ];
 then
   WriteOutput "No zone exists. Good to go."
 else
