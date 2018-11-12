@@ -174,7 +174,7 @@
     - marvin_cfg
 
 - name: create marvintest file
-  template: src="marvintest.sh.j2" dest="/marvin/marvintest.sh" mode=0755
+  template: src="runtests.sh.j2" dest="/marvin/runtests.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
