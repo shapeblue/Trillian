@@ -106,7 +106,7 @@
       when: upgrade_baseurl_mgmt is undefined
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].kvm_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
@@ -116,7 +116,7 @@
         - systemvms
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].xs_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
@@ -126,7 +126,7 @@
         - systemvms
 
     - name: Wait for new system VM template to be ready before returning
-      shell: "cloudmonkey list templates listall=true templatefilter=all name=cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
+      shell: "cloudmonkey list templates listall=true templatefilter=all name='{{ def_system_templates[upgrade_version].vmware_systemvm_name }}' | jq '.template[].isready' | sort | uniq"
       register: result
       until: result.stdout == "true"
       retries: 400
