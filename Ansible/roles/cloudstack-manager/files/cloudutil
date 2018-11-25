@@ -96,9 +96,9 @@ function getVRdetails(){
 # returns json  "hostid": ,"hostname","hypervisor","name","ipaddress"
 VRNAME=$1
 export TERM=vt100
-HOSTDETAILS=`cloudmonkey list routers listall=true name=$VRNAME filter=name,hostname,hostid | jq '.router[]'`
-HOSTID=`echo $HOSTDETAILS | jq '.hostid'`
-HOSTIP=`cloudmonkey list hosts id=$HOSTID filter=ipaddress,hypervisor | jq '.host[]'`
+HOSTDETAILS=`cloudmonkey list routers listall=true name=$VRNAME filter=name,hostname,hostid | jq -r '.router[]'`
+HOSTID=`echo $HOSTDETAILS | jq -r '.hostid'`
+HOSTIP=`cloudmonkey list hosts id=$HOSTID filter=ipaddress,hypervisor | jq -r '.host[]'`
 HOSTDETAILS=`echo "$HOSTDETAILS $HOSTIP" | jq -s add`
 echo $HOSTDETAILS
 }
@@ -124,9 +124,9 @@ function getSVMdetails(){
 # returns json  "hostid": ,"hostname","hypervisor","name","ipaddress","privateip","linklocalip"
 VRNAME=$1
 export TERM=vt100
-SVMDETAILSA=`cloudmonkey list systemvms name=$VRNAME filter=name,hostname,hostid,hypervisor,privateip,linklocalip | jq '.systemvm[]'`
-HOST=`echo $SVMDETAILSA | jq '.hostname'`
-HOSTIP=`cloudmonkey list hosts name=$HOST filter=ipaddress,hypervisor | jq '.host[]'`
+SVMDETAILSA=`cloudmonkey list systemvms name=$VRNAME filter=name,hostname,hostid,hypervisor,privateip,linklocalip | jq -r '.systemvm[]'`
+HOST=`echo $SVMDETAILSA | jq -r '.hostname'`
+HOSTIP=`cloudmonkey list hosts name=$HOST filter=ipaddress,hypervisor | jq -r '.host[]'`
 SVMDETAILS=`echo "$SVMDETAILSA $HOSTDETAILS $HOSTIP" | jq -s add`
 echo $SVMDETAILS
 }
@@ -276,7 +276,7 @@ case $COMMAND in
   "decrypt")
     echo $"`java -classpath /usr/share/cloudstack-common/lib/jasypt-1.9.2.jar org.jasypt.intf.cli.JasyptPBEStringDecryptionCLI decrypt.sh input="$HOST" password="$(cat /etc/cloudstack/management/key)"`"
   ;;
-  "*")
+  *)
     display_usage
   ;;
 esac
