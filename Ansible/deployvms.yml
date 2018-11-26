@@ -281,12 +281,12 @@
   tasks:
     - name: update project - tag Waiting_for_System_VMs
       include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
-      when: wait_till_setup and (additional_pod|bool == False)
+      when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
 
 - hosts: primary_cs_manager
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
-      when: wait_till_setup and (additional_pod|bool == False)
+      when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
 
 - hosts: localhost
   connection: local
@@ -294,7 +294,7 @@
   tasks:
     - name: update project - tag System_VMs_up
       include: tasks/updateproject.yml project_tag=System_VMs_up
-      when: wait_till_setup and (additional_pod|bool == False)
+      when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
 
 ## Wait for services/templates etc
 
@@ -304,12 +304,12 @@
   tasks:
     - name: update project - tag Waiting_for_builtin_template
       include: tasks/updateproject.yml project_tag=Waiting_for_builtin_template
-      when: wait_for_template
+      when: wait_for_template and (create_zone|bool == True)
 
 - hosts: primary_cs_manager
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-template.yml
-      when: wait_for_template
+      when: wait_for_template and (create_zone|bool == True)
   tags:
     - waitfortemplate
 

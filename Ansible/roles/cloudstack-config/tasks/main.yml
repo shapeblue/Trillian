@@ -22,7 +22,7 @@
     - buildzone
     - create_script
   when: additional_pod|bool == false
- 
+
 - name: Copy Cloudmonkey pod addition script to mgmt server
   template: src="addpod.sh.j2" dest="/tmp/addpod-{{ env_name_clean }}.sh" mode=0744
   tags:
@@ -73,7 +73,7 @@
 #  until: pong.rc == 0
 #  retries: "{{ ssh_retries }}"
 #  with_items:
-#    - groups['kvm_hosts']		
+#    - groups['kvm_hosts']
 #  when: hostvars[groups['kvm_hosts'][0]]['ansible_distribution'] == 'Ubuntu'
 #  tags:
 #    - kvm
@@ -81,13 +81,13 @@
 
 - name: Configure Zone (Run Cloudmonkey Zone create script)
   shell: /tmp/deployzone.sh
-  when: create_zone and additional_pod|bool == false
+  when: (create_zone|bool == True) and (additional_pod|bool == false)
   tags:
     - buildzone
 
 - name: Add pod (Run Cloudmonkey add pod script)
   shell: /tmp/addpod-{{ env_name_clean }}.sh
-  when: create_zone and additional_pod
+  when: additional_pod
   tags:
     - buildzone
 
@@ -96,8 +96,7 @@
   register: logdetails
   tags:
     - buildzone
-  when: additional_pod|bool == false
-
+  when: (additional_pod|bool == false) and (create_zone|bool == True)
 
 - name: Print to screen pod addition log
   command: "/bin/cat /tmp/addpod-{{ env_name_clean }}.log"
