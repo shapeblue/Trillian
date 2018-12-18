@@ -314,7 +314,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "debian" %}
 {% elif kvm_os | lower == "u" %}
-{% set kvmosversion = "debian" %}
+{% set kvmosversion = "ubuntu1604" %}
 {% set kvmreleaseurl = "debian" %}
 {% set kvm_os_type = "debian" %}
 {% elif kvm_os | lower == "custom" %}
