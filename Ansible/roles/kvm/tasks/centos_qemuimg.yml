@@ -23,5 +23,5 @@
   copy: src=cloud-qemu-img dest=/usr/bin/ mode=0775
   when:
     - ansible_distribution == 'CentOS'
-    - ansible_distribution_version | version_compare('6.4', '>')
+    - ansible_distribution_version | version_compare('6.4', '>=')
     - ansible_distribution_version | version_compare('7.0', '<')
