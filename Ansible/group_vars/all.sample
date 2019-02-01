@@ -47,6 +47,14 @@ parent_vcenter_hostname: "<IP_ADDRESS_HERE>"
 parent_vcenter_password: "<PASSWORD_HERE>"
 parent_vcenter_username: "<USERNAME_HERE>"
 
+# SSL
+def_ssl_systemvm: "false"
+def_ssl_mgmt: "false"
+def_ssl_key: "SSL cert key filename"
+def_ssl_cert: "SSL cert file"
+def_ssl_rootcert: "SSL root cert file"
+def_systemvm_url: "URL here" 
+
 ################################################################################
 # version of this file is checked when running generate or deploy
 # if the vars in this file are updated/added then version will be increased.

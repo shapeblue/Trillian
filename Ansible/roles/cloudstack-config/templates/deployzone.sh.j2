@@ -269,6 +269,13 @@ cloudmonkey add secondarystorage zoneid=${ZoneID} url="NFS://{% if groups['secon
 {% endif %}
 {% endfor %}
 
+WriteOutput "Configuring SSL"
+{% if ssl_systemvm %}
+cloudmonkey upload customcertificate id=1 name=RootCertificate certificate={% lookup( 'file', '{{ ssl_rootcert }}') | urlencode %} privatekey={% lookup( 'file', '{{ ssl_key }}') | urlencode %} domainsuffix='{{ systemvm_url }}'
+cloudmonkey upload customcertificate id=2 name=SiteCertificate certificate={% lookup( 'file', '{{ ssl_cert }}') | urlencode %} privatekey={% lookup( 'file', '{{ ssl_key }}') | urlencode %} domainsuffix='{{ systemvm_url }}'
+{% endif %}
+
+
 WriteOutput "Enabling zone."
 cloudmonkey update zone allocationstate='Enabled' id=${ZoneID} | tee -i -a ${DEPLOYLOG};
 WriteOutput "You're done. Good luck!";
