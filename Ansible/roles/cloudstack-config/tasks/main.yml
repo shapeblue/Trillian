@@ -16,26 +16,23 @@
     - buildzone
     - create_script
 
-- name: Read certificate files
+- name: Copy Cloudmonkey zone create script to mgmt server
+  template: src="deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
   vars:
       sslrootcert: "{{ lookup( 'file', '{{ ssl_rootcert }}') | urlencode }}"
       sslsitecert: "{{ lookup( 'file', '{{ ssl_cert }}') | urlencode }}"
       sslkey: "{{ lookup( 'file', '{{ ssl_key }}') | urlencode }}"
-  when: ssl_systemvm
-
-- name: debug those
-  debug: msg={{ item }}
-  with_items:
-    - "{{ sslrootcert }}"
-    - "{{ sslsitecert }}"
-    - "{{ sslkey }}"
+  tags:
+    - buildzone
+    - create_script
+  when: ( additional_pod|bool == false ) and ( ssl_systemvm|bool == true )
 
 - name: Copy Cloudmonkey zone create script to mgmt server
   template: src="deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
   tags:
     - buildzone
     - create_script
-  when: additional_pod|bool == false
+  when: ( additional_pod|bool == false ) and ( ssl_systemvm|bool == false ) 
 
 - name: Copy Cloudmonkey pod addition script to mgmt server
   template: src="addpod.sh.j2" dest="/tmp/addpod-{{ env_name_clean }}.sh" mode=0744
