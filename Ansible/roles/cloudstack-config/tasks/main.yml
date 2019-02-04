@@ -1,5 +1,9 @@
 ---
 
+- name: SSL configuration on management
+  include: ./ssljetty.yml
+  when: ssl_mgmt|bool == true
+
 - name: Seed secondary storage
   include: ./seedstorage.yml
   when: additional_pod|bool == false

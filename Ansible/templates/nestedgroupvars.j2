@@ -456,6 +456,9 @@ ssl_key: "{{ ssl_key | default ( def_ssl_key ) }}"
 ssl_cert: "{{ ssl_cert | default ( def_ssl_cert ) }}"
 ssl_rootcert: "{{ ssl_rootcert | default ( def_ssl_rootcert ) }}"
 systemvm_url: "{{ systemvm_url | default ( def_systemvm_url ) }}"
+ssl_keystore: "{{ ssl_keystore | default ( def_ssl_keystore ) }}"
+ssl_keystore_password: "{{ ssl_keystore_password | default ( def_ssl_keystore_password ) }}"
+ssl_port: "{{ ssl_port | default ( def_ssl_port ) }}"
 
 # Hipchat cli client
 use_hipchat: {{ use_hipchat | default( def_use_hipchat) }}

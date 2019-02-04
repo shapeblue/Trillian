@@ -53,7 +53,10 @@ def_ssl_mgmt: "false"
 def_ssl_key: "SSL cert key filename"
 def_ssl_cert: "SSL cert file"
 def_ssl_rootcert: "SSL root cert file"
-def_systemvm_url: "URL here" 
+def_systemvm_url: "URL here"
+def_ssl_keystore: "Keystorename.pkcs12"
+def_ssl_keystore_password: "keystore password"
+def_ssl_port: "8443"
 
 ################################################################################
 # version of this file is checked when running generate or deploy
