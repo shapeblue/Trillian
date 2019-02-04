@@ -5,11 +5,11 @@
     dest: "/etc/cloustack/management/keystore.pkcs12"
     mode: 0755
 
-- name: Confiure SSL for Jetty
+- name: Configure SSL for Jetty
   lineinfile:
     dest="/etc/cloudstack/management/server.properties"
-    regexp="^https.enable.*$"
-    line=
+    regexp="{{ item.regexpression }}"
+    line="{{ item.newline }}"
   loop:
     - { regexpression: "^https.enable=.*$", newline: "https.enable=true" }
     - { regexpression: "^https.keystore=.*$", newline: "https.keystore=/etc/cloudstack/management/keystore.pkcs12" }
