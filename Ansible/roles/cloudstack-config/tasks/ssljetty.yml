@@ -1,8 +1,8 @@
 ---
 - name: Copy SSL keystore to management host
   copy:
-    src: {{ ssl_keystore }}
-    dest: /etc/cloustack/management/keystore.pkcs12
+    src: "{{ ssl_keystore }}"
+    dest: "/etc/cloustack/management/keystore.pkcs12"
     mode: 0755
 
 - name: Confiure SSL for Jetty
