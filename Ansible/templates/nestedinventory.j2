@@ -24,6 +24,9 @@ vc_hosts
 storage_hosts
 marvin_host
 
+[local]
+localhost ansible_connection=local
+
 [hypervisor_hosts:children]
 xenserver_hosts
 kvm_hosts
@@ -33,13 +36,17 @@ esxi_hosts
 mysql_master_host
 mysql_slave_hosts
 
-[local]
-localhost ansible_connection=local
-
 [cloudstack_manager_hosts:children]
 primary_cs_manager
 secondary_cs_manager
 
+{% if mgmt_os | lower == "u18" %}
+[mysql_hosts:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[cloudstack_manager_hosts:vars]
+ansible_python_interpreter=/usr/bin/python3
+{% endif %}
 
 [primary_cs_manager]
 {% if additional_zone | bool or additional_pod | bool %}
@@ -102,7 +109,6 @@ secondary_cs_manager
 {% endif %}
 {% endif %}
 
-
 [kvm_hosts]
 {% if kvm_os | lower != "na" %}
 {% if not use_external_hv_hosts %}
@@ -115,6 +121,10 @@ secondary_cs_manager
 {{ env_name_clean }}-kvm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }}
 {% endfor %}
 {% endif %}
+{% endif %}
+{% if kvm_os | lower == "u18" %}
+[kvm_hosts:vars]
+ansible_python_interpreter=/usr/bin/python3
 {% endif %}
 
 [marvin_host]
