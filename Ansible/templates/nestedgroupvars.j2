@@ -109,10 +109,14 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
 {% set mgmt_os_type = "ubuntu1604" %}
+{% elif mgmt_os | lower == "u18" %}
+{% set osversion = "debian" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "ubuntu1804" %}
 {% elif mgmt_os | lower == "u" %}
 {% set osversion = "debian" %}
 {% set releaseurl = "debian" %}
-{% set mgmt_os_type = "debian" %}
+{% set mgmt_os_type = "ubuntu1604" %}
 {% elif mgmt_os | lower == "custom" %}
 {% set osversion = "custom" %}
 {% set releaseurl = "custom" %}
