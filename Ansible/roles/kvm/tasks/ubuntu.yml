@@ -49,7 +49,7 @@
     - "deb http://security.ubuntu.com/ubuntu/ bionic-security restricted multiverse universe"
     - "deb http://archive.ubuntu.com/ubuntu bionic-updates restricted multiverse universe"
     - "deb http://archive.canonical.com/ bionic partner"
-  when: ansible_distribution_release == "bionic"
+  when: ansible_distribution_version == "18.04"
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -76,7 +76,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_release != "bionic"
+  when: ansible_distribution_version != "18.04"
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -108,7 +108,7 @@
       src: netplan.j2
       dest: /etc/netplan/50-cloud-init.yaml
       force: yes
-    when: ansible_distribution_release == "bionic"
+    when: ansible_distribution_version == "18.04"
 
   when: kvm_network_mode == "bridge"
 
@@ -244,7 +244,7 @@
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_release == "bionic"
+  when: ansible_distribution_version == "18.04"
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -271,7 +271,7 @@
   with_items:
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
-  when: ansible_distribution_release == "bionic"
+  when: ansible_distribution_version == "18.04"
 
 # Note - Ubuntu18 startup of OVS bridges is not robust and does
 # sometime lead to race conditions where bridges don't come online
