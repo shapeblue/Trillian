@@ -2,7 +2,7 @@
 
 - name: SSL configuration on management (4.11 only)
   include: ./ssljetty.yml
-  when: ( ssl_mgmt|bool == true ) and (env_numversion | version_compare('4.11','>=')) and ( ansible_distribution =="CentOS" )
+  when: ( ssl_mgmt|bool == true ) and (env_numversion | version_compare('4.11','>='))
 
 - name: Seed secondary storage
   include: ./seedstorage.yml
