@@ -266,9 +266,6 @@ mgmt_java_ver: "{{ mgmtjava }}"
 {% endif %}
 mgmt_java_path: "{{ mgmtjavapath }}"
 
-
-
-
 # DB servers
 dbsrv_service_offering: "{{ dbsrv_service_offering | default( def_dbsrv_service_offering ) }}"
 dbsrv_template: "{{ dbsrv_template | default( def_dbsrv_template ) }}"
@@ -281,7 +278,6 @@ old_mysql_root_password: "{{ old_mysql_root_password | default( def_old_mysql_ro
 db_type: "{{ db_type | default( def_db_type ) }}"
 mysql_max_connections: "{{ mysql_max_connections | default( def_mysql_max_connections ) }}"
 mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_mysql_innodb_buffer_pool_size ) }}"
-
 
 # KVM
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
@@ -380,7 +376,6 @@ phys_host_mgmt_if: "{{ phys_host_mgmt_if | default( def_phys_host_mgmt_if ) }}"
 phys_host_trunked_if: "{{ phys_host_trunked_if | default( def_phys_host_trunked_if ) }}"
 phys_host_PXE_if: "{{ phys_host_PXE_if | default( def_phys_host_PXE_if ) }}"
 
-
 # XS
 xs_ver: "{{ xs_ver }}"
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
@@ -458,6 +453,17 @@ marvin_test_categories:
 {% endfor %}
 {% endif %}
 
+# SSL
+ssl_systemvm: "{{ ssl_systemvm | default ( def_ssl_systemvm ) }}"
+ssl_mgmt: "{{ ssl_mgmt | default ( def_ssl_mgmt ) }}"
+ssl_key: "{{ ssl_key | default ( def_ssl_key ) }}"
+ssl_cert: "{{ ssl_cert | default ( def_ssl_cert ) }}"
+ssl_rootcert: "{{ ssl_rootcert | default ( def_ssl_rootcert ) }}"
+systemvm_url: "{{ systemvm_url | default ( def_systemvm_url ) }}"
+ssl_keystore: "{{ ssl_keystore | default ( def_ssl_keystore ) }}"
+ssl_keystore_password: "{{ ssl_keystore_password | default ( def_ssl_keystore_password ) }}"
+ssl_port: "{{ ssl_port | default ( def_ssl_port ) }}"
+
 # Hipchat cli client
 use_hipchat: {{ use_hipchat | default( def_use_hipchat) }}
 hipchat_server: "{{ hipchat_server | default( def_hipchat_server ) }}"
@@ -478,4 +484,3 @@ slack_username: "{{ slack_username | default( def_slack_username ) }}"
 slack_icon_url: "{{ slack_icon_url | default( def_slack_icon_url ) }}"
 slack_color: "{{ slack_color | default( def_slack_color ) }}"
 slack_webhook: "{{ slack_webhook | default( def_slack_webhook ) }}"
-
