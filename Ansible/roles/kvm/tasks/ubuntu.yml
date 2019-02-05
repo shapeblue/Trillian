@@ -35,17 +35,10 @@
     repo: 'deb {{ baseurl_kvm }} /'
     state: present
 
-- name: Add openjdk-ppa repository into sources list (trusty)
+- name: Add openjdk-ppa repository into sources list.
   apt_repository:
-    repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main'
+    repo: "ppa:webupd8team/java"
     state: present
-  when: ansible_distribution_release == "trusty"
-
-- name: Add openjdk-ppa repository into sources list (xenial)
-  apt_repository:
-    repo: 'deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu xenial main'
-    state: present
-  when: ansible_distribution_release == "xenial"
 
 - name: Add 18.04 repos to bionic
   apt_repository:

@@ -31,8 +31,11 @@
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
+
 - name: Add openjdk-ppa repository into sources list.
-  apt_repository: repo='deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main' state=present
+  apt_repository:
+    repo: "ppa:webupd8team/java"
+    state: present
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
