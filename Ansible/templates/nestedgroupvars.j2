@@ -101,22 +101,22 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% set osversion = "centos7" %}
 {% set releaseurl = "centos7" %}
 {% set mgmt_os_type = "centos7" %}
-{% elif mgmt_os | lower == "u14" %}
-{% set osversion = "debian" %}
-{% set releaseurl = "debian" %}
-{% set mgmt_os_type = "ubuntu1404" %}
-{% elif mgmt_os | lower == "u16" %}
-{% set osversion = "debian" %}
-{% set releaseurl = "debian" %}
-{% set mgmt_os_type = "ubuntu1604" %}
-{% elif mgmt_os | lower == "u18" %}
-{% set osversion = "debian" %}
-{% set releaseurl = "debian" %}
-{% set mgmt_os_type = "ubuntu1804" %}
 {% elif mgmt_os | lower == "u" %}
-{% set osversion = "debian" %}
+{% set osversion = "ubuntu1604" %}
 {% set releaseurl = "debian" %}
-{% set mgmt_os_type = "ubuntu1604" %}
+{% set mgmt_os_type = "debian" %}
+{% elif mgmt_os | lower == "u14" %}
+{% set osversion = "ubuntu1404" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "debian" %}
+{% elif mgmt_os | lower == "u16" %}
+{% set osversion = "ubuntu1604" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "debian" %}
+{% elif mgmt_os | lower == "u18" %}
+{% set osversion = "ubuntu1804" %}
+{% set releaseurl = "debian" %}
+{% set mgmt_os_type = "debian" %}
 {% elif mgmt_os | lower == "custom" %}
 {% set osversion = "custom" %}
 {% set releaseurl = "custom" %}
