@@ -20,7 +20,7 @@
     - buildzone
     - create_script
 
-- name: Copy Cloudmonkey zone create script to mgmt server
+- name: Copy Cloudmonkey zone create script to mgmt server with SSL certs
   template: src="deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
   vars:
       sslrootcert: "{{ lookup( 'file', '{{ ssl_rootcert }}') }}"
@@ -31,7 +31,7 @@
     - create_script
   when: ( additional_pod|bool == false ) and ( ssl_systemvm|bool == true )
 
-- name: Copy Cloudmonkey zone create script to mgmt server
+- name: Copy Cloudmonkey zone create script to mgmt server without SSL certs
   template: src="deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
   vars:
       sslrootcert: "noSSLconfigured"
