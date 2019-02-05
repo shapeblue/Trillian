@@ -33,9 +33,12 @@
   apt: pkg=openntpd state=present update_cache=true
 
 - name: install setup tools and jq
-  apt: pkg={{ item }} state=present
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
   with_items:
-  - python-setuptools
+    - python-setuptools
 
 - name: Ensure mysql python are installed (Ansible requirement)
   apt: pkg=python-mysqldb state=present

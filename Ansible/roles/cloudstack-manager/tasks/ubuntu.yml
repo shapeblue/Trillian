@@ -39,19 +39,18 @@
     update_cache: yes
 
 - name: Ensure CloudStack packages are installed
-  apt: pkg=cloudstack-management state=present
-
-- name: Ensure DB Client is present
-  apt: pkg=mysql-client state=present
-
-- name: install rng-tools to create entropy
-  apt: pkg=rng-tools state=present
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-management
+    - mysql-client
+    - rng-tool
+    - cloudstack-usage
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
-
-- name: Ensure CloudStack Usage Service is installed
-  apt: pkg=cloudstack-usage state=present update_cache=true
 
 - include: ./setupdb.yml
 
