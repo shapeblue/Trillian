@@ -1,0 +1,29 @@
+---
+- name: Copy SSL keystore to management host
+  copy:
+    src: "{{ ssl_keystore }}"
+    dest: "/etc/cloudstack/management/keystore.pkcs12"
+    mode: 0755
+
+- name: Configure SSL for Jetty
+  lineinfile:
+    dest="/etc/cloudstack/management/server.properties"
+    regexp="{{ item.regexpression }}"
+    line="{{ item.newline }}"
+  with_items:
+    - { regexpression: "^https.enable=.*$", newline: "https.enable=true" }
+    - { regexpression: "^https.keystore=.*$", newline: "https.keystore=/etc/cloudstack/management/keystore.pkcs12" }
+    - { regexpression: "^https.keystore.password=.*$", newline: "https.keystore.password={{ ssl_keystore_password }}" }
+    - { regexpression: "^https.port=.*$", newline: "https.port={{ ssl_port }}" }
+
+- name: restart mgmt service
+  service: name=cloudstack-management state=restarted
+  ignore_errors: true
+
+- name: "wait for ACS Management Service to come up"
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 36
+  tags:
+    - buildzone
