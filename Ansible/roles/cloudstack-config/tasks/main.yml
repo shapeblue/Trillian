@@ -33,6 +33,10 @@
 
 - name: Copy Cloudmonkey zone create script to mgmt server
   template: src="deployzone.sh.j2" dest="/tmp/deployzone.sh" mode=0744
+  vars:
+      sslrootcert: "noSSLconfigured"
+      sslsitecert: "noSSLconfigured"
+      sslkey: "noSSLconfigured"
   tags:
     - buildzone
     - create_script
