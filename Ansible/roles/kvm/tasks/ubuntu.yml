@@ -182,6 +182,7 @@
   apt_repository:
     repo: 'deb {{ baseurl_kvm }} /'
     state: present
+    validate_certs: no
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
