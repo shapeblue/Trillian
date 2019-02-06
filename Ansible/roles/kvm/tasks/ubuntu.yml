@@ -179,7 +179,7 @@
 
 - name: add CloudStack ubuntu repo keys
   apt_key:
-    url: "{{ baseurl_kvm }}/release.gpg"
+    url: "{{ baseurl_cloudstack }}Release.gpg"
     state: present
 
 - name: add CloudStack ubuntu repo keys
