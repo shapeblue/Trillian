@@ -30,9 +30,15 @@ basedir         = /usr
 datadir         = /var/lib/mysql
 tmpdir          = /tmp
 lc-messages-dir = /usr/share/mysql
+
 {% if inventory_hostname in groups["mysql_hosts"] %}
 server-id={{ hostvars[inventory_hostname]['serverid'] }}
+{% elif '{{ db_type }}' == 'mysql-masterslave' %}
+server-id={{ hostvars[inventory_hostname]['serverid'] }}
+{% else %}
+server-id=1
 {% endif %}
+
 
 skip_name_resolve
 
@@ -45,7 +51,7 @@ bind-address = 0.0.0.0
 
 innodb_buffer_pool_size={{ mysql_innodb_buffer_pool_size }}
 innodb_file_per_table=1
-innodb_additional_mem_pool_size=20M
+#innodb_additional_mem_pool_size=20M
 innodb_log_buffer_size=16MB
 innodb_flush_log_at_trx_commit=2
 
@@ -57,7 +63,7 @@ max_heap_table_size=64M
 
 sync_binlog=1
 
-key_buffer=16M
+#key_buffer=16M
 max_allowed_packet = 16M
 thread_stack=192K
 thread_cache_size=8
@@ -72,9 +78,7 @@ slow_query_log=0
 log_queries_not_using_indexes=1
 long_query_time=0.5
 
-{% if '{{ db_type }}' == 'mysql-masterslave' %}
-server-id={{ hostvars[inventory_hostname]['serverid'] }}
-{% endif %}
+
 
 log_bin=/var/log/mysql/mysql-bin.log
 expire_logs_days=5
