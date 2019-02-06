@@ -24,9 +24,6 @@
   apt:
     update_cache: yes
 
-- name: Ensure NTP packages are installed
-  apt: pkg=openntpd state=present update_cache=true
-
 - name: install setup tools and jq
   apt:
     pkg: "{{ item }}"
