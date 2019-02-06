@@ -22,22 +22,30 @@
 #  with_items:
 #    - "sources.list"
 
+- name: Add openjdk-ppa repository into sources list.
+  apt_repository:
+    repo: "ppa:webupd8team/java"
+    state: present
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    url: "{{ repohost }}/release.gpg"
+    state: present
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
+
 - name: Add CloudStack repository into sources list.
   apt_repository:
     repo: 'deb "{{ baseurl_cloudstack }}" /'
     state: present
     validate_certs: no
 
-- apt_key: url={{ repohost }}/release.asc state=present
-
-- apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: 86F44E2A
-
-- name: Add openjdk-ppa repository into sources list.
-  apt_repository:
-    repo: "ppa:webupd8team/java"
-    state: present
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:

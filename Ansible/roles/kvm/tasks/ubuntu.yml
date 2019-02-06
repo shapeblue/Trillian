@@ -177,6 +177,18 @@
     - "5900:6100"
     - "49152:49216"
 
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    url: "{{ repohost }}/release.gpg"
+    state: present
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
 
 - name: Add CloudStack repository into sources list.
   apt_repository:
