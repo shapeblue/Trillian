@@ -41,11 +41,6 @@
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
-- name: Add specified repository into sources list.
-  apt_repository:
-    repo: 'deb {{ baseurl_kvm }} /'
-    state: present
-
 - name: Add openjdk-ppa repository into sources list.
   apt_repository:
     repo: "ppa:webupd8team/java"
@@ -182,6 +177,16 @@
     - "5900:6100"
     - "49152:49216"
 
+
+- name: Add CloudStack repository into sources list.
+  apt_repository:
+    repo: 'deb {{ baseurl_kvm }} /'
+    state: present
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
 - name: Installs cloudstack-agent
   apt:
     pkg: "{{ item }}"
@@ -189,6 +194,15 @@
     allow_unauthenticated: yes
   with_items:
     - cloudstack-management
+
+- name: remove CloudStack repository into sources list.
+  apt_repository:
+    repo: 'deb {{ baseurl_kvm }} /'
+    state: absent
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
 
 - name: Configure agent.properties for OVS
   lineinfile:

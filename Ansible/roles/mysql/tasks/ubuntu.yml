@@ -30,7 +30,6 @@
   apt:
     pkg: "{{ item }}"
     state: present
-    allow_unauthenticated: yes
   with_items:
     - python-setuptools
 

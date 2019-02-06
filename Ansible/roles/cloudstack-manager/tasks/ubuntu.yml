@@ -22,7 +22,7 @@
 #  with_items:
 #    - "sources.list"
 
-- name: Add specified repository into sources list.
+- name: Add CloudStack repository into sources list.
   apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=present
 
 - apt_key: url={{ repohost }}/release.asc state=present
@@ -47,9 +47,22 @@
     allow_unauthenticated: yes
   with_items:
     - cloudstack-management
+    - cloudstack-usage
+
+- name: remove CloudStack repository into sources list.
+  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Ensure extra packages are installed
+  apt:
+    pkg: "{{ item }}"
+    state: present
+  with_items:
     - mysql-client
     - rng-tool
-    - cloudstack-usage
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
