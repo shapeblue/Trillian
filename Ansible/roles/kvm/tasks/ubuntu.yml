@@ -14,23 +14,12 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-# Following commented out until local repositories available and sources.list exists
-#- name: set apt repo to local
-#  template:
-#    src: "{{ inventory_dir }}/templates/{{ item }}.j2"
-#    dest: "/etc/apt/{{item}}"
-#  with_items:
-#    - "sources.list"
-
-- name: Add 18.04 repos to bionic
-  apt_repository:
-    repo: "{{ item }}"
-    state: present
+- name: set apt repo
+  template:
+    src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
+    dest: "/etc/apt/{{item}}"
   with_items:
-    - "deb http://archive.ubuntu.com/ubuntu bionic universe restricted multiverse"
-    - "deb http://security.ubuntu.com/ubuntu/ bionic-security restricted multiverse universe"
-    - "deb http://archive.ubuntu.com/ubuntu bionic-updates restricted multiverse universe"
-    - "deb http://archive.canonical.com/ bionic partner"
+    - "sources.list"
   when: ansible_distribution_version == "18.04"
 
 - apt_key:
