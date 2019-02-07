@@ -14,36 +14,44 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-- name: set apt repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+- name: set apt repo
+  template:
+    src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
+    dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-
-- name: Add specified repository into sources list.
-  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=present
-
-- apt_key: url={{ repohost }}/release.asc state=present
+  when: ansible_distribution_version == "18.04"
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
 
-- name: Ensure NTP packages are installed
-  apt: pkg=openntpd state=present update_cache=true
-
 - name: install setup tools and jq
-  apt: pkg={{ item }} state=present
+  apt:
+    pkg: "{{ item }}"
+    state: present
   with_items:
-  - python-setuptools
+    - python-setuptools
+
 
 - name: Ensure mysql python are installed (Ansible requirement)
-  apt: pkg=python-mysqldb state=present
+  apt:
+    pkg: python-mysqldb
+    state: present
   tags: services
+  when: ansible_distribution_version != "18.04"
+
+- name: Ensure mysql python are installed (Ansible requirement)
+  apt:
+    pkg: python3-mysqldb
+    state: present
+  tags: services
+  when: ansible_distribution_version == "18.04"
 
 - name: Ensure mysql server is installed (Ubuntu)
   apt: pkg=mysql-server state=present
   tags: services
+
 
 #- name: Ridiculous fix for mysql permissions
 #  file: path=/var/lib/mysql state=directory mode=0666

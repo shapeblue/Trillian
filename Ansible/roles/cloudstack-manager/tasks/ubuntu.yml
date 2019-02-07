@@ -14,44 +14,73 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Ensure NTP packages are installed
-  apt: pkg=openntpd state=present update_cache=true
 
-- name: set apt repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/apt/{{item}}"
+- name: set apt repo
+  template:
+    src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
+    dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-
-- name: Add specified repository into sources list.
-  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=present
-
-- apt_key: url={{ repohost }}/release.asc state=present
-
-- apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: 86F44E2A
+  when: ansible_distribution_version == "18.04"
 
 - name: Add openjdk-ppa repository into sources list.
-  apt_repository: repo='deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu trusty main' state=present
+  apt_repository:
+    repo: "ppa:webupd8team/java"
+    state: present
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    url: "{{ baseurl_cloudstack }}Release.gpg"
+    state: present
+  ignore_errors: yes
+
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
+  ignore_errors: yes
+
+- name: Add CloudStack repository into sources list.
+  apt_repository:
+    repo: 'deb "{{ baseurl_cloudstack }}" /'
+    state: present
+    validate_certs: no
+  ignore_errors: yes
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
 
 - name: Ensure CloudStack packages are installed
-  apt: pkg=cloudstack-management state=present
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-management
+    - cloudstack-usage
 
-- name: Ensure DB Client is present
-  apt: pkg=mysql-client state=present
+- name: remove CloudStack repository into sources list.
+  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
 
-- name: install rng-tools to create entropy
-  apt: pkg=rng-tools state=present
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Ensure extra packages are installed
+  apt:
+    pkg: "{{ item }}"
+    state: present
+  with_items:
+    - mysql-client
+    - haveged
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
-
-- name: Ensure CloudStack Usage Service is installed
-  apt: pkg=cloudstack-usage state=present update_cache=true
 
 - include: ./setupdb.yml
 

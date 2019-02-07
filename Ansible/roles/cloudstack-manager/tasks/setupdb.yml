@@ -43,11 +43,6 @@
   tags:
   - setup_db
 
-- name: use rngd to generate entropy
-  command: rngd -r /dev/urandom
-  tags:
-    - setup_db
-
 - name: cloudstack-setup-databases
   shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_ssh_host }}"
   when: ("primary_cs_manager" in group_names) and ("{{ cloudbd_exists }}" == "no") and (path_is_cloudstack.stat.exists == True)
