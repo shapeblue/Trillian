@@ -73,11 +73,11 @@
 
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
-      when: use_custom_allocator
+      when: use_custom_allocator and (use_external_hv_hosts|bool == false)
 
     - name: Build VMs
       include: ./tasks/buildvms.yml
-      when: use_custom_allocator|bool == false
+      when: (use_custom_allocator|bool == false) and (use_external_hv_hosts|bool == false)
 
     - name: Add dvfilter
       include: ./tasks/add_dvfilter.yml
