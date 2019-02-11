@@ -230,6 +230,7 @@ mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_se
 mgmtsrv_template: "{{ mgmtsrv_template | default( def_mgmt_templates[osversion].mgmtsrv_template ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
+use_custom_browser_title: {{ use_custom_browser_title | default ( def_use_custom_browser_title ) }}
 
 {% if env_dotted_version is not defined or env_cs_subminor_version == env_cs_minor_version %}
 cloudstack_management_package: "cloudstack-management"
