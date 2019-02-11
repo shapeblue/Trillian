@@ -86,13 +86,16 @@
     - marvin_install
 
 - name: Install pip
-  easy_install: name=pip
+  easy_install:
+    name: pip
   tags:
     - marvin
     - marvin_install
 
 - name: Update pip and setuptools
-  pip: name={{ item }} extra_args='--upgrade'
+  pip:
+    name: "{{ item }}"
+    extra_args: '--upgrade'
   with_items:
   - pip
   - setuptools
@@ -106,9 +109,19 @@
     state: absent
 
 - name: Install pyOpenSSL with pip
-  pip: name=pyOpenSSL extra_args='--upgrade'
+  pip:
+    name: pyOpenSSL
+    extra_args: '--upgrade'
   with_items:
   - pyopenssl
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Ensure CA-Certificates are up to date
+  yum:
+    name: ca-certificates
+    state: latest
   tags:
     - marvin
     - marvin_install
