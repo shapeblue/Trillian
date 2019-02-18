@@ -271,7 +271,7 @@ cloudmonkey add secondarystorage zoneid=${ZoneID} url="NFS://{% if groups['secon
 
 WriteOutput "Configuring SSL"
 {% if ssl_systemvm | bool %}
-cloudmonkey upload customcertificate id=1 name=RootCertificate certificate='{{ sslrootcert }}' privatekey='{{ sslkey }}' domainsuffix='{{ systemvm_url }}'
+cloudmonkey upload customcertificate id=1 name=RootCertificate certificate='{{ sslrootcert }}' domainsuffix='{{ systemvm_url }}'
 cloudmonkey upload customcertificate id=2 certificate='{{ sslsitecert }}' privatekey='{{ sslkey }}' domainsuffix='{{ systemvm_url }}'
 {% endif %}
 
