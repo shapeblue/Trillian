@@ -48,14 +48,14 @@ parent_vcenter_password: "<PASSWORD_HERE>"
 parent_vcenter_username: "<USERNAME_HERE>"
 
 # SSL
-def_ssl_systemvm: "false"
-def_ssl_mgmt: "false"
-def_ssl_key: "SSL cert key filename"
-def_ssl_cert: "SSL cert file"
-def_ssl_rootcert: "SSL root cert file"
-def_systemvm_url: "URL here"
-def_ssl_keystore: "Keystorename.pkcs12"
-def_ssl_keystore_password: "keystore password"
+def_ssl_systemvm: "true"
+def_ssl_mgmt: "true"
+def_ssl_key: "<KEY_HERE>"
+def_ssl_cert: "<CERT_HERE>"
+def_ssl_rootcert: "<CERT_HERE>"
+def_systemvm_url: "<SYSTEMVM_URL_HERE>"
+def_ssl_keystore: "<KEYSTORE_HERE>"
+def_ssl_keystore_password: "<PASSWORD_HERE>"
 def_ssl_port: "8443"
 
 ################################################################################
@@ -63,6 +63,8 @@ def_ssl_port: "8443"
 # if the vars in this file are updated/added then version will be increased.
 
 all-file_version: 6
+#remove version above when refacor is merged
+all_file_version: 6
 
 # Environment vars
 def_marvin_network: "<NETWORK_NAME_HERE>"
@@ -76,7 +78,9 @@ repohost: "http://<IP_ADDRESS_HERE>"
 def_env_timezone: "UTC"
 def_use_external_hv_hosts: no
 def_use_phys_hosts: no
-def_env_ssh_key_path: /tmp/.ssh/id_rsa_trillian
+def_env_ssh_key_path: "<KEY_PATH_HERE>"
+def_use_custom_allocator: yes
+def_use_firewalld: no
 
 # Global URLs - not copied to granular group_vars
 current_epel: http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
@@ -118,7 +122,7 @@ def_env_iscsi_target: "<IQN_HERE>"
 def_env_sechost: "<IP_ADDRESS_HERE>"
 def_env_pripath: "/acs/primary/"
 def_env_pripath_iscsi: "/iscsiroot/"
-def_env_iscsilunsize: "50G"
+def_env_iscsilunsize: "150G"
 def_env_secpath: "/acs/secondary/"
 # BEING DEPRECATED:
 def_env_zone_secgroups: "false"
@@ -142,9 +146,9 @@ def_use_local_storage_systemvms: no
 def_local_storage_disk_offering: "Custom"
 def_local_storage_disk_size: "80"
 def_use_s3: no
-def_setshortname: false
+def_setshortname: no
 
-base_version_of_master: cs412
+base_version_of_master: cs413
 
 java_vers:
   ccp306: java-1.6.0-openjdk
@@ -161,6 +165,7 @@ java_vers:
   cs410: java-1.8.0-openjdk
   cs411: java-1.8.0-openjdk
   cs412: java-1.8.0-openjdk
+  cs413: java-1.8.0-openjdk
   custom: custom
   na: na
 
@@ -190,6 +195,11 @@ java_paths:
     java-1.7.0-openjdk: "openjdk-7-jre"
     java-1.8.0-openjdk: "openjdk-8-jre"
     na: na
+  ubuntu1804:
+    java-1.6.0-openjdk: "tbc"
+    java-1.7.0-openjdk: "tbc"
+    java-1.8.0-openjdk: "openjdk-8-jre-headless"
+    na: na
   na:
     java-1.6.0-openjdk: "na"
     java-1.7.0-openjdk: "na"
@@ -199,105 +209,254 @@ java_paths:
 def_mgmtsrv_service_offering: "Mgmt Server"
 def_mgmtsrv_template: "CentOS 6.8"
 def_rooturl_cloudstack: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/"
+def_use_custom_browser_title: yes
 
 # System templates
 def_system_templates:
+  ccp450:
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+  ccp470:
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+  ccp471:
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   ccp306:
-    kvm_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2"
-    xs_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.vhd.bz2"
-    vmware_url: "http://download.cloud.com/templates/burbank/burbank-systemvm-08012012.ova"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   ccp307:
-    kvm_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.qcow2.bz2"
-    xs_url: "http://download.cloud.com/templates/acton/acton-systemvm-02062012.vhd.bz2"
-    vmware_url: "http://download.cloud.com/templates/burbank/burbank-systemvm-08012012.ova"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   ccp43:
-    kvm_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-01-14-master-kvm.qcow2.bz2"
-    xs_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-01-14-master-xen.vhd.bz2"
-    vmware_url: "http://download.cloud.com/templates/4.3/systemvm64template-2014-02-13-master-vmware.ova"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   cs43:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-kvm.qcow2.bz2"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-xen.vhd.bz2"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.3/systemvm64template-4.3-vmware.ova"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   cs45:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-kvm.qcow2.bz2"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-xen.vhd.bz2"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.5/systemvm64template-4.5-vmware.ova"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
   cs46:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.6"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.6"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.6"
   cs47:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.6"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.6"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.6"
   cs48:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.6"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.6"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.6"
   cs49:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.6"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.6"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.6/dnsmasq/systemvm64template-4.6-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.6"
-    hyperv_url: "http://cloudstack.apt-get.eu/systemvm/4.6/systemvm64template-4.6.0-hyperv.vhd.zip"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs490:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4900:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4901:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs491:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4910:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs492:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4920:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs493:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4930:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs4931:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.6"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.6"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.6"
+    hyperv_url: "<HYPERV_URL_HERE>"
   cs410:
-    kvm_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.10/systemvm64template-4.10-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.10"
-    xs_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.10/systemvm64template-4.10-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.10"
-    vmware_url: "http://<IP_ADDRESS_HERE>/shapeblue/systemvmtemplate/4.10/systemvm64template-4.10-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.10"
-    hyperv_url: "http://cloudstack.apt-get.eu/systemvm/4.6/systemvm64template-4.6.0-hyperv.vhd.zip"
+    hyperv_url: "<HYPERV_URL_HERE>"
+  cs41000:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.10"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.10"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.10"
+    hyperv_url: "<HYPERV_URL_HERE>"
   cs411:
-    kvm_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-kvm.qcow2.bz2"
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.1"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.1"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.1"
+  cs4110:
+    kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.11"
-    xs_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-xen.vhd.bz2"
+    xs_url: "<XS_URL_HERE>"
     xs_systemvm_name: "systemvm-xenserver-4.11"
-    vmware_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-vmware.ova"
+    vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.11"
+  cs4111:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.1"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.1"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.1"
+  cs4112:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.2"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.2"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.2"
+  cs41120:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.2"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.2"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.2"
+  cs41121:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.2"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.2"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.2"
+  cs41130:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
   cs412:
-    kvm_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-kvm.qcow2.bz2"
-    kvm_systemvm_name: "systemvm-kvm-4.11"
-    xs_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-xen.vhd.bz2"
-    xs_systemvm_name: "systemvm-xenserver-4.11"
-    vmware_url: "http://<IP_ADDRESS_HERE>/systemvmtemplate/4.11/systemvmtemplate-4.11.0-vmware.ova"
-    vmware_systemvm_name: "systemvm-vmware-4.11"
-  ccp450:
-    kvm_url: "http://download.cloud.com/templates/4.5/systemvm64template-2014-12-18-<IP_ADDRESS_HERE>-kvm.qcow2.bz2"
-    xs_url: "http://download.cloud.com/templates/4.5/systemvm64template-2014-12-18-<IP_ADDRESS_HERE>-xen.vhd.bz2"
-    vmware_url: "http://download.cloud.com/templates/4.5/systemvm64template-2014-12-18-<IP_ADDRESS_HERE>-vmware.ova"
-  ccp470:
-    kvm_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-06-16-4.7.0-kvm.qcow2.bz2"
-    xs_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-06-16-4.7.0-xen.vhd.bz2"
-    vmware_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-06-16-4.7.0-vmware.ova"
-  ccp471:
-    kvm_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-11-03-4.7.1-kvm.qcow2.bz2"
-    xs_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-11-03-4.7.1-xen.vhd.bz2"
-    vmware_url: "http://<IP_ADDRESS_HERE>/ccp/systemvmtemplate/4.7/systemvm64template-2016-11-03-4.7.1-vmware.ova"
-
-
-
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs41200:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs413:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs41300:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
   custom:
-    kvm_url: "KVMCustomURL"
-    xs_url: "XSCustomURL"
-    vmware_url: "VMwareCustomURL"
-    hyperv_url: "HypervCustomURL"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+    hyperv_url: "<HYPERV_URL_HERE>"
   na:
-    kvm_url: "na"
-    xs_url: "na"
-    vmware_url: "na"
-    hyperv_url: "na"
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+    hyperv_url: "<HYPERV_URL_HERE>"
 
 # Default management VM templates based on management server OS choice
 def_mgmt_templates:
@@ -317,6 +476,8 @@ def_mgmt_templates:
     mgmtsrv_template: "Ubuntu Server 14.04"
   ubuntu1604:
     mgmtsrv_template: "Ubuntu 16.04"
+  ubuntu1804:
+    mgmtsrv_template: "Ubuntu 18.04"
   custom:
     mgmtsrv_template: "CustomTemplateName"
 # DB servers
@@ -336,14 +497,18 @@ def_kvm_templates:
     kvm_template: "CentOS 6.2"
   centos64:
     kvm_template: "CentOS 6.4"
+  centos73:
+    kvm_template: "CentOS 7.3"
   centos7:
     kvm_template: "CentOS7"
   debian:
-    kvm_template: "Ubuntu Server 14.04"
+    kvm_template: "Ubuntu 16.04"
   ubuntu1404:
     kvm_template: "Ubuntu Server 14.04"
   ubuntu1604:
     kvm_template: "Ubuntu 16.04"
+  ubuntu1804:
+    kvm_template: "Ubuntu 18.04"
   custom:
     kvm_template: "CustomTemplateName"
   na:
@@ -352,10 +517,12 @@ def_kvm_mgmt_network_label: "cloudbr0"
 def_kvm_guest_network_label: "cloudbr1"
 def_kvm_public_network_label: "cloudbr1"
 def_kvm_network_mode: "bridge"
+def_kvm_centos_ovsrpm: "<OVS_RPM_PATH>"
+# def_kvm_centos_ovsrpm: "<OVS_RPM_PATH>"
 def_kvm_localstorage_mount: "/localstorage"
-def_phys_host_mgmt_if: "eth1"
-def_phys_host_trunked_if: "p55p1"
-def_phys_host_PXE_if: "eth0"
+def_phys_host_mgmt_if: "eth0"
+def_phys_host_trunked_if: "eth2"
+def_phys_host_PXE_if: "eth1"
 
 # XS
 def_xs_service_offering: "Nested Hypervisor"
@@ -370,6 +537,10 @@ def_xenserver_templates:
     xs_template: "XenServer 7.1"
   xs72:
     xs_template: "XenServer 7.2.0"
+  xs74:
+    xs_template: "XenServer 7.4"
+  xcpng74:
+    xs_template: "xcp-ng-741"
   custom:
     xs_template: "CustomTemplateName"
   na:
@@ -380,6 +551,10 @@ def_xs_guest_network_nic: "eth1"
 def_xs_guest_network_label: "Network1"
 def_xs_public_network_nic: "eth1"
 def_xs_public_network_label: "Network1"
+def_xs_license_server: "<IP_ADDRESS_HERE>"
+def_xs_license_server_port: "27000"
+def_xs_apply_license: no
+def_xs_license_edition: "enterprise-per-socket"
 
 # VMware
 def_vmware_templates:
@@ -401,6 +576,15 @@ def_vmware_templates:
   "65":
     esxi_template: "ESXi 6.5"
     vc_template: "vCenter 65"
+  "65u1":
+    esxi_template: "ESXi 6.5u1"
+    vc_template: "vCenter 65u1"
+  "65u2":
+    esxi_template: "ESXi 6.5u1"
+    vc_template: "vCenter 65u2"
+  "67u1":
+    esxi_template: "ESXi 6.7u1"
+    vc_template: "vCenter 67u1"
   kddi:
     esxi_template: "ESXi 5.0u1"
     vc_template: "vCenter 55u3"
@@ -420,6 +604,7 @@ def_esxi_public_network_label: "vSwitch1"
 def_esxi_mgmt_dvs_network_label: "dvSwitch0"
 def_esxi_guest_dvs_network_label: "dvSwitch1"
 def_esxi_public_dvs_network_label: "dvSwitch1"
+
 
 # Hyper-V
 
@@ -449,18 +634,33 @@ def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
 def_marvin_images_location: "http://<IP_ADDRESS_HERE>/marvin"
 def_openvm_images_location: "http://<IP_ADDRESS_HERE>/openvm"
-def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/testing/centos7/4.10.0/"
+def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/testing/centos7/4.12.0/"
+
+# Webhooks for integration
+def_use_webhooks: no
+def_marvin_notifi_webhook_url: "<WEBHOOK_URL_HERE>"
 
 # hipchat integration:
-
 def_use_hipchat: yes
 def_hipchat_server: "<HIPCHAT_SERVER_URL>"
 def_hipchat_token: "<TOKEN_HERE>"
 def_hipchat_cli_client_location: "http://<IP_ADDRESS_HERE>/tools/atlassian-cli-7.1.0-distribution.zip"
 def_hipchat_cli_client_version: "7.1.0"
 
+# Slack integration
+def_use_slack: yes
+def_slackcli_url: "http://<IP_ADDRESS_HERE>/tools/slack-cli"
+def_slack_token: "<TOKEN_HERE>"
+def_slack_channel: "#testing"
+def_slack_username: "<USERNAME_HERE>"
+def_slack_icon_url: "<ICON_URL_HERE>"
+def_slack_color: "normal"
+def_slack_webhook: "<WEBHOOK_HERE>"
+def_marvin_icon_url: "<ICON_URL_HERE>"
+
 # cloudmonkey keys:
 
+def_linux_cm_url:  http://<IP_ADDRESS_HERE>/tools/cmk-a2b
 cm_apikey: "<KEY_HERE>"
 cm_secretkey_enc: "<ENCKEY_HERE>"
 cm_secretkey: "<KEY_HERE>"
@@ -475,6 +675,16 @@ global_settings:
     - {name: "cluster.memory.allocated.capacity.disablethreshold", value: "0.95", condition: "all"}
     - {name: "dynamic.apichecker.enabled", value: "true", condition: "all"}
     - {name: "workers", value: "10", condition: "all"}
+    - {name: "kvm.ha.activity.check.failure.ratio", value: "0.6", condition: "all"}
+    - {name: "kvm.ha.activity.check.interval", value: "8", condition: "all"}
+    - {name: "kvm.ha.activity.check.max.attempts", value: "5", condition: "all"}
+    - {name: "kvm.ha.activity.check.timeout", value: "30", condition: "all"}
+    - {name: "kvm.ha.degraded.max.period", value: "30", condition: "all"}
+    - {name: "kvm.ha.fence.timeout", value: "30", condition: "all"}
+    - {name: "kvm.ha.health.check.timeout", value: "30", condition: "all"}
+    - {name: "kvm.ha.recover.failure.threshold", value: "2", condition: "all"}
+    - {name: "kvm.ha.recover.timeout", value: "30", condition: "all"}
+    - {name: "kvm.ha.recover.wait.period", value: "30", condition: "all"}
   marvin:
     - {name: "ping.interval", value: "20", condition: "marvin"}
     - {name: "ping.timeout", value: "2.0", condition: "marvin"}
@@ -483,12 +693,12 @@ global_settings:
     - {name: "extract.url.cleanup.interval", value: "300", condition: "marvin"}
     - {name: "network.securitygroups.work.cleanup.interval", value: "120", condition: "marvin"}
     - {name: "storage.cleanup.enabled", value: "TRUE", condition: "marvin"}
-    - {name: "storage.cleanup.interval", value: "150", condition: "marvin"}
+    - {name: "storage.cleanup.interval", value: "10800", condition: "marvin"}
     - {name: "storage.template.cleanup.enabled", value: "TRUE", condition: "marvin"}
-    - {name: "task.cleanup.retry.interval", value: "600", condition: "marvin"}
-    - {name: "vm.op.cleanup.interval", value: "600", condition: "marvin"}
-    - {name: "vm.op.cleanup.wait", value: "60", condition: "marvin"}
-    - {name: "vpc.cleanup.interval", value: "600", condition: "marvin"}
+    - {name: "task.cleanup.retry.interval", value: "3600", condition: "marvin"}
+    - {name: "vm.op.cleanup.interval", value: "1200", condition: "marvin"}
+    - {name: "vm.op.cleanup.wait", value: "1200", condition: "marvin"}
+    - {name: "vpc.cleanup.interval", value: "1200", condition: "marvin"}
     - {name: "expunge.delay", value: "60", condition: "marvin"}
     - {name: "expunge.interval", value: "60", condition: "marvin"}
     - {name: "expunge.workers", value: "3", condition: "marvin"}
@@ -500,8 +710,8 @@ global_settings:
     - {name: "create.private.template.from.volume.wait", value: "1200", condition: "marvin"}
     - {name: "create.volume.from.snapshot.wait", value: "1200", condition: "marvin"}
     - {name: "migratewait", value: "1200", condition: "marvin"}
-    - {name: "network.gc.wait", value: "60", condition: "marvin"}
-    - {name: "network.gc.interval", value: "60", condition: "marvin"}
+    - {name: "network.gc.wait", value: "600", condition: "marvin"}
+    - {name: "network.gc.interval", value: "600", condition: "marvin"}
     - {name: "primary.storage.download.wait", value: "900", condition: "marvin"}
     - {name: "storage.pool.max.waitseconds", value: "900", condition: "marvin"}
     - {name: "update.wait", value: "300", condition: "marvin"}
@@ -509,17 +719,17 @@ global_settings:
     - {name: "vm.op.wait.interval", value: "60", condition: "marvin"}
     - {name: "vm.tranisition.wait.interval", value: "300", condition: "marvin"}
     - {name: "vmsnapshot.create.wait", value: "900", condition: "marvin"}
-    - {name: "wait", value: "3600", condition: "marvin"}
+    - {name: "wait", value: "1800", condition: "marvin"}
     - {name: "xapiwait", value: "300", condition: "marvin"}
     - {name: "router.alerts.check.interval", value: "300", condition: "marvin"}
-    - {name: "storage.cleanup.delay", value: "150", condition: "marvin"}
+    - {name: "storage.cleanup.delay", value: "1800", condition: "marvin"}
     - {name: "enable.dynamic.scale.vm", value: "true", condition: "marvin"}
     - {name: "outofbandmanagement.sync.interval", value: "5000", condition: "marvin"}
     - {name: "vpc.max.networks", value: "10", condition: "marvin"}
     - {name: "vm.destroy.forcestop", value: "true", condition: "marvin"}
     - {name: "vpc.max.networks", value: "5", condition: "marvin"}
     - {name: "router.redundant.vrrp.interval", value: "1", condition: "marvin"}
-    - {name: "router.aggregation.command.each.timeout", value: "600", condition: "marvin"}
+    - {name: "router.aggregation.command.each.timeout", value: "10", condition: "marvin"}
   dvswitch:
     - {name: "vmware.use.dvswitch", value: "true", condition: "dvswitch"}
   systemvmlocalstorage:
