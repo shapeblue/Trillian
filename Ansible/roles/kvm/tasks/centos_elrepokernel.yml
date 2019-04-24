@@ -38,8 +38,8 @@
   shell: /sbin/reboot
   async: 0
   poll: 0
-  ignore_errors: true	
-	
+  ignore_errors: true
+
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
