@@ -19,9 +19,8 @@
 # Released by ShapeBlue <info@shapeblue.com>, April 2014
 
 - name: Setup ELrepo-kernel yum repository
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "elrepo.repo"
+  template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
+ 
  
 - name: Install ELrepo kernel
   shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
