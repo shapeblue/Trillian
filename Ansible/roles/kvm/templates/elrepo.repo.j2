@@ -1,5 +1,3 @@
----
-
 #Copyright 2016 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +12,14 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-#Set elrepo release based on kvm_os
-{% if kvm_os | lower == "6" %}
-{% set el_os = "el6" %}
-{% elif kvm_os | lower == "62" %}
-{% set el_os = "el6" %}
-{% elif kvm_os | lower == "64" %}
-{% set el_os = "el6" %}
-{% elif kvm_os | lower == "73" %}
-{% set el_os = "el7" %}
-{% elif kvm_os | lower == "7" %}
-{% set el_os = "el7" %}
-{% endif %}
-
 [elrepo-kernel]
-name=ELRepo.org Community Enterprise Linux Kernel Repository - {{ el_os }}
-baseurl=http://elrepo.org/linux/kernel/{{ el_os }}/$basearch/
-        http://mirrors.coreix.net/elrepo/kernel/{{ el_os }}/$basearch/
-        http://mirror.rackspace.com/elrepo/kernel/{{ el_os }}/$basearch/
-        http://repos.lax-noc.com/elrepo/kernel/{{ el_os }}/$basearch/
-        http://mirror.ventraip.net.au/elrepo/kernel/{{ el_os }}/$basearch/
-mirrorlist=http://mirrors.elrepo.org/mirrors-elrepo-kernel.{{ el_os }}
+name=ELRepo.org Community Enterprise Linux Kernel Repository
+baseurl=http://elrepo.org/linux/kernel/el$releasever/$basearch/
+        http://mirrors.coreix.net/elrepo/kernel/el$releasever/$basearch/
+        http://mirror.rackspace.com/elrepo/kernel/el$releasever/$basearch/
+        http://repos.lax-noc.com/elrepo/kernel/el$releasever/$basearch/
+        http://mirror.ventraip.net.au/elrepo/kernel/el$releasever/$basearch/
+mirrorlist=http://mirrors.elrepo.org/mirrors-elrepo-kernel.el$releasever
 enabled=0
 gpgcheck=0
 protect=0
