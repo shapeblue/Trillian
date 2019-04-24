@@ -1,3 +1,4 @@
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,7 +15,7 @@
 #limitations under the License.
 
 
-# Set elrepo release based on kvm_os
+#Set elrepo release based on kvm_os
 {% if kvm_os | lower == "6" %}
 {% set el_os = "el6" %}
 {% elif kvm_os | lower == "62" %}
