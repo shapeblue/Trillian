@@ -198,16 +198,7 @@
 - name: Change password for KVM host (usually root password)
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
-- name: Setup ELrepo-kernel yum repository
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "elrepo.repo"
-  when: kvm_install_elrepo_kernel
-  tags:
-    - kvm
-
-- name: Install ELrepo kernel
-  shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }}"
-  when: kvm_install_elrepo_kernel
+- include: ./centos_elrepokernel.yml
+  when: kvm_install_elrepo_kernel 
   tags:
     - kvm
