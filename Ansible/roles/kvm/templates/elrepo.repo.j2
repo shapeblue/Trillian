@@ -25,7 +25,7 @@
 {% set el_os = "el7" %}
 {% elif kvm_os | lower == "7" %}
 {% set el_os = "el7" %}
-
+{% endif %}
 
 [elrepo-kernel]
 name=ELRepo.org Community Enterprise Linux Kernel Repository - {{ el_os }}
