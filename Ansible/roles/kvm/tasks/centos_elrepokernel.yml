@@ -17,8 +17,8 @@
 # Unauthorized copying of this file, via any medium is strictly prohibited
 # Proprietary and confidential
 # Released by ShapeBlue <info@shapeblue.com>, April 2014
-  ---
-  gather_facts: true
+---
+gather_facts: true
 
 - name: Setup ELrepo-kernel yum repository
   template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
@@ -26,7 +26,7 @@
 - name: Install ELrepo kernel
   shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
 
-- name: ###### print out operating system ######
+- name: print out operating system
 - debug: var=ansible_distribution
 
 - name: Set ELrepo kernel as the default (CentOS 6)
