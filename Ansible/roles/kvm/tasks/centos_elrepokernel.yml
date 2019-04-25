@@ -22,7 +22,6 @@
   setup:
     gather_subset:
       - '!all'
-      - '!any'
       - facter
 
 - debug: msg "OS release is {{ ansible_distribution }} and major version is {{ ansible_distribution_major_version}}"
