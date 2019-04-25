@@ -17,7 +17,7 @@
 # Unauthorized copying of this file, via any medium is strictly prohibited
 # Proprietary and confidential
 # Released by ShapeBlue <info@shapeblue.com>, April 2014
----
+
 gather_facts: true
 
 - name: Setup ELrepo-kernel yum repository
