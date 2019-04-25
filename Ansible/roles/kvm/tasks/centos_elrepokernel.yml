@@ -20,10 +20,15 @@
 
 - name: Setup ELrepo-kernel yum repository
   template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
-    
+
 - name: Install ELrepo kernel
   shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
-  
+
+- name: ###### print out operating system ######
+  gather_facts: True
+  tasks:
+  - debug: var=ansible_distribution
+
 - name: Set ELrepo kernel as the default (CentOS 6)
   shell: sed -i '/default=1/c\default=0' /boot/grub/grub.conf
   when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")
