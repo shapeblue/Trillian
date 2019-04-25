@@ -21,8 +21,6 @@
 - name: Now I'm connected, get facts
   setup:
 
-- debug: msg "OS release is {{ ansible_distribution }} and major version is {{ ansible_distribution_major_version}}"
-
 - name: Setup ELrepo-kernel yum repository
   template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
 
