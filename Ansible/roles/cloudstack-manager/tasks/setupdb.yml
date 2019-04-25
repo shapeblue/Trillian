@@ -86,7 +86,7 @@
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
-  retries: 50
+  retries: 100
   run_once: true
 
 - name: Setup management on additional cloudstack management servers
