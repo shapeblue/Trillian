@@ -197,3 +197,8 @@
 
 - name: Change password for KVM host (usually root password)
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
+
+- include: ./centos_elrepokernel.yml
+  when: kvm_install_elrepo_kernel 
+  tags:
+    - kvm

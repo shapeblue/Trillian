@@ -376,6 +376,8 @@ kvm_localstorage_mount: "{{ kvm_localstorage_mount | default( def_kvm_localstora
 phys_host_mgmt_if: "{{ phys_host_mgmt_if | default( def_phys_host_mgmt_if ) }}"
 phys_host_trunked_if: "{{ phys_host_trunked_if | default( def_phys_host_trunked_if ) }}"
 phys_host_PXE_if: "{{ phys_host_PXE_if | default( def_phys_host_PXE_if ) }}"
+kvm_install_elrepo_kernel: {{ kvm_install_elrepo_kernel | default( def_kvm_install_elrepo_kernel) }}
+kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrepo_kernel_version ) }}"
 
 # XS
 xs_ver: "{{ xs_ver }}"

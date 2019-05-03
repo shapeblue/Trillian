@@ -1,0 +1,46 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+# Copyright (C) ShapeBlue Ltd - All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential
+# Released by ShapeBlue <info@shapeblue.com>, April 2014
+
+- name: Now I'm connected, get facts
+  setup:
+
+- name: Setup ELrepo-kernel yum repository
+  template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
+
+- name: Install ELrepo kernel
+  shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
+
+- name: Set ELrepo kernel as the default (CentOS 6)
+  shell: sed -i '/default=1/c\default=0' /boot/grub/grub.conf
+  when: (ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux') and (ansible_distribution_major_version == "6")
+
+- name: Set ELrepo kernel as the default one (CentOS 7)
+  shell: grub2-set-default 0
+  when: (ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux') and (ansible_distribution_major_version == "7")
+
+- name: Reboot KVM host to load ELrepo kernel
+  shell: /sbin/reboot
+  async: 0
+  poll: 0
+  ignore_errors: true
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: (not use_phys_hosts)
