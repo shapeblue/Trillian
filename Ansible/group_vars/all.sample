@@ -523,6 +523,8 @@ def_kvm_localstorage_mount: "/localstorage"
 def_phys_host_mgmt_if: "eth0"
 def_phys_host_trunked_if: "eth2"
 def_phys_host_PXE_if: "eth1"
+def_kvm_install_elrepo_kernel: no
+def_kvm_elrepo_kernel_version: "kernel-lt"
 
 # XS
 def_xs_service_offering: "Nested Hypervisor"
@@ -660,7 +662,7 @@ def_marvin_icon_url: "<ICON_URL_HERE>"
 
 # cloudmonkey keys:
 
-def_linux_cm_url:  http://<IP_ADDRESS_HERE>/tools/cmk-a2b
+def_linux_cm_url:  http://<IP_ADDRESS_HERE>/tools/cmk-6.0.0
 cm_apikey: "<KEY_HERE>"
 cm_secretkey_enc: "<ENCKEY_HERE>"
 cm_secretkey: "<KEY_HERE>"
