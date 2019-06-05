@@ -78,6 +78,7 @@
   with_items:
     - mysql-client
     - haveged
+    - qemu-utils
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
