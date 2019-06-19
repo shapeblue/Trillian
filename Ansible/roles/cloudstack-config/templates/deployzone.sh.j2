@@ -275,7 +275,14 @@ cloudmonkey upload customcertificate id=1 name=RootCertificate certificate='{{ s
 cloudmonkey upload customcertificate id=2 certificate='{{ sslsitecert }}' privatekey='{{ sslkey }}' domainsuffix='{{ systemvm_url }}'
 {% endif %}
 
-
 WriteOutput "Enabling zone."
 cloudmonkey update zone allocationstate='Enabled' id=${ZoneID} | tee -i -a ${DEPLOYLOG};
+
+{% if add_def_user %}
+DOM_ID=`cloudmonkey list domains level=0 name=ROOT | jq -r '.domain[].id'`;
+WriteOutput "Adding a normal user."
+cloudmonkey create account domainid="$DOM_ID" accounttype=0 username="user" account="ACSUser" firstname="ACloudStack" lastname="User" email="sblab@shapeblue.com" password=password timezone=Etc/UTC | tee -i -a ${DEPLOYLOG};
+{% endif %}
+
+
 WriteOutput "You're done. Good luck!";

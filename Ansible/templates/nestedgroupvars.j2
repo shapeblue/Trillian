@@ -223,7 +223,7 @@ use_shared_storage: {{ use_shared_storage | default( def_use_shared_storage ) }}
 use_local_storage_systemvms: {{ use_local_storage_systemvms | default( def_use_local_storage_systemvms ) }}
 local_storage_disk_offering: "{{ local_storage_disk_offering | default( def_local_storage_disk_offering ) }}"
 local_storage_disk_size: "{{ local_storage_disk_size | default( def_local_storage_disk_size ) }}"
-
+add_def_user: "{{ add_def_user | default("yes") }}"
 
 # Management server
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
