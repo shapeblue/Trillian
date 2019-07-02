@@ -97,6 +97,14 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 {% set osversion = "centos64" %}
 {% set releaseurl = "centos" %}
 {% set mgmt_os_type = "centos" %}
+{% elif mgmt_os | lower == "68" %}
+{% set osversion = "centos68" %}
+{% set releaseurl = "centos" %}
+{% set mgmt_os_type = "centos" %}
+{% elif mgmt_os | lower == "610" %}
+{% set osversion = "centos610" %}
+{% set releaseurl = "centos" %}
+{% set mgmt_os_type = "centos" %}
 {% elif mgmt_os | lower == "7" %}
 {% set osversion = "centos7" %}
 {% set releaseurl = "centos7" %}
@@ -292,6 +300,12 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvm_os_type = "centos" %}
 {% elif kvm_os | lower == "64" %}
 {% set kvmosversion = "centos64" %}
+{% set kvmreleaseurl = "centos" %}
+{% elif kvm_os | lower == "68" %}
+{% set kvmosversion = "centos68" %}
+{% set kvmreleaseurl = "centos" %}
+{% elif kvm_os | lower == "610" %}
+{% set kvmosversion = "centos68" %}
 {% set kvmreleaseurl = "centos" %}
 {% set kvm_os_type = "centos" %}
 {% elif kvm_os | lower == "73" %}
