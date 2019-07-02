@@ -304,7 +304,7 @@ kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offeri
 {% set kvmosversion = "centos68" %}
 {% set kvmreleaseurl = "centos" %}
 {% elif kvm_os | lower == "610" %}
-{% set kvmosversion = "centos68" %}
+{% set kvmosversion = "centos610" %}
 {% set kvmreleaseurl = "centos" %}
 {% set kvm_os_type = "centos" %}
 {% elif kvm_os | lower == "73" %}
