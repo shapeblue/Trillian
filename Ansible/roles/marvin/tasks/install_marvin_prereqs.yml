@@ -133,6 +133,7 @@
   - pyasn1
   - wget
   - texttable
+  - lxml
   tags:
     - marvin
     - marvin_install
