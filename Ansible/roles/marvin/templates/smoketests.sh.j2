@@ -35,32 +35,92 @@ rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
 cleanup() {
+    # dont wait for async job - execute in parallel until told otherwise
     cloudmonkey set asyncblock false
-    cloudmonkey set display default
-    # TODO: destroy accounts, domains, templates
-    # Destroy vms
-    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
-    done
-    # Destroy routers
-    for rid in $(cloudmonkey list routers listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey destroy router id=$rid || true
-    done
-    # Destroy networks
-    for netid in $(cloudmonkey list networks listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey delete network id=$netid || true
-    done
-    # Destroy vpcs
-    for vid in $(cloudmonkey list vpcs listall=true filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey delete vpc id=$vid || true
-    done
+    cloudmonkey set output json
+    # TODO: N/A
+
     # Destroy alerts
-    for id in $(cloudmonkey list alerts listall=true keyword=auth-error filter=id | grep '^id' | awk '{print $3}'); do
+    for id in $(cloudmonkey list alerts listall=true keyword=vm filter=id | jq -r '.alert[] .id'); do
         cloudmonkey delete alerts ids=$id || true
     done
-   # Destroy tepla
-    for templateid in $(cloudmonkey list templates templatefilter=self filter=id | grep '^id' | awk '{print $3}'); do
-        cloudmonkey delete template id=$templateid || true
+
+    # Destroy templates, forced, since some VMs might exist.
+    for templateid in $(cloudmonkey list templates templatefilter=self filter=id | jq -r '.template[] .id'); do
+        cloudmonkey delete template id=$templateid forced=true  || true
+    done
+
+    # Destroy vms, all in parallel
+    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | jq -r '.virtualmachine[] .id'); do
+        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
+    done
+
+    # Not needed to destroy VRs explicitely, will be destroyed with network/VPC
+
+    # Destroy networks only when no more VMS (otherwise will fail if network contains a VM)
+         NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
+         while [ $NoVMs -ne 0 ]
+         do
+          sleep 5
+          #echo "sleeping 5 sec"
+             if [[ "$NoVMs" == '0' ]]; then
+             break
+             fi
+          NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
+         done
+    for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
+        cloudmonkey delete network id=$netid || true
+    done
+
+    # Destroy vpcs, only if no networks present (otherwise will fail if VPC has networks)
+         NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
+         while [ $NoNets -ne 0 ]
+         do
+          sleep 5
+          #echo "sleeping 5 sec"
+             if [[ "$NoNets" == '0' ]]; then
+             break
+             fi
+          NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
+         done
+    for vid in $(cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'); do
+        cloudmonkey delete vpc id=$vid || true
+    done
+
+    # move to blocking asyn calls (just volume deletion, should be very fast), so later we can delete accounts and domains gracefully
+    cloudmonkey set asyncblock true
+
+    # Destroy data volumes when zero attached (all VMs deleted)
+      NoAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
+         while [ $NoAttachedVolumes -ne 0 ]
+         do
+          sleep 5
+          #echo "sleeping 5 sec"
+             if [[ "$NoAttachedVolumes" == '0' ]]; then
+             break
+             fi
+          NoAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
+         done
+    for volumeid in $(cloudmonkey list volumes listall=true type=data filter=id | jq -r '.volume[] .id'); do
+        cloudmonkey delete volume id=$volumeid || true
+    done
+
+cloudmonkey set asyncblock true
+
+    # Destroy accounts (keep some, delete all others)
+    cloudmonkey list accounts listall=true filter=id name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
+    cloudmonkey list accounts listall=true filter=id name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+    cloudmonkey list accounts listall=true filter=id name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+    cloudmonkey list accounts listall=true filter=id | jq -r '.account[] .id'  > .deleteaccounts
+    for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
+        cloudmonkey delete account id=$accountid || true
+    done
+
+    # Destroy domains (keep ROOT domain, delete all other), with cleanup (delete children domains accounts)
+    cloudmonkey list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomain
+    cloudmonkey list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomain
+    for domainid in $(comm -13 <(sort -u .skipdeletingdomain) <(sort -u .deletedomain)); do
+        cloudmonkey delete domain id=$domainid cleanup=true || true
     done
 
 }
