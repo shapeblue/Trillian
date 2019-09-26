@@ -55,18 +55,31 @@ cleanup() {
         cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
     done
 
-    # Not needed to destroy VRs explicitely, will be destroyed with network/VPC
+    # Not neeed to destroy VRs explicitely, will be destroyed with network/VPC - otherwise later deleting network/VPC fails if VR is gone!!!
+
+# Set sleep time (seconds) between checks if child resources deleted; i.e. 5secs
+  sleepduration=5
+# Set max number of retires after the sleep period - i.e. if child resource is not deleted withing $sleepduration x $maxretries,
+# then move on and hope for the best; i.e. 60secs (total of 300sec waiting time)
+  maxretries=60
 
     # Destroy networks only when no more VMS (otherwise will fail if network contains a VM)
-         NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
-         while [ $NoVMs -ne 0 ]
+        NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
+        retries=0
+        while [ $NoVMs -ne 0 ]
          do
-          sleep 5
-          #echo "sleeping 5 sec"
+          echo "Retrying in $sleepduration sec"
+          sleep $sleepduration
              if [[ "$NoVMs" == '0' ]]; then
-             break
+                echo "No more VMs, about to wipe Networks..."
+                break
              fi
-          NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
+             if [[ "$retries" == "$maxretries" ]]; then
+                echo "Waited for some time, giving up, trying wiping networks..."
+                break
+             fi
+           NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
+           (( retries++ ))
          done
     for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
         cloudmonkey delete network id=$netid || true
@@ -74,38 +87,50 @@ cleanup() {
 
     # Destroy vpcs, only if no networks present (otherwise will fail if VPC has networks)
          NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
+         retries=0
          while [ $NoNets -ne 0 ]
          do
-          sleep 5
-          #echo "sleeping 5 sec"
+          echo "Retrying in $sleepduration sec"
+          sleep $sleepduration
              if [[ "$NoNets" == '0' ]]; then
-             break
+                echo "No more networks, about to wipe VPCs..."
+                break
              fi
-          NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
+             if [[ "$retries" == "$maxretries" ]]; then
+                echo "Waited for some time, giving up, trying wiping VPCs..."
+                break
+             fi
+           NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
+           (( retries++ ))
          done
     for vid in $(cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'); do
         cloudmonkey delete vpc id=$vid || true
     done
 
-    # move to blocking asyn calls (just volume deletion, should be very fast), so later we can delete accounts and domains gracefully
+    # move to blocking async calls (just volume deletion, should be very fast), so later we can delete accounts and domains
     cloudmonkey set asyncblock true
 
     # Destroy data volumes when zero attached (all VMs deleted)
-      NoAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
-         while [ $NoAttachedVolumes -ne 0 ]
-         do
-          sleep 5
-          #echo "sleeping 5 sec"
-             if [[ "$NoAttachedVolumes" == '0' ]]; then
-             break
+        NumAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
+        retries=0
+        while [ $NumAttachedVolumes -ne 0 ]
+       do
+          echo "Retrying in $sleepduration sec"
+          sleep $sleepduration
+             if [[ "$NumAttachedVolumes" == '0' ]]; then
+                echo "No more VMs, about to wipe all DATA Volumes..."
+                break
              fi
-          NoAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
+             if [[ "$retries" == "$maxretries" ]]; then
+                echo "Waited for some time, giving up, trying wiping VPCs..."
+                break
+             fi
+           NumAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
+           (( retries++ ))
          done
     for volumeid in $(cloudmonkey list volumes listall=true type=data filter=id | jq -r '.volume[] .id'); do
         cloudmonkey delete volume id=$volumeid || true
     done
-
-cloudmonkey set asyncblock true
 
     # Destroy accounts (keep some, delete all others)
     cloudmonkey list accounts listall=true filter=id name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
@@ -116,13 +141,17 @@ cloudmonkey set asyncblock true
         cloudmonkey delete account id=$accountid || true
     done
 
-    # Destroy domains (keep ROOT domain, delete all other), with cleanup (delete children domains accounts)
-    cloudmonkey list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomain
-    cloudmonkey list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomain
-    for domainid in $(comm -13 <(sort -u .skipdeletingdomain) <(sort -u .deletedomain)); do
-        cloudmonkey delete domain id=$domainid cleanup=true || true
+    # Destroy domains (keep ROOT domain, delete all other)
+    cloudmonkey list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomains
+    cloudmonkey list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomains
+    for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
+        cloudmonkey delete domain id=$domainid || true
     done
-
+# cleanup
+rm -f .skipdeletingaccounts
+rm -f .deleteaccounts
+rm -f .skipdeletingdomain
+rm -f .deletedomain
 }
 
 runtest() {
