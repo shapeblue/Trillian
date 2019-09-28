@@ -180,11 +180,9 @@ local_storage_disk_size: "{{ local_storage_disk_size | default( def_local_storag
 add_def_user: "{{ add_def_user | default("yes") }}"
 
 # Management server
-{% set osversion = linux_os[mgmt_os].os %}
-{% set releaseurl = "linux_os[mgmt_os].os" %}
 env_num_pods: {{ env_num_pods | default( def_env_num_pods ) }}
 env_num_zones: {{ env_num_zones | default( def_env_num_zones ) }}
-env_mgmtos: "{{ osversion }}"
+env_mgmtos: "{{ linux_os[mgmt_os].os }}"
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
 mgmtsrv_template: "{{ mgmtsrv_template | default( linux_os[mgmt_os].template ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
@@ -197,7 +195,7 @@ cloudstack_management_package: "cloudstack-management"
 cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version }}"
 {% endif %}
 
-
+{% set releaseurl = linux_os[mgmt_os].os_type %}
 {% if rooturl_cloudstack is defined %}
 {% set baseurl = rooturl_cloudstack~releaseurl~"/"~env_repo_version_var~"/" %}
 {% elif baseurl_cloudstack is defined %}
@@ -213,12 +211,16 @@ baseurl_cloudstack: "{{ baseurl }}"
 create_zone: {{ createzone }}
 {% if ccp_install_tarball is not defined %}{% set ccp_tarball = "na" %}{% else %}{% set ccp_tarball = ccp_install_tarball %}{% endif %}
 ccp_install_tarball: {{ ccp_tarball }}
+
+# mamagement server java
+
 {% if mgmt_java_ver is not defined %}
 {% set mgmtjava = java_vers[env_cs_minor_version_string] %}
 {% else %}
 {% set mgmtjava = mgmt_java_ver %}
 {% endif %}
 mgmt_java_ver: "{{ mgmtjava }}"
+{% set mgmt_os_type = linux_os[mgmt_os].os_type %}
 {% if mgmt_java_path is not defined %}
 {% set mgmtjavapath = java_paths[mgmt_os_type][mgmtjava] %}
 {% else %}
@@ -241,9 +243,8 @@ mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_
 
 # KVM
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
-kvm_os: "{{ kvmosversion }}"
+{% set kvmreleaseurl = linux_os[kvm_os].os_type %}
 {% set kvmosversion = linux_os[kvm_os].os %}
-{% set kvmreleaseurl = "linux_os[kvm_os].os" %}
 {% if kvmosversion != "custom" %}
 {% if rooturl_kvm is defined %}
 {% set baseurlkvm = rooturl_kvm~kvmreleaseurl~"/"~env_repo_version_var~"/" %}
@@ -276,24 +277,30 @@ kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
-{% if kvm_java_ver is not defined %}
-{% set kvmjava = java_vers[env_cs_minor_version_string] %}
-{% else %}
-{% set kvmjava = mgmt_java_ver %}
-{% endif %}
-kvm_java_ver: "{{ kvmjava }}"
-{% if kvm_java_path is not defined %}
-{% set kvmjavapath = java_paths[kvm_os_type][kvmjava] %}
-{% else %}
-{% set kvmjavapath = kvm_java_path %}
-{% endif %}
-kvm_java_path: "{{ kvmjavapath }}"
+
 kvm_localstorage_mount: "{{ kvm_localstorage_mount | default( def_kvm_localstorage_mount ) }}"
 phys_host_mgmt_if: "{{ phys_host_mgmt_if | default( def_phys_host_mgmt_if ) }}"
 phys_host_trunked_if: "{{ phys_host_trunked_if | default( def_phys_host_trunked_if ) }}"
 phys_host_PXE_if: "{{ phys_host_PXE_if | default( def_phys_host_PXE_if ) }}"
 kvm_install_elrepo_kernel: {{ kvm_install_elrepo_kernel | default( def_kvm_install_elrepo_kernel) }}
 kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrepo_kernel_version ) }}"
+
+
+# set kvm host java
+
+{% if kvm_java_ver is not defined %}
+{% set kvmjava = java_vers[env_cs_minor_version_string] %}
+{% else %}
+{% set kvmjava = kvm_java_ver %}
+{% endif %}
+kvm_java_ver: "{{ kvmjava }}" 
+{% if kvm_java_path is not defined %}
+{% set kvm_os_type = linux_os[kvm_os].os %}
+{% set kvmjavapath = java_paths[kvm_os_type][kvmjava] %}
+{% else %}
+{% set kvmjavapath = kvm_java_path %}
+{% endif %}
+kvm_java_path: "{{ kvmjavapath }}"
 
 # XS
 xs_ver: "{{ xs_ver }}"
