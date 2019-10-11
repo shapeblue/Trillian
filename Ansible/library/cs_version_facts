@@ -21,7 +21,7 @@ else
   
   re='[a-zA-Z]'
   if [[ "${VERSIONSTRING:1}" =~ $re ]]; then 
-    if [[ "${VERSIONSTRING,,}" == "CCP"* ]] || [[ "${VERSIONSTRING,,}" == "ACP"* ]]; then
+    if [[ "${VERSIONSTRING}" =~ "CCP"* ]] || [[ "${VERSIONSTRING}" =~ "ACP"* ]]; then
       DISTRIBUTION="ccp"
       VERSIONNUM="${VERSIONSTRING:3}"
     else
