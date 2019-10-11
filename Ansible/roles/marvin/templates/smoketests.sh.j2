@@ -19,6 +19,7 @@ TESTTYPE="Smoke tests"
 LOGDIR=/marvin/MarvinLogs
 TESTDIR="/marvin/tests/smoke"
 TMP_JSON_DIR="/marvin/json_results/"
+CLEAN_UP_LOG="$LOGDIR/cleanup.log"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 export SLACK_CLI_TOKEN="{{ slack_token }}"
@@ -34,75 +35,79 @@ rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
+count_networks() {
+  GCNETWORKS=`cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'`
+  NUM_GCNETWORKS=`echo $GCNETWORKS | jq '.network | length'`
+}
+
 cleanup() {
     # dont wait for async job - execute in parallel until told otherwise
     cloudmonkey set asyncblock false
     cloudmonkey set output json
     # TODO: N/A
 
-    # Destroy alerts
+    echo "Destroy alerts"
     for id in $(cloudmonkey list alerts listall=true keyword=vm filter=id | jq -r '.alert[] .id'); do
         cloudmonkey delete alerts ids=$id || true
     done
 
-    # Destroy templates, forced, since some VMs might exist.
-    for templateid in $(cloudmonkey list templates templatefilter=self filter=id | jq -r '.template[] .id'); do
-        cloudmonkey delete template id=$templateid forced=true  || true
-    done
+    echo "Destroy templates, forced, since some VMs might exist."
+    GCTEMPLATES=`cmk list templates templatefilter=self`
+    NUM_GCTEMPLATES=`echo $GCTEMPLATES | jq '.template | length'`
+    if [ $NUM_GCTEMPLATES -gt 0 ]; then
+      echo "Test file $file left behind $NUM_GCTEMPLATES templates" >> $CLEAN_UP_LOG
+      for templateid in $(echo $GCTEMPLATES | jq -r '.template[] .id'); do
+          cloudmonkey delete template id=$templateid forced=true  || true
+      done
+    fi
 
-    # Destroy vms, all in parallel
-    for vmid in $(cloudmonkey list virtualmachines listall=true filter=id | jq -r '.virtualmachine[] .id'); do
-        cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
-    done
+  sleepduration=10
+
+    echo "Destroy vms, all in parallel"
+    GCVMS=`cmk list virtualmachines listall=true filter=id`
+    NUM_GCVMS=`echo $GCVMS | jq '.virtualmachine | length'`
+    if [ $NUM_GCVMS -gt 0 ]; then
+      echo "Test file $file left behind $NUM_GCVMS VMs" >> $CLEAN_UP_LOG
+      for vmid in $(echo $GCVMS | jq -r '.virtualmachine[] .id'); do
+          cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
+      done
+      echo "wait ${sleepduration}s to give VM destory some time"
+      sleep $sleepduration
+    fi
 
     # Not neeed to destroy VRs explicitely, will be destroyed with network/VPC - otherwise later deleting network/VPC fails if VR is gone!!!
 
 # Set sleep time (seconds) between checks if child resources deleted; i.e. 5secs
-  sleepduration=5
+  sleepduration=10
 # Set max number of retires after the sleep period - i.e. if child resource is not deleted withing $sleepduration x $maxretries,
 # then move on and hope for the best; i.e. 60secs (total of 300sec waiting time)
-  maxretries=60
-
-    # Destroy networks only when no more VMS (otherwise will fail if network contains a VM)
-        NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
-        retries=0
-        while [ $NoVMs -ne 0 ]
-         do
-          echo "Retrying in $sleepduration sec"
-          sleep $sleepduration
-             if [[ "$NoVMs" == '0' ]]; then
-                echo "No more VMs, about to wipe Networks..."
-                break
-             fi
-             if [[ "$retries" == "$maxretries" ]]; then
-                echo "Waited for some time, giving up, trying wiping networks..."
-                break
-             fi
-           NoVMs=$(cloudmonkey list virtualmachines filter=id  | grep id | wc -l)
-           (( retries++ ))
-         done
-    for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
+  retries=60
+  
+  echo "deleting netowrks"
+  count_networks
+  if [ $NUM_GCNETWORKS -gt 0 ]; then
+    echo "Test file $file left behind $NUM_GCNETWORKS Networks" >> $CLEAN_UP_LOG    
+    while [ $retries -gt 0 ]     
+    do 
+      for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
         cloudmonkey delete network id=$netid || true
+      done
+    echo "wait ${sleepduration}s to give Networks some time to destroy"
+    sleep $sleepduration
+    count_networks
+    if [ $NUM_GCNETWORKS -gt 0 ]; then
+      retries=$((retries)-1)
+    else
+      retries=0
+    fi
     done
+  fi   
 
-    # Destroy vpcs, only if no networks present (otherwise will fail if VPC has networks)
-         NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
-         retries=0
-         while [ $NoNets -ne 0 ]
-         do
-          echo "Retrying in $sleepduration sec"
-          sleep $sleepduration
-             if [[ "$NoNets" == '0' ]]; then
-                echo "No more networks, about to wipe VPCs..."
-                break
-             fi
-             if [[ "$retries" == "$maxretries" ]]; then
-                echo "Waited for some time, giving up, trying wiping VPCs..."
-                break
-             fi
-           NoNets=$(cloudmonkey list networks filter=id | grep id | wc -l)
-           (( retries++ ))
-         done
+  echo "deleting VPCs"
+  GCVPCS=`cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'`
+  NUM_GCVPCS=`echo $VPCs | jq '.VPC | length'`
+  if [ $NUM_GCVPC -gt 0 ]; then
+    echo "$file left $NUM_GCVPCS behind"
     for vid in $(cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'); do
         cloudmonkey delete vpc id=$vid || true
     done
