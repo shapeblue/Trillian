@@ -29,154 +29,207 @@ else
   jenkinslink=""
 fi
 
+STUCKTEMPLATES=0
+STUCKVMS=0
+STUCKNETORKS=0
+STUCKVPCS=0
+STUCKVOLS=0
+sleepduration=10
+retries=12
+
 rm -f /marvin/smoketests-summary.txt
 rm -f $TESTDIR/test_*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
 
-count_networks() {
-  GCNETWORKS=`cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'`
-  NUM_GCNETWORKS=`echo $GCNETWORKS | jq '.network | length'`
-}
-
 cleanup() {
-    # dont wait for async job - execute in parallel until told otherwise
-    cloudmonkey set asyncblock false
-    cloudmonkey set output json
-    # TODO: N/A
+  # dont wait for async job - execute in parallel until told otherwise
+  cloudmonkey set asyncblock false
+  cloudmonkey set output json
+  # TODO: N/A
 
-    echo "Destroy alerts"
-    for id in $(cloudmonkey list alerts listall=true keyword=vm filter=id | jq -r '.alert[] .id'); do
-        cloudmonkey delete alerts ids=$id || true
+  echo "Destroy alerts"
+  for id in $(cloudmonkey list alerts listall=true keyword=vm filter=id | jq -r '.alert[] .id'); do
+    cloudmonkey delete alerts ids=$id || true
+  done
+
+  echo "Destroy templates, forced, since some VMs might exist."
+  GCTEMPLATES=`cmk list templates templatefilter=self listall=true`
+  NUM_GCTEMPLATES=`echo $GCTEMPLATES | jq -r '.count'`
+  if [ $NUM_GCTEMPLATES -gt $STUCKTEMPLATES ]; then
+    echo "Test file $file left behind $NUM_GCTEMPLATES templates" >> $CLEAN_UP_LOG
+    for templateid in $(echo $GCTEMPLATES | jq -r '.template[] .id'); do
+      cmk delete template id=$templateid forced=true  || true
     done
+  sleep $sleepduration
+  STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.count'`
+  fi
 
-    echo "Destroy templates, forced, since some VMs might exist."
-    GCTEMPLATES=`cmk list templates templatefilter=self`
-    NUM_GCTEMPLATES=`echo $GCTEMPLATES | jq '.template | length'`
-    if [ $NUM_GCTEMPLATES -gt 0 ]; then
-      echo "Test file $file left behind $NUM_GCTEMPLATES templates" >> $CLEAN_UP_LOG
-      for templateid in $(echo $GCTEMPLATES | jq -r '.template[] .id'); do
-          cloudmonkey delete template id=$templateid forced=true  || true
-      done
-    fi
+  echo "Destroy vms, all in parallel"
+  GCVMS=`cmk list virtualmachines listall=true filter=id`
+  NUM_GCVMS=`echo $GCVMS | jq -r '.count'`
+  if [ $NUM_GCVMS -gt $STUCKVMS ]; then
+    echo "Test file $file left behind $NUM_GCVMS VMs" >> $CLEAN_UP_LOG
+    for vmid in $(echo $GCVMS | jq -r '.virtualmachine[] .id'); do
+      cmk destroy virtualmachine id=$vmid expunge=true || true
+    done
+    echo "wait ${sleepduration}s to give VMs some time to be destroyed"
+    sleep $sleepduration
+  fi
 
-  sleepduration=10
-
-    echo "Destroy vms, all in parallel"
-    GCVMS=`cmk list virtualmachines listall=true filter=id`
-    NUM_GCVMS=`echo $GCVMS | jq '.virtualmachine | length'`
-    if [ $NUM_GCVMS -gt 0 ]; then
-      echo "Test file $file left behind $NUM_GCVMS VMs" >> $CLEAN_UP_LOG
-      for vmid in $(echo $GCVMS | jq -r '.virtualmachine[] .id'); do
-          cloudmonkey destroy virtualmachine id=$vmid expunge=true || true
-      done
-      echo "wait ${sleepduration}s to give VM destory some time"
+  tries=$retries
+  while [ $tries -gt 0 ]     
+  do 
+    NUM_GCVMS=`cmk list virtualmachines listall=true| jq -r '.count'`
+    if [ $NUM_GCVMS -gt $STUCKVMS ]; then
+      echo "Still $NUM_GCVMS left"
       sleep $sleepduration
+      tries=$((tries)-1)
+      if [ retries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
+    else
+      tries=0
     fi
+  done
 
     # Not neeed to destroy VRs explicitely, will be destroyed with network/VPC - otherwise later deleting network/VPC fails if VR is gone!!!
 
-# Set sleep time (seconds) between checks if child resources deleted; i.e. 5secs
-  sleepduration=10
-# Set max number of retires after the sleep period - i.e. if child resource is not deleted withing $sleepduration x $maxretries,
 # then move on and hope for the best; i.e. 60secs (total of 300sec waiting time)
-  retries=60
-  
+
+  tries=$retries
   echo "deleting netowrks"
-  count_networks
-  if [ $NUM_GCNETWORKS -gt 0 ]; then
+  GCNETWORKS=$(cmk list networks listall=true filter=id | jq -r '.network[] .id')
+  NUM_GCNETWORKS=`echo $GCNETWORKS | jq '.count'`
+  if [ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]; then
     echo "Test file $file left behind $NUM_GCNETWORKS Networks" >> $CLEAN_UP_LOG    
-    while [ $retries -gt 0 ]     
+    while [ $tries -gt 0 ]     
     do 
       for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
-        cloudmonkey delete network id=$netid || true
+        cmk delete network id=$netid || true
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
     sleep $sleepduration
-    count_networks
-    if [ $NUM_GCNETWORKS -gt 0 ]; then
-      retries=$((retries)-1)
+    NUM_GCNETWORKS=`cmk networks listall=true filter=id | jq -r '.count'`
+    if [ $NUM_GCNETWORKS -gt $STUCKVMS ]; then
+      tries=$((retries)-1)
+      if [ retries -eq 0 ]; then STUCKNETWORKS=$NUM_GCNETWORKS; fi
     else
-      retries=0
+      tries=0
     fi
     done
   fi   
 
   echo "deleting VPCs"
-  GCVPCS=`cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'`
+  GCVPCS=$(cmk list vpcs listall=true filter=id | jq -r '.vpc[] .id')
   NUM_GCVPCS=`echo $VPCs | jq '.VPC | length'`
-  if [ $NUM_GCVPC -gt 0 ]; then
+  if [ $NUM_GCVPC -gt $STUCKVPCS ]; then
     echo "$file left $NUM_GCVPCS behind"
-    for vid in $(cloudmonkey list vpcs listall=true filter=id | jq -r '.vpc[] .id'); do
-        cloudmonkey delete vpc id=$vid || true
+    for vid in $(cmk list vpcs listall=true | jq -r '.vpc[] .id'); do
+      cmk delete vpc id=$vid || true
     done
-
-    # move to blocking async calls (just volume deletion, should be very fast), so later we can delete accounts and domains
-    cloudmonkey set asyncblock true
-
-    # Destroy data volumes when zero attached (all VMs deleted)
-        NumAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
-        retries=0
-        while [ $NumAttachedVolumes -ne 0 ]
-       do
-          echo "Retrying in $sleepduration sec"
-          sleep $sleepduration
-             if [[ "$NumAttachedVolumes" == '0' ]]; then
-                echo "No more VMs, about to wipe all DATA Volumes..."
-                break
-             fi
-             if [[ "$retries" == "$maxretries" ]]; then
-                echo "Waited for some time, giving up, trying wiping VPCs..."
-                break
-             fi
-           NumAttachedVolumes=$(cloudmonkey list volumes type=data  | grep virtualmachineid | wc -l)
-           (( retries++ ))
-         done
-    for volumeid in $(cloudmonkey list volumes listall=true type=data filter=id | jq -r '.volume[] .id'); do
-        cloudmonkey delete volume id=$volumeid || true
+    sleep $sleepduration
+    NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.count'`
+    if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
+      tries=$((retries)-1)
+      if [ retries -eq 0 ]; then
+        STUCKVPCS=$NUM_GCVPCS
+      else
+        sleep $sleepduration
+      fi
+    else
+      tries=0
+    fi
     done
+  fi
 
-    # Destroy accounts (keep some, delete all others)
-    cloudmonkey list accounts listall=true filter=id name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
-    cloudmonkey list accounts listall=true filter=id name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-    cloudmonkey list accounts listall=true filter=id name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-    cloudmonkey list accounts listall=true filter=id | jq -r '.account[] .id'  > .deleteaccounts
-    for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
-        cloudmonkey delete account id=$accountid || true
-    done
+  # move to blocking async calls (just volume deletion, should be very fast), so later we can delete accounts and domains
+  cloudmonkey set asyncblock true
 
-    # Destroy domains (keep ROOT domain, delete all other)
-    cloudmonkey list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomains
-    cloudmonkey list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomains
-    for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
-        cloudmonkey delete domain id=$domainid || true
+  # Destroy data volumes when zero attached (all VMs deleted)
+  NUM_GCVOLS=$(cmk list volumes type=data | jq -r '.count')
+  if [ $NUM_GCVOLS -gt $STUCKVOLS ]; then
+    for volumeid in $(cmk list volumes listall=true type=data | jq -r '.volume[] .id'); do
+      cmk delete volume id=$volumeid || true
     done
+  fi
+  sleep $sleepduration
+  NUM_GCVOLS=`cmk list volumes listall=true type=data | jq -r '.count'`
+  if [ $NUM_GCVOLS -gt $STUCKVOLS ]; then
+    tries=$((retries)-1)
+    if [ retries -eq 0 ]; then
+      STUCKVOLS=$NUM_GCVOLS
+    else
+      sleep $sleepduration
+    fi
+  else
+    tries=0
+  fi
+  done
+  fi
+
+  # Destroy accounts (keep some, delete all others)
+  cmk list accounts listall=true filter=id name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
+  cmk list accounts listall=true filter=id name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+  cmk list accounts listall=true filter=id name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+  cmk list accounts listall=true filter=id | jq -r '.account[] .id'  > .deleteaccounts
+  for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
+    cmk delete account id=$accountid || true
+  done
+
+  # Destroy domains (keep ROOT domain, delete all other)
+  cmk list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomains
+  cmk list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomains
+  for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
+    cmk delete domain id=$domainid || true
+  done
+  
+  cmk list serviceofferings listall=true issystem=false name='medium instance' | jq -r '.serviceoffering[].id' > .skipdeleteofferings
+  cmk list serviceofferings listall=true issystem=false name='small instance' | jq -r '.serviceoffering[].id' >> .skipdeleteofferings
+  cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
+  for offeringid in $(comm -13 <(sort -u .skipdeletdeleteofferings) <(sort -u .deleteofferings)); do
+    cmk delete serviceofferings id=$offeringid || true
+  done
+
+  cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskoffering[].id' > .skipdeletediskofferings
+  cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+  cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+  cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+  cmk list diskofferings listall=true issystem=false | jq -r '.diskoffering[].id' > .deletediskofferings
+  for offeringid in $(comm -13 <(sort -u .skipdeletediskofferings) <(sort -u .deletediskofferings)); do
+    cmk delete diskofferings id=$offeringid || true
+  done
+
+
+
 # cleanup
 rm -f .skipdeletingaccounts
 rm -f .deleteaccounts
 rm -f .skipdeletingdomain
 rm -f .deletedomain
+rm -f .skipdeleteofferings
+rm -f .deleteofferings
+rm -f .skipdeletediskofferings
+rm -f .deletediskofferings
 }
 
 runtest() {
-    file=$1
-    rm -fr $LOGDIR/$(basename $file).xml
-    TRIMFILE=$(echo $(basename $file) | sed 's/.py$//g')
-    OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
-    if [ ! -z "${OLDRESULT// }" ]; then
-        echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
-        rm -fr $LOGDIR/$OLDRESULT
-    fi
-    nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
-    cleanup || true
+  file=$1
+  rm -fr $LOGDIR/$(basename $file).xml
+  TRIMFILE=$(echo $(basename $file) | sed 's/.py$//g')
+  OLDRESULT=$(ls $LOGDIR | grep -E $TRIMFILE'_[a-zA-Z0-9]{6}$' | head -1)
+  if [ ! -z "${OLDRESULT// }" ]; then
+    echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
+    rm -fr $LOGDIR/$OLDRESULT
+  fi
+  nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+  cleanup || true
 }
 
 launchtest() {
-    file=$1
-    runtest $file
-    # Run tests once again on error or failure
-    python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
+  file=$1
+  runtest $file
+  # Run tests once again on error or failure
+  python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 slackmsg() {
    messagebody=$1
@@ -202,36 +255,36 @@ if [ -f $TESTDIR/test_hostha_kvm.py ]; then
     FILES="$FILES $TESTDIR/test_hostha_kvm.py"
 fi
 for file in $FILES; do
-    TESTFILENAME="$(basename $file)"
-    echo -e "\e[92m ---->  Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
-    {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
-    {% endif %}
-    {% if use_slack %}    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
-    {% endif %}
-    start_time="$(date -u +%s)"
-    launchtest $file
-    end_time="$(date -u +%s)"
-    elapsed="$(($end_time-$start_time))"
-    all_tests_elapsed="$((($end_time-$run_start_time)/1440))"
-    tests_left="$(($NUMTESTS-$counter))"
-    echo "$(basename $file): $elapsed seconds" >> $LOGDIR/tests-time.txt
+  TESTFILENAME="$(basename $file)"
+  echo -e "\e[92m ---->  Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
+  {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
+  {% endif %}
+  {% if use_slack %}    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
+  {% endif %}
+  start_time="$(date -u +%s)"
+  launchtest $file
+  end_time="$(date -u +%s)"
+  elapsed="$(($end_time-$start_time))"
+  all_tests_elapsed="$((($end_time-$run_start_time)/1440))"
+  tests_left="$(($NUMTESTS-$counter))"
+  echo "$(basename $file): $elapsed seconds" >> $LOGDIR/tests-time.txt
 
-    LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
-    if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
-      echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
-      {% if use_hipchat %}      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+  LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
+  if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
+    echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
+    {% if use_hipchat %}      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
 {% endif %}
-      {% if use_slack %}      slackmsg "Test $TESTFILENAME looks to have *errors*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
+    {% if use_slack %}      slackmsg "Test $TESTFILENAME looks to have *errors*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
 {% endif %}
-    else
-      PASSES=$((PASSES+1))
-      echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
-      {% if use_hipchat %}       hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+  else
+    PASSES=$((PASSES+1))
+    echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
+    {% if use_hipchat %}       hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
 {% endif %}
-      {% if use_slack %}      slackmsg "Test $TESTFILENAME looks *OK*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
+  {% if use_slack %}      slackmsg "Test $TESTFILENAME looks *OK*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
 {% endif %}
-    fi
-    counter=$((counter+1))
+  fi
+  counter=$((counter+1))
 
 done
 
