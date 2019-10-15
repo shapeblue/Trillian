@@ -50,7 +50,7 @@ cleanup() {
   # TODO: N/A
 
   echo "Destroy alerts"
-  for id in $(cloudmonkey list alerts listall=true keyword=vm filter=id | jq -r '.alert[] .id'); do
+  for id in $(cmk list alerts listall=true keyword=vm | jq -r '.alert[] .id'); do
     cloudmonkey delete alerts ids=$id || true
   done
 
@@ -62,16 +62,15 @@ cleanup() {
     for templateid in $(echo $GCTEMPLATES | jq -r '.template[] .id'); do
       cmk delete template id=$templateid forced=true  || true
     done
-  sleep $sleepduration
-  STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.count'`
+    sleep $((sleepduration)*2)
+    STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.count'`
   fi
 
   echo "Destroy vms, all in parallel"
-  GCVMS=`cmk list virtualmachines listall=true filter=id`
-  NUM_GCVMS=`echo $GCVMS | jq -r '.count'`
+  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.count'`
   if [ $NUM_GCVMS -gt $STUCKVMS ]; then
     echo "Test file $file left behind $NUM_GCVMS VMs" >> $CLEAN_UP_LOG
-    for vmid in $(echo $GCVMS | jq -r '.virtualmachine[] .id'); do
+    for vmid in $(cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id'); do
       cmk destroy virtualmachine id=$vmid expunge=true || true
     done
     echo "wait ${sleepduration}s to give VMs some time to be destroyed"
@@ -83,7 +82,7 @@ cleanup() {
   do 
     NUM_GCVMS=`cmk list virtualmachines listall=true| jq -r '.count'`
     if [ $NUM_GCVMS -gt $STUCKVMS ]; then
-      echo "Still $NUM_GCVMS left"
+      echo "Still $NUM_GCVMS left. waiting.."
       sleep $sleepduration
       tries=$((tries)-1)
       if [ retries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
@@ -92,19 +91,15 @@ cleanup() {
     fi
   done
 
-    # Not neeed to destroy VRs explicitely, will be destroyed with network/VPC - otherwise later deleting network/VPC fails if VR is gone!!!
-
-# then move on and hope for the best; i.e. 60secs (total of 300sec waiting time)
-
   tries=$retries
-  echo "deleting netowrks"
-  GCNETWORKS=$(cmk list networks listall=true filter=id | jq -r '.network[] .id')
+  echo "deleting networks"
+  GCNETWORKS=$(cmk list networks listall=true | jq -r '.network[] .id')
   NUM_GCNETWORKS=`echo $GCNETWORKS | jq '.count'`
   if [ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]; then
     echo "Test file $file left behind $NUM_GCNETWORKS Networks" >> $CLEAN_UP_LOG    
     while [ $tries -gt 0 ]     
     do 
-      for netid in $(cloudmonkey list networks listall=true filter=id | jq -r '.network[] .id'); do
+      for netid in $(cmk list networks listall=true | jq -r '.network[] .id'); do
         cmk delete network id=$netid || true
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
@@ -117,13 +112,12 @@ cleanup() {
       tries=0
     fi
     done
-  fi   
+  fi
 
   echo "deleting VPCs"
-  GCVPCS=$(cmk list vpcs listall=true filter=id | jq -r '.vpc[] .id')
-  NUM_GCVPCS=`echo $VPCs | jq '.VPC | length'`
+  NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc | length'`
   if [ $NUM_GCVPC -gt $STUCKVPCS ]; then
-    echo "$file left $NUM_GCVPCS behind"
+    echo "$file left $((NUM_GCVPCS)-(STUCKVPCS)) behind"
     for vid in $(cmk list vpcs listall=true | jq -r '.vpc[] .id'); do
       cmk delete vpc id=$vid || true
     done
@@ -148,6 +142,7 @@ cleanup() {
   # Destroy data volumes when zero attached (all VMs deleted)
   NUM_GCVOLS=$(cmk list volumes type=data | jq -r '.count')
   if [ $NUM_GCVOLS -gt $STUCKVOLS ]; then
+    echo "$file left $((NUM_GCVOLS-(STUCKVOLS)) behind"
     for volumeid in $(cmk list volumes listall=true type=data | jq -r '.volume[] .id'); do
       cmk delete volume id=$volumeid || true
     done
@@ -168,17 +163,17 @@ cleanup() {
   fi
 
   # Destroy accounts (keep some, delete all others)
-  cmk list accounts listall=true filter=id name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
-  cmk list accounts listall=true filter=id name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-  cmk list accounts listall=true filter=id name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-  cmk list accounts listall=true filter=id | jq -r '.account[] .id'  > .deleteaccounts
+  cmk list accounts listall=true name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
+  cmk list accounts listall=true name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+  cmk list accounts listall=true name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+  cmk list accounts listall=true | jq -r '.account[] .id'  > .deleteaccounts
   for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
     cmk delete account id=$accountid || true
   done
 
   # Destroy domains (keep ROOT domain, delete all other)
-  cmk list domains listall=true filter=id name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomains
-  cmk list domains listall=true filter=id | jq -r '.domain[] .id' > .deletedomains
+  cmk list domains listall=true name=ROOT | jq -r '.domain[] .id' > .skipdeletingdomains
+  cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
     cmk delete domain id=$domainid || true
   done
