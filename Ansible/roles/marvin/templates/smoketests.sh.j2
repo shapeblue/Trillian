@@ -191,7 +191,7 @@ cleanup() {
   # Destroy accounts (keep some, delete all others)
   cmk list accounts listall=true | jq -r '.account[] .id'  > .deleteaccounts
   NUM_LEFT=`cat .deleteaccounts | wc -l`
-  if [[ $NUM_LEFT -gt 0 ]]; then
+  if [[ $NUM_LEFT -gt 3 ]]; then
     echo "$file left $NUM_LEFT accounts behind"
     for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
       cmk delete account id=$accountid || true
@@ -201,7 +201,7 @@ cleanup() {
   # Destroy domains (keep ROOT domain, delete all other)
   cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   NUM_LEFT=`cat .deletedomains | wc -l`
-  if [[ $NUM_LEFT -gt 0 ]]; then
+  if [[ $NUM_LEFT -gt 1 ]]; then
     for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
       cmk delete domain id=$domainid || true
     done
@@ -209,17 +209,17 @@ cleanup() {
 
   cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
   NUM_LEFT=`cat .deleteofferings | wc -l`
-  if [[ $NUM_LEFT -gt 0 ]]; then
+  if [[ $NUM_LEFT -gt 2 ]]; then
     for offeringid in $(comm -13 <(sort -u .skipdeleteofferings) <(sort -u .deleteofferings)); do
-      cmk delete serviceofferings id=$offeringid || true
+      cmk delete serviceoffering id=$offeringid || true
     done
   fi
 
   cmk list diskofferings listall=true issystem=false | jq -r '.diskoffering[].id' > .deletediskofferings
   NUM_LEFT=`cat .deletediskofferings | wc -l `
-  if [[ $NUM_LEFT -gt 0 ]]; then
+  if [[ $NUM_LEFT -gt 4 ]]; then
     for offeringid in $(comm -13 <(sort -u .skipdeletediskofferings) <(sort -u .deletediskofferings)); do
-      cmk delete diskofferings id=$offeringid || true
+      cmk delete diskoffering id=$offeringid || true
     done
   fi
 
