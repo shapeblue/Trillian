@@ -56,7 +56,35 @@ cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.disko
 cmk list domains listall=true name="root" | jq -r '.domain[].id' > skipdeletingdomains
 touch $CLEAN_UP_LOG
 
+STUCKTEMPLATES=0
+STUCKVMS=0
+STUCKNETWORKS=0
+STUCKVPCS=0
+STUCKVOLS=0
+sleepduration=10
+retries=12
+
+rm -f /marvin/smoketests-summary.txt
+rm -f $TESTDIR/test_*.pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
+rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
+rm -f $CLEAN_UP_LOG
+
+cmk list accounts listall=true name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
+cmk list accounts listall=true name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+cmk list accounts listall=true name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
+cmk list serviceofferings listall=true issystem=false name='medium instance' | jq -r '.serviceoffering[].id' > .skipdeleteofferings
+cmk list serviceofferings listall=true issystem=false name='small instance' | jq -r '.serviceoffering[].id' >> .skipdeleteofferings
+cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskoffering[].id' > .skipdeletediskofferings
+cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
+cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletingdomains
+touch $CLEAN_UP_LOG
+
 cleanup() {
+
   # dont wait for async job - execute in parallel until told otherwise
   cloudmonkey set asyncblock false
   cloudmonkey set output json
@@ -295,6 +323,13 @@ for file in $LOGDIR/*.xml; do
       BAD=$((BAD+1))
   fi
 done
+
+# Cleanup tmp files
+rm -f .skipdeletingaccounts
+rm -f .skipdeletingdomain
+rm -f .skipdeleteofferings
+rm -f .skipdeletediskofferings
+
 echo "Test completed. $GOOD look ok, $BAD have errors"
 {% if use_hipchat %}hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$$TESTTYPE for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify
 {% endif %}
