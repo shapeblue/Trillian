@@ -80,7 +80,7 @@ cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskof
 cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletingdomains
+cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletedomains
 touch $CLEAN_UP_LOG
 
 cleanup() {
@@ -96,14 +96,14 @@ cleanup() {
   done
 
   echo "Destroy templates, forced, since some VMs might exist."
-  NUM_GCTEMPLATES=`cmk list templates templatefilter=self listall=true | jq -r '.template[] | length'`
+  NUM_GCTEMPLATES=`cmk list templates templatefilter=self listall=true | jq -r '.template[].id' | wc -l`
   if [[ $NUM_GCTEMPLATES -gt $STUCKTEMPLATES ]]; then
     echo "Test file $file left behind $(($NUM_GCTEMPLATES-$STUCKTEMPLATES)) templates" >> $CLEAN_UP_LOG
     for templateid in $(echo $GCTEMPLATES | jq -r '.template[].id'); do
       cmk delete template id=$templateid forced=true  || true
     done
-    sleep $((sleepduration)*2)
-    STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.template[] | length'`
+    sleep $((sleepduration*2))
+    STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.template[].id' | wc -l`
   fi
 
   echo "Destroy vms, all in parallel"
@@ -120,7 +120,7 @@ cleanup() {
   tries=$retries
   while [ $tries -gt 0 ]     
   do 
-    NUM_GCVMS=`cmk list virtualmachines listall=true| jq -r '.virtualmachine[] | length'`
+    NUM_GCVMS=`cmk list virtualmachines listall=true| jq -r '.virtualmachine[].id' | wc -l`
     if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
       echo "Still $NUM_GCVMS left. waiting.."
       sleep $sleepduration
@@ -133,7 +133,7 @@ cleanup() {
 
   tries=$retries
   echo "deleting networks"
-  NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[] | length'`
+  NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[].id' | wc -l`
   if [[ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]]; then
     echo "Test file $file left $(($NUM_GCNETWORKS-$STUCKNETWORKS)) Networks behind" >> $CLEAN_UP_LOG    
     while [ $tries -gt 0 ]     
@@ -155,7 +155,7 @@ cleanup() {
  
   tries=$retries
   echo "deleting VPCs"
-  NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc[] | length'`
+  NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc[].id' | wc -l`
   if [[ $NUM_GCVPC -gt $STUCKVPCS ]]; then
     echo "Test $file left $(($NUM_GCVPCS-$STUCKVPCS)) VPCs behind" >> $CLEAN_UP_LOG
     while [ $tries -gt 0 ]; do
@@ -177,14 +177,14 @@ cleanup() {
   cloudmonkey set asyncblock true
 
   # Destroy data volumes when zero attached (all VMs deleted)
-  NUM_GCVOLS=$(cmk list volumes type=data | jq -r '.volume[] | length')
+  NUM_GCVOLS=$(cmk list volumes type=data | jq -r '.volume[].id' | wc -l)
   if [[ $NUM_GCVOLS -gt $STUCKVOLS ]]; then
     echo "$file left $(($NUM_GCVOLS-$STUCKVOLS)) volumes behind" >> $CLEAN_UP_LOG
     for volumeid in $(cmk list volumes listall=true type=data | jq -r '.volume[] .id'); do
       cmk delete volume id=$volumeid || true
     done
     sleep $sleepduration
-  NUM_GCVOLS=`cmk list volumes listall=true type=data | jq -r '.volume[] | length'`
+  NUM_GCVOLS=`cmk list volumes listall=true type=data | jq -r '.volume[].id' | wc -l`
   STUCKVOLS=$NUM_GCVOLS
   fi
 
@@ -192,7 +192,7 @@ cleanup() {
   cmk list accounts listall=true | jq -r '.account[] .id'  > .deleteaccounts
   NUM_LEFT=`cat .deleteaccounts | wc -l`
   if [[ $NUM_LEFT -gt 3 ]]; then
-    echo "$file left $NUM_LEFT accounts behind"
+    echo "$file left $(($NUM_LEFT-3)) accounts behind"
     for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
       cmk delete account id=$accountid || true
     done
@@ -202,7 +202,8 @@ cleanup() {
   cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   NUM_LEFT=`cat .deletedomains | wc -l`
   if [[ $NUM_LEFT -gt 1 ]]; then
-    for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
+    echo "$file left $(($NUM_LEFT-1)) accounts behind"
+    for domainid in $(comm -13 <(sort -u .skipdeletedomains) <(sort -u .deletedomains)); do
       cmk delete domain id=$domainid || true
     done
   fi
@@ -210,6 +211,7 @@ cleanup() {
   cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
   NUM_LEFT=`cat .deleteofferings | wc -l`
   if [[ $NUM_LEFT -gt 2 ]]; then
+    echo "$file left $(($NUM_LEFT-2)) accounts behind"
     for offeringid in $(comm -13 <(sort -u .skipdeleteofferings) <(sort -u .deleteofferings)); do
       cmk delete serviceoffering id=$offeringid || true
     done
@@ -218,15 +220,16 @@ cleanup() {
   cmk list diskofferings listall=true issystem=false | jq -r '.diskoffering[].id' > .deletediskofferings
   NUM_LEFT=`cat .deletediskofferings | wc -l `
   if [[ $NUM_LEFT -gt 4 ]]; then
+    "$file left $(($NUM_LEFT-4)) accounts behind"
     for offeringid in $(comm -13 <(sort -u .skipdeletediskofferings) <(sort -u .deletediskofferings)); do
       cmk delete diskoffering id=$offeringid || true
     done
   fi
 
-# cleanup 
+# cleanup
 
 rm -f .deleteaccounts
-rm -f .deletedomain
+rm -f .deletedomains
 rm -f .deleteofferings
 rm -f .deletediskofferings
 }
@@ -308,7 +311,7 @@ for file in $FILES; do
 done
 
 rm -f .skipdeletingaccounts
-rm -f .skipdeletingdomain
+rm -f .skipdeletedomain
 rm -f .skipdeleteofferings
 rm -f .skipdeletediskofferings
 
