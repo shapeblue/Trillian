@@ -19,7 +19,7 @@ TESTTYPE="Smoke tests"
 LOGDIR=/marvin/MarvinLogs
 TESTDIR="/marvin/tests/smoke"
 TMP_JSON_DIR="/marvin/json_results/"
-CLEAN_UP_LOG="$LOGDIR/cleanup.log"
+CLEAN_UP_LOG="/marvin/cleanup.log"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 export SLACK_CLI_TOKEN="{{ slack_token }}"
@@ -53,35 +53,9 @@ cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskof
 cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list domains listall=true name="root" | jq -r '.domain[].id' > skipdeletingdomains
+cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletingdomains
 touch $CLEAN_UP_LOG
 
-STUCKTEMPLATES=0
-STUCKVMS=0
-STUCKNETWORKS=0
-STUCKVPCS=0
-STUCKVOLS=0
-sleepduration=10
-retries=12
-
-rm -f /marvin/smoketests-summary.txt
-rm -f $TESTDIR/test_*.pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
-rm -f $CLEAN_UP_LOG
-
-cmk list accounts listall=true name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
-cmk list accounts listall=true name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-cmk list accounts listall=true name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-cmk list serviceofferings listall=true issystem=false name='medium instance' | jq -r '.serviceoffering[].id' > .skipdeleteofferings
-cmk list serviceofferings listall=true issystem=false name='small instance' | jq -r '.serviceoffering[].id' >> .skipdeleteofferings
-cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskoffering[].id' > .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletedomains
-touch $CLEAN_UP_LOG
 
 cleanup() {
 
@@ -107,7 +81,7 @@ cleanup() {
   fi
 
   echo "Destroy vms, all in parallel"
-  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.count'`
+  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id' | wc -l`
   if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
     echo "Test file $file left behind $(($NUM_GCVMS-$STUCKVMS)) VMs" >> $CLEAN_UP_LOG
     for vmid in $(cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id'); do
@@ -143,7 +117,7 @@ cleanup() {
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
     sleep $sleepduration
-    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.count'`
+    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.network[].id' | wc -l`
     if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
       tries=$((retries)-1)
     else
@@ -163,7 +137,7 @@ cleanup() {
         cmk delete vpc id=$vid || true
       done
       sleep $sleepduration
-      NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.count'`
+      NUM_GCVPCS=`cmk list vpcs listall=true |jq -r '.vpc[].id' | wc -l`
       if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
         tries=$((retries)-1)
       else
@@ -192,7 +166,7 @@ cleanup() {
   cmk list accounts listall=true | jq -r '.account[] .id'  > .deleteaccounts
   NUM_LEFT=`cat .deleteaccounts | wc -l`
   if [[ $NUM_LEFT -gt 3 ]]; then
-    echo "$file left $(($NUM_LEFT-3)) accounts behind"
+    echo "$file left $(($NUM_LEFT-3)) accounts behind" >> $CLEAN_UP_LOG
     for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
       cmk delete account id=$accountid || true
     done
@@ -202,8 +176,8 @@ cleanup() {
   cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   NUM_LEFT=`cat .deletedomains | wc -l`
   if [[ $NUM_LEFT -gt 1 ]]; then
-    echo "$file left $(($NUM_LEFT-1)) accounts behind"
-    for domainid in $(comm -13 <(sort -u .skipdeletedomains) <(sort -u .deletedomains)); do
+    echo "$file left $(($NUM_LEFT-1)) accounts behind" >> $CLEAN_UP_LOG
+    for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
       cmk delete domain id=$domainid || true
     done
   fi
@@ -211,7 +185,7 @@ cleanup() {
   cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
   NUM_LEFT=`cat .deleteofferings | wc -l`
   if [[ $NUM_LEFT -gt 2 ]]; then
-    echo "$file left $(($NUM_LEFT-2)) accounts behind"
+    echo "$file left $(($NUM_LEFT-2)) accounts behind" >> $CLEAN_UP_LOG
     for offeringid in $(comm -13 <(sort -u .skipdeleteofferings) <(sort -u .deleteofferings)); do
       cmk delete serviceoffering id=$offeringid || true
     done
@@ -220,7 +194,7 @@ cleanup() {
   cmk list diskofferings listall=true issystem=false | jq -r '.diskoffering[].id' > .deletediskofferings
   NUM_LEFT=`cat .deletediskofferings | wc -l `
   if [[ $NUM_LEFT -gt 4 ]]; then
-    "$file left $(($NUM_LEFT-4)) accounts behind"
+    "$file left $(($NUM_LEFT-4)) accounts behind" >> $CLEAN_UP_LOG
     for offeringid in $(comm -13 <(sort -u .skipdeletediskofferings) <(sort -u .deletediskofferings)); do
       cmk delete diskoffering id=$offeringid || true
     done
@@ -310,12 +284,6 @@ for file in $FILES; do
 
 done
 
-rm -f .skipdeletingaccounts
-rm -f .skipdeletedomain
-rm -f .skipdeleteofferings
-rm -f .skipdeletediskofferings
-
-
 GOOD=0
 BAD=0
 for file in $LOGDIR/*.xml; do
@@ -329,7 +297,7 @@ done
 
 # Cleanup tmp files
 rm -f .skipdeletingaccounts
-rm -f .skipdeletingdomain
+rm -f .skipdeletingdomains
 rm -f .skipdeleteofferings
 rm -f .skipdeletediskofferings
 
