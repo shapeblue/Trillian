@@ -83,6 +83,7 @@ cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.disko
 cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletedomains
 touch $CLEAN_UP_LOG
 
+
 cleanup() {
 
   # dont wait for async job - execute in parallel until told otherwise
@@ -98,18 +99,19 @@ cleanup() {
   echo "Destroy templates, forced, since some VMs might exist."
   NUM_GCTEMPLATES=`cmk list templates templatefilter=self listall=true | jq -r '.template[].id' | wc -l`
   if [[ $NUM_GCTEMPLATES -gt $STUCKTEMPLATES ]]; then
-    echo "Test file $file left behind $(($NUM_GCTEMPLATES-$STUCKTEMPLATES)) templates" >> $CLEAN_UP_LOG
-    for templateid in $(echo $GCTEMPLATES | jq -r '.template[].id'); do
+    echo "$(basename $file) left behind $(($NUM_GCTEMPLATES-$STUCKTEMPLATES)) templates" >> $CLEAN_UP_LOG
+    cloudmonkey set asyncblock true
+    for templateid in $(cmk list templates templatefilter=self listall=true | jq -r '.template[].id'); do
       cmk delete template id=$templateid forced=true  || true
     done
-    sleep $((sleepduration*2))
     STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.template[].id' | wc -l`
   fi
 
   echo "Destroy vms, all in parallel"
-  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.count'`
+  cloudmonkey set asyncblock false
+  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id' | wc -l`
   if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
-    echo "Test file $file left behind $(($NUM_GCVMS-$STUCKVMS)) VMs" >> $CLEAN_UP_LOG
+    echo "$(basename $file) left behind $(($NUM_GCVMS-$STUCKVMS)) VMs" >> $CLEAN_UP_LOG
     for vmid in $(cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id'); do
       cmk destroy virtualmachine id=$vmid expunge=true || true
     done
@@ -135,7 +137,7 @@ cleanup() {
   echo "deleting networks"
   NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[].id' | wc -l`
   if [[ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]]; then
-    echo "Test file $file left $(($NUM_GCNETWORKS-$STUCKNETWORKS)) Networks behind" >> $CLEAN_UP_LOG    
+    echo "$(basename $file) left behind $(($NUM_GCNETWORKS-$STUCKNETWORKS)) Networks" >> $CLEAN_UP_LOG    
     while [ $tries -gt 0 ]     
     do 
       for netid in $(cmk list networks listall=true | jq -r '.network[].id'); do
@@ -143,7 +145,7 @@ cleanup() {
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
     sleep $sleepduration
-    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.count'`
+    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.network[].id' | wc -l`
     if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
       tries=$((retries)-1)
     else
@@ -157,13 +159,13 @@ cleanup() {
   echo "deleting VPCs"
   NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc[].id' | wc -l`
   if [[ $NUM_GCVPC -gt $STUCKVPCS ]]; then
-    echo "Test $file left $(($NUM_GCVPCS-$STUCKVPCS)) VPCs behind" >> $CLEAN_UP_LOG
+    echo "$(basename $file) left behind $(($NUM_GCVPCS-$STUCKVPCS)) VPCs" >> $CLEAN_UP_LOG
     while [ $tries -gt 0 ]; do
       for vid in $(cmk list vpcs listall=true | jq -r '.vpc[].id'); do
         cmk delete vpc id=$vid || true
       done
       sleep $sleepduration
-      NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.count'`
+      NUM_GCVPCS=`cmk list vpcs listall=true |jq -r '.vpc[].id' | wc -l`
       if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
         tries=$((retries)-1)
       else
@@ -179,7 +181,7 @@ cleanup() {
   # Destroy data volumes when zero attached (all VMs deleted)
   NUM_GCVOLS=$(cmk list volumes type=data | jq -r '.volume[].id' | wc -l)
   if [[ $NUM_GCVOLS -gt $STUCKVOLS ]]; then
-    echo "$file left $(($NUM_GCVOLS-$STUCKVOLS)) volumes behind" >> $CLEAN_UP_LOG
+    echo "$(basename $file) left behind $(($NUM_GCVOLS-$STUCKVOLS)) volumes" >> $CLEAN_UP_LOG
     for volumeid in $(cmk list volumes listall=true type=data | jq -r '.volume[] .id'); do
       cmk delete volume id=$volumeid || true
     done
@@ -192,7 +194,7 @@ cleanup() {
   cmk list accounts listall=true | jq -r '.account[] .id'  > .deleteaccounts
   NUM_LEFT=`cat .deleteaccounts | wc -l`
   if [[ $NUM_LEFT -gt 3 ]]; then
-    echo "$file left $(($NUM_LEFT-3)) accounts behind"
+    echo "$(basename $file) left behind $(($NUM_LEFT-3)) accounts" >> $CLEAN_UP_LOG
     for accountid in $(comm -13 <(sort -u .skipdeletingaccounts) <(sort -u .deleteaccounts)); do
       cmk delete account id=$accountid || true
     done
@@ -202,8 +204,8 @@ cleanup() {
   cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   NUM_LEFT=`cat .deletedomains | wc -l`
   if [[ $NUM_LEFT -gt 1 ]]; then
-    echo "$file left $(($NUM_LEFT-1)) accounts behind"
-    for domainid in $(comm -13 <(sort -u .skipdeletedomains) <(sort -u .deletedomains)); do
+    echo "$(basename $file) left behind $(($NUM_LEFT-3)) domains" >> $CLEAN_UP_LOG
+    for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
       cmk delete domain id=$domainid || true
     done
   fi
@@ -211,7 +213,7 @@ cleanup() {
   cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
   NUM_LEFT=`cat .deleteofferings | wc -l`
   if [[ $NUM_LEFT -gt 2 ]]; then
-    echo "$file left $(($NUM_LEFT-2)) accounts behind"
+    echo "$(basename $file) left behind $(($NUM_LEFT-3)) service offerings" >> $CLEAN_UP_LOG
     for offeringid in $(comm -13 <(sort -u .skipdeleteofferings) <(sort -u .deleteofferings)); do
       cmk delete serviceoffering id=$offeringid || true
     done
@@ -220,7 +222,7 @@ cleanup() {
   cmk list diskofferings listall=true issystem=false | jq -r '.diskoffering[].id' > .deletediskofferings
   NUM_LEFT=`cat .deletediskofferings | wc -l `
   if [[ $NUM_LEFT -gt 4 ]]; then
-    "$file left $(($NUM_LEFT-4)) accounts behind"
+    "$(basename $file) left behind $(($NUM_LEFT-3)) disk offerings" >> $CLEAN_UP_LOG
     for offeringid in $(comm -13 <(sort -u .skipdeletediskofferings) <(sort -u .deletediskofferings)); do
       cmk delete diskoffering id=$offeringid || true
     done
