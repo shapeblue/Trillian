@@ -19,7 +19,7 @@ TESTTYPE="Smoke tests"
 LOGDIR=/marvin/MarvinLogs
 TESTDIR="/marvin/tests/smoke"
 TMP_JSON_DIR="/marvin/json_results/"
-CLEAN_UP_LOG="$LOGDIR/cleanup.log"
+CLEAN_UP_LOG="/marvin/cleanup.log"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 export SLACK_CLI_TOKEN="{{ slack_token }}"
@@ -53,35 +53,9 @@ cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskof
 cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
 cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list domains listall=true name="root" | jq -r '.domain[].id' > skipdeletingdomains
+cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletingdomains
 touch $CLEAN_UP_LOG
 
-STUCKTEMPLATES=0
-STUCKVMS=0
-STUCKNETWORKS=0
-STUCKVPCS=0
-STUCKVOLS=0
-sleepduration=10
-retries=12
-
-rm -f /marvin/smoketests-summary.txt
-rm -f $TESTDIR/test_*.pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
-rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
-rm -f $CLEAN_UP_LOG
-
-cmk list accounts listall=true name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
-cmk list accounts listall=true name="ACSuser" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-cmk list accounts listall=true name="admin" | jq -r '.account[] .id'  >> .skipdeletingaccounts
-cmk list serviceofferings listall=true issystem=false name='medium instance' | jq -r '.serviceoffering[].id' > .skipdeleteofferings
-cmk list serviceofferings listall=true issystem=false name='small instance' | jq -r '.serviceoffering[].id' >> .skipdeleteofferings
-cmk list diskofferings listall=true issystem=false name='small' | jq -r '.diskoffering[].id' > .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='medium' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='large' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list diskofferings listall=true issystem=false name='custom' | jq -r '.diskoffering[].id' >> .skipdeletediskofferings
-cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeletedomains
-touch $CLEAN_UP_LOG
 
 
 cleanup() {
@@ -108,6 +82,7 @@ cleanup() {
   fi
 
   echo "Destroy vms, all in parallel"
+
   cloudmonkey set asyncblock false
   NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id' | wc -l`
   if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
@@ -312,12 +287,6 @@ for file in $FILES; do
 
 done
 
-rm -f .skipdeletingaccounts
-rm -f .skipdeletedomain
-rm -f .skipdeleteofferings
-rm -f .skipdeletediskofferings
-
-
 GOOD=0
 BAD=0
 for file in $LOGDIR/*.xml; do
@@ -331,7 +300,7 @@ done
 
 # Cleanup tmp files
 rm -f .skipdeletingaccounts
-rm -f .skipdeletingdomain
+rm -f .skipdeletingdomains
 rm -f .skipdeleteofferings
 rm -f .skipdeletediskofferings
 
