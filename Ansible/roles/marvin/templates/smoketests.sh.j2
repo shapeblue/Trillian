@@ -179,7 +179,7 @@ cleanup() {
   cmk list domains listall=true | jq -r '.domain[] .id' > .deletedomains
   NUM_LEFT=`cat .deletedomains | wc -l`
   if [[ $NUM_LEFT -gt 1 ]]; then
-    echo "$(basename $file) left behind $(($NUM_LEFT-3)) domains" >> $CLEAN_UP_LOG
+    echo "$(basename $file) left behind $(($NUM_LEFT-1)) domains" >> $CLEAN_UP_LOG
     for domainid in $(comm -13 <(sort -u .skipdeletingdomains) <(sort -u .deletedomains)); do
       cmk delete domain id=$domainid || true
     done
