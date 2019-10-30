@@ -188,7 +188,7 @@ cleanup() {
   cmk list serviceofferings listall=true issystem=false | jq -r '.serviceoffering[].id' > .deleteofferings
   NUM_LEFT=`cat .deleteofferings | wc -l`
   if [[ $NUM_LEFT -gt 2 ]]; then
-    echo "$(basename $file) left behind $(($NUM_LEFT-3)) service offerings" >> $CLEAN_UP_LOG
+    echo "$(basename $file) left behind $(($NUM_LEFT-2)) service offerings" >> $CLEAN_UP_LOG
     for offeringid in $(comm -13 <(sort -u .skipdeleteofferings) <(sort -u .deleteofferings)); do
       cmk delete serviceoffering id=$offeringid || true
     done
