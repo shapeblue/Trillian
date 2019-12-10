@@ -195,6 +195,7 @@ cloudstack_management_package: "cloudstack-management"
 cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version }}"
 {% endif %}
 
+{% if env_cs_distribution != "ccp" %}
 {% set releaseurl = linux_os[mgmt_os].os_type %}
 {% if rooturl_cloudstack is defined %}
 {% set baseurl = rooturl_cloudstack~releaseurl~"/"~env_repo_version_var~"/" %}
@@ -206,6 +207,8 @@ cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version 
 {% set baseurl_mgmt_suffix = releaseurl~"/" %}
 baseurl_mgmt_suffix: "{{ baseurl_mgmt_suffix }}"
 baseurl_cloudstack: "{{ baseurl }}"
+{% endif %}
+
 
 {% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
 create_zone: {{ createzone }}
@@ -242,6 +245,7 @@ mysql_max_connections: "{{ mysql_max_connections | default( def_mysql_max_connec
 mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_mysql_innodb_buffer_pool_size ) }}"
 
 # KVM
+{% if env_cs_distribution != "ccp" %}
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
 {% set kvmreleaseurl = linux_os[kvm_os].os_type %}
 {% set kvmosversion = linux_os[kvm_os].os %}
@@ -267,6 +271,7 @@ baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
 cloudstack_agent_package: "cloudstack-agent"
 {% else %}
 cloudstack_agent_package: "cloudstack-agent-{{ env_cs_numeric_version }}"
+{% endif %}
 {% endif %}
 
 kvm_template: "{{ kvm_template | default( linux_os[kvm_os].template ) }}"
