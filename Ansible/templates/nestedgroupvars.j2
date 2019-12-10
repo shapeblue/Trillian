@@ -245,6 +245,7 @@ mysql_max_connections: "{{ mysql_max_connections | default( def_mysql_max_connec
 mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_mysql_innodb_buffer_pool_size ) }}"
 
 # KVM
+{% if kvm_os is undefined %}{% set kvm_os = "na" %}{% endif %}
 {% if env_cs_distribution != "ccp" %}
 kvm_service_offering: "{{ kvm_service_offering | default( def_kvm_service_offering ) }}"
 {% set kvmreleaseurl = linux_os[kvm_os].os_type %}
@@ -308,6 +309,7 @@ kvm_java_ver: "{{ kvmjava }}"
 kvm_java_path: "{{ kvmjavapath }}"
 
 # XS
+{% if xs_ver is undefined %}{% set xs_ver = "na" %}{% endif %}
 xs_ver: "{{ xs_ver }}"
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
 xs_template: "{{ xs_template | default( def_xenserver_templates[xs_ver].xs_template ) }}"
@@ -325,6 +327,7 @@ xs_apply_license: {{ xs_apply_license | default( def_xs_apply_license) }}
 xs_license_edition: "{{ xs_license_edition | default( def_xs_license_edition ) }}"
 
 # VMware
+{% if vmware_ver is undefined %}{% set vmware_ver = "na" %}{% endif %}
 vmware: "{{ vmware_ver }}"  ##-- LEGACY REMOVE SOONEST
 vmware_ver: "{{ vmware_ver }}"
 esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
