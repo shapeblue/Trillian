@@ -166,18 +166,18 @@ env_zone_systemplate_str:
 
 
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
-build_marvin: {{ build_marvin | default (def_build_marvin) }}
-wait_for_template: {{ wait_for_template | default("no") }}
-force_java: {{ force_java | default("no") }}
+build_marvin: {{ build_marvin | default( def_build_marvin ) }}
+wait_for_template: {{ wait_for_template | default( "no" ) }}
+force_java: {{ force_java | default( "no" ) }}
 use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}
-env_iscsi_test_target: "{{ env_iscsi_test_target | default (def_env_iscsi_test_target) }}"
-env_iscsi_test_host: "{{ env_iscsi_test_host | default (def_env_iscsi_test_host) }}"
+env_iscsi_test_target: "{{ env_iscsi_test_target | default( def_env_iscsi_test_target ) }}"
+env_iscsi_test_host: "{{ env_iscsi_test_host | default( def_env_iscsi_test_host ) }}"
 use_local_storage: {{ use_local_storage | default( def_use_local_storage ) }}
 use_shared_storage: {{ use_shared_storage | default( def_use_shared_storage ) }}
 use_local_storage_systemvms: {{ use_local_storage_systemvms | default( def_use_local_storage_systemvms ) }}
 local_storage_disk_offering: "{{ local_storage_disk_offering | default( def_local_storage_disk_offering ) }}"
 local_storage_disk_size: "{{ local_storage_disk_size | default( def_local_storage_disk_size ) }}"
-add_def_user: "{{ add_def_user | default("yes") }}"
+add_def_user: {{ add_def_user | default( "yes" ) }}
 
 # Management server
 env_num_pods: {{ env_num_pods | default( def_env_num_pods ) }}
@@ -187,7 +187,7 @@ mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_se
 mgmtsrv_template: "{{ mgmtsrv_template | default( linux_os[mgmt_os].template ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
-use_custom_browser_title: {{ use_custom_browser_title | default ( def_use_custom_browser_title ) }}
+use_custom_browser_title: {{ use_custom_browser_title | default( def_use_custom_browser_title ) }}
 
 {% if env_dotted_version is not defined or env_cs_subminor_version == env_cs_minor_version %}
 cloudstack_management_package: "cloudstack-management"
@@ -207,13 +207,13 @@ cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version 
 {% set baseurl_mgmt_suffix = releaseurl~"/" %}
 baseurl_mgmt_suffix: "{{ baseurl_mgmt_suffix }}"
 baseurl_cloudstack: "{{ baseurl }}"
+{% else %}
+ccp_install_tarball: {{ ccp_install_tarball | default( "na" )}
 {% endif %}
 
 
-{% if create_zone is not defined %}{% set createzone = "yes" %}{% else %}{% set createzone = create_zone %}{% endif %}
-create_zone: {{ createzone }}
-{% if ccp_install_tarball is not defined %}{% set ccp_tarball = "na" %}{% else %}{% set ccp_tarball = ccp_install_tarball %}{% endif %}
-ccp_install_tarball: {{ ccp_tarball }}
+create_zone: {{ create_zone | default( "yes" ) }}
+
 
 # mamagement server java
 
