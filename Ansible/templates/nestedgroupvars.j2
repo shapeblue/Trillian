@@ -208,7 +208,7 @@ cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version 
 baseurl_mgmt_suffix: "{{ baseurl_mgmt_suffix }}"
 baseurl_cloudstack: "{{ baseurl }}"
 {% else %}
-ccp_install_tarball: {{ ccp_install_tarball | default( "na" )}
+ccp_install_tarball: {{ ccp_install_tarball | default( "na" ) }}
 {% endif %}
 
 
