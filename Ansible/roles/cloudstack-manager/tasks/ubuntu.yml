@@ -63,12 +63,10 @@
   with_items:
     - cloudstack-management
 
-# no need to remove, unless proven otherise - same as for CentOS
+# no need to remove - same as for CentOS
 #- name: remove CloudStack repository into sources list.
-#  apt_repository:
-#    repo: 'deb {{ baseurl_kvm }} /'
-#    state: absent
-
+#  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
+#
 #- name: Run the equivalent of "apt-get update" as a separate step
 #  apt:
 #    update_cache: yes
