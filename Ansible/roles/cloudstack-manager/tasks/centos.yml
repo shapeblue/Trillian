@@ -20,7 +20,6 @@
 - name: set yum repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
-    - "epel.repo"
     - "CentOS-Base.repo"
 
 - name: Ensure CA Certs are latest
