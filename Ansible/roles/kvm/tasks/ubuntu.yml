@@ -200,14 +200,15 @@
   with_items:
     - cloudstack-agent
 
-- name: remove CloudStack repository into sources list.
-  apt_repository:
-    repo: 'deb {{ baseurl_kvm }} /'
-    state: absent
+# no need to remove - same as for CentOS
+#- name: remove CloudStack repository into sources list.
+#  apt_repository:
+#    repo: 'deb {{ baseurl_kvm }} /'
+#    state: absent
 
-- name: Run the equivalent of "apt-get update" as a separate step
-  apt:
-    update_cache: yes
+#- name: Run the equivalent of "apt-get update" as a separate step
+#  apt:
+#    update_cache: yes
 
 - name: Configure agent.properties for OVS
   lineinfile:

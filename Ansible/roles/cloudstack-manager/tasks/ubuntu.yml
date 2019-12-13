@@ -55,21 +55,21 @@
   apt:
     update_cache: yes
 
-- name: Ensure CloudStack packages are installed
+- name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
     pkg: "{{ item }}"
     state: present
     allow_unauthenticated: yes
   with_items:
     - cloudstack-management
-    - cloudstack-usage
 
-- name: remove CloudStack repository into sources list.
-  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
-
-- name: Run the equivalent of "apt-get update" as a separate step
-  apt:
-    update_cache: yes
+# no need to remove - same as for CentOS
+#- name: remove CloudStack repository into sources list.
+#  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
+#
+#- name: Run the equivalent of "apt-get update" as a separate step
+#  apt:
+#    update_cache: yes
 
 - name: Ensure extra packages are installed
   apt:
@@ -84,6 +84,14 @@
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - include: ./setupdb.yml
+
+- name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-usage
 
 - name: Ensure CloudStack Usage Service is started
   service: name=cloudstack-usage state=started
