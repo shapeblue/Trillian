@@ -1,7 +1,6 @@
 [epel]
-name=Extra Packages for Enterprise Linux 6/7 - $basearch
-#dont use local repo, since there are very frequent sync issues causing broken deployments
-baseurl=http://download.fedoraproject.org/pub/epel/$releasever/$basearch
+name=Extra Packages for Enterprise Linux 6 - $basearch
+baseurl={{ repohost }}/epel/$releasever/$basearch
 #mirrorlist=http://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=$basearch
 failovermethod=priority
 enabled=1
