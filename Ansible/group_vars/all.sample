@@ -6,7 +6,7 @@
 #you may not use this file except in compliance with the License.
 #You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.076
 #
 #Unless required by applicable law or agreed to in writing, software
 #distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,7 +49,7 @@ parent_vcenter_username: "<USERNAME_HERE>"
 
 # SSL
 def_ssl_systemvm: "true"
-def_ssl_mgmt: "true"
+def_ssl_mgmt: "false"
 def_ssl_key: "<KEY_HERE>"
 def_ssl_cert: "<CERT_HERE>"
 def_ssl_rootcert: "<CERT_HERE>"
@@ -154,8 +154,9 @@ java_vers:
   ccp306: java-1.6.0-openjdk
   ccp307: java-1.6.0-openjdk
   ccp43: java-1.6.0-openjdk
-  ccp470: java-1.7.0-openjdk
-  ccp471: java-1.7.0-openjdk
+  ccp45: java-1.6.0-openjdk
+  ccp47: java-1.7.0-openjdk
+  ccp411: java-1.7.0-openjdk
   cs43: java-1.6.0-openjdk
   cs45: java-1.7.0-openjdk
   cs46: java-1.7.0-openjdk
@@ -166,6 +167,7 @@ java_vers:
   cs411: java-1.8.0-openjdk
   cs412: java-1.8.0-openjdk
   cs413: java-1.8.0-openjdk
+  cs414: java-1.8.0-openjdk
   custom: custom
   na: na
 
@@ -175,10 +177,16 @@ java_paths:
     java-1.7.0-openjdk: "jre_1.7.0_openjdk"
     java-1.8.0-openjdk: "jre_1.8.0_openjdk"
     na: na
+  centos6:
+    java-1.6.0-openjdk: "jre_1.6.0_openjdk"
+    java-1.7.0-openjdk: "jre_1.7.0_openjdk"
+    java-1.8.0-openjdk: "jre_1.8.0_openjdk"
+    na: na
   centos7:
     java-1.6.0-openjdk: "jre_1.6.0_openjdk"
     java-1.7.0-openjdk: "jre_1.7.0_openjdk"
     java-1.8.0-openjdk: "jre_1.8.0_openjdk"
+    java-11-openjdk: "java-11-openjdk-headless"
     na: na
   debian:
     java-1.6.0-openjdk: "tbc"
@@ -199,6 +207,7 @@ java_paths:
     java-1.6.0-openjdk: "tbc"
     java-1.7.0-openjdk: "tbc"
     java-1.8.0-openjdk: "openjdk-8-jre-headless"
+    java-11-openjdk: "openjdk-11-jre-headless"
     na: na
   na:
     java-1.6.0-openjdk: "na"
@@ -207,13 +216,17 @@ java_paths:
 
 # Management server
 def_mgmtsrv_service_offering: "Mgmt Server"
-def_mgmtsrv_template: "CentOS 6.8"
+def_mgmtsrv_template: "CentOS 6.10"
 def_rooturl_cloudstack: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/"
 def_use_custom_browser_title: yes
 
 # System templates
 def_system_templates:
   ccp450:
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+  ccp451:
     kvm_url: "<KVM_URL_HERE>"
     xs_url: "<XS_URL_HERE>"
     vmware_url: "<VMWARE_URL_HERE>"
@@ -237,6 +250,11 @@ def_system_templates:
     kvm_url: "<KVM_URL_HERE>"
     xs_url: "<XS_URL_HERE>"
     vmware_url: "<VMWARE_URL_HERE>"
+  ccp411:
+    kvm_url: "<KVM_URL_HERE>"
+    xs_url: "<XS_URL_HERE>"
+    vmware_url: "<VMWARE_URL_HERE>"
+    hyperv_url: "<HYPERV_URL_HERE>"
   cs43:
     kvm_url: "<KVM_URL_HERE>"
     xs_url: "<XS_URL_HERE>"
@@ -372,11 +390,11 @@ def_system_templates:
     hyperv_url: "<HYPERV_URL_HERE>"
   cs411:
     kvm_url: "<KVM_URL_HERE>"
-    kvm_systemvm_name: "systemvm-kvm-4.11.1"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
     xs_url: "<XS_URL_HERE>"
-    xs_systemvm_name: "systemvm-xenserver-4.11.1"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
     vmware_url: "<VMWARE_URL_HERE>"
-    vmware_systemvm_name: "systemvm-vmware-4.11.1"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
   cs4110:
     kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.11"
@@ -412,6 +430,13 @@ def_system_templates:
     xs_systemvm_name: "systemvm-xenserver-4.11.2"
     vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.11.2"
+  cs4113:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
   cs41130:
     kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.11.3"
@@ -440,7 +465,35 @@ def_system_templates:
     xs_systemvm_name: "systemvm-xenserver-4.11.3"
     vmware_url: "<VMWARE_URL_HERE>"
     vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs4130:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
   cs41300:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs414:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs4140:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-4.11.3"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-4.11.3"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-4.11.3"
+  cs41400:
     kvm_url: "<KVM_URL_HERE>"
     kvm_systemvm_name: "systemvm-kvm-4.11.3"
     xs_url: "<XS_URL_HERE>"
@@ -458,20 +511,95 @@ def_system_templates:
     vmware_url: "<VMWARE_URL_HERE>"
     hyperv_url: "<HYPERV_URL_HERE>"
 
+linux_os:
+  "6":
+    template: "CentOS 6.10"
+    os: "centos"
+    os_type: "centos6"
+  "62":
+    template: "CentOS 6.2"
+    os: "centos6"
+    os_type: "centos"
+  "63":
+    template: "CentOS 6.3"
+    os: "centos6"
+    os_type: "centos"
+  "64":
+    template: "CentOS 6.4"
+    os: "centos6"
+    os_type: "centos"
+  "68":
+    template: "CentOS 6.8"
+    os: "centos6"
+    os_type: "centos"
+  "610":
+    template: "CentOS 6.10"
+    os: "centos6"
+    os_type: "centos"
+  "73":
+    template: "CentOS 7.3"
+    os: "centos7"
+    os_type: "centos7"
+  "76":
+    template: "CentOS 7.6"
+    os: "centos7"
+    os_type: "centos7"
+  "7":
+    template: "CentOS 7.6"
+    os: "centos7"
+    os_type: "centos7"
+  "8":
+    template: "CentOS 8.0"
+    os: "centos7"
+    os_type: "centos7"
+  "u":
+    template: "Ubuntu 18.04"
+    os: "ubuntu1804"
+    os_type: "debian"
+  "u14":
+    template: "Ubuntu Server 14.04"
+    os: "ubuntu1404"
+    os_type: "debian"
+  "u16":
+    template: "Ubuntu 16.04"
+    os: "ubuntu1604"
+    os_type: "debian"
+  "u18":
+    template: "Ubuntu 18.04"
+    os: "ubuntu1804"
+    os_type: "debian"
+  "custom":
+    template: "CustomTemplateName"
+    os:  "custom"
+    os_type: "custom"
+  "na":
+    template: "na"
+    os:  "na"
+    os_type: "na"
+
+
 # Default management VM templates based on management server OS choice
 def_mgmt_templates:
   centos:
-    mgmtsrv_template: "CentOS 6.8"
+    mgmtsrv_template: "CentOS 6.10"
   centos62:
     mgmtsrv_template: "CentOS 6.2"
   centos63:
     mgmtsrv_template: "CentOS 6.3"
   centos64:
     mgmtsrv_template: "CentOS 6.4"
+  centos68:
+    mgmtsrv_template: "CentOS 6.8"
+  centos610:
+    mgmtsrv_template: "CentOS 6.10"
+  centos76:
+    mgmtsrv_template: "CentOS 7.6"
   centos7:
-    mgmtsrv_template: "CentOS7"
+    mgmtsrv_template: "CentOS 7.6"
+  centos80:
+    mgmtsrv_template: "CentOS 8.0"
   debian:
-    mgmtsrv_template: "Ubuntu Server 14.04"
+    mgmtsrv_template: "Ubuntu 16.04"
   ubuntu1404:
     mgmtsrv_template: "Ubuntu Server 14.04"
   ubuntu1604:
@@ -480,6 +608,7 @@ def_mgmt_templates:
     mgmtsrv_template: "Ubuntu 18.04"
   custom:
     mgmtsrv_template: "CustomTemplateName"
+
 # DB servers
 def_dbsrv_service_offering: "Mgmt Server"
 def_dbsrv_template: "CentOS 6.8"
@@ -492,15 +621,21 @@ def_mysql_innodb_buffer_pool_size: 256M
 def_kvm_service_offering: "Nested Hypervisor"
 def_kvm_templates:
   centos:
-    kvm_template: "CentOS 6.8"
+    kvm_template: "CentOS 6.10"
   centos62:
     kvm_template: "CentOS 6.2"
   centos64:
     kvm_template: "CentOS 6.4"
+  centos610:
+    kvm_template: "CentOS 6.10"
   centos73:
     kvm_template: "CentOS 7.3"
+  centos76:
+    kvm_template: "CentOS 7.6"
   centos7:
-    kvm_template: "CentOS7"
+    kvm_template: "CentOS 7.6"
+  centos80:
+    kvm_template: "CentOS 8.0"
   debian:
     kvm_template: "Ubuntu 16.04"
   ubuntu1404:
@@ -543,6 +678,10 @@ def_xenserver_templates:
     xs_template: "XenServer 7.4"
   xcpng74:
     xs_template: "xcp-ng-741"
+  xcpng76:
+    xs_template: "xcp-ng-76"
+  xcpng80:
+    xs_template: "XCP-ng 8.0.0"
   custom:
     xs_template: "CustomTemplateName"
   na:
@@ -583,10 +722,19 @@ def_vmware_templates:
     vc_template: "vCenter 65u1"
   "65u2":
     esxi_template: "ESXi 6.5u1"
-    vc_template: "vCenter 65u2"
+    vc_template: "vCenter-65u2"
+  "67u0":
+    esxi_template: "ESXi 6.7.0"
+    vc_template: "vCenter 67u0"
   "67u1":
     esxi_template: "ESXi 6.7u1"
     vc_template: "vCenter 67u1"
+  "67u2":
+    esxi_template: "ESXi 6.7u2c"
+    vc_template: "vCenter 67u2c"
+  "67u3":
+    esxi_template: "ESXi 6.7u3"
+    vc_template: "vCenter 67u3"
   kddi:
     esxi_template: "ESXi 5.0u1"
     vc_template: "vCenter 55u3"
@@ -636,14 +784,14 @@ def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
 def_marvin_images_location: "http://<IP_ADDRESS_HERE>/marvin"
 def_openvm_images_location: "http://<IP_ADDRESS_HERE>/openvm"
-def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/testing/centos7/4.12.0/"
+def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/centos7/4.13/"
 
 # Webhooks for integration
 def_use_webhooks: no
 def_marvin_notifi_webhook_url: "<WEBHOOK_URL_HERE>"
 
 # hipchat integration:
-def_use_hipchat: yes
+def_use_hipchat: no
 def_hipchat_server: "<HIPCHAT_SERVER_URL>"
 def_hipchat_token: "<TOKEN_HERE>"
 def_hipchat_cli_client_location: "http://<IP_ADDRESS_HERE>/tools/atlassian-cli-7.1.0-distribution.zip"
