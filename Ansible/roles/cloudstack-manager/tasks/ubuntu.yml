@@ -79,6 +79,7 @@
     - mysql-client
     - haveged
     - qemu-utils
+    - rsync
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
@@ -105,3 +106,8 @@
 - name: Open 8096 when Marvin is required (Ubuntu)
   shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
   when: num_marv_hosts > 0
+  
+- name: copy CloudStack id_rsa where Marvin expects to find it
+  shell: "mkdir -p /var/cloudstack/management; rsync -av /var/lib/cloudstack/management/ /var/cloudstack/management/"
+  when: ansible_distribution == "Ubuntu"
+

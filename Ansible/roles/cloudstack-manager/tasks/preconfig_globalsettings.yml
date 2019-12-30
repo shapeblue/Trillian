@@ -73,7 +73,7 @@
 
 - name: restart mgmt service (inc fix for broken stop) for Ubuntu
   shell: "service cloudstack-management stop && sleep 10 && service cloudstack-management stop && sleep 10 && service cloudstack-management start"
-  when: (path_is_cloudstack.stat.exists == True) and (ansible_distribution == "Ubuntu")
+  when: ansible_distribution == "Ubuntu"
   ignore_errors: true
 
 - name: restart mgmt service (inc fix for broken stop)
