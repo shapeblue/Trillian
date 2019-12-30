@@ -109,5 +109,6 @@
   
 - name: copy CloudStack id_rsa where Marvin expects to find it
   shell: "mkdir -p /var/cloudstack/management; rsync -av /var/lib/cloudstack/management/ /var/cloudstack/management/"
-  when: ansible_distribution == "Ubuntu"
+  when: (ansible_distribution == "Ubuntu") and (num_marv_hosts > 0)
+
 
