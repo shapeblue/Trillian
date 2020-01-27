@@ -68,7 +68,7 @@
     - marvin_cfg
 
 - name: Install nose
-  easy_install: name=nose
+  pip: name=nose
   tags:
     - marvin
 
