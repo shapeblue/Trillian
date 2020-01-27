@@ -6,7 +6,7 @@
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
-  
+
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   tags:
@@ -68,7 +68,11 @@
     - marvin_cfg
 
 - name: Install nose
-  pip: name=nose
+  pip:
+    name: "{{ item }}"
+  wth_items:
+    - nose
+    - wheel
   tags:
     - marvin
 
@@ -107,7 +111,7 @@
     - marvin_cfg
 
 - name: install nose-json
-  shell: cd /marvin/nose-json && python ./setup.py build && python ./setup.py install 
+  shell: cd /marvin/nose-json && python ./setup.py build && python ./setup.py install
 
 - name: Retrieve cloud SSH keys from mgmt server
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
