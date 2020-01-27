@@ -67,12 +67,15 @@
     - marvin
     - marvin_cfg
 
+- name: Install wheel
+  pip:
+    name: wheel
+  tags:
+    - marvin
+
 - name: Install nose
   pip:
-    name: "{{ item }}"
-  wth_items:
-    - nose
-    - wheel
+    name: nose
   tags:
     - marvin
 
