@@ -56,7 +56,6 @@
   - sqlite
   - sqlite-devel
   - python-paramiko
-  - python-setuptools
   - python-devel
   - mysql-devel
   - zlib-devel
@@ -75,19 +74,13 @@
   - vim
   - tmux
   - pyOpenSSL
+  - python-pip
   tags:
     - marvin
     - marvin_install
 
 - name: Install mysql-connector-python
   yum: name=mysql-connector-python state=installed
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Install pip
-  easy_install:
-    name: pip
   tags:
     - marvin
     - marvin_install
@@ -102,6 +95,12 @@
   tags:
     - marvin
     - marvin_install
+
+- name: Install wheel
+  pip:
+    name: wheel
+  tags:
+    - marvin
 
 - name: remove yum openSSL package
   yum:
