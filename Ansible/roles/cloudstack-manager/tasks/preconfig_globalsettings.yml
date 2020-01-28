@@ -34,7 +34,7 @@
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET url='{{ item.url }}' WHERE id='{{ item.id }}';"
   with_items:
   - "{{ local_builtin_templates }}"
-  when: use_local_templates and ("primary_cs_manager" in group_names)
+  when: use_local_templates and ("primary_cs_manager" in group_names) and (env_numversion | version_compare('4.14','<'))
   tags:
     - "global_settings"
 
