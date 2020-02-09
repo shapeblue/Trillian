@@ -41,15 +41,15 @@
       register: pong
       until: pong.rc == 0
       retries: "{{ ssh_retries }}"
-      when: stopstartaction = "Started"
+      when: stopstartaction == "started"
 
     - name: wait for ssh
       local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
-      when: stopstartaction = "Started"
+      when: stopstartaction == "started"
 
     - name: "wait for ACS Management Service to come up before appying additional global settings"
       shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
       register: result
       until: result.stdout.find("unable to verify user") != -1
       retries: 48
-      when: ("primary_cs_manager" in group_names) and (stopstartaction = "Started")
+      when: ("primary_cs_manager" in group_names) and (stopstartaction == "Started")
