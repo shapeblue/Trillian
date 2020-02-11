@@ -419,3 +419,11 @@ slack_username: "{{ slack_username | default( def_slack_username ) }}"
 slack_icon_url: "{{ slack_icon_url | default( def_slack_icon_url ) }}"
 slack_color: "{{ slack_color | default( def_slack_color ) }}"
 slack_webhook: "{{ slack_webhook | default( def_slack_webhook ) }}"
+
+# cks
+
+cks_coreos_template_hyperv: "{{ cks_coreos_template_hyperv | default( def_cks_coreos_template_hyperv ) }}"
+cks_coreos_template_kvm: "{{ cks_coreos_template_kvm | default( def_cks_coreos_template_kvm )}}"
+def_cks_coreos_template_vmware: "{{ cks_coreos_template_vmware | default( def_cks_coreos_template_vmware )}}"
+def_cks_coreos_template_xenserver:"{{ cks_coreos_template_xenserver | default( def_cks_coreos_template_xenserver )}}"
+def_cks_version
