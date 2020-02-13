@@ -327,7 +327,7 @@
   tasks:
     - name: Setup CKS in environment
       include: tasks/configure_cks.yaml
-      when: (create_zone|bool == True) and (enable_cks|bool == True)
+      when: (create_zone|bool == True) and (env_enable_cks|bool == True)
 
 ## Run Marvin Tests
 
