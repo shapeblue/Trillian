@@ -5,12 +5,14 @@
 
 # add min CKS service offering
 
-cmk create serviceoffering cpunumber={{ min_cks_service_offering.cpunumber }} cpuspeed={{ min_cks_service_offering.cpuspeed }} displaytext=''"{{ min_cks_service_offering.displaytext }}"'' memory={{ min_cks_service_offering.memory }} name=''"{{ min_cks_service_offering.name }}"'' offerha={{ min_cks_service_offering.offerha }}
+cmk create serviceoffering cpunumber={{ min_cks_service_offering.cpunumber }} cpuspeed={{ min_cks_service_offering.cpuspeed }} displaytext='{{ min_cks_service_offering.displaytext }}' memory={{ min_cks_service_offering.memory }} name='{{ min_cks_service_offering.name }}' offerha={{ min_cks_service_offering.offerha }}
+
 
 # upload versions
-{% for versions in cks_version %}
-add KubernetesSupportedVersion semanticversion={{ semanticversion }} url={{ url }} mincpunumber=2 minmemory=2048
+{% for item in cks_version %}
+add KubernetesSupportedVersion semanticversion={{ item.semanticversion }} url={{ item.url }} mincpunumber=2 minmemory=2048
 {% endfor %}
+
 
 # Get CoreOS UUID
 COREOS_UUID=`cmk list ostypes description="CoreOS" | jq -r '.ostype[].id'`
