@@ -10,21 +10,20 @@ cmk create serviceoffering cpunumber={{ min_cks_service_offering.cpunumber }} cp
 
 # upload versions
 {% for item in cks_version %}
-add KubernetesSupportedVersion semanticversion={{ item.semanticversion }} url={{ item.url }} mincpunumber=2 minmemory=2048
+cmk add KubernetesSupportedVersion semanticversion={{ item.semantic_version }} url={{ item.url }} mincpunumber=2 minmemory=2048
 {% endfor %}
-
 
 # Get CoreOS UUID
 COREOS_UUID=`cmk list ostypes description="CoreOS" | jq -r '.ostype[].id'`
 
 # upload template(s)
 if  [ "{{ xs_ver | lower }}" != "na" ]; then
-  cmk register template name=Kubernetes-CoreOS-vmware displayText=Kubernetes-CoreOS-xenserver url={{ cks_coreos_template_xenserver }} zoneids=-1 format=VHD isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=XenServer ispublic=true isfeatured=false isrouting=false
+  cmk register template name=Kubernetes-CoreOS-vmware displayText=Kubernetes-CoreOS-xenserver url={{ env_cks_coreos_template_xenserver }} zoneids=-1 format=VHD isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=XenServer ispublic=true isfeatured=false isrouting=false
 fi
 if  [ "{{ kvm_os | lower }}" != "na" ]; then
-  cmk register template cmk register template name=Kubernetes-CoreOS-kvm displayText=Kubernetes-CoreOS-kvm url={{ cks_coreos_template_kvm }} zoneids=-1 format=QCOW2 isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=KVM ispublic=true isfeatured=false isrouting=false
+  cmk register template cmk register template name=Kubernetes-CoreOS-kvm displayText=Kubernetes-CoreOS-kvm url={{ env_cks_coreos_template_kvm }} zoneids=-1 format=QCOW2 isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=KVM ispublic=true isfeatured=false isrouting=false
 fi
 if [ "{{ vmware_ver | lower }}" != "na" ]; then
-  cmk register template name=Kubernetes-CoreOS-vmware displayText=Kubernetes-CoreOS-vmware url={{ cks_coreos_template_vmware }} zoneids=-1 format=OVA isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=VMware ispublic=true isfeatured=false isrouting=false details[0].rootDiskController=pvscsi details[0].nicAdapter=Vmxnet3
+  cmk register template name=Kubernetes-CoreOS-vmware displayText=Kubernetes-CoreOS-vmware url={{ env_cks_coreos_template_vmware }} zoneids=-1 format=OVA isextractable=false passwordEnabled=false isdynamicallyscalable=false osTypeId=$COREOS_UUID hypervisor=VMware ispublic=true isfeatured=false isrouting=false details[0].rootDiskController=pvscsi details[0].nicAdapter=Vmxnet3
 fi
  
