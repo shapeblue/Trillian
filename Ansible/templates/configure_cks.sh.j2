@@ -19,7 +19,7 @@ COREOS_UUID=`cmk list ostypes description="CoreOS" | jq -r '.ostype[].id'`
 
 # upload template(s)
 if  [ "{{ xs_ver | lower }}" != "na" ]; then
-  cmk register template name=Kubernetes-CoreOS-vmware displaytext=Kubernetes-CoreOS-xenserver url={{ env_cks_coreos_template_xenserver }} zoneids=-1 format=VHD isextractable=false passwordenabled=false isdynamicallyscalable=false ostypeid=$COREOS_UUID hypervisor=XenServer ispublic=true isfeatured=false isrouting=false
+  cmk register template name=Kubernetes-CoreOS-xenserver displaytext=Kubernetes-CoreOS-xenserver url={{ env_cks_coreos_template_xenserver }} zoneids=-1 format=VHD isextractable=false passwordenabled=false isdynamicallyscalable=false ostypeid=$COREOS_UUID hypervisor=XenServer ispublic=true isfeatured=false isrouting=false
 fi
 if  [ "{{ kvm_os | lower }}" != "na" ]; then
   cmk register template cmk register template name=Kubernetes-CoreOS-kvm displaytext=Kubernetes-CoreOS-kvm url={{ env_cks_coreos_template_kvm }} zoneids=-1 format=QCOW2 isextractable=false passwordenabled=false isdynamicallyscalable=false ostypeid=$COREOS_UUID hypervisor=KVM ispublic=true isfeatured=false isrouting=false
