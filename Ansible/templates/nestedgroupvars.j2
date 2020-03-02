@@ -223,9 +223,9 @@ create_zone: {{ create_zone | default( "yes" ) }}
 {% set mgmtjava = mgmt_java_ver %}
 {% endif %}
 mgmt_java_ver: "{{ mgmtjava }}"
-{% set mgmt_os_type = linux_os[mgmt_os].os_type %}
+{% set mgmt_os_name = linux_os[mgmt_os].os %}
 {% if mgmt_java_path is not defined %}
-{% set mgmtjavapath = java_paths[mgmt_os_type][mgmtjava] %}
+{% set mgmtjavapath = java_paths[mgmt_os_name][mgmtjava] %}
 {% else %}
 {% set mgmtjavapath = mgmt_java_path %}
 {% endif %}
@@ -302,8 +302,8 @@ kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrep
 {% endif %}
 kvm_java_ver: "{{ kvmjava }}" 
 {% if kvm_java_path is not defined %}
-{% set kvm_os_type = linux_os[kvm_os].os %}
-{% set kvmjavapath = java_paths[kvm_os_type][kvmjava] %}
+{% set kvm_os_name = linux_os[kvm_os].os %}
+{% set kvmjavapath = java_paths[kvm_os_name][kvmjava] %}
 {% else %}
 {% set kvmjavapath = kvm_java_path %}
 {% endif %}
