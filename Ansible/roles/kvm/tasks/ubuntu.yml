@@ -20,7 +20,7 @@
 #    use: debian
 
 - name: Set hostname pt2
-  command: "hostnamectl set-hostname {{ inventory_hostname }}"
+  shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
 - name: set apt repo
   template:
