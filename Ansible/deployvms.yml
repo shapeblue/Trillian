@@ -321,6 +321,14 @@
       include: tasks/updateproject.yml project_tag=Running
       when: wait_for_template
 
+# Setup Region for CKS
+- hosts: cloudstack_manager_hosts
+  gather_facts: no
+  tasks:
+    - name: Setup CKS in environment
+      include: tasks/configure_cks.yaml
+      when: (create_zone|bool == True) and (env_enable_cks|bool == True)
+
 ## Run Marvin Tests
 
 - hosts: marvin_host

@@ -1,0 +1,10 @@
+---
+
+- name: Copy configure_cks script to mgmt server
+  template:
+    src: "../templates/configure_cks.sh.j2"
+    dest: "/tmp/configure_cks.sh"
+    mode: 0744
+
+- name: Configure CKS (Run CKS configuration script)
+  shell: /tmp/configure_cks.sh
