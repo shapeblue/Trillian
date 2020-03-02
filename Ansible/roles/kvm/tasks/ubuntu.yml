@@ -16,7 +16,7 @@
 
 - hostname:
     name: "{{ inventory_hostname }}"
-    use: debian
+#    use: debian
 
 - name: set apt repo
   template:
