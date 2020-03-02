@@ -14,6 +14,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- hostname:
+    name: "{{ inventory_hostname }}"
+    use: debian
+
 - name: set apt repo
   template:
     src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
