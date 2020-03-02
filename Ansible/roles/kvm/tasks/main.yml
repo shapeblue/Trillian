@@ -36,6 +36,11 @@
 #  tags:
 #    - kvm
 
+- name: Ensure hostname file is not present
+  file:
+    path: "/etc/hostname"
+    state: absent
+
 - name: Configure CentOS VMs for KVM
   include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
