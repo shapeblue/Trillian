@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-ES_IP="10.4.0.15"
+ES_IP="elk.lab.lon"
 RESULTS_INDEX="test_results"
 ENV_TEST_DATA="./test_run.json"
 JSON_OUTPUT_DIR="/marvin/json_results"
