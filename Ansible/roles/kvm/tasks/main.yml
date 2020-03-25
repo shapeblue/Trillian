@@ -41,6 +41,13 @@
     path: "/etc/hostname"
     state: absent
 
+- name: add staging server to hosts if set in all file
+  lineinfile:
+    path: /etc/hosts
+    state: present
+    line: "{{ stagingserverip }}   {{ stagingserverurl }}"
+  when: use_staging_server
+
 - name: Configure CentOS VMs for KVM
   include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
