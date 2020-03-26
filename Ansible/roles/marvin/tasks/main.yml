@@ -28,13 +28,6 @@
 - name: set live selinux
   command: setenforce permissive
 
-- name: add staging server to hosts if set in all file
-  lineinfile:
-    path: /etc/hosts
-    state: present
-    line: "{{ stagingserverip }}   {{ stagingserverurl }}"
-  when: use_staging_server
-
 - name: sync time with mgmt server
   shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`
 

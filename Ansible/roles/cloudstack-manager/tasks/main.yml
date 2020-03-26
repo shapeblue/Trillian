@@ -29,13 +29,6 @@
     - "global_settings"
     - "rename_browser"
 
-- name: add staging server to hosts if set in all file
-  lineinfile:
-    path: /etc/hosts
-    state: present
-    line: "{{ stagingserverip }}   {{ stagingserverurl }}"
-  when: use_staging_server
-
 - include: ./centos.yml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
