@@ -134,13 +134,6 @@
     - kvm
     - kvm-agent
 
-- name: Bugfix libvirt cpu issue on ACS 4.5 (CLOUDSTACK-8443)
-  shell: sed -i -e '/cgroup\_controllers/d' /usr/lib64/python2.7/site-packages/cloudutils/serviceConfig.py
-  when: ansible_distribution_major_version == "7"
-  tags:
-    - kvm
-    - kvm-agent
-
 - name: Add iptables rules
   shell: "iptables -I INPUT -p tcp -m tcp --dport {{ item }} -j ACCEPT"
   with_items:
