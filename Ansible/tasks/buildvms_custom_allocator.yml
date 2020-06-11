@@ -41,7 +41,7 @@
     state: absent
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -70,7 +70,7 @@
     public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -85,7 +85,7 @@
 # then start other VMs on least used hosts (regardless of cluster usage)
 
 ####################################################################
-- name: Create Nested VMs (Using Custom Allocator) 
+- name: Create Nested VMs (Using Custom Allocator)
   debug:
     msg: "Is addtional pod- {{ additional_pod|bool }}. Is addtional zone- {{ additional_zone|bool }}."
 
@@ -168,7 +168,7 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
   register: alg_output
   when: use_external_hv_hosts|bool == false
 
@@ -259,7 +259,7 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
   register: allocator_output
   when: use_external_hv_hosts|bool == false
 
@@ -349,7 +349,7 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
   register: allocator_output
   when: use_external_hv_hosts|bool == false
 

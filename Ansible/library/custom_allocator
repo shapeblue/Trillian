@@ -15,26 +15,32 @@ PODID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="podid"{print $2}'| tr -d '"' | se
 METRIC=`echo $ARGS | tr " " "\n"| awk -F= '$1=="metric"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 ZONEID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="zoneid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 
-function least_cluster()
+function least_cluster_cpu()
 {
-  LOWESTCLUSTERID=`cloudmonkey list clustersmetrics | jq -r '.cluster | sort_by(.cpuused|rtrimstr("%")|tonumber) | .[0]|.id'`
-  LOWESTCLUSTERNAME=`cloudmonkey list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
+  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,cpuused | jq '.cluster' |sed 's/%//g'| jq 'sort_by(.cpuused)' | jq -r '.[0].id'`
+  LOWESTCLUSTERNAME=`cmk list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
+}
+
+function least_cluster_mem()
+{
+  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,memoryused | jq '.cluster' |sed 's/%//g'| jq 'sort_by(.memoryused)' | jq -r '.[0].id'`
+  LOWESTCLUSTERNAME=`cmk list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
 function least_host()
 {
-  HOSTUSE=`cloudmonkey list hosts type=routing | jq '.host[]' | sed 's/\%//'`
+  HOSTUSE=`cmk list hosts type=routing | jq '.host[]' | sed 's/\%//'`
   LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
   LOWESTCLUSTERID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .clusterid'`
-  LOWESTHOSTNAME=`cloudmonkey list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
-  LOWESTCLUSTERNAME=`cloudmonkey list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
+  LOWESTHOSTNAME=`cmk list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
+  LOWESTCLUSTERNAME=`cmk list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
 function least_host_in_cluster()
 {
-  HOSTUSE=`cloudmonkey list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
+  HOSTUSE=`cmk list hosts type=routing clusterid=$CLUSTERID| jq '.host[]' | sed 's/\%//'`
   LOWESTHOSTID=`echo $HOSTUSE | jq -r -s -c 'sort_by(.cpuused|tonumber) | .[0] | .id'`
-  LOWESTHOSTNAME=`cloudmonkey list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
+  LOWESTHOSTNAME=`cmk list hosts id=$LOWESTHOSTID | jq -r '.host[] | .name'`
 }
 
 
@@ -61,8 +67,8 @@ EOF
 }
 
 export TERM=vt100
-cloudmonkey set display json
-cloudmonkey set color false
+cmk set display json
+cmk set color false
 
 
 LOWESTCLUSTERID=""
@@ -83,8 +89,13 @@ case "$ALGORITHM" in
     MSG="Returning lowest used host in lowest used cluster in zone"
     ReturnFact;
   ;;
-  least_cluster)
-    least_cluster;
+  least_cluster_cpu)
+    least_cluster_cpu;
+    MSG="Returning lowest used cluster in zone"
+    ReturnFact;
+  ;;
+  least_cluster_mem)
+    least_cluster_mem;
     MSG="Returning lowest used cluster in zone"
     ReturnFact;
   ;;
