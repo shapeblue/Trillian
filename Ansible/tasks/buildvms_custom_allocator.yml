@@ -41,7 +41,7 @@
     state: absent
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -70,7 +70,7 @@
     public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -85,7 +85,7 @@
 # then start other VMs on least used hosts (regardless of cluster usage)
 
 ####################################################################
-- name: Create Nested VMs (Using Custom Allocator) 
+- name: Create Nested VMs (Using Custom Allocator)
   debug:
     msg: "Is addtional pod- {{ additional_pod|bool }}. Is addtional zone- {{ additional_zone|bool }}."
 
@@ -168,7 +168,7 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
   register: alg_output
   when: use_external_hv_hosts|bool == false
 
@@ -176,7 +176,7 @@
     msg: "{{ alg_output }}"
 
 - name: Start KVM hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -259,7 +259,7 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
   register: allocator_output
   when: use_external_hv_hosts|bool == false
 
@@ -267,7 +267,7 @@
     msg: "{{ allocator_output }}"
 
 - name: Start XenServer hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{xs_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -349,14 +349,15 @@
 
 - name: find least used cluster
   custom_allocator:
-    algorithm: least_cluster
+    algorithm: least_cluster_mem
+  register: allocator_output
   when: use_external_hv_hosts|bool == false
 
 - debug:
-    msg: "allocated_cluster_id= {{ allocator_cluster_id }}"
+    msg: "{{ allocator_output }}"
 
 - name: Start ESXi hosts
-  include: " ./looped_vm_start.yaml lowestclusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -417,12 +418,8 @@
     instance_name={{ item.instance_name }}
   with_items: "{{vc_retval.results}}"
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{vc_retval.results}}"
 
@@ -494,13 +491,8 @@
   with_items: "{{mgmtsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-  when: (additional_zone|bool == False) and (additional_pod|bool == False)
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{mgmtsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
@@ -566,13 +558,8 @@
   with_items: "{{mgmtsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-  when: (additional_zone|bool == False) and (additional_pod|bool == False)
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{mgmtsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
@@ -622,13 +609,8 @@
   with_items: "{{dbsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-  when: (additional_zone|bool == False) and (additional_pod|bool == False)
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{dbsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
@@ -679,17 +661,8 @@
   with_items: "{{dbsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-  register: alg_output
-  when: (additional_zone|bool == False) and (additional_pod|bool == False)
-
-- debug:
-    msg: "{{ alg_output }}"
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{dbsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
@@ -752,12 +725,8 @@
     instance_name={{ item.instance_name }}
   with_items: "{{marvin_retval.results}}"
 
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{marvin_retval.results}}"
 
