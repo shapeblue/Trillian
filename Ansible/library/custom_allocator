@@ -7,10 +7,10 @@
 #
 
 
-ARGS="(`cat $1`)"
+#ARGS="(`cat $1`)"
 
-ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="algorithm"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="clusterid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+#ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="algorithm"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
+#CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="clusterid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 PODID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="podid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 METRIC=`echo $ARGS | tr " " "\n"| awk -F= '$1=="metric"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
 ZONEID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="zoneid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'` ## FOR LATER
@@ -68,7 +68,7 @@ EOF
 
 export TERM=vt100
 cmk set display json
-cmk set color false
+#cmk set color false
 
 
 LOWESTCLUSTERID=""
