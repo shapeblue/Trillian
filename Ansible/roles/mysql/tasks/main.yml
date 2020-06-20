@@ -22,10 +22,21 @@
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
-  
+
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
+- name: symlink /usr/bin/python -> /usr/bin/python3
+  hosts: "*"
+  gather_facts: false
+  tasks:
+    - name: symlink /usr/bin/python -> /usr/bin/python3
+      raw: |
+        if [ -f /usr/bin/python3 ] && [ ! -f /usr/bin/python ]; then
+          ln --symbolic /usr/bin/python3 /usr/bin/python;
+        fi
+      become: true
 
 - name: now i'm connected, get facts
   setup:
