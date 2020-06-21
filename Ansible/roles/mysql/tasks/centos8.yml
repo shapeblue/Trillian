@@ -39,7 +39,9 @@
   changed_when: false
 
 - name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+  selinux:
+    policy: targeted
+    state: permissive
 
 - name: Ensure mysql server is installed
   dnf:
@@ -48,7 +50,9 @@
   tags: services
 
 - name: replace MySQL my.cnf using Template
-  action: template src=my.cnf.j2 dest=/etc/my.cnf
+  template:
+    src: my-centos8.cnf.j2
+    dest: /etc/my.cnf
   tags:
     - mysqlconf
 
@@ -60,7 +64,7 @@
   file:
     path: /var/log/mysql
     state: directory
-    mode: 0666
+    mode: 0750
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
   service:
