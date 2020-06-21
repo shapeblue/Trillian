@@ -25,6 +25,7 @@
   with_items:
     - "epel.repo"
     - "CentOS-Base.repo"
+    - "CentOS-AppStream.repo"
 
 - name: Ensure CA Certs are latest
   dnf: name=ca-certificates state=latest enablerepo=base
