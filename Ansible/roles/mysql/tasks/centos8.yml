@@ -1,0 +1,51 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+
+- name: now i'm connected, get facts
+  setup:
+  tags:
+    - mysqlconf
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf: name=libselinux-python state=present
+  tags: services
+
+- name: Ensure mysql python are installed (Ansible requirement)
+  dnf: name=MySQL-python state=present
+  tags: services
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+
+- name: Ensure mysql server is installed
+  dnf: name=mysql-server state=present
+  tags: services
+
+- name: Ridiculous fix for mysql permissions
+  file: path=/var/lib/mysql state=directory mode=0666
+
+- name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
+  service: name=mysql-server state=restarted enabled=yes
+  tags: services
+
+- include: ./secure_mysql.yml

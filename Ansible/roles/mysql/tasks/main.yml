@@ -41,10 +41,17 @@
     - mysqlconf
 
 - include: ./centos.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
   tags:
     - mysql
     - mysqlconf
+
+- include: ./centos8.yml
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int = 8 )
+  tags:
+    - mysql
+    - mysqlconf
+
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
