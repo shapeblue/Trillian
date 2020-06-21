@@ -30,7 +30,7 @@
 
 - name: Ensure mysql python are installed (Ansible requirement)
   dnf:
-    name: MySQL-python
+    name: python3-PyMySQL
     state: present
   tags: services
 
