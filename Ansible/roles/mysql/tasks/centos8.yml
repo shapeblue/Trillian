@@ -31,7 +31,7 @@
 - name: Ensure mysql python are installed (Ansible requirement)
   dnf:
     name: MySQL-python
-   state: present
+    state: present
   tags: services
 
 - name: Set selinux to permissive
@@ -42,14 +42,19 @@
   selinux: policy=targeted state=permissive
 
 - name: Ensure mysql server is installed
-  dnf: name=mysql-server state=present
+  dnf:
+    name: mysql-server
+    state: present
   tags: services
 
 - name: Ridiculous fix for mysql permissions
   file: path=/var/lib/mysql state=directory mode=0666
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
-  service: name=mysql-server state=restarted enabled=yes
+  service:
+    name: mysql-server
+    state: restarted
+    enabled: yes
   tags: services
 
 - include: ./secure_mysql.yml
