@@ -50,6 +50,11 @@
 - name: Ridiculous fix for mysql permissions
   file: path=/var/lib/mysql state=directory mode=0666
 
+- name: replace MySQL my.cnf using Template
+  action: template src=my.cnf.j2 dest=/etc/my.cnf
+  tags:
+    - mysqlconf
+
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
   service:
     name: mysqld
