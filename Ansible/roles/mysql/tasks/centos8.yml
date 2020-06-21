@@ -54,6 +54,13 @@
 
 - name: Initialise MySQL
   shell: mysqld --initialize-insecure --user=mysql
+  ignore_errors: yes
+
+- name: Ridiculous fix for mysql permissions
+  file:
+    path: /var/log/mysql
+    state: directory
+    mode: 0666
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
   service:
