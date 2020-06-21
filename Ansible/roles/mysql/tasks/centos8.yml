@@ -14,6 +14,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+
+- debug:
+    msg: "CentOS 8 Specific MySQL Build"
+
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
 
@@ -29,10 +33,8 @@
   tags: services
 
 - name: Ensure mysql python are installed (Ansible requirement)
-  dnf:
-    name: python3-PyMySQL
-    state: present
-  tags: services
+  pip:
+    name: PyMySQL
 
 - name: Set selinux to permissive
   command: setenforce permissive

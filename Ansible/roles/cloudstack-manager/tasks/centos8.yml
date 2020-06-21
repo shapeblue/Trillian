@@ -1,12 +1,15 @@
 ---
 
+- debug:
+    msg: "CentOS 8 Specific Management Server Build"
+
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   dnf:
     name: python3-libselinux
     state: present
   tags: services
 
-- name: CentOS 7 hostname fixup
+- name: CentOS hostname fixup
   file: path=/etc/hostname state=absent
   when: ansible_distribution_major_version == "7"
 
