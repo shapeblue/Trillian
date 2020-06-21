@@ -52,7 +52,7 @@
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
   service:
-    name: mysql-server
+    name: mysqld
     state: restarted
     enabled: yes
   tags: services
