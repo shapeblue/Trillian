@@ -1,7 +1,10 @@
 ---
 
-- name: Ensure selinux python bindings are installed
-  dnf: name=libselinux-python state=present
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf:
+    name: python3-libselinux
+    state: present
+  tags: services
 
 - name: CentOS 7 hostname fixup
   file: path=/etc/hostname state=absent
