@@ -42,14 +42,12 @@
     - "rename_browser"
 
 - include: ./centos.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - "global_settings"
     - "rename_browser"
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
 
 - include: ./centos8.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   tags:
     - "global_settings"
     - "rename_browser"
