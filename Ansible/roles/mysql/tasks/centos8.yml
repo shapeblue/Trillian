@@ -26,10 +26,10 @@
   tags:
     - mysqlconf
 
-    - name: Ensure python pre-req mysql repo is installed
-    dnf:
-      name: http://repo.mysql.com/mysql80-community-release-el8.rpm
-      state: present
+- name: Ensure python pre-req mysql repo is installed
+  dnf:
+    name: http://repo.mysql.com/mysql80-community-release-el8.rpm
+    state: present
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   dnf:
