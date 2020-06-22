@@ -48,7 +48,7 @@
 
 - debug:
     msg: "env_cs_distribution - {{ env_cs_distribution }}"
-- include: ./centos-acs.yml
+- include: ./centos8-acs.yml
   when: env_cs_distribution == "cs"
 
 - include: ./centos-shortname.yml
