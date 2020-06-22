@@ -14,6 +14,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: Ensure python pre-req mysql repo is installed
+  dnf:
+    name: http://repo.mysql.com/mysql80-community-release-el8.rpm
+    state: present 
 
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
@@ -26,18 +30,12 @@
 
 - name: Ensure MySQL Client is present (centos/rhel6)
   dnf: name=mysql state=present
-  when: ansible_distribution_major_version == "6"
-
-- name: Ensure MariaDB Client is present (centos/rhel7)
-  dnf: name=mysql state=present
-  when: ansible_distribution_major_version == "7"
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - name: Ensure CloudStack Usage Service is installed
   dnf: name=cloudstack-usage state=present
-
 
 - include: ./setupdb.yml
 
