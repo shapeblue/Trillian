@@ -24,7 +24,7 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS-Base.repo"
+    - "CentOS8-Base.repo"
     - "CentOS-AppStream.repo"
 
 - name: Ensure CA Certs are latest
