@@ -28,14 +28,11 @@
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   dnf:
-    name: python3-libselinux
+    name: 
+       - python3-libselinux
+       - mysql-connector-python3
     state: present
   tags: services
-
-- name: Ensure mysql python is installed (Ansible requirement)
-  pip:
-    name: PyMySQL
-    state: present
 
 - name: Set selinux to permissive
   command: setenforce permissive
