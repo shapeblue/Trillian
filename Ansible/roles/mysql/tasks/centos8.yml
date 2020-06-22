@@ -32,9 +32,10 @@
     state: present
   tags: services
 
-- name: Ensure mysql python are installed (Ansible requirement)
+- name: Ensure mysql python is installed (Ansible requirement)
   pip:
     name: PyMySQL
+    state: present
 
 - name: Set selinux to permissive
   command: setenforce permissive
