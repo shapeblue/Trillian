@@ -16,13 +16,18 @@
 
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: wait for VM to be alive
   shell: "ping {{ ansible_ssh_host }} -c 1"
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
-
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
@@ -33,7 +38,9 @@
       ln --symbolic /usr/bin/python3 /usr/bin/python;
     fi
   become: true
-
+  tags:
+    - mysql
+    - mysqlconf
 - name: now i'm connected, get facts
   setup:
   tags:
@@ -55,6 +62,9 @@
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+  tags:
+    - mysql
+    - mysqlconf
 
 - include: ./mysql_replication.yml
   when: num_db_hosts | int > 1

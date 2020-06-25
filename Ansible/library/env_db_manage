@@ -11,7 +11,8 @@
 #
 
 ARGS="(`cat $1`)"
-echo $ARGS > /tmp/db_log.log
+#echo $ARGS > /tmp/db_log.log
+TMPLOGINFILE="/tmp/mysqlaccess-$RANDOM"
 
 DBHOST=""
 DBUSER=""
@@ -37,7 +38,19 @@ ENV_ZONETYPE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_ZONETYPE"{print $2}'| 
 ENV_SECGROUPS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="ENV_SECGROUPS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 ENV_SECGROUPS_PARSED=`echo $ENV_SECGROUPS | grep -Ei 'yes|true'`
 
-MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+MYSQL_VER_STR=`mysql --version | grep -i mysql | awk -F ' ' '{print $3}' | head -c 1`
+MARIA_VER_STR=`mysql --version | tr " " "\n" | grep Maria | head -c 1`
+
+if [[ "$MYSQL_VER_STR" == "8" ]];then
+  echo "[client]
+password=${DBPASS}
+" > $TMPLOGINFILE
+
+  MYSQLCOMMAND="mysql --defaults-extra-file=$TMPLOGINFILE -h${DBHOST} -u${DBUSER}  -s -N -e";
+
+else
+  MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+fi
 
 ENVTBL="environments";
 PODTBL="podnetworks";
@@ -470,4 +483,5 @@ case "$ENV_ACTION" in
     ;;
 
 esac
+rm -rf $TMPLOGINFILE
 exit

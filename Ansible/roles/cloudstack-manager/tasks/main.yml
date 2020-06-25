@@ -53,7 +53,7 @@
 
 - name: copy cloudstack-systemvm script to /usr/bin
   copy:
-    src: cloudstac|intk-systemvm
+    src: cloudstack-systemvm
     dest: /usr/bin/
     mode: 0755
 

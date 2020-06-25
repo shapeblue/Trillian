@@ -1,0 +1,52 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf:
+    name: python3-libselinux
+    state: present
+  tags: services
+
+- name: install jq
+  dnf:
+   name: jq
+   state: latest
+
+- name: ensure cm config is removed
+  file: path=/root/.cloudmonkey/config state=absent
+
+- name: copy CloudMonkey to host
+  get_url:
+    url: "{{ def_linux_cm_url }}"
+    dest: /usr/bin/cmk
+    mode: 0755
+
+- name: link cmk to cloudmonkey
+  file:
+    src: /usr/bin/cmk
+    dest: /usr/bin/cloudmonkey
+    state: link
+
+- name: create .cmk directory
+  file:
+    path: /root/.cmk
+    state: directory
+    mode: 0755
+
+- name: base configuration
+  shell: "cmk set prompt 'cmk-SB>' ; cmk set log_file /var/log/cloud-cli.log ; cmk set apikey {{ cm_apikey }} ; cmk set secretkey {{ cm_secretkey }} ; cmk set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
+  ignore_errors: true
