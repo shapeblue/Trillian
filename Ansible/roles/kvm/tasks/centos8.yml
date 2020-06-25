@@ -1,11 +1,16 @@
 ---
 
-- name: Ensure prerequisite libselinux-python installed
-  dnf: name=libselinux-python state=installed
+- debug:
+    msg: "CentOS 8 Specific KVM host Build"
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf:
+    name: python3-libselinux
+    state: present
   tags:
     - kvm
 
-- name: CentOS 7 hostname fixup
+- name: CentOS hostname fixup
   file: path=/etc/hostname state=absent
   when: ansible_distribution_major_version == "7"
   tags:
@@ -22,13 +27,6 @@
   tags:
     - kvm
 
-- name: Install bridge utilities
-  dnf: name={{ item }} state=present enablerepo=base
-  with_items:
-    - bridge-utils
-  tags:
-    - kvm
-  when: kvm_network_mode == "bridge"
 
 - include: ./kvm_networking_bridge.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
@@ -51,7 +49,8 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS-Base.repo"
+    - "CentOS8-Base.repo"
+    - "CentOS-AppStream.repo"
   tags:
     - kvm
 
@@ -59,8 +58,7 @@
   dnf: name={{ item }} state=present enablerepo=base
   with_items:
     - bind-utils
-    - bridge-utils
-    - ntp
+    - chrony
     - openssh-clients
     - pciutils
     - telnet
@@ -68,10 +66,16 @@
     - traceroute
     - nano
     - iftop
-    - python-argparse
     - rpcbind
     - parted
     - vim
+  tags:
+    - kvm
+
+- name: install python-argparse
+  pip:
+    name: argparse
+    state: present
   tags:
     - kvm
 
@@ -81,14 +85,14 @@
     - firewalld
   tags:
     - kvm
-  when: ( ansible_distribution_major_version >= "7" ) and use_firewalld
+  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
 
 - name: Start firewalld CentOS7
   service:
     name=firewalld
     state=started
     enabled=yes
-  when: ( ansible_distribution_major_version >= "7" ) and use_firewalld
+  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
 
 - include: ./add_local_storage.yml
   when: use_local_storage
@@ -162,7 +166,7 @@
     - "16509"
     - "5900-6100"
     - "49152-49216"
-  when: ( ansible_distribution_major_version == "7" ) and use_firewalld
+  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
   tags:
     - kvm
     - kvm-agent

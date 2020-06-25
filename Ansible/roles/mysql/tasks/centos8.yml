@@ -1,4 +1,4 @@
----
+﻿---
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,38 +14,118 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+
+- debug:
+    msg: "CentOS 8 Specific MySQL Build"
+  tags:
+    - mysql
+    - mysqlconf
+
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: now i'm connected, get facts
   setup:
   tags:
+    - mysql
     - mysqlconf
 
-- name: Ensure selinux python bindings are installed (Ansible requirement)
-  dnf: name=libselinux-python state=present
-  tags: services
-
-- name: Ensure mysql python are installed (Ansible requirement)
-  dnf: name=MySQL-python state=present
-  tags: services
+- name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
+  dnf:
+    name: 
+       - python3-libselinux
+       - python3-PyMySQL
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+  selinux:
+    policy: targeted
+    state: permissive
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure mysql server is installed
-  dnf: name=mysql-server state=present
-  tags: services
+  dnf:
+    name: mysql-server
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: replace MySQL my.cnf using Template
+  template:
+    src: my-centos8.cnf.j2
+    dest: /etc/my.cnf
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Initialise MySQL
+  shell: mysqld --initialize-insecure --user=mysql
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ridiculous fix for mysql permissions
-  file: path=/var/lib/mysql state=directory mode=0666
+  file:
+    path: /var/log/mysql
+    state: directory
+    mode: 0750
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
-  service: name=mysql-server state=restarted enabled=yes
-  tags: services
+  service:
+    name: mysqld
+    state: restarted
+    enabled: yes
+  tags:
+    - mysql
+    - mysqlconf
 
-- include: ./secure_mysql.yml
+
+#- include: ./secure_mysql.yml
+
+# temporary fix until new version of ansible used
+
+
+#- name: set root password
+#  acs_mysql_update: DBHOST="localhost" DBUSER="cloud" DBPASS="NA" MYSQL_STATEMENT="ALTER USER 'root'@'localhost' IDENTIFIED BY '"{{ mysql_root_password }}"';FLUSH PRIVILEGES;"
+#  tags:
+#    - mysql
+#    - mysqlconf
+
+#- name: allow remote root access
+#  acs_mysql_update: DBHOST="localhost" DBUSER="root" DBPASS={{ mysql_root_password }} MYSQL_STATEMENT="CREATE USER 'root'@'%' IDENTIFIED BY '"{{ mysql_root_password }}"';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES;"
+#  tags:
+#    - mysql
+#    - mysqlconf
+
+
+- name: set root password
+  shell: mysql -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: grant permissions
+  shell: mysql -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
+  ignore_errors: yes
+  tags:
+    - mysql
+    - mysqlconf

@@ -29,6 +29,16 @@
     name: "{{ cloudstack_agent_package}}*"
     state: present
     enablerepo: base
+  when: ansible_distribution_major_version|int < 8
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure CloudStack packages are installed
+  dnf:
+    name: "{{ cloudstack_agent_package}}*"
+    state: present
+  when: ansible_distribution_major_version|int == 8
   tags:
     - kvm
     - kvm-agent

@@ -32,6 +32,14 @@
   tags:
     - setup_mgmt
 
+- name: Setup CloudStack Manager (centos/rhel8)
+  shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
+  when: ansible_distribution_major_version|int == 8
+  tags:
+    - setup_mgmt
+
+
+
 - name: Setup CloudStack Manager (Ubuntu)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
   when: ansible_distribution == "Ubuntu"

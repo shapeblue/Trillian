@@ -1,9 +1,15 @@
 ---
 
-- name: Ensure selinux python bindings are installed
-  dnf: name=libselinux-python state=present
+- debug:
+    msg: "CentOS 8 Specific Management Server Build"
 
-- name: CentOS 7 hostname fixup
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf:
+    name: python3-libselinux
+    state: present
+  tags: services
+
+- name: CentOS hostname fixup
   file: path=/etc/hostname state=absent
   when: ansible_distribution_major_version == "7"
 
@@ -18,7 +24,8 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS-Base.repo"
+    - "CentOS8-Base.repo"
+    - "CentOS-AppStream.repo"
 
 - name: Ensure CA Certs are latest
   dnf: name=ca-certificates state=latest enablerepo=base
@@ -41,7 +48,7 @@
 
 - debug:
     msg: "env_cs_distribution - {{ env_cs_distribution }}"
-- include: ./centos-acs.yml
+- include: ./centos8-acs.yml
   when: env_cs_distribution == "cs"
 
 - include: ./centos-shortname.yml

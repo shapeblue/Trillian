@@ -31,27 +31,12 @@
 
 - name: now i'm connected, get facts
   setup:
-  tags:
-    - "global_settings"
-    - "rename_browser"
 
 - include: ./centos.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-  tags:
-    - "global_settings"
-    - "rename_browser"
-
-- include: ./centos.yml
-  tags:
-    - "global_settings"
-    - "rename_browser"
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
 
 - include: ./centos8.yml
-  tags:
-    - "global_settings"
-    - "rename_browser"
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "8" )
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
 
 
 - include: ./ubuntu.yml
