@@ -27,6 +27,20 @@
   tags:
     - kvm
 
+- name: change cockpit port
+  lineinfile:
+    path: /usr/lib/systemd/system/cockpit.socket
+    regexp: '^ListenStream='
+    line: ListenStream=9091
+
+- name: reload daemon
+  command: systemctl daemon-reload
+
+- name: stop cockpit service
+  systemd:
+    name: cockpit
+    state: stopped
+
 - include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
