@@ -12,7 +12,7 @@
 
 - name: CentOS hostname fixup
   file: path=/etc/hostname state=absent
-  when: ansible_distribution_major_version == "7"
+  when: ansible_distribution_major_version|int == 7
   tags:
     - kvm
 
@@ -27,8 +27,7 @@
   tags:
     - kvm
 
-
-- include: ./kvm_networking_bridge.yml
+- include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
 - include: ./kvm_networking_ovs.yml
