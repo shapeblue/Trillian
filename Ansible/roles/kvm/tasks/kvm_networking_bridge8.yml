@@ -65,7 +65,7 @@
   command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes
 
 - name: Add interfaces to bridge
-  command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
+  command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1 ipv4.method disabled
 
 - name: bring up bridge
   command: nmcli connection up {{ kvm_guest_network_label }}
