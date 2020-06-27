@@ -75,3 +75,10 @@
 
 - name: bring up bridge
   command: nmcli connection up {{ kvm_guest_network_label }}
+
+#hack
+- pause:
+    seconds: 10
+
+- name: try to bring up bridge again
+  command: nmcli connection up {{ kvm_guest_network_label }}
