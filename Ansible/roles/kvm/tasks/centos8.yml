@@ -12,7 +12,7 @@
 
 - name: CentOS hostname fixup
   file: path=/etc/hostname state=absent
-  when: ansible_distribution_major_version == "7"
+  when: ansible_distribution_major_version|int == 7
   tags:
     - kvm
 
@@ -27,8 +27,21 @@
   tags:
     - kvm
 
+- name: change cockpit port
+  lineinfile:
+    path: /usr/lib/systemd/system/cockpit.socket
+    regexp: '^ListenStream='
+    line: ListenStream=9091
 
-- include: ./kvm_networking_bridge.yml
+- name: reload daemon
+  command: systemctl daemon-reload
+
+- name: stop cockpit service
+  systemd:
+    name: cockpit
+    state: stopped
+
+- include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
 - include: ./kvm_networking_ovs.yml
