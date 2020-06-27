@@ -37,7 +37,7 @@
 - name: Create {{ kvm_mgmt_network_label }} bridge interface
   command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes
 
-- name: Add interfaces to bridge
+- name: Add interface to {{ kvm_mgmt_network_label }}
   command: nmcli con add type bridge-slave ifname eth0 master {{ kvm_mgmt_network_label }} autoconnect yes con-name br-eth0
 
 - name: bring up bridge
@@ -60,12 +60,6 @@
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 
-- name: Create {{ kvm_guest_network_label }} bridge interface
-  command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method disabled
-
-- name: Add interfaces to bridge
-  command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
-
 - name: get name of eth1 connection
   shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
   register: eth1_name
@@ -73,11 +67,8 @@
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
 
-- name: bring up slave
-  command: nmcli connection up br-eth1
+- name: Create {{ kvm_guest_network_label }} bridge interface
+  command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method disabled
 
-- pause:
-    seconds: 10
-
-- name: Bring up bridge
-  command: nmcli connection up {{ kvm_guest_network_label }}
+- name: Add interface to {{ kvm_guest_network_label }}
+  command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
