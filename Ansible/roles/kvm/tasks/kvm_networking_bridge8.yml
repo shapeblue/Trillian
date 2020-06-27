@@ -73,12 +73,11 @@
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
 
-- name: bring up bridge
-  command: nmcli connection up {{ kvm_guest_network_label }}
+- name: bring up slave
+  command: nmcli connection up br-eth1
 
-#hack
 - pause:
     seconds: 10
 
-- name: try to bring up bridge again
+- name: Bring up bridge
   command: nmcli connection up {{ kvm_guest_network_label }}
