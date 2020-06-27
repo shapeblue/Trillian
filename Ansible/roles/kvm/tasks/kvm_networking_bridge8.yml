@@ -66,12 +66,12 @@
 - name: Add interfaces to bridge
   command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
 
-- name: bring up bridge
-  command: nmcli connection up {{ kvm_guest_network_label }}
-
 - name: get name of eth1 connection
   shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
   register: eth1_name
 
-- name: delete old eth0
+- name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
+
+- name: bring up bridge
+  command: nmcli connection up {{ kvm_guest_network_label }}
