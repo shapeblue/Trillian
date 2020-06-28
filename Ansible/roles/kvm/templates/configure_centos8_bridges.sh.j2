@@ -1,0 +1,11 @@
+#!/bin/sh
+
+nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes
+nmcli con add type bridge-slave ifname eth0 master {{ kvm_mgmt_network_label }} autoconnect yes con-name br-eth0
+nmcli connection up {{ kvm_mgmt_network_label }}
+ETH0_NAME=`nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'`
+nmcli connection delete '${ETH0_NAME}'
+ETH1_NAME=`nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'`
+nmcli connection delete '${ETH1_NAME}'
+nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method disabled
+nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
