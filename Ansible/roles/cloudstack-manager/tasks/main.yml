@@ -64,7 +64,7 @@
 
 - name: Download and extract Primate archive
   unarchive:
-    src: "{{ env_primate_url }}"
+    src: "{{ env_primate_archive_url }}"
     dest: /usr/share/cloudstack-management/webapp/primate/
     remote_src: yes
     owner: root
