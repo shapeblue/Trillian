@@ -51,6 +51,7 @@
   command: nmcli connection delete '{{ eth0_name.stdout }}'
 
 - name: wait for VM to be alive
+
   shell: "ping {{ ansible_ssh_host }} -c 1"
   register: pong
   until: pong.rc == 0

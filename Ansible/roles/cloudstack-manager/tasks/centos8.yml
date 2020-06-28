@@ -23,6 +23,19 @@
 - name: disable ipv6
   command: nmcli connection modify eth0 ipv6.method ignore
 
+- name: change cockpit port
+  lineinfile:
+    path: /usr/lib/systemd/system/cockpit.socket
+    regexp: '^ListenStream='
+    line: ListenStream=9091
+
+- name: reload daemon
+  command: systemctl daemon-reload
+
+- name: stop cockpit service
+  systemd:
+    name: cockpit
+    state: stopped
 
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
