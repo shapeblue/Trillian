@@ -45,7 +45,7 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
 
-- name: Now I'm connected, get facts
+- name: Now Im connected, get facts
   setup:
   when: (not use_phys_hosts)
 
@@ -141,13 +141,6 @@
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
-  tags:
-    - kvm
-    - kvm-agent
-
-- name: Bugfix libvirt cpu issue on ACS 4.5 (CLOUDSTACK-8443)
-  shell: sed -i -e '/cgroup\_controllers/d' /usr/lib64/python2.7/site-packages/cloudutils/serviceConfig.py
-  when: (ansible_distribution_major_version == "7") and (env_numversion | version_compare('4.9','<='))
   tags:
     - kvm
     - kvm-agent

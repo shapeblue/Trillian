@@ -31,7 +31,7 @@
     fi
   become: true
 
-- name: Now I'm connected, get facts
+- name: Now Im connected, get facts
   setup:
 
 - name: Create {{ kvm_mgmt_network_label }} bridge interface
@@ -63,6 +63,9 @@
 - name: Create {{ kvm_guest_network_label }} bridge interface
   command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes
 
+- pause:
+    seconds: 2
+
 #- name: disable dhcp on {{ kvm_guest_network_label }}
 #  command: nmcli connection modify {{ kvm_guest_network_label }} ipv4.method disable
 
@@ -70,14 +73,32 @@
   shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
   register: eth1_name
 
-#- name: bounce bridge (down)
-#  command: nmcli connection down {{ kvm_guest_network_label }}
+- pause:
+    seconds: 2
 
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
 
+- pause:
+    seconds: 2
+
 - name: Add interfaces to bridge
   command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
 
-- name: bounce bridge (up)
+- pause:
+    seconds: 2
+
+- name: Bring up interface
+  command: nmcli connection up br-eth1
+
+- pause:
+    seconds: 2
+
+- name: Bring up bridge
   command: nmcli connection up {{ kvm_guest_network_label }}
+
+- pause:
+    seconds: 2
+
+- name: echo out nmcli
+  command: nmcli conn show

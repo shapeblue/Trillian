@@ -20,6 +20,10 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: disable ipv6
+  command: nmcli connection modify eth0 ipv6.method ignore
+
+
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
