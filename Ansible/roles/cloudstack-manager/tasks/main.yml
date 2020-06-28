@@ -57,15 +57,10 @@
     dest: /usr/bin/
     mode: 0755
 
-- name: create primate dir
-  file:
-    path: /usr/share/cloudstack-management/webapp/primate/
-    state: directory
-
 - name: Download and extract Primate archive
   unarchive:
     src: "{{ env_primate_archive_url }}"
-    dest: /usr/share/cloudstack-management/webapp/primate/
+    dest: /usr/share/cloudstack-management/webapp/
     remote_src: yes
     owner: root
     mode: 0644
