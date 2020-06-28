@@ -263,6 +263,17 @@
       with_items:
         - "{{ groups[ env_name_clean ] }}"
 
+
+- name: Download and extract Primate archive
+  unarchive:
+    src: "{{ env_primate_url }}"
+    dest: /usr/share/cloudstack-management/webapp/primate/
+    remote_src: yes
+    owner: root
+    mode: 0644
+  when: (env_install_primate_archive|bool == True)
+
+
 ## update status
 
 - hosts: localhost

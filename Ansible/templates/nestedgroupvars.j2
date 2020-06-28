@@ -40,6 +40,11 @@ env_db_ip: "{{ env_db_ip | default( def_env_db_ip ) }}"
 env_db_user: "{{ env_db_user | default( def_env_db_user ) }}"
 env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
 
+# primate
+
+env_install_primate_archive: {{ env_install_primate_archive | default( def_install_primate_archive ) }}
+env_install_primate: "placeholder"
+env_primate_archive_url: "{{ env_primate_url | default( "NA" ) }}"
 
 # Environment summary
 env_uuid: "{{ env_uuid.stdout }}"
