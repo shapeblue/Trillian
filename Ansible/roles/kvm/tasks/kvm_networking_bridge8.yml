@@ -31,16 +31,27 @@
     fi
   become: true
 
-- name: copy nmcli script to host
-  template:
-    src: configure_centos8_bridges.sh.j2
-    dest: /tmp/configure_centos8_bridges.sh
-    mode: 0750
+- name: Now I'm connected, get facts
+  setup:
 
-- name: run script
-  shell: sh /tmp/configure_centos8_bridges.sh
+- name: Create {{ kvm_mgmt_network_label }} bridge interface
+  command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes
 
-- name: wait for networking to come back
+- name: Add interfaces to bridge
+  command: nmcli con add type bridge-slave ifname eth0 master {{ kvm_mgmt_network_label }} autoconnect yes con-name br-eth0
+
+- name: bring up bridge
+  command: nmcli connection up {{ kvm_mgmt_network_label }}
+
+- name: get name of eth0 connection
+  shell: nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
+  register: eth0_name
+
+- name: delete old eth0
+  command: nmcli connection delete '{{ eth0_name.stdout }}'
+
+- name: wait for VM to be alive
+
   shell: "ping {{ ansible_ssh_host }} -c 1"
   register: pong
   until: pong.rc == 0
@@ -49,3 +60,25 @@
 
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
+- name: Create {{ kvm_guest_network_label }} bridge interface
+  command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes
+
+- name: Add interfaces to bridge
+  command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
+
+- name: disable dhcp on {{ kvm_guest_network_label }}
+  command: nmcli connection modify {{ kvm_guest_network_label }} ipv4.method disable
+
+- name: bounce bridge (down)
+  command: nmcli connection down {{ kvm_guest_network_label }}
+
+- name: bounce bridge (up)
+  command: nmcli connection up {{ kvm_guest_network_label }}
+
+- name: get name of eth1 connection
+  shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
+  register: eth1_name
+
+- name: delete old eth1
+  command: nmcli connection delete '{{ eth1_name.stdout }}'
