@@ -57,6 +57,15 @@
     dest: /usr/bin/
     mode: 0755
 
+- name: Download and extract Primate archive
+  unarchive:
+    src: "{{ env_primate_url }}"
+    dest: /usr/share/cloudstack-management/webapp/primate/
+    remote_src: yes
+    owner: root
+    mode: 0644
+  when: (env_install_primate_archive|bool == True)
+
 - name: "wait for ACS Management Service to come up before appying additional global settings"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
