@@ -38,6 +38,13 @@
   tags:
     - "global_settings"
 
+- name: Modify Xen Templates to stop dymanic scaling **** TEMPORARY HACK *****
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET dynamically_scalable='0' WHERE id='5';"
+  when: xs_ver not in xs_dyn_scaling_ok_vers and ("primary_cs_manager" in group_names)
+  tags:
+    - "global_settings"
+    
+
 - name: Boost SSVM offering when using VMWare
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.service_offering SET {{ item.field}}='{{ item.value }}' WHERE vm_type='secondarystoragevm';"
   with_items:
