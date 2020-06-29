@@ -63,7 +63,7 @@
     dest: /usr/share/cloudstack-management/webapp/
     remote_src: yes
     owner: root
-    mode: 0754
+    mode: 0755
   when: (env_install_primate_archive|bool == True)
 
 - name: "wait for ACS Management Service to come up before appying additional global settings"
