@@ -20,6 +20,9 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: disable ipv6
+  command: nmcli connection modify eth0 ipv6.method ignore
+
 - name: change cockpit port
   lineinfile:
     path: /usr/lib/systemd/system/cockpit.socket

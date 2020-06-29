@@ -19,6 +19,7 @@
   local_action:
     module: cs_project
     name: "{{ build_project }}"
+    display_text: "{{ env_comment }}"
     state: present
     api_timeout: 120
     tags:
