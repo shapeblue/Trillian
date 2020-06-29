@@ -67,9 +67,6 @@
 - pause:
     seconds: 2
 
-#- name: disable dhcp on {{ kvm_guest_network_label }}
-#  command: nmcli connection modify {{ kvm_guest_network_label }} ipv4.method disable
-
 - name: get name of eth1 connection
   shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
   register: eth1_name
@@ -88,7 +85,7 @@
 
 - pause:
     seconds: 2
-
+    
 - name: Bring up interface
   command: nmcli connection up br-eth1
 
@@ -101,5 +98,6 @@
 - pause:
     seconds: 2
 
-- name: echo out nmcli
+- name: echo out nmcli for confirmation
   command: nmcli conn show
+
