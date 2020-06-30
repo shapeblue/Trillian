@@ -32,7 +32,7 @@
 - name: get specified cluster id from name (if set)
   shell: cs listClusters | jq -r --arg JQVAR "{{ env_specific_hv_cluster }}" '.cluster[]| select(.name| endswith($JQVAR))| .id'
   register: allocator_cluster_id
-  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster != "na"
   delegate_to: localhost
 
 # Add SSH keys to Cloudstack for this project
