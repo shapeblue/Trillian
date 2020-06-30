@@ -29,6 +29,16 @@
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
+- name: get specified cluster id from name (if set)
+  shell: cs listClusters | jq -r --arg JQVAR "{{ env_specific_hv_cluster }}" '.cluster[]| select(.name| endswith($JQVAR))| .id'
+  register: found_cluster_id
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster != "na"
+  delegate_to: localhost
+
+- set_fact:
+    allocator_cluster_id: "{{ found_cluster_id.stdout }}"
+
+
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
 
@@ -88,7 +98,6 @@
 - name: Create Nested VMs (Using Custom Allocator)
   debug:
     msg: "Is addtional pod- {{ additional_pod|bool }}. Is addtional zone- {{ additional_zone|bool }}."
-
 
 
 # KVM hosts
@@ -170,13 +179,13 @@
   custom_allocator:
     algorithm: least_cluster_mem
   register: alg_output
-  when: use_external_hv_hosts|bool == false
-
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+  
 - debug:
     msg: "{{ alg_output }}"
 
 - name: Start KVM hosts
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}" 
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -261,11 +270,11 @@
   custom_allocator:
     algorithm: least_cluster_mem
   register: allocator_output
-  when: use_external_hv_hosts|bool == false
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - debug:
     msg: "{{ allocator_output }}"
-
+    
 - name: Start XenServer hosts
   shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
@@ -346,12 +355,12 @@
     api_timeout: 120
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
-
+  
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster_mem
   register: allocator_output
-  when: use_external_hv_hosts|bool == false
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - debug:
     msg: "{{ allocator_output }}"
