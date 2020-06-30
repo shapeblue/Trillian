@@ -90,10 +90,16 @@ if [[ "${HV,,}" == "kvm" ]]; then
     sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 6\"/g" $TMP_ENV_META_DATA
   elif [[ -n `echo $HOSTYPEDATA | grep 'CentOS Linux release 7'` ]]; then
     sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 7\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'CentOS Linux release 8'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"CentOS 8\"/g" $TMP_ENV_META_DATA
   elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 16.04'` ]]; then
     sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 16.04\"/g" $TMP_ENV_META_DATA
   elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 14.04'` ]]; then
     sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 14.04\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 18.04'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 18.04\"/g" $TMP_ENV_META_DATA
+  elif [[ -n `echo $HOSTYPEDATA | grep 'Ubuntu 20.04'` ]]; then
+    sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Ubuntu 20.04\"/g" $TMP_ENV_META_DATA
   else
     sed -i "s/\"hypervisor_version\": \".*\"/\"hypervisor_version\": \"Unknown\"/g" $TMP_ENV_META_DATA
   fi
