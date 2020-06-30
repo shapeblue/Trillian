@@ -33,6 +33,7 @@
   shell: cs listClusters | jq -r --arg JQVAR "{{ env_specific_hv_cluster }}" '.cluster[]| select(.name| endswith($JQVAR))| .id'
   register: allocator_cluster_id
   when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+  delegate_to: localhost
 
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
@@ -178,7 +179,6 @@
   
 - debug:
     msg: "{{ alg_output }}"
-    when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - name: Start KVM hosts
   shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}" 
@@ -270,8 +270,7 @@
 
 - debug:
     msg: "{{ allocator_output }}"
-    when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-
+    
 - name: Start XenServer hosts
   shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
@@ -361,7 +360,6 @@
 
 - debug:
     msg: "{{ allocator_output }}"
-    when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - name: Start ESXi hosts
   shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
