@@ -37,7 +37,7 @@
 
 - set_fact:
     allocator_cluster_id: "{{ found_cluster_id.stdout }}"
-
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster != "na"
 
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
@@ -180,12 +180,12 @@
     algorithm: least_cluster_mem
   register: alg_output
   when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-  
+
 - debug:
     msg: "{{ alg_output }}"
 
 - name: Start KVM hosts
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}" 
+  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -274,7 +274,7 @@
 
 - debug:
     msg: "{{ allocator_output }}"
-    
+
 - name: Start XenServer hosts
   shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
@@ -355,7 +355,7 @@
     api_timeout: 120
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
-  
+
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster_mem
