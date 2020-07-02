@@ -120,7 +120,9 @@
   pip: name=pycparser version=2.13
 
 - name: Install mysql-connector-python
-  pip: mysql-connector-python
+  pip: name={{ item }} extra_args='--upgrade'
+  with_items:
+  - mysql-connector-python
   tags:
     - marvin
     - marvin_install
