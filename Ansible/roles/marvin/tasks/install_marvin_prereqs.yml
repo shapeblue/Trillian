@@ -78,6 +78,12 @@
     - marvin
     - marvin_install
 
+- name: Install mysql-connector-python
+  yum: name=mysql-connector-python state=latest
+  tags:
+    - marvin
+    - marvin_install
+
 - name: remove yum openSSL package
   yum:
     name: pyOpenSSL
@@ -118,14 +124,6 @@
 
 - name: WORKAROUND **Install pycparser v2.13**
   pip: name=pycparser version=2.13
-
-- name: Install mysql-connector-python
-  pip: name={{ item }} extra_args='--upgrade'
-  with_items:
-  - mysql-connector-python
-  tags:
-    - marvin
-    - marvin_install
 
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes
