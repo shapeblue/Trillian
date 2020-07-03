@@ -79,7 +79,7 @@
     - marvin_install
 
 - name: Install mysql-connector-python
-  yum: name=mysql-connector-python state=installed
+  yum: name=mysql-connector-python state=latest
   tags:
     - marvin
     - marvin_install
