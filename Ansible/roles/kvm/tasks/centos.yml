@@ -5,9 +5,9 @@
   tags:
     - kvm
 
-- name: CentOS 7/8 hostname fixup
+- name: CentOS 7 hostname fixup
   file: path=/etc/hostname state=absent
-  when: ansible_distribution_major_version|int >= 7
+  when: ansible_distribution_major_version == "7"
   tags:
     - kvm
 
@@ -75,28 +75,20 @@
   tags:
     - kvm
 
-- name: Install chrony for centos8
-  yum: name={{ item }} state=present enablerepo=base
-  with_items:
-    - chrony
-  tags:
-    - kvm
-  when: ( ansible_distribution_major_version > "8" )
-
-- name: Firewalld for CentOS7/CentOS8
+- name: Firewalld for CentOS7
   yum: name={{ item }} state=present enablerepo=base
   with_items:
     - firewalld
   tags:
     - kvm
-  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
+  when: ( ansible_distribution_major_version == "7" ) and use_firewalld
 
-- name: Start firewalld CentOS7/CentOS8
+- name: Start firewalld CentOS7
   service:
     name=firewalld
     state=started
     enabled=yes
-  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
+  when: ( ansible_distribution_major_version == "7" ) and use_firewalld
 
 - include: ./add_local_storage.yml
   when: use_local_storage
@@ -144,7 +136,7 @@
 
 - name: Bugfix libvirt cpu issue on ACS 4.5 (CLOUDSTACK-8443)
   shell: sed -i -e '/cgroup\_controllers/d' /usr/lib64/python2.7/site-packages/cloudutils/serviceConfig.py
-  when: (ansible_distribution_major_version|int >= 7) and (env_numversion | version_compare('4.9','<='))
+  when: (ansible_distribution_major_version == "7") and (env_numversion | version_compare('4.9','<='))
   tags:
     - kvm
     - kvm-agent
@@ -170,7 +162,7 @@
     - "16509"
     - "5900-6100"
     - "49152-49216"
-  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
+  when: ( ansible_distribution_major_version == "7" ) and use_firewalld
   tags:
     - kvm
     - kvm-agent
@@ -184,7 +176,7 @@
 
 - name: load updated config
   shell: "firewall-cmd --reload"
-  when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
+  when: ( ansible_distribution_major_version == "7" ) and use_firewalld
   tags:
     - kvm
     - kvm-agent
