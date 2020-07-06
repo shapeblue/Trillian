@@ -100,3 +100,7 @@
 #- name: Open 8096 when Marvin is required (CentOS 7)
 #  shell: firewall-cmd --permanent --zone=public --add-port=8096/tcp && firewall-cmd --reload
 #  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
+
+# Workaround for https://github.com/apache/cloudstack/issues/4204
+- name: Patch ipmitool yo ipmitool-1.8.18-12.el8_1.x86_64.rpm
+  shell: "rpm -i https://rpmfind.net/linux/centos/8.1.1911/AppStream/x86_64/os/Packages/ipmitool-1.8.18-12.el8_1.x86_64.rpm --force"
