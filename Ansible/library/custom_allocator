@@ -17,13 +17,13 @@ ZONEID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="zoneid"{print $2}'| tr -d '"' | 
 
 function least_cluster_cpu()
 {
-  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,cpuused | jq '.cluster' |sed 's/%//g'| jq 'sort_by(.cpuused)' | jq -r '.[0].id'`
+  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,cpuused,state | jq '.cluster | map(select(.state=="Enabled"))' |sed 's/%//g'| jq 'sort_by(.cpuused)' | jq -r '.[0].id'`
   LOWESTCLUSTERNAME=`cmk list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
 function least_cluster_mem()
 {
-  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,memoryused | jq '.cluster' |sed 's/%//g'| jq 'sort_by(.memoryused)' | jq -r '.[0].id'`
+  LOWESTCLUSTERID=`cmk list clustersmetrics filter=id,cpuused,state | jq '.cluster | map(select(.state=="Enabled"))' |sed 's/%//g'| jq 'sort_by(.memoryused)' | jq -r '.[0].id'`
   LOWESTCLUSTERNAME=`cmk list clusters id=$LOWESTCLUSTERID | jq -r '.cluster[] | .name'`
 }
 
@@ -58,7 +58,7 @@ cat << EOF
   "allocator_cluster_id": "${LOWESTCLUSTERID}",
   "allocator_pod_id": "${LOWESTPODID}",
   "allocator_cluster_name": "${LOWESTCLUSTERNAME}",
-  "allocator_host_name": "${LOWESTHOSTNAME}",  
+  "allocator_host_name": "${LOWESTHOSTNAME}",
   "env_return": "success",
   "env_retmsg": "${MSG}"
  }
