@@ -58,6 +58,27 @@
 
 - name: replace MySQL my.cnf using Template (Ubuntu)
   template: src=my.ubuntu.cnf.j2 dest=/etc/mysql/my.cnf
+  when: ansible_distribution_major_version|int >= 18
+
+- name: replace MySQL my.cnf using Template (Ubuntu)
+  template: src=my-centos8.cnf.j2 dest=/etc/mysql/my.cnf
+  when: ansible_distribution_major_version|int >= 20
+
+- name: Initialise MySQL
+  shell: mysqld --initialize-insecure --user=mysql
+  when: ansible_distribution_major_version|int >= 20
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Ridiculous fix for mysql permissions
+  file:
+    path: /var/log/mysql
+    state: directory
+    mode: 0750
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure MySQL service is started and set to start on boot (Ubuntu)
   service: name=mysql state=restarted enabled=yes
@@ -70,7 +91,7 @@
    state: restarted
    enabled: yes
   tags: services
-  when: ansible_distribution_major_version|int > 18
+  when: ansible_distribution_major_version|int >= 20
 
 - include: ./secure_mysql.yml
   when: ansible_distribution_major_version|int <= 18
@@ -79,7 +100,7 @@
 
 - name: set root password
   shell: mysql -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
-  when: ansible_distribution_major_version|int > 18
+  when: ansible_distribution_major_version|int >= 20
   tags:
     - mysql
     - mysqlconf
@@ -87,7 +108,7 @@
 - name: grant permissions
   shell: mysql -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
   ignore_errors: yes
-  when: ansible_distribution_major_version|int > 18
+  when: ansible_distribution_major_version|int >= 20
   tags:
     - mysql
     - mysqlconf
