@@ -64,6 +64,19 @@
   template: src=my-centos8.cnf.j2 dest=/etc/mysql/my.cnf
   when: ansible_distribution_major_version|int >= 20
 
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  service: name=mysql state=restarted enabled=yes
+  tags: services
+  when: ansible_distribution_major_version|int <= 18
+
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  systemd:
+   name: mysql
+   state: restarted
+   enabled: yes
+  tags: services
+  when: ansible_distribution_major_version|int >= 20
+
 - name: Initialise MySQL
   shell: mysqld --initialize-insecure --user=mysql
   when: ansible_distribution_major_version|int >= 20
@@ -79,19 +92,6 @@
   tags:
     - mysql
     - mysqlconf
-
-- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
-  service: name=mysql state=restarted enabled=yes
-  tags: services
-  when: ansible_distribution_major_version|int <= 18
-
-- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
-  systemd:
-   name: mysql
-   state: restarted
-   enabled: yes
-  tags: services
-  when: ansible_distribution_major_version|int >= 20
 
 - include: ./secure_mysql.yml
   when: ansible_distribution_major_version|int <= 18
