@@ -41,6 +41,7 @@
   tags:
     - mysql
     - mysqlconf
+
 - name: now i'm connected, get facts
   os_facts:
   tags:

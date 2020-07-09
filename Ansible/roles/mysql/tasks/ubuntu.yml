@@ -62,8 +62,35 @@
 - name: Ensure MySQL service is started and set to start on boot (Ubuntu)
   service: name=mysql state=restarted enabled=yes
   tags: services
+  when: ansible_distribution_major_version|int <= 18
+
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  systemd:
+   name: mysql
+   state: restarted
+   enabled: yes
+  tags: services
+  when: ansible_distribution_major_version|int > 18
 
 - include: ./secure_mysql.yml
+  when: ansible_distribution_major_version|int <= 18
+
+# bypass ansible mysql8 connection/library issues.
+
+- name: set root password
+  shell: mysql -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
+  when: ansible_distribution_major_version|int > 18
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: grant permissions
+  shell: mysql -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
+  ignore_errors: yes
+  when: ansible_distribution_major_version|int > 18
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure Firewall Rules are in place for MySQL
   shell: ufw allow mysql

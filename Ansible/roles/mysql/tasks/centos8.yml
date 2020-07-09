@@ -35,7 +35,7 @@
 
 - name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
   dnf:
-    name: 
+    name:
        - python3-libselinux
        - python3-PyMySQL
     state: present
