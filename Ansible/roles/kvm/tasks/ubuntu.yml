@@ -68,7 +68,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_version|version_compare('18.04',<)
+  when: ansible_distribution_major_version|int < 18
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
