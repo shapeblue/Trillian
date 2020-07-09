@@ -80,6 +80,7 @@
 - name: Initialise MySQL
   shell: mysqld --initialize-insecure --user=mysql
   when: ansible_distribution_major_version|int >= 20
+  ignore_errors: yes
   tags:
     - mysql
     - mysqlconf
