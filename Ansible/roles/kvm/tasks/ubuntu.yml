@@ -68,7 +68,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_version != "18.04"
+  when: ansible_distribution_version|version_compare('18.04',<)
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -91,16 +91,14 @@
 
   - name: Added network instances file to precise/trusty/xenial
     template: src=interfaces.j2 dest="/etc/network/interfaces"
-    when: (ansible_distribution_release == "precise") or
-          (ansible_distribution_release == "trusty" ) or
-          (ansible_distribution_release == "xenial")
+    when: ansible_distribution_version|version_compare('16.04',<=)
 
   - name: Added Netplan instances file bionic
     template:
       src: netplan.j2
       dest: /etc/netplan/50-cloud-init.yaml
       force: yes
-    when: ansible_distribution_version == "18.04"
+    when: ansible_distribution_version|version_compare('18.04',>=)
 
   when: kvm_network_mode == "bridge"
 
@@ -260,19 +258,12 @@
     line: 'libvirtd_opts="-d -l"'
   when: ansible_distribution_release == "trusty"
 
-- name: Updated /etc/default/libvirt-bin in xenial
-  lineinfile:
-    dest: "/etc/default/libvirt-bin"
-    regexp: '.*libvirtd_opts=*'
-    line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_release == "xenial"
-
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('16.04',>=)
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -294,12 +285,12 @@
   shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
   ignore_errors: yes
 
-- name: Delete DHCP leases file - bionic
+- name: Delete DHCP leases file - bionic onwards
   file: path={{ item }} state=absent
   with_items:
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('18.04',>=)
 
 # Note - Ubuntu18 startup of OVS bridges is not robust and does
 # sometime lead to race conditions where bridges don't come online
