@@ -34,7 +34,7 @@
   become: true
 
 - name: Now I'm connected, get facts
-  setup:
+  os_facts:
   tags:
     - kvm
 

@@ -10,7 +10,7 @@
     fi
 
 - name: Now I'm connected, get facts
-  setup:
+  os_facts:
 
 - include: ./centos6.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "6" )
