@@ -45,6 +45,7 @@
   apt_repository:
     repo: "ppa:webupd8team/java"
     state: present
+  when: ansible_distribution_major_version|int < 20
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -125,7 +126,7 @@
       regexp='preserve_hostname{{ ':' }} false'
       line='preserve_hostname{{ ':' }} true'
 
-  - name: Purge netplan - shell as apt module doesn't work
+  - name: Purge netplan - shell as apt module doesnt work
     shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
     with_items:
       - nplan
@@ -192,10 +193,12 @@
 
 - name: Add CloudStack repository into sources list.
   apt_repository:
-    repo: 'deb {{ baseurl_kvm }} /'
+    repo: 'deb "{{ baseurl_cloudstack }}" /'
     state: present
     validate_certs: no
   ignore_errors: yes
+  when: ansible_distribution_major_version|int < 20
+
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
