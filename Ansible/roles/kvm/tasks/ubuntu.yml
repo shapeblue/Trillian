@@ -14,10 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: gather OS facts
+  os_facts:
+
 - name: Set hostname pt1
   hostname:
     name: "{{ inventory_hostname }}"
-#    use: debian
+    when: ansible_distribution_major_version|int != 20
 
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"

@@ -228,6 +228,7 @@
 ## Configure Zone on Mgmt Server
 
 - hosts: primary_cs_manager
+  gather_facts: no
   roles:
     - cloudstack-config
 
@@ -243,6 +244,7 @@
 ## Configure Marvin host
 
 - hosts: marvin_host
+  gather_facts: no
   vars:
     num_marv_hosts: "{{ groups['marvin_host'] | length }}"
     num_db_hosts: "{{ groups['mysql_hosts'] | length }}"
@@ -283,6 +285,7 @@
       when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
 
 - hosts: primary_cs_manager
+  gather_facts: no
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
       when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
@@ -306,6 +309,7 @@
       when: wait_for_template and (create_zone|bool == True)
 
 - hosts: primary_cs_manager
+  gather_facts: no
   tasks:
     - include: ./roles/cloudstack-manager/tasks/wait-for-template.yml
       when: wait_for_template and (create_zone|bool == True)

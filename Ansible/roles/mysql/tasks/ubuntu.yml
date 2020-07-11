@@ -21,6 +21,9 @@
   with_items:
     - "sources.list"
   when: ansible_distribution_version == "18.04"
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -32,26 +35,33 @@
     state: present
   with_items:
     - python-setuptools
-
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure mysql python are installed (Ansible requirement)
   apt:
     pkg: python-mysqldb
     state: present
-  tags: services
   when: ansible_distribution_major_version|int < 18
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure mysql python are installed (Ansible requirement)
   apt:
     pkg: python3-mysqldb
     state: present
-  tags: services
   when: ansible_distribution_major_version|int >= 18
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure mysql server is installed (Ubuntu)
   apt: pkg=mysql-server state=present
-  tags: services
-
+  tags:
+    - mysql
+    - mysqlconf
 
 #- name: Ridiculous fix for mysql permissions
 #  file: path=/var/lib/mysql state=directory mode=0666
@@ -59,28 +69,13 @@
 - name: replace MySQL my.cnf using Template (Ubuntu)
   template: src=my.ubuntu.cnf.j2 dest=/etc/mysql/my.cnf
   when: ansible_distribution_major_version|int >= 18
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: replace MySQL my.cnf using Template (Ubuntu)
   template: src=my-centos8.cnf.j2 dest=/etc/mysql/my.cnf
   when: ansible_distribution_major_version|int >= 20
-
-- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
-  service: name=mysql state=restarted enabled=yes
-  tags: services
-  when: ansible_distribution_major_version|int <= 18
-
-- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
-  systemd:
-   name: mysql
-   state: restarted
-   enabled: yes
-  tags: services
-  when: ansible_distribution_major_version|int >= 20
-
-- name: Initialise MySQL
-  shell: mysqld --initialize-insecure --user=mysql
-  when: ansible_distribution_major_version|int >= 20
-  ignore_errors: yes
   tags:
     - mysql
     - mysqlconf
@@ -94,8 +89,28 @@
     - mysql
     - mysqlconf
 
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  service: name=mysql state=restarted enabled=yes
+  tags:
+    - mysql
+    - mysqlconf
+  when: ansible_distribution_major_version|int <= 18
+
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  systemd:
+    name: mysql
+    state: restarted
+    enabled: yes
+  when: ansible_distribution_major_version|int >= 20
+  tags:
+    - mysql
+    - mysqlconf
+
 - include: ./secure_mysql.yml
   when: ansible_distribution_major_version|int <= 18
+  tags:
+    - mysql
+    - mysqlconf
 
 # bypass ansible mysql8 connection/library issues.
 
@@ -116,6 +131,15 @@
 
 - name: Ensure Firewall Rules are in place for MySQL
   shell: ufw allow mysql
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: restart iptables
-  service: name=ufw state=restarted
+  systemd:
+    name: ufw
+    state: restarted
+    enabled: yes
+  tags:
+    - mysql
+    - mysqlconf
