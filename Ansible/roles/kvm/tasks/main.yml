@@ -25,6 +25,7 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   tags:
     - kvm
+  delegate_to: localhost
 
 - name: symlink /usr/bin/python -> /usr/bin/python3
   raw: |
@@ -33,8 +34,8 @@
     fi
   become: true
 
-- name: Now I'm connected, get facts
-  setup:
+- name: Now Im connected, get facts
+  os_facts:
   tags:
     - kvm
 
@@ -62,7 +63,7 @@
 
 
 
-- name: Configure KVM VMs for KVM
+- name: Configure Ubuntu VMs for KVM
   include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:

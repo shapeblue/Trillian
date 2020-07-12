@@ -1,0 +1,29 @@
+#!/bin/bash
+
+OS_DIST="NotFound"
+OS_VER="NotFound"
+if [ -h "/etc/redhat-release" ]; then
+  OS_DIST="CentOS"
+  OS_VER=`cat /etc/*-release | grep 'VERSION_ID=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
+  OS_VER_MAJOR=$OS_VER
+else
+  OS_DIST="Ubuntu"
+  OS_VER=`cat /etc/*-release | grep 'DISTRIB_RELEASE=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
+  OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
+fi
+ETH0_MAC="`cat /sys/class/net/eth0/address`"
+
+cat << EOF
+{
+"ansible_facts": {
+  "ansible_distribution": "${OS_DIST}",
+  "ansible_distribution_version": "${OS_VER}",
+  "ansible_distribution_major_version": "${OS_VER_MAJOR}",
+  "ansible_eth0": { "macaddress": "${ETH0_MAC}"},
+  "env_return": "success",
+  "env_retmsg": "Data successfully returned."
+ }
+}
+EOF
+
+exit

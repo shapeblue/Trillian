@@ -14,10 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Set hostname pt1
-  hostname:
-    name: "{{ inventory_hostname }}"
-#    use: debian
+- name: gather OS facts
+  os_facts:
+
+#- name: Set hostname pt1
+#  hostname:
+#    name: "{{ inventory_hostname }}"
+#    when: ansible_distribution_major_version != "20"
 
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
@@ -34,6 +37,7 @@
   apt_repository:
     repo: "ppa:webupd8team/java"
     state: present
+  when: ansible_distribution_major_version|int < 20
 
 - name: add CloudStack ubuntu repo keys
   apt_key:
@@ -57,6 +61,11 @@
     state: present
     validate_certs: no
   ignore_errors: yes
+  when: ansible_distribution_major_version|int < 20
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int == 20
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -101,7 +110,17 @@
     - cloudstack-usage
 
 - name: Ensure CloudStack Usage Service is started
-  service: name=cloudstack-usage state=started
+  service: 
+    name: cloudstack-usage
+    state: started
+  when: ansible_distribution_major_version|int <= 18
+
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  systemd:
+    name: mysql
+    state: restarted
+    enabled: yes
+  when: ansible_distribution_major_version|int >= 20
 
 - name: copy cloudutil script to /usr/bin
   copy: src=cloudutil dest=/usr/bin/ mode=0755

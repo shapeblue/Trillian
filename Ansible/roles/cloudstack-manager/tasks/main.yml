@@ -30,7 +30,7 @@
     fi
 
 - name: now i'm connected, get facts
-  setup:
+  os_facts:
 
 - include: ./centos.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )

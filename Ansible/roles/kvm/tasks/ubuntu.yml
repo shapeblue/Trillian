@@ -14,10 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Set hostname pt1
-  hostname:
-    name: "{{ inventory_hostname }}"
-#    use: debian
+- name: gather OS facts
+  os_facts:
+
+#- name: Set hostname pt1
+#  hostname:
+#    name: "{{ inventory_hostname }}"
+#    when: ansible_distribution_major_version|int != 20
 
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
@@ -28,7 +31,7 @@
     dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('18.04','==')
 
 - apt_key:
     url: "{{ repohost }}/release.asc"
@@ -42,6 +45,7 @@
   apt_repository:
     repo: "ppa:webupd8team/java"
     state: present
+  when: ansible_distribution_major_version|int < 20
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -68,7 +72,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_version != "18.04"
+  when: ansible_distribution_version|version_compare('18.04','<')
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -86,23 +90,29 @@
   tags:
     - kvm
 
-- name: Ubuntu linux bridge
+- name: Added network instances file to precise/trusty/xenial
+  template: src=interfaces.j2 dest="/etc/network/interfaces"
+  when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
+
+## start block
+
+- name: netplan on Ubuntu 18 onwards
   block:
+ 
+  - name: write netplan
+    shell: rm -rf  /etc/netplan/*
 
-  - name: Added network instances file to precise/trusty/xenial
-    template: src=interfaces.j2 dest="/etc/network/interfaces"
-    when: (ansible_distribution_release == "precise") or
-          (ansible_distribution_release == "trusty" ) or
-          (ansible_distribution_release == "xenial")
-
-  - name: Added Netplan instances file bionic
+  - name: write netplan
     template:
       src: netplan.j2
-      dest: /etc/netplan/50-cloud-init.yaml
-      force: yes
-    when: ansible_distribution_version == "18.04"
+      dest: /etc/netplan/00-trillian-config.yaml
 
-  when: kvm_network_mode == "bridge"
+  - name: apply netplan
+    command: netplan apply
+
+  when: ansible_distribution_version|version_compare('18.04','>=') and kvm_network_mode == "bridge"
+
+## end block
 
 - name: OVS on Ubuntu 18 onwards
   block:
@@ -124,15 +134,17 @@
       regexp='preserve_hostname{{ ':' }} false'
       line='preserve_hostname{{ ':' }} true'
 
-  - name: Purge netplan - shell as apt module doesn't work
+  - name: Purge netplan - shell as apt module doesnt work
     shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
     with_items:
       - nplan
       - netplan
     ignore_errors: true
+    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Delete netplan startup file
     shell: rm -f /etc/netplan/*
+    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
@@ -191,10 +203,15 @@
 
 - name: Add CloudStack repository into sources list.
   apt_repository:
-    repo: 'deb {{ baseurl_kvm }} /'
+    repo: 'deb "{{ baseurl_cloudstack }}" /'
     state: present
     validate_certs: no
   ignore_errors: yes
+  when: ansible_distribution_version|version_compare('20.04','<')
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_version|version_compare('20.04','==')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -258,21 +275,14 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
-  when: ansible_distribution_release == "trusty"
-
-- name: Updated /etc/default/libvirt-bin in xenial
-  lineinfile:
-    dest: "/etc/default/libvirt-bin"
-    regexp: '.*libvirtd_opts=*'
-    line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_release == "xenial"
+  when: ansible_distribution_version|version_compare('14.04','==')
 
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('16.04','>=')
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -294,12 +304,12 @@
   shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
   ignore_errors: yes
 
-- name: Delete DHCP leases file - bionic
+- name: Delete DHCP leases file - bionic onwards
   file: path={{ item }} state=absent
   with_items:
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('18.04','>=')
 
 # Note - Ubuntu18 startup of OVS bridges is not robust and does
 # sometime lead to race conditions where bridges don't come online

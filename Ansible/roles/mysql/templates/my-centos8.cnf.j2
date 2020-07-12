@@ -51,8 +51,10 @@ sync_binlog=1
 binlog_expire_logs_seconds=86400
 binlog-format=ROW
 
-socket=/var/lib/mysql/mysql.sock
 user=mysql
+socket=/var/run/mysqld/mysqld.sock
+pid-file=/var/run/mysqld/mysqld.pid
+
 
 [mysqld_safe]
 log-error=/var/log/mysql/mysql.log
