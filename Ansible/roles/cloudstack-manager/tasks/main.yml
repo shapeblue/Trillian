@@ -64,7 +64,9 @@
     remote_src: yes
     owner: root
     mode: 0755
-  when: (env_install_primate_archive|bool == True)
+  when: (env_install_primate_archive|bool == True) and ("primary_cs_manager" in group_names) and (env_numversion|version_compare('4.13', '>='))
+  tags:
+    - primate
 
 - name: "wait for ACS Management Service to come up before appying additional global settings"
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
