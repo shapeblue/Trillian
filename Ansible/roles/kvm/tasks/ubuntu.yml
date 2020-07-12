@@ -265,7 +265,7 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
-  when: ansible_distribution_release == "trusty"
+  when: ansible_distribution_release|version_compare('14.04','==')
 
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
