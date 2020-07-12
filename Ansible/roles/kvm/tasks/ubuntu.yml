@@ -84,6 +84,10 @@
     - network-manager
   when: ansible_distribution_version|version_compare('18.04','>=')
 
+- name: network-manger enable on devices
+  shell: echo "" > /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf
+  when: ansible_distribution_version|version_compare('18.04','>=')
+
 - name: network-manger enable
   lineinfile:
     dest: "/etc/NetworkManager/NetworkManager.conf"
