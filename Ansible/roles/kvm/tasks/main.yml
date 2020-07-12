@@ -34,7 +34,7 @@
     fi
   become: true
 
-- name: Now I'm connected, get facts
+- name: Now Im connected, get facts
   os_facts:
   tags:
     - kvm
@@ -63,7 +63,7 @@
 
 
 
-- name: Configure KVM VMs for KVM
+- name: Configure Ubuntu VMs for KVM
   include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:

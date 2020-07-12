@@ -90,21 +90,14 @@
   tags:
     - kvm
 
-- name: Ubuntu linux bridge
-  block:
+- name: Added network instances file to precise/trusty/xenial
+  template: src=interfaces.j2 dest="/etc/network/interfaces"
+  when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
 
-  - name: Added network instances file to precise/trusty/xenial
-    template: src=interfaces.j2 dest="/etc/network/interfaces"
-    when: ansible_distribution_version|version_compare('16.04','<=')
 
-  - name: Added Netplan instances file bionic
-    template:
-      src: netplan.j2
-      dest: /etc/netplan/50-cloud-init.yaml
-      force: yes
-    when: ansible_distribution_version|version_compare('18.04','>=')
+- include: ./kvm_networking_bridge8.yml
+  when: ansible_distribution_version|version_compare('18.04','>=') and kvm_network_mode == "bridge"
 
-  when: kvm_network_mode == "bridge"
 
 - name: OVS on Ubuntu 18 onwards
   block:
