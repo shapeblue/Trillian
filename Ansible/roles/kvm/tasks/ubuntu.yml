@@ -132,9 +132,11 @@
       - nplan
       - netplan
     ignore_errors: true
+    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Delete netplan startup file
     shell: rm -f /etc/netplan/*
+    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
