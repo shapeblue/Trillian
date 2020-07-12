@@ -92,6 +92,12 @@
   when: ansible_distribution_version|version_compare('18.04','>=')
 
 
+- name: network-manger enable
+  systemd:
+    name: network-manager
+    state: restarted
+  when: ansible_distribution_version|version_compare('18.04','>=')
+
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
 
