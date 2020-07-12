@@ -31,7 +31,7 @@
     dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-  when: ansible_distribution_version == "18.04"
+  when: ansible_distribution_version|version_compare('18.04','==')
 
 - apt_key:
     url: "{{ repohost }}/release.asc"
@@ -72,7 +72,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_major_version|int < 18
+  when: ansible_distribution_version|version_compare('18.04','<')
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -197,11 +197,11 @@
     state: present
     validate_certs: no
   ignore_errors: yes
-  when: ansible_distribution_major_version|int < 20
+  when: ansible_distribution_version|version_compare('20.04','<')
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_major_version|int == 20
+  when: ansible_distribution_version|version_compare('20.04','==')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -265,7 +265,7 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
-  when: ansible_distribution_release|version_compare('14.04','==')
+  when: ansible_distribution_version|version_compare('14.04','==')
 
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
