@@ -74,34 +74,6 @@
     - iptables-persistent
   when: ansible_distribution_version|version_compare('18.04','<')
 
-
-- name: Install basic utilities and tools - post bionic
-  apt:
-    pkg: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items:
-    - network-manager
-  when: ansible_distribution_version|version_compare('18.04','>=')
-
-- name: network-manger enable on devices
-  shell: echo "" > /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf
-  when: ansible_distribution_version|version_compare('18.04','>=')
-
-- name: network-manger enable
-  lineinfile:
-    dest: "/etc/NetworkManager/NetworkManager.conf"
-    regexp: 'managed=*'
-    line: 'managed=true'
-  when: ansible_distribution_version|version_compare('18.04','>=')
-
-
-- name: network-manger enable
-  systemd:
-    name: network-manager
-    state: restarted
-  when: ansible_distribution_version|version_compare('18.04','>=')
-
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
 
@@ -122,10 +94,22 @@
   template: src=interfaces.j2 dest="/etc/network/interfaces"
   when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
 
+## start block
 
-- include: ./kvm_networking_bridge8.yml
+- name: netplan on Ubuntu 18 onwards
+  block:
+ 
+  - name: write netplan
+    template:
+      src: netplan.j2
+      dest: /etc/netplan/00-installer-config.yaml
+
+  - name: apply netplan
+    command: netplan apply
+
   when: ansible_distribution_version|version_compare('18.04','>=') and kvm_network_mode == "bridge"
 
+## end block
 
 - name: OVS on Ubuntu 18 onwards
   block:
