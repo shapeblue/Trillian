@@ -25,6 +25,13 @@
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
+- name: network-manger enable
+  lineinfile:
+    dest: "/etc/NetworkManager/NetworkManager.conf"
+    regexp: 'managed=*'
+    line: 'managed=true'
+  when: ansible_distribution_version|version_compare('18.04','>=')
+
 - name: set apt repo
   template:
     src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
