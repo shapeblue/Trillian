@@ -100,9 +100,12 @@
   block:
  
   - name: write netplan
+    shell: rm -rf  /etc/netplan/*
+
+  - name: write netplan
     template:
       src: netplan.j2
-      dest: /etc/netplan/00-installer-config.yaml
+      dest: /etc/netplan/00-trillian-config.yaml
 
   - name: apply netplan
     command: netplan apply
