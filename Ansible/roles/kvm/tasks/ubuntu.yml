@@ -74,6 +74,17 @@
     - iptables-persistent
   when: ansible_distribution_version|version_compare('18.04','<')
 
+
+- name: Install basic utilities and tools - post bionic
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - network-manager
+  when: ansible_distribution_version|version_compare('18.04','>=')
+
+
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
 
