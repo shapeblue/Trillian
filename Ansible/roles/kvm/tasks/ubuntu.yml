@@ -90,6 +90,25 @@
   tags:
     - kvm
 
+- name: workaround ssh crypo issues
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "{{ item }}"
+  with_items:
+    - "PubkeyAcceptedKeyTypes=+ssh-dss"
+    - "HostKeyAlgorithms=+ssh-dss"
+    - "KexAlgorithms=+diffie-hellman-group1-sha1"
+  tags:
+    - kvm
+  when: ansible_distribution_version|version_compare('20.04','<=')
+
+  - name: Wait for SSH
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: ansible_distribution_version|version_compare('20.04','<=')
+  tags:
+    - kvm
+  delegate_to: localhost
+
 - name: Added network instances file to precise/trusty/xenial
   template: src=interfaces.j2 dest="/etc/network/interfaces"
   when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
