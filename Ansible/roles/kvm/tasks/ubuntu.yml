@@ -102,7 +102,7 @@
     - kvm
   when: ansible_distribution_version|version_compare('20.04','<=')
 
-  - name: Wait for SSH
+- name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: ansible_distribution_version|version_compare('20.04','<=')
   tags:
