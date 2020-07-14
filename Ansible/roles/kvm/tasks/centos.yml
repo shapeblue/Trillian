@@ -199,7 +199,7 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./powerflex.yaml
-  when: env_install_powerflex_sdc|bool == yes
+  when: env_install_powerflex_sdc == True
 
 - include: ./centos_elrepokernel.yml
   when: kvm_install_elrepo_kernel 
