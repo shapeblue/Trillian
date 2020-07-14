@@ -438,12 +438,12 @@ env_enable_cks: "{{ env_enable_cks | default( def_enable_cks ) }}"
 # powerflex
 
 env_install_powerflex_sdc: {{ env_install_powerflex_sdc | default( def_install_powerflex_sdc ) }}
-{% if env_install_powerflex_sdc is not defined and def_install_powerflex_sdc|bool == no  %}
+{% if env_install_powerflex_sdc is not defined and def_install_powerflex_sdc == False  %}
 {% set env_powerflex_ver_inmem = "na" %}
 {% set env_sdc_binary_url_inmem = "na" %}
 {% else %}
 {% if env_powerflex_ver is not defined %}{% set env_powerflex_ver_inmem = def_powerflex_ver %}{% else %}{% set env_powerflex_ver_inmem = env_powerflex_ver %}{% endif %}
-{% if env_sdc_binary_url is not defined %}{% set env_sdc_binary_url_inmem = def_powerflex_sdc_binaries[env_powerflex_ver_inmem].os %}{% else %}{% set env_sdc_binary_url_inmem = env_sdc_binary_url %}{% endif %}
+{% if env_sdc_binary_url is not defined %}{% set env_sdc_binary_url_inmem = def_powerflex_sdc_binaries[env_powerflex_ver_inmem][kvmosversion] %}{% else %}{% set env_sdc_binary_url_inmem = env_sdc_binary_url %}{% endif %}
 {% endif %}
 env_powerflex_ver: "{{ env_powerflex_ver_inmem }}"
 env_sdc_binary_url: "{{ env_sdc_binary_url_inmem }}"
