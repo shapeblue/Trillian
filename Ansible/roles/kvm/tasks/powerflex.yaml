@@ -1,0 +1,10 @@
+---
+
+- name: install SDC
+  yum:
+    name: "{{ env_sdc_binary_url }}"
+    state: present
+#  when: 
+  tags:
+    - powerflex
+    - SDC
