@@ -442,14 +442,19 @@ env_powerflex_mdm_user: "{{env_powerflex_mdm_user | default( def_powerflex_mdm_u
 env_powerflex_mdm_password: "{{ env_powerflex_mdm_password | default( def_powerflex_mdm_password ) }}"
 env_powerflex_mdm_host_user: "{{env_powerflex_mdm_host_user | default( def_powerflex_mdm_host_user ) }}"
 env_powerflex_mdm_host_password: "{{ env_powerflex_mdm_host_password | default( def_powerflex_mdm_host_password ) }}"
-{% if ( env_install_powerflex_sdc is not defined and def_install_powerflex_sdc == False ) or ( env_install_powerflex_sdc = False ) %}
-{% set env_powerflex_ver_inmem = "na" %}
-{% set env_sdc_binary_url_inmem = "na" %}
+{% if env_install_powerflex_sdc is not defined %}
+{% set env_install_powerflex_sdc_inmem = def_install_powerflex_sdc|bool %}
 {% else %}
+{% set env_install_powerflex_sdc_inmem = env_install_powerflex_sdc|bool %}
+{% endif %}
+{% if env_install_powerflex_sdc_inmem %}
 {% if env_powerflex_ver is not defined %}{% set env_powerflex_ver_inmem = def_powerflex_ver %}{% else %}{% set env_powerflex_ver_inmem = env_powerflex_ver %}{% endif %}
 {% if env_sdc_binary_url is not defined %}{% set env_sdc_binary_url_inmem = def_powerflex_sdc_binaries[env_powerflex_ver_inmem][kvmosversion] %}{% else %}{% set env_sdc_binary_url_inmem = env_sdc_binary_url %}{% endif %}
+{% else %}
+{% set env_powerflex_ver_inmem = "na" %}
+{% set env_sdc_binary_url_inmem = "na" %}
 {% endif %}
 env_powerflex_ver: "{{ env_powerflex_ver_inmem }}"
 env_sdc_binary_url: "{{ env_sdc_binary_url_inmem }}"
-env_powerflex_mdms: "{{ env_powerflex_mdms | default ( def_powerflex_mdms }}"
+env_powerflex_mdms: "{{ env_powerflex_mdms | default( def_powerflex_mdms ) }}"
 
