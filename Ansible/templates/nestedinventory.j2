@@ -148,10 +148,11 @@ secondary_storage_hosts
 {{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}
 
 [powerflex_mdm_hosts]
-{% if ( env_install_powerflex_sdc is not defined and def_install_powerflex_sdc | bool ) or ( env_install_powerflex_sdc | bool ) %}
-{% if env_powerflex_mdms is not defined %}{% set env_powerflex_mdms_inmem = def_powerflex_ver %}{% else %}{% set env_powerflex_mdms_inmem = env_powerflex_mdms %}{% endif %}
-{% set iplist = env_powerflex_mdms.split(',') %}
+{% if env_install_powerflex_sdc is not defined %}{% set env_install_powerflex_sdc_inmem = def_install_powerflex_sdc|bool %}{% else %}{% set env_install_powerflex_sdc_inmem = env_install_powerflex_sdc|bool %}{% endif %}
+{% if env_install_powerflex_sdc_inmem %}
+{% if env_powerflex_mdms is not defined %}{% set env_powerflex_mdms_inmem = def_powerflex_mdms %}{% else %}{% set env_powerflex_mdms_inmem = env_powerflex_mdms %}{% endif %}
+{% set iplist = env_powerflex_mdms_inmem.split(",") %}
 {% for ip in iplist %}
-{{ env_name_clean }}-mdm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{env_powerflex_mdm_host_user | default( def_powerflex_mdm_host_user ) }}
+{{ env_name_clean }}-mdm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ env_powerflex_mdm_host_user | default( def_powerflex_mdm_host_user ) }}
 {% endfor %}
 {% endif %}
