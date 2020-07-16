@@ -23,6 +23,7 @@ mysql_hosts
 vc_hosts
 storage_hosts
 marvin_host
+powerflex_mdm_hosts
 
 [local]
 localhost ansible_connection=local
@@ -145,3 +146,12 @@ secondary_storage_hosts
 
 [secondary_storage_hosts]
 {{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}
+
+[powerflex_mdm_hosts]
+{% if ( env_install_powerflex_sdc is not defined and def_install_powerflex_sdc | bool ) or ( env_install_powerflex_sdc | bool ) %}
+{% if env_powerflex_mdms is not defined %}{% set env_powerflex_mdms_inmem = def_powerflex_ver %}{% else %}{% set env_powerflex_mdms_inmem = env_powerflex_mdms %}{% endif %}
+{% set iplist = env_powerflex_mdms.split(',') %}
+{% for ip in iplist %}
+{{ env_name_clean }}-mdm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{env_powerflex_mdm_host_user | default( def_powerflex_mdm_host_user ) }}
+{% endfor %}
+{% endif %}

@@ -438,7 +438,11 @@ env_enable_cks: "{{ env_enable_cks | default( def_enable_cks ) }}"
 # powerflex
 
 env_install_powerflex_sdc: {{ env_install_powerflex_sdc | default( def_install_powerflex_sdc ) }}
-{% if env_install_powerflex_sdc is not defined and def_install_powerflex_sdc == False  %}
+env_powerflex_mdm_user: "{{env_powerflex_mdm_user | default( def_powerflex_mdm_user ) }}"
+env_powerflex_mdm_password: "{{ env_powerflex_mdm_password | default( def_powerflex_mdm_password ) }}"
+env_powerflex_mdm_host_user: "{{env_powerflex_mdm_host_user | default( def_powerflex_mdm_host_user ) }}"
+env_powerflex_mdm_host_password: "{{ env_powerflex_mdm_host_password | default( def_powerflex_mdm_host_password ) }}"
+{% if ( env_install_powerflex_sdc is not defined and def_install_powerflex_sdc == False ) or ( env_install_powerflex_sdc = False ) %}
 {% set env_powerflex_ver_inmem = "na" %}
 {% set env_sdc_binary_url_inmem = "na" %}
 {% else %}
@@ -447,3 +451,5 @@ env_install_powerflex_sdc: {{ env_install_powerflex_sdc | default( def_install_p
 {% endif %}
 env_powerflex_ver: "{{ env_powerflex_ver_inmem }}"
 env_sdc_binary_url: "{{ env_sdc_binary_url_inmem }}"
+env_powerflex_mdms: "{{ env_powerflex_mdms | default ( def_powerflex_mdms }}"
+
