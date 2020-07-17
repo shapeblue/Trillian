@@ -10,7 +10,7 @@
     - SDC
 
 - name: add SDCs to MDMs
-  shell: "scli --login --user {{ env_powerflex_mdm_user }} --password {{ env_powerflex_mdm_password }} ;scli --add_sdc --sdc_ip {{ hostvars[host][ansible_ssh_host] }}"
+  shell: "scli --login --username {{ env_powerflex_mdm_user }} --password {{ env_powerflex_mdm_password }} ;scli --add_sdc --sdc_ip {{ hostvars[host][ansible_ssh_host] }}"
   delegate_to: "{{ groups['powerflex_mdm_hosts'][0] }}"
   ignore_errors: True
 
