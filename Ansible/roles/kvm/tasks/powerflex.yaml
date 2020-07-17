@@ -2,6 +2,17 @@
 
 - name: install SDC
   yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - numactl
+    - libaio
+  tags:
+    - powerflex
+    - SDC
+
+- name: install SDC
+  yum:
     name: "{{ env_sdc_binary_url }}"
     state: present
 #  when: 
