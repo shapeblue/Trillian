@@ -9,8 +9,9 @@
     - powerflex
     - SDC
 
-- name: add SDCs to MDMs - running "scli --login --username {{ env_powerflex_mdm_user }} --password {{ env_powerflex_mdm_password }} --native_authentication;scli --add_sdc --sdc_ip {{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+- name: add SDCs to MDMs
   shell: "scli --login --username {{ env_powerflex_mdm_user }} --password '{{ env_powerflex_mdm_password }}' --native_authentication || true;scli --add_sdc --sdc_ip {{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+
   delegate_to: "{{ groups['powerflex_mdm_hosts'][0] }}"
   ignore_errors: True
   tags:
