@@ -23,6 +23,16 @@
     - marvin_cfg
     - marvin_fix_tests
 
+- name: Remove test_vm_life_cycle.py file as it is not needed to be replaced for CS4.15
+  file:
+    path: ../files/smoke/test_vm_life_cycle.py
+    state: absent
+  when: (env_numversion | version_compare('4.15','>='))
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_fix_tests
+
 - name: Copy files to /marvin/tests/smoke/
   copy:
     src: "{{ item }}"
