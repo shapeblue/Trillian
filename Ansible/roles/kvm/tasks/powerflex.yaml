@@ -7,6 +7,7 @@
   with_items:
     - numactl
     - libaio
+    - sysfsutils
   tags:
     - powerflex
     - SDC
@@ -28,6 +29,7 @@
   tags:
     - powerflex
     - SDC
+
 - name: add MDMs to SDCs
   shell: "/opt/emc/scaleio/sdc/bin/drv_cfg --add_mdm --ip {{ env_powerflex_mdms }}"
   tags:
