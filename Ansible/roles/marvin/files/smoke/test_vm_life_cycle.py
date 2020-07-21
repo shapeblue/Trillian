@@ -45,6 +45,21 @@ import time
 import re
 
 _multiprocess_shared_ = True
+
+def getTemplateForTest(apiclient, zoneid, ostypeid, hypervisor):
+    template = FAILED
+    if hypervisor.lower() in ["xenserver"]:
+        template = get_test_template(
+            apiclient,
+            zoneid,
+            hypervisor)
+    if template == FAILED:
+        template = get_template(
+            apiclient,
+            zone.id,
+            ostypeid)
+    return template
+
 class Test01DeployVM(cloudstackTestCase):
 
     @classmethod
@@ -66,19 +81,7 @@ class Test01DeployVM(cloudstackTestCase):
             cls.services["service_offerings"]["small"]["storagetype"] = 'local'
             cls.services["service_offerings"]["medium"]["storagetype"] = 'local'
 
-        template = FAILED
-        if cls.hypervisor.lower() in ["xenserver"]:
-            template = get_test_template(
-                cls.apiclient,
-                cls.zone.id,
-                cls.hypervisor
-            )
-        if template == FAILED:
-            template = get_template(
-                cls.apiclient,
-                cls.zone.id,
-                cls.services["ostype"]
-            )
+        template = getTemplateForTest(cls.apiclient, cls.zone.id, cls.services["ostype"], cls.hypervisor)
         if template == FAILED:
             assert False, "get_template() failed to return template with description %s" % cls.services["ostype"]
 
@@ -285,19 +288,7 @@ class Test02VMLifeCycle(cloudstackTestCase):
             cls.services["service_offerings"]["small"]["storagetype"] = 'local'
             cls.services["service_offerings"]["medium"]["storagetype"] = 'local'
 
-        template = FAILED
-        if cls.hypervisor.lower() in ["xenserver"]:
-            template = get_test_template(
-                cls.apiclient,
-                cls.zone.id,
-                cls.hypervisor
-            )
-        if template == FAILED:
-            template = get_template(
-                                cls.apiclient,
-                                cls.zone.id,
-                                cls.services["ostype"]
-                                )
+        template = getTemplateForTest(cls.apiclient, cls.zone.id, cls.services["ostype"], cls.hypervisor)
         if template == FAILED:
             assert False, "get_template() failed to return template with description %s" % cls.services["ostype"]
 
@@ -758,8 +749,9 @@ class Test02VMLifeCycle(cloudstackTestCase):
                 break
             if str(res).find("mount: unknown filesystem type 'iso9660'") != -1:
                 iso_unsupported = True
-                self.debug("Test template does not supports iso9660 filesystem. Proceeding with test without mounting.")
-                print "Test template does not supports iso9660 filesystem. Proceeding with test without mounting."
+                log_msg = "Test template does not supports iso9660 filesystem. Proceeding with test without mounting."
+                self.debug(log_msg)
+                print log_msg
                 break
         else:
             self.fail("No mount points matched. Mount was unsuccessful")
@@ -773,13 +765,11 @@ class Test02VMLifeCycle(cloudstackTestCase):
             # Get ISO size
             iso_response = Iso.list(
                 self.apiclient,
-                id=iso.id
-            )
+                id=iso.id)
             self.assertEqual(
                 isinstance(iso_response, list),
                 True,
-                "Check list response returns a valid list"
-            )
+                "Check list response returns a valid list")
 
             try:
                 # Unmount ISO
@@ -787,7 +777,7 @@ class Test02VMLifeCycle(cloudstackTestCase):
                 ssh_client.execute(command)
             except Exception as e:
                 self.fail("SSH failed for virtual machine: %s - %s" %
-                          (self.virtual_machine.ipaddress, e))
+                    (self.virtual_machine.ipaddress, e))
 
         # Detach from VM
         cmd = detachIso.detachIsoCmd()
@@ -830,19 +820,8 @@ class Test03SecuredVmMigration(cloudstackTestCase):
         cls.services['mode'] = cls.zone.networktype
         cls.hostConfig = cls.config.__dict__["zones"][0].__dict__["pods"][0].__dict__["clusters"][0].__dict__["hosts"][0].__dict__
         cls.management_ip = cls.config.__dict__["mgtSvr"][0].__dict__["mgtSvrIp"]
-        template = FAILED
-        if cls.hypervisor.lower() in ["xenserver"]:
-            template = get_test_template(
-                cls.apiclient,
-                cls.zone.id,
-                cls.hypervisor
-            )
-        if template == FAILED:
-            template = get_template(
-                                cls.apiclient,
-                                cls.zone.id,
-                                cls.services["ostype"]
-                                )
+
+        template = getTemplateForTest(cls.apiclient, cls.zone.id, cls.services["ostype"], cls.hypervisor)
         if template == FAILED:
             assert False, "get_template() failed to return template with description %s" % cls.services["ostype"]
 
