@@ -789,7 +789,7 @@ class Test02VMLifeCycle(cloudstackTestCase):
                 res = ssh_client.execute(c)
             except Exception as e:
                 self.fail("SSH failed for virtual machine: %s - %s" %
-                          (self.virtual_machine.ipaddress, e))
+                    (self.virtual_machine.ipaddress, e))
 
             # Check if ISO is properly detached from VM (using fdisk)
             result = self.services["mount"] in str(res)
@@ -797,8 +797,7 @@ class Test02VMLifeCycle(cloudstackTestCase):
             self.assertEqual(
                 result,
                 False,
-                "Check if ISO is detached from virtual machine"
-            )
+                "Check if ISO is detached from virtual machine")
         return
 
 class Test03SecuredVmMigration(cloudstackTestCase):
