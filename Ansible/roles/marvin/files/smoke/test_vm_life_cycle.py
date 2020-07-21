@@ -34,9 +34,9 @@ from marvin.lib.base import (Account,
                              Router,
                              Configurations)
 from marvin.lib.common import (get_domain,
-                                get_zone,
-                                get_template,
-                                get_test_template,
+                               get_zone,
+                               get_template,
+                               get_test_template,
                                list_hosts)
 from marvin.codes import FAILED, PASS
 from nose.plugins.attrib import attr
