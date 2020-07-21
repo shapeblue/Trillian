@@ -759,6 +759,7 @@ class Test02VMLifeCycle(cloudstackTestCase):
             if str(res).find("mount: unknown filesystem type 'iso9660'") != -1:
                 iso_unsupported = True
                 self.debug("Test template does not supports iso9660 filesystem. Proceeding with test without mounting.")
+                print "Test template does not supports iso9660 filesystem. Proceeding with test without mounting."
                 break
         else:
             self.fail("No mount points matched. Mount was unsuccessful")
