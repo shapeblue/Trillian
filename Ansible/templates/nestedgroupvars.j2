@@ -319,6 +319,7 @@ kvm_java_path: "{{ kvmjavapath }}"
 # XS
 {% if xs_ver is undefined %}{% set xs_ver = "na" %}{% endif %}
 xs_ver: "{{ xs_ver }}"
+xen_ver: {{ xen_ver | default( def_xenserver_templates[xs_ver].xen_ver ) }}
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
 xs_template: "{{ xs_template | default( def_xenserver_templates[xs_ver].xs_template ) }}"
 xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
