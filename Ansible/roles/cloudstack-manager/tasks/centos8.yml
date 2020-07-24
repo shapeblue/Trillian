@@ -37,6 +37,12 @@
     name: cockpit
     state: stopped
 
+- name: Stop and disable firewalld on CentOS8
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
