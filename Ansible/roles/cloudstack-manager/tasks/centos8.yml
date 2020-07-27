@@ -37,6 +37,16 @@
     name: cockpit
     state: stopped
 
+- name: Allow connections on management server required ports with firewall
+  shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
+  with_items:
+    - "3306"
+    - "8080"
+    - "8096"
+    - "8250"
+    - "8443"
+    - "9090"
+
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
