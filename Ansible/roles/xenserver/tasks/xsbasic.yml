@@ -38,7 +38,7 @@
 #  shell: sysctl -p /etc/sysctl.conf
 
 - name: Reboot
-  shell: /sbin/shutdown -r +1 "Ansible-triggered Reboot"
+  shell: /sbin/reboot
 
 - name: Wait for SSH to shut down
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900 state=stopped
