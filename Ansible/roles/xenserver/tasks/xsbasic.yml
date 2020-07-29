@@ -44,7 +44,7 @@
 
 - name: (reboot) Wait for server to restart
   wait_for_connection:
-    delay: 75
+    delay: 120
     sleep: 5
     timeout: 900
     connect_timeout: 2
