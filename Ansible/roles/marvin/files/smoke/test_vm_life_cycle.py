@@ -56,7 +56,7 @@ def getTemplateForTest(apiclient, zoneid, ostypeid, hypervisor):
     if template == FAILED:
         template = get_template(
             apiclient,
-            zone.id,
+            zoneid,
             ostypeid)
     return template
 
