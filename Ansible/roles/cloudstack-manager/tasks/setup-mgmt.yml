@@ -7,7 +7,10 @@
   register: path_is_cloudstack
   tags:
     - setup_mgmt
-    
+
+- debug:
+    msg: "cloudstack not cloud is {{ path_is_cloudstack.stat.exists }}"
+
 - name: Setup CloudStack Manager (centos/rhel6)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
   when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists == True)
