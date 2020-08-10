@@ -13,13 +13,13 @@
 
 - name: Setup CloudStack Manager (centos/rhel6)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
-  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists == True)
+  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists|bool == True)
   tags:
     - setup_mgmt
 
 - name: Setup CloudStack Manager (centos/rhel6)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloud-setup-management
-  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists == False)
+  when: (ansible_distribution_major_version == "6") and (path_is_cloudstack.stat.exists|bool == False)
   tags:
     - setup_mgmt
 
