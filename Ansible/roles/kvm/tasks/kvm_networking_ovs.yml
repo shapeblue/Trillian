@@ -65,8 +65,14 @@
 #  service: name=network state=restarted
 #  ignore_errors: true
 
-- name: Reboot KVM host to implement new networking
-  shell: /sbin/shutdown -r +1
+- name: Reboot KVM host to implement new networking (reboot scheduled in 1min)
+  command: /sbin/shutdown -r +1 "Ansible-triggered Reboot"
   async: 0
   poll: 0
-  ignore_errors: true
+
+- name: Reboot KVM host to implement new networking (wait for server to restart)
+  wait_for_connection:
+    delay: 120
+    sleep: 5
+    timeout: 900
+    connect_timeout: 2
