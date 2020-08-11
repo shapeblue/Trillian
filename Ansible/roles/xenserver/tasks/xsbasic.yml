@@ -37,14 +37,17 @@
 #- name: Configure bridge network backend
 #  shell: sysctl -p /etc/sysctl.conf
 
-- name: Reboot
-  shell: /sbin/reboot
+- name: (reboot) Reboot triggered
+  command: /sbin/shutdown -r +1 "Ansible-triggered Reboot"
+  async: 0
+  poll: 0
 
-- name: Wait for SSH to shut down
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900 state=stopped
-
-- name: Wait for SSH to come back online
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=900
+- name: (reboot) Wait for server to restart
+  wait_for_connection:
+    delay: 120
+    sleep: 5
+    timeout: 900
+    connect_timeout: 2
 
 - name: Check uptime
   shell: /usr/bin/uptime
