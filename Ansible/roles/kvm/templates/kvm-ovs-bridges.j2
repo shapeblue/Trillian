@@ -33,13 +33,13 @@ DEVICE={{ item.bridge }}
 ONBOOT=yes
 DEVICETYPE=ovs
 TYPE=OVSBridge
-{% if item.bridge == "cloud0" %}
-  BOOTPROTO=DHCP
-{% else %}
-  {% if item.bootproto == "static" %}
-    BOOTPROTO=static
-    IPADDR=169.254.0.1
-    NETMASK=255.255.0.0
-  {% endif %}
+{% if item.bootproto == "static" %}
+BOOTPROTO=static
+IPADDR=169.254.0.1
+NETMASK=255.255.0.0
+{% elif item.bootproto == "static" %}
+BOOTPROTO=DHCP
+{% elif item.bootproto == "none" %}
+BOOTPROTO=NONE
 {% endif %}
 HOTPLUG=no

@@ -43,7 +43,7 @@
 - name: Configure bridges - advanced networking
   template: src=kvm-ovs-bridges.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.bridge }}
   with_items:
-    - { bridge: "{{ kvm_mgmt_network_label }}", bootproto: static }
+    - { bridge: "{{ kvm_mgmt_network_label }}", bootproto: dhcp }
     - { bridge: "{{ kvm_guest_network_label }}", bootproto: none }
     - { bridge: "cloud0", bootproto: static }
 
