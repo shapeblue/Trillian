@@ -90,13 +90,6 @@ env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 
 env_comment: "{{ env_comment }}"
 env_user: "{{ env_user }}"
-{% if env_accounts | lower == "all" %}
-env_accounts: "{{ allaccts_retval.stdout }}"
-{% elif env_accounts == "" %}
-env_accounts: "{{ env_user }}"
-{% else %}
-env_accounts: "{{ env_accounts }}"
-{% endif %}
 env_zonetype:  "{{ env_zonetype | default( def_env_zonetype ) }}"
 {% if hvtype[0:1] | lower == "v" %}
 env_hv: "vmware"

@@ -282,14 +282,9 @@
     - debug: msg="{{ dbcheck }}"
 
 # now do stuff
-
     - name: Capture account name
       shell:  cs listAccounts
       register: acct_retval
-
-    - name: Capture all accounts in domain
-      shell: cs listAccounts listall=true | jq -c -r '.account[]' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
-      register: allaccts_retval
 
     - name: Register authenticating account
       set_fact: env_user={{ (acct_retval.stdout|from_json ).account[0].name }}
