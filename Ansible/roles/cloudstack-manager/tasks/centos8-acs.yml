@@ -24,7 +24,9 @@
 
 - name: Ensure CloudStack packages are installed
   dnf:
-    name: "{{ cloudstack_management_package }}*"
+    name:
+      - "{{ cloudstack_management_package }}*"
+      - "{{ cloudstack_common_package }}*"
     state: present
     enablerepo: base
 
