@@ -34,11 +34,14 @@ ONBOOT=yes
 DEVICETYPE=ovs
 TYPE=OVSBridge
 {% if item.bootproto == "static" %}
-BOOTPROTO=static
+BOOTPROTO=STATIC
 IPADDR=169.254.0.1
 NETMASK=255.255.0.0
-{% elif item.bootproto == "static" %}
+OVS_EXTRA="set bridge $DEVICE other-config:hwaddr={{ item.mac }}"
+{% elif item.bootproto == "dhcp" %}
 BOOTPROTO=DHCP
+OVS_EXTRA="set bridge $DEVICE other-config:hwaddr={{ item.mac }}"
+OVSDHCPINTERFACES="eth0"
 {% elif item.bootproto == "none" %}
 BOOTPROTO=NONE
 {% endif %}

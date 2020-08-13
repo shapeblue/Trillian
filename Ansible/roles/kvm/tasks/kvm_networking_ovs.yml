@@ -48,7 +48,7 @@
   with_items:
     - { bridge: "{{ kvm_mgmt_network_label }}", bootproto: "dhcp", mac: "{{ hostvars[inventory_hostname].ansible_eth0.ipv4.macaddress }}" }
     - { bridge: "{{ kvm_guest_network_label }}", bootproto: "none", mac: "{{ hostvars[inventory_hostname].ansible_eth1.ipv4.macaddress }}" }
-    - { bridge: "cloud0", bootproto: "static" }
+    - { bridge: "cloud0", bootproto: "static", mac: "" }
 
 - name: Set static hostname
   shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
