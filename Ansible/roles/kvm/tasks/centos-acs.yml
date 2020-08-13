@@ -27,8 +27,8 @@
 - name: Ensure CloudStack packages are installed
   yum:
     name:
-      - "{{ cloudstack_agent_package}}*"
-      - "{{ cloudstack_common_package}}*"
+      - "{{ cloudstack_agent_package }}*"
+      - "{{ cloudstack_common_package }}*"
     state: present
     enablerepo: base
   when: ansible_distribution_major_version|int < 8
@@ -39,8 +39,8 @@
 - name: Ensure CloudStack packages are installed
   dnf:
     name:
-      - "{{ cloudstack_agent_package}}*"
-      - "{{ cloudstack_common_package}}*"
+      - "{{ cloudstack_agent_package }}*"
+      - "{{ cloudstack_common_package }}*"
     state: present
   when: ansible_distribution_major_version|int == 8
   tags:
