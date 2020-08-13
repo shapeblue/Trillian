@@ -275,10 +275,8 @@ baseurl_kvm_suffix: "{{ baseurl_kvm_suffix }}"
 baseurl_kvm: "{{ baseurlkvm | default( baseurl ) }}"
 {% if env_dotted_version is not defined or env_cs_subminor_version == env_cs_minor_version %}
 cloudstack_agent_package: "cloudstack-agent"
-cloudstack_common_package: "cloudstack-common"
 {% else %}
 cloudstack_agent_package: "cloudstack-agent-{{ env_cs_numeric_version }}"
-cloudstack_common_package: "cloudstack-common-{{ env_cs_numeric_version }}"
 {% endif %}
 {% endif %}
 
