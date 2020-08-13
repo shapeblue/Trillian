@@ -39,7 +39,7 @@
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - name: Ensure CloudStack Usage Service is installed
-  dnf: name=cloudstack-usage state=present
+  dnf: name="{{ cloudstack_usage_package }}*" state=present
 
 - include: ./setupdb.yml
 
