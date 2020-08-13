@@ -15,7 +15,7 @@
 #limitations under the License.
 
 - name: get OS facts
-    setup:
+  setup:
 
 - name: stop and disable networkmanager (CentOS7)
   service:
