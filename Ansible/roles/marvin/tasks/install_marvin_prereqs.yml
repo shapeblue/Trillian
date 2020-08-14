@@ -92,12 +92,12 @@
 - name: Update pip and components
   pip:
     name: "{{ item }}"
-    extra_args: '--upgrade --ignore-installed'
+    extra_args: '--upgrade'
   with_items:
   - pip==20.2.1
   - six
   - pyOpenSSL
-  - wheel
+  - wheel==0.34.2
   tags:
     - marvin
     - marvin_install
