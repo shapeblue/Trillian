@@ -33,16 +33,15 @@ DEVICE={{ item.bridge }}
 ONBOOT=yes
 DEVICETYPE=ovs
 TYPE=OVSBridge
+BOOTPROTO={{ item.bootproto }}
 {% if item.bootproto == "static" %}
-BOOTPROTO=STATIC
+{% if item.bridge == "cloud0" %}
 IPADDR=169.254.0.1
 NETMASK=255.255.0.0
-OVS_EXTRA="set bridge $DEVICE other-config:hwaddr={{ item.mac }}"
-{% elif item.bootproto == "dhcp" %}
-BOOTPROTO=DHCP
-OVS_EXTRA="set bridge $DEVICE other-config:hwaddr={{ item.mac }}"
-OVSDHCPINTERFACES="eth0"
-{% elif item.bootproto == "none" %}
-BOOTPROTO=NONE
+{% else %}
+IPADDR={{ ansible_eth0.ipv4.address }}
+NETMASK={{ ansible_eth0.ipv4.netmask }}
+GATEWAY={{ ansible_default_ipv4.gateway }}
+{% endif %}
 {% endif %}
 HOTPLUG=no
