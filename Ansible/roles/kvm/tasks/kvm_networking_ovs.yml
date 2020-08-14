@@ -28,7 +28,7 @@
 - name: Blacklist bridge module
   template: src=bridge-blacklist.j2 dest="/etc/modprobe.d/bridge-blacklist.conf"
 
-  - name: Install OVS RPM
+- name: Install OVS RPM
   yum: name={{ kvm_centos_ovsrpm }} state=present validate_certs=no
 
 - name: Start OVS
