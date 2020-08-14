@@ -92,9 +92,9 @@
 - name: Update pip and components
   pip:
     name: "{{ item }}"
-    extra_args: '--upgrade'
+    extra_args: '--upgrade --ignore-installed'
   with_items:
-  - pip
+  - pip==20.2.1
   - six
   - pyOpenSSL
   - wheel
