@@ -44,15 +44,15 @@ env_db_password: "{{ env_db_password | default( def_env_db_password ) }}"
 
 env_install_primate_archive: {{ env_install_primate_archive | default( def_install_primate_archive ) }}
 env_install_primate: "placeholder"
-env_primate_archive_url: "{{ env_primate_url | default( "NA" ) }}"
+env_primate_archive_url: "{{ env_primate_url | default( 'NA' ) }}"
 
 # Environment summary
 env_uuid: "{{ env_uuid.stdout }}"
 additional_zone: {{ additional_zone }}
 additional_pod: {{ additional_pod }}
-existing_zone: "{{ existing_zone | default("NA") }}"
-region_mgmt_ip: "{{ region_mgmt_ip | default("NA") }}"
-vcenter_ip: "{{ vcenter_ip | default("NA") }}"
+existing_zone: "{{ existing_zone | default('NA') }}"
+region_mgmt_ip: "{{ region_mgmt_ip | default('NA') }}"
+vcenter_ip: "{{ vcenter_ip | default('NA') }}"
 env_name_clean: "{{ env_name_clean | mandatory }}"
 env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_dotted_version is not defined %}
@@ -61,9 +61,9 @@ env_version: "{{ env_version }}"
 {% if env_version[0:2] == "cs" %}
 {% set majorversion = env_version[2:3] %}
 {% set minorversion = env_version[3:6] %}
-env_cs_distribution: "{{ env_cs_distribution | default("cs") }}"
+env_cs_distribution: "{{ env_cs_distribution | default('cs') }}"
 {% else %}
-env_cs_distribution: "{{ env_cs_distribution | default("ccp") }}"
+env_cs_distribution: "{{ env_cs_distribution | default('ccp') }}"
 {% set majorversion = env_version[3:4] %}
 {% set minorversion = env_version[4:7] %}
 {% endif %}
@@ -213,7 +213,7 @@ ccp_install_tarball: {{ ccp_install_tarball | default( "na" ) }}
 
 
 create_zone: {{ create_zone | default( "yes" ) }}
-env_specific_hv_cluster: "{{ env_specific_hv_cluster | default( "na" ) }}"
+env_specific_hv_cluster: "{{ env_specific_hv_cluster | default( 'na' ) }}"
 
 # mamagement server java
 
@@ -300,7 +300,7 @@ kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrep
 {% else %}
 {% set kvmjava = kvm_java_ver %}
 {% endif %}
-kvm_java_ver: "{{ kvmjava }}" 
+kvm_java_ver: "{{ kvmjava }}"
 {% if kvm_java_path is not defined %}
 {% set kvm_os_name = linux_os[kvm_os].os %}
 {% set kvmjavapath = java_paths[kvm_os_name][kvmjava] %}
