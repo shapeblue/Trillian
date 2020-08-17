@@ -94,10 +94,10 @@
     name: "{{ item }}"
     extra_args: '--upgrade'
   with_items:
-  - pip
+  - pip==20.2.1
   - six
   - pyOpenSSL
-  - wheel
+  - wheel==0.34.2
   tags:
     - marvin
     - marvin_install
