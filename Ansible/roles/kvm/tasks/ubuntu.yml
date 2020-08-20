@@ -41,6 +41,10 @@
     keyserver: keyserver.ubuntu.com
     id: 86F44E2A
 
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
 - name: Add openjdk-ppa repository into sources list.
   apt_repository:
     repo: "ppa:webupd8team/java"
@@ -126,7 +130,7 @@
 
 - name: netplan on Ubuntu 18 onwards
   block:
- 
+
   - name: write netplan
     shell: rm -rf  /etc/netplan/*
 
