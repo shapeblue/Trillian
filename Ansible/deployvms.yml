@@ -64,16 +64,17 @@
       include: tasks/updateproject.yml project_tag=Deploying_VMs
     
     - name: Capture all accounts in domain
-      shell: cs listAccounts listall=true | jq -c -r '.account[]' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
+      shell: cs listAccounts listall=true | jq -c -r '.account[] | select(.domain == "ROOT")' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
       register: allaccts_retval
 
+    - name: get projectid
+      shell: cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'
+      register: projectid
+
     - name: Add accounts to project
-      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects listall=true | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq -r '.id'`
+      shell: "cs addAccountToProject account={{ item }} projectid={{ projectid.stdout }}"
       with_items:
         - "{{ allaccts_retval.stdout.split(',') }}"
-      async: 60
-      poll: 0
-
 
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
