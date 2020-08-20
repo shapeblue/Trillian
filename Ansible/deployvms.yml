@@ -68,7 +68,7 @@
       register: allaccts_retval
 
     - name: get projectid
-      shell: cs listProjects | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'
+      shell: cs listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
       register: projectid
 
     - name: Add accounts to project
