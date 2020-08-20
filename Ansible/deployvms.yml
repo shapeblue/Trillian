@@ -68,7 +68,7 @@
       register: allaccts_retval
 
     - name: Add accounts to project
-      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects listall=true | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq '.id'`
+      shell: cs addAccountToProject account={{ item }} projectid=`cs listProjects listall=true | jq -c '.project[] | select(.displaytext | contains("{{ build_project }}"))' | jq -r '.id'`
       with_items:
         - "{{ allaccts_retval.stdout.split(',') }}"
       async: 60
