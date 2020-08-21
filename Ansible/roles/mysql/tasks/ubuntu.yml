@@ -43,7 +43,7 @@
   apt:
     pkg: python-mysqldb
     state: present
-  when: ansible_distribution_major_version|int < 18
+  when: ansible_distribution_major_version|int <= 18
   tags:
     - mysql
     - mysqlconf
