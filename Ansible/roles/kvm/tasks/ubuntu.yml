@@ -47,6 +47,12 @@
     state: present
   when: ansible_distribution_major_version|int < 20
 
+- name: Add openjdk-ppa repository into sources list.
+  apt_repository:
+    repo: "ppa:openjdk-r/ppa"
+    state: present
+  when: ansible_distribution_major_version|int = 16
+
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
@@ -109,7 +115,6 @@
   when: ansible_distribution_version|version_compare('20.04','<=')
   tags:
     - kvm
-
 
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
