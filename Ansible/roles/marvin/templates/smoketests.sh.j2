@@ -71,83 +71,126 @@ cleanup() {
   done
 
   echo "Destroy templates, forced, since some VMs might exist."
-  NUM_GCTEMPLATES=`cmk list templates templatefilter=self listall=true | jq -r '.template[].id' | wc -l`
-  if [[ $NUM_GCTEMPLATES -gt $STUCKTEMPLATES ]]; then
-    echo "$(basename $file) left behind $(($NUM_GCTEMPLATES-$STUCKTEMPLATES)) templates" >> $CLEAN_UP_LOG
-    cloudmonkey set asyncblock true
-    for templateid in $(cmk list templates templatefilter=self listall=true | jq -r '.template[].id'); do
-      cmk delete template id=$templateid forced=true  || true
-    done
-    STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.template[].id' | wc -l`
+  NUM_GCTEMPLATES=`cmk list templates templatefilter=self listall=true`
+  if [ -n $NUM_GCTEMPLATES ]
+  then
+    NUM_GCTEMPLATES=`echo jq -r '.template[].id' | wc -l`
+    if [[ $NUM_GCTEMPLATES -gt $STUCKTEMPLATES ]]; then
+      echo "$(basename $file) left behind $(($NUM_GCTEMPLATES-$STUCKTEMPLATES)) templates" >> $CLEAN_UP_LOG
+      cloudmonkey set asyncblock true
+      for templateid in $(cmk list templates templatefilter=self listall=true | jq -r '.template[].id'); do
+        cmk delete template id=$templateid forced=true  || true
+      done
+      STUCKTEMPLATES=`cmk list templates templatefilter=self | jq -r '.template[].id' | wc -l`
+    else
+      STUCKTEMPLATES=0
+    fi
+  else
+    STUCKTEMPLATES=0
   fi
 
   echo "Destroy vms, all in parallel"
 
   cloudmonkey set asyncblock false
-  NUM_GCVMS=`cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id' | wc -l`
-  if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
-    echo "$(basename $file) left behind $(($NUM_GCVMS-$STUCKVMS)) VMs" >> $CLEAN_UP_LOG
-    for vmid in $(cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id'); do
-      cmk destroy virtualmachine id=$vmid expunge=true || true
-    done
-    echo "wait ${sleepduration}s to give VMs some time to be destroyed"
-    sleep $sleepduration
-  fi
-
-  tries=$retries
-  while [ $tries -gt 0 ]     
-  do 
-    NUM_GCVMS=`cmk list virtualmachines listall=true| jq -r '.virtualmachine[].id' | wc -l`
+  NUM_GCVMS=`cmk list virtualmachines listall=true`
+  if [ -n $NUM_GCVMS ]
+  then
+    $GCVMS=`echo $NUM_GCVMS | jq -r '.virtualmachine[].id' | wc -l`
     if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
-      echo "Still $NUM_GCVMS left. waiting.."
+      echo "$(basename $file) left behind $(($NUM_GCVMS-$STUCKVMS)) VMs" >> $CLEAN_UP_LOG
+      for vmid in $(cmk list virtualmachines listall=true $GCVMS | jq -r '.virtualmachine[].id'); do
+        cmk destroy virtualmachine id=$vmid expunge=true || true
+      done
+      echo "wait ${sleepduration}s to give VMs some time to be destroyed"
       sleep $sleepduration
-      tries=$((tries)-1)
-      if [ retries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
-    else
-      tries=0
     fi
-  done
-
-  tries=$retries
-  echo "deleting networks"
-  NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[].id' | wc -l`
-  if [[ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]]; then
-    echo "$(basename $file) left behind $(($NUM_GCNETWORKS-$STUCKNETWORKS)) Networks" >> $CLEAN_UP_LOG    
+    tries=$retries
     while [ $tries -gt 0 ]     
     do 
-      for netid in $(cmk list networks listall=true | jq -r '.network[].id'); do
-        cmk delete network id=$netid || true
-      done
-    echo "wait ${sleepduration}s to give Networks some time to destroy"
-    sleep $sleepduration
-    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.network[].id' | wc -l`
-    if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
-      tries=$((retries)-1)
-    else
-      tries=0
-    fi
-    done
-    STUCKNETWORKS=$NUM_GCNETWORKS
-  fi
+      NUM_GCVMS=`cmk list virtualmachines listall=true`
+      if [ -n $NUM_GCVMS ]
  
-  tries=$retries
-  echo "deleting VPCs"
-  NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc[].id' | wc -l`
-  if [[ $NUM_GCVPC -gt $STUCKVPCS ]]; then
-    echo "$(basename $file) left behind $(($NUM_GCVPCS-$STUCKVPCS)) VPCs" >> $CLEAN_UP_LOG
-    while [ $tries -gt 0 ]; do
-      for vid in $(cmk list vpcs listall=true | jq -r '.vpc[].id'); do
-        cmk delete vpc id=$vid || true
-      done
-      sleep $sleepduration
-      NUM_GCVPCS=`cmk list vpcs listall=true |jq -r '.vpc[].id' | wc -l`
-      if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
-        tries=$((retries)-1)
+        if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
+          echo "Still $NUM_GCVMS left. waiting.."
+          sleep $sleepduration
+          tries=$((tries)-1)
+          if [ retries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
+        else
+          tries=0
+        fi
       else
-        tries=0
+        NUM_GCVMS=0
       fi
     done
-  STUCKVPCS=$NUM_GCVPCS
+  else
+    NUM_GCVMS=0
+  fi
+    
+  tries=$retrieS
+  echo "deleting networks"
+  NUM_GCNETWORKS=`cmk list networks listall=true`
+  if [ -n  $NUM_GCNETWORKS ]
+  then
+    NUM_GCNETWORKS=`echo $NUM_GCNETWORKS | jq -r '.network[].id' | wc -l`
+    then
+    if [[ $NUM_GCNETWORKS -gt $STUCKNETWORKS ]]; then
+      echo "$(basename $file) left behind $(($NUM_GCNETWORKS-$STUCKNETWORKS)) Networks" >> $CLEAN_UP_LOG    
+      while [ $tries -gt 0 ]     
+      do 
+        for netid in $(cmk list networks listall=true | jq -r '.network[].id')
+        do
+          cmk delete network id=$netid || true
+        done
+        echo "wait ${sleepduration}s to give Networks some time to destroy"
+        sleep $sleepduration
+        NUM_GCNETWORKS=`cmk networks listall=true`
+        if [ -n $NUM_GCNETWORKS]
+        then
+          NUM_GCNETWORKS=`echo $NUM_GCNETWORKS | jq -r '.network[].id' | wc -l`
+          if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
+            tries=$((retries)-1)
+          else
+            tries=0
+          fi
+        else
+          NUM_GCNETWORKS=0
+        fi
+      done
+      STUCKNETWORKS=$NUM_GCNETWORKS 
+    else
+      STUCKNETWORKS=0
+    fi
+  else
+    STUCKNETWORKS=0
+  fi
+
+  tries=$retries
+  echo "deleting VPCs"
+
+  NUM_GCVPCS=`cmk list vpcs listall=true`
+  if [ -n $NUM_GCVPCS ]
+  then
+    NUM_GCVPCS=`echo $NUM_GCVPCS | jq -r '.vpc[].id' | wc -l`
+    if [[ $NUM_GCVPC -gt $STUCKVPCS ]] then echo "$(basename $file) left behind $(($NUM_GCVPCS-$STUCKVPCS)) VPCs" >> $CLEAN_UP_LOG
+      while [ $tries -gt 0 ]; do
+        for vid in $(cmk list vpcs listall=true | jq -r '.vpc[].id'); do
+          cmk delete vpc id=$vid || true
+        done
+        sleep $sleepduration
+        if [ -n $NUM_GCVPCS]; then NUM_GCVPCS=`echo $NUM_GCVPCS | jq -r '.network[].id' | wc -l`
+          NUM_GCVPCS=`cmk list vpcs listall=true |jq -r '.vpc[].id' | wc -l`
+          if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
+            tries=$((retries)-1)
+          else
+            tries=0
+          fi
+        fi
+      done
+    fi
+    NUM_GCNETWORKS=0
+    STUCKVPCS=$NUM_GCVPCS
+  else
+    STUCKVPCS=0
   fi
 
   # move to blocking async calls (just volume deletion, should be very fast), so later we can delete accounts and domains
