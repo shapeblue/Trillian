@@ -51,7 +51,7 @@
   apt_repository:
     repo: "ppa:openjdk-r/ppa"
     state: present
-  when: ansible_distribution_major_version|int = 16
+  when: ansible_distribution_major_version|int == 16
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
