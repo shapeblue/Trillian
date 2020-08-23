@@ -257,6 +257,7 @@
     allow_unauthenticated: yes
   with_items:
     - cloudstack-agent
+    - cloudstack-common
 
 # no need to remove - same as for CentOS
 #- name: remove CloudStack repository into sources list.
