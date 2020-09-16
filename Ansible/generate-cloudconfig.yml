@@ -262,12 +262,12 @@
     - name: Set kvm os fact
       set_fact:
         kvm_os_name: "{{ linux_os[kvm_os].os }}"
-      when: kvm_os is defined
+      when: (kvm_os is defined) and (kvm_os != "NA")
 
     - name: Check that java version is specified for KVM OS and CloudStack version combination
       fail:
         msg: "Combination of OS and CloudStack version does not have a Java version specified in 'all' file"
-      when: ("java_paths" in "{{ java_paths[kvm_os_name][java_ver] }}") and (kvm_os is defined)
+      when: ("java_paths" in "{{ java_paths[kvm_os_name][java_ver] }}") and (kvm_os is defined) and (kvm_os != "NA")
 
 
     - name: Check that java version is specified for Mgmt OS and CloudStack version combination
