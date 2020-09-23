@@ -20,7 +20,9 @@
 
 - name: Ensure CloudStack packages are installed
   yum:
-    name: "{{ cloudstack_management_package }}*"
+    name: 
+      - "{{ cloudstack_management_package }}*"
+      - "{{ cloudstack_common_package }}*"
     state: present
     enablerepo: base
 
@@ -36,7 +38,7 @@
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - name: Ensure CloudStack Usage Service is installed
-  yum: name=cloudstack-usage state=present
+  yum: name="{{ cloudstack_usage_package }}*" state=present
 
 - name: rename CloudStack title in browser (pre 4.11 location)
   shell: sed -i "/document.title =/ c\        document.title = \"{{ env_name_clean }}\";" /usr/share/cloudstack-management/webapps/client/scripts/cloudStack.js || true
