@@ -84,9 +84,9 @@
       include: ./tasks/buildvms.yml
       when: (use_custom_allocator|bool == false) and (use_external_hv_hosts|bool == false)
 
-    - name: Add dvfilter
-      include: ./tasks/add_dvfilter.yml
-      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
+#    - name: Add dvfilter
+#      include: ./tasks/add_dvfilter.yml
+#      when: (use_dvfilter) and (use_external_hv_hosts|bool == false)
 
     - name: Update project - tag Configuring_MySQL
       include: tasks/updateproject.yml project_tag=Configuring_MySQL
