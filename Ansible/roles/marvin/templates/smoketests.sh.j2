@@ -57,7 +57,6 @@ cmk list domains listall=true name="root" | jq -r '.domain[].id' > .skipdeleting
 touch $CLEAN_UP_LOG
 
 
-
 cleanup() {
 
   # dont wait for async job - execute in parallel until told otherwise
@@ -203,12 +202,12 @@ cleanup() {
     done
   fi
 
-# cleanup
+  rm -f .deleteaccounts
+  rm -f .deletedomains
+  rm -f .deleteofferings
+  rm -f .deletediskofferings
 
-rm -f .deleteaccounts
-rm -f .deletedomains
-rm -f .deleteofferings
-rm -f .deletediskofferings
+  # end of cleanup()
 }
 
 runtest() {
@@ -221,7 +220,6 @@ runtest() {
     rm -fr $LOGDIR/$OLDRESULT
   fi
   nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
-  cleanup || true
 }
 
 launchtest() {
@@ -230,6 +228,7 @@ launchtest() {
   # Run tests once again on error or failure
   python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
+
 slackmsg() {
    messagebody=$1
    messagecolor=$2
@@ -241,19 +240,8 @@ slackmsg() {
   --title-link "$jenkinslink"
 }
 
-NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
-run_start_time="$(date -u +%s)"
-counter=1
-PASSES=0
-# FIXME: make separate list of `dangerous` tests and those that may be run in parallel
-FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
-if [ -f /$TESTDIR/test_host_maintenance.py ]; then
-    FILES="$FILES $TESTDIR/test_host_maintenance.py"
-fi
-if [ -f $TESTDIR/test_hostha_kvm.py ]; then
-    FILES="$FILES $TESTDIR/test_hostha_kvm.py"
-fi
-for file in $FILES; do
+singletestrun() {
+  file=$1
   TESTFILENAME="$(basename $file)"
   echo -e "\e[92m ---->  Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: {{ env_name_clean }}\e[0m"
   {% if use_hipchat %}    hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
@@ -272,20 +260,37 @@ for file in $FILES; do
   if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
     echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
     {% if use_hipchat %}      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
-{% endif %}
+    {% endif %}
     {% if use_slack %}      slackmsg "Test $TESTFILENAME looks to have *errors*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
-{% endif %}
+    {% endif %}
   else
     PASSES=$((PASSES+1))
     echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
     {% if use_hipchat %}       hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
-{% endif %}
-  {% if use_slack %}      slackmsg "Test $TESTFILENAME looks *OK*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
-{% endif %}
+    {% endif %}
+    {% if use_slack %}      slackmsg "Test $TESTFILENAME looks *OK*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
+    {% endif %}
   fi
   counter=$((counter+1))
+}
 
-done
+NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
+run_start_time="$(date -u +%s)"
+counter=1
+PASSES=0
+# FIXME: make separate list of `dangerous` tests and those that may be run in parallel
+FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+if [ -f /$TESTDIR/test_host_maintenance.py ]; then
+    FILES="$FILES $TESTDIR/test_host_maintenance.py"
+fi
+if [ -f $TESTDIR/test_hostha_kvm.py ]; then
+    FILES="$FILES $TESTDIR/test_hostha_kvm.py"
+fi
+
+echo $FILES | xargs -P4 singletestrun
+
+# cleanup only after all tests
+cleanup || true
 
 GOOD=0
 BAD=0
