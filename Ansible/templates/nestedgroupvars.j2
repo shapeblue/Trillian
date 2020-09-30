@@ -194,8 +194,12 @@ use_custom_browser_title: {{ use_custom_browser_title | default( def_use_custom_
 
 {% if env_dotted_version is not defined or env_cs_subminor_version == env_cs_minor_version %}
 cloudstack_management_package: "cloudstack-management"
+cloudstack_common_package: "cloudstack-common"
+cloudstack_usage_package: "cloudstack-usage"
 {% else %}
 cloudstack_management_package: "cloudstack-management-{{ env_cs_numeric_version }}"
+cloudstack_common_package: "cloudstack-common-{{ env_cs_numeric_version }}"
+cloudstack_usage_package: "cloudstack-usage-{{ env_cs_numeric_version }}"
 {% endif %}
 
 {% if env_cs_distribution != "ccp" %}
