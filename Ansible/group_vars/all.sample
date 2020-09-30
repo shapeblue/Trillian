@@ -58,6 +58,9 @@ def_ssl_keystore: "<KEYSTORE_HERE>"
 def_ssl_keystore_password: "<PASSWORD_HERE>"
 def_ssl_port: "8443"
 
+# cks
+def_enable_cks: "false"
+
 ################################################################################
 # version of this file is checked when running generate or deploy
 # if the vars in this file are updated/added then version will be increased.
@@ -884,6 +887,11 @@ global_settings:
     - {name: "vmware.use.dvswitch", value: "true", condition: "dvswitch"}
   systemvmlocalstorage:
     - {name: "system.vm.use.local.storage", value: "true", condition: "systemvmlocalstorage"}
+  cks:
+    - {name: "cloud.kubernetes.cluster.template.name.xenserver", value: "Kubernetes-CoreOS-xenserver", condition: "cks"}
+    - {name: "cloud.kubernetes.cluster.template.name.vmware", value: "Kubernetes-CoreOS-vmware", condition: "cks"}
+    - {name: "cloud.kubernetes.cluster.template.name.kvm", value: "Kubernetes-CoreOS-kvm", condition: "cks"}
+    - {name: "cloud.kubernetes.service.enabled", value: "true", condition: "cks"}
 
 # local_templates
 def_use_local_templates: true

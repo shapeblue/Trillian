@@ -303,7 +303,7 @@ kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrep
 {% else %}
 {% set kvmjava = kvm_java_ver %}
 {% endif %}
-kvm_java_ver: "{{ kvmjava }}" 
+kvm_java_ver: "{{ kvmjava }}"
 {% if kvm_java_path is not defined %}
 {% set kvm_os_name = linux_os[kvm_os].os %}
 {% set kvmjavapath = java_paths[kvm_os_name][kvmjava] %}
@@ -430,4 +430,4 @@ env_cks_coreos_template_hyperv: "{{ env_cks_coreos_template_hyperv | default( de
 env_cks_coreos_template_kvm: "{{ env_cks_coreos_template_kvm | default( def_cks_coreos_template_kvm )}}"
 env_cks_coreos_template_vmware: "{{ env_cks_coreos_template_vmware | default( def_cks_coreos_template_vmware )}}"
 env_cks_coreos_template_xenserver: "{{ env_cks_coreos_template_xenserver | default( def_cks_coreos_template_xenserver )}}"
-env_enable_cks: "{{ env_enable_cks | default( def_enable_cks ) }}"
+env_enable_cks: {{ enable_cks | default( def_enable_cks ) }}
