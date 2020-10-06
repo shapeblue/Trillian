@@ -21,7 +21,7 @@
     - vc_config
 
 - set_fact:
-    vc_ip: {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}
+    vc_ip: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
     when: additional_pod|boolean == false
 
 - set_fact:
