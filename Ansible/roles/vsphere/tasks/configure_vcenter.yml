@@ -25,7 +25,7 @@
     when: additional_pod|boolean == false
 
 - set_fact:
-    vc_ip: {{ vcenter_ip }}
+    vc_ip: "{{ vcenter_ip }}"
     when: additional_pod|boolean == true
 
 - name: "wait for vCenter API Service to come up"
