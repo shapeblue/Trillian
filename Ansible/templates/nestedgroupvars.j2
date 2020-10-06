@@ -156,7 +156,7 @@ env_zone_intdns1: "{{ env_zone_intdns1 | default( def_env_zone_intdns1 ) }}"
 env_zone_intdns2: "{{ env_zone_intdns2 | default( def_env_zone_intdns2 ) }}"
 env_zone_localstorage: "{{ localstorage | default( def_env_zone_localstorage ) }}"
 env_zone_podname: "{{ env_zone_podname | default( def_env_zone_podname ) }}"
-{% if additional_pod | boolean == true %}
+{% if additional_pod|bool == true %}
 env_zone_clustername: "{{ env_zone_clustername | default( "P2-C1" ) }}"
 {% else %}
 env_zone_clustername: "{{ env_zone_clustername | default( def_env_zone_clustername ) }}"
