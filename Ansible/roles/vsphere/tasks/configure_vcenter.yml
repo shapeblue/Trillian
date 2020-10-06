@@ -20,8 +20,16 @@
   tags:
     - vc_config
 
+- set_fact:
+    vc_ip: {{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}
+    when: additional_pod|boolean == false
+
+- set_fact:
+    vc_ip: {{ vcenter_ip }}
+    when: additional_pod|boolean == true
+
 - name: "wait for vCenter API Service to come up"
-  shell: "curl https://{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk/vimService.wsdl  --insecure"
+  shell: "curl https://{{ vc_ip }}/sdk/vimService.wsdl  --insecure"
   register: result
   until: result.stdout.find("vim25Service") != -1
   retries: 60
@@ -33,10 +41,9 @@
 - name: Ensure Datacenter {{ vmware_datacenter_name }} exists
   local_action: >
         vmware_datacenter
-        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        hostname="{{ vc_ip }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}" state=present validate_certs=false
   delegate_to: localhost
-  ignore_errors: true
   tags:
     - vc_config
     - create_vmware_dc
@@ -44,7 +51,7 @@
 - name: Ensure Cluster {{ env_zone_clustername }} exists
   local_action: >
         vmware_cluster
-        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        hostname="{{ vc_ip }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}"
         cluster_name="{{ env_zone_clustername }}"
         enable_ha=False
@@ -52,7 +59,6 @@
         enable_vsan=False
         validate_certs=False
   delegate_to: localhost
-  ignore_errors: true
   tags:
     - vc_config
     - create_vmware_cluster
@@ -61,14 +67,13 @@
 - name: Ensure Cluster {{ env_zone_clustername }} exists
   local_action: >
         vmware_cluster
-        hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
+        hostname="{{ vc_ip }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}"
         cluster_name="{{ env_zone_clustername }}"
         enable_ha=False
         enable_drs=False
         validate_certs=False
   delegate_to: localhost
-  ignore_errors: true
   tags:
     - vc_config
     - create_vmware_cluster
@@ -78,7 +83,7 @@
 - name: add hosts to vCenter
   local_action:
         module: vmware_host
-        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+        hostname: "{{ vc_ip }}"
         username: "{{ vmware_vcsa_user }}"
         password: "{{ vmware_vcsa_pass }}"
         datacenter_name: "{{ vmware_datacenter_name }}"
@@ -91,7 +96,6 @@
   with_items:
   - "{{ groups['esxi_hosts'] }}"
   delegate_to: localhost
-  ignore_errors: true
   tags:
     - vc_config
     - add_vwmare_hosts
@@ -100,7 +104,7 @@
 - name: Create dvSwitch for guest and public
   local_action:
     module: vmware_dvswitch
-    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    hostname: "{{ vc_ip }}"
     username: "{{ vmware_vcsa_user }}"
     password: "{{ vmware_vcsa_pass }}"
     datacenter_name: "{{ vmware_datacenter_name }}"
@@ -120,7 +124,7 @@
 - name: Create dvSwitch for management
   local_action:
     module: vmware_dvswitch
-    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    hostname: "{{ vc_ip }}"
     username: "{{ vmware_vcsa_user }}"
     password: "{{ vmware_vcsa_pass }}"
     datacenter_name: "{{ vmware_datacenter_name }}"
@@ -140,7 +144,7 @@
 - name: Add dvSwitch management port group
   local_action:
     module: vmware_dvs_portgroup
-    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    hostname: "{{ vc_ip }}"
     username: "{{ vmware_vcsa_user }}"
     password: "{{ vmware_vcsa_pass }}"
     portgroup_name: "Management Network"
@@ -159,7 +163,7 @@
 - name: Add Host to dvSwitch for guest public only (management done separately)
   local_action:
     module: vmware_dvs_host
-    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    hostname: "{{ vc_ip }}"
     username: "{{ vmware_vcsa_user }}"
     password: "{{ vmware_vcsa_pass }}"
     esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
@@ -186,5 +190,5 @@
   when: esxi_use_mgmt_dvswitch
 
 - name: Move host management networking to dvSwitch
-  local_action: shell /usr/bin/pwsh {{ inventory_dir }}/roles/vsphere/files/esxi-dvs-mgmt.ps1 -vchost "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" -vcuser "{{ vmware_vcsa_user }}" -vcpass "{{ vmware_vcsa_pass }}" -esxihosts "{{ esxilist | trim }}" -dvswitchname "{{ esxi_mgmt_dvs_network_label }}"
+  local_action: shell /usr/bin/pwsh {{ inventory_dir }}/roles/vsphere/files/esxi-dvs-mgmt.ps1 -vchost "{{ vc_ip }}" -vcuser "{{ vmware_vcsa_user }}" -vcpass "{{ vmware_vcsa_pass }}" -esxihosts "{{ esxilist | trim }}" -dvswitchname "{{ esxi_mgmt_dvs_network_label }}"
   when: esxi_use_mgmt_dvswitch
