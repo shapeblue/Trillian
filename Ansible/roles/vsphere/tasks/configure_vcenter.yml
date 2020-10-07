@@ -23,10 +23,19 @@
 - set_fact:
     vc_ip: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
     when: additional_pod|boolean == false
+  tags:
+    - vc_config
 
 - set_fact:
     vc_ip: "{{ vcenter_ip }}"
     when: additional_pod|boolean == true
+  tags:
+    - vc_config
+
+- debug:
+    msg: "vCenter IP: {{ vc_ip }}" 
+  tags:
+    - vc_config
 
 - name: "wait for vCenter API Service to come up"
   shell: "curl https://{{ vc_ip }}/sdk/vimService.wsdl  --insecure"
@@ -188,6 +197,8 @@
         {%- if not loop.last -%},{%- else -%}{%- endif -%}
       {%- endfor -%}
   when: esxi_use_mgmt_dvswitch
+  tags:
+    - vc_config
 
 - name: Move host management networking to dvSwitch
   local_action: shell /usr/bin/pwsh {{ inventory_dir }}/roles/vsphere/files/esxi-dvs-mgmt.ps1 -vchost "{{ vc_ip }}" -vcuser "{{ vmware_vcsa_user }}" -vcpass "{{ vmware_vcsa_pass }}" -esxihosts "{{ esxilist | trim }}" -dvswitchname "{{ esxi_mgmt_dvs_network_label }}"

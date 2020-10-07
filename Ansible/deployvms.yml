@@ -152,6 +152,8 @@
     num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
   roles:
     - { role: vsphere, when: num_esxi_hosts | int != 0 }
+  tags:
+    - vc_config
 
 - hosts: localhost
   connection: local
@@ -160,7 +162,9 @@
     num_vc_hosts: "{{ groups['vc_hosts'] | length }}"
   tasks:
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
-      when: "num_vc_hosts | int != 0"
+      when: (num_vc_hosts | int != 0) or (additional_pod|bool == true)
+  tags:
+    - vc_config
 
 ## update status
 
