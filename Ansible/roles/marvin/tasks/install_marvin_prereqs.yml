@@ -74,6 +74,7 @@
   - vim
   - tmux
   - python-pip
+  - 'https://repo.mysql.com/yum/mysql-8.0-community/el/7/x86_64/mysql-community-client-plugins-8.0.22-1.el7.x86_64.rpm'
   tags:
     - marvin
     - marvin_install
