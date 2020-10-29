@@ -92,6 +92,7 @@
   - six
   - pyOpenSSL
   - wheel==0.34.2
+  - kubernetes
   tags:
     - marvin
     - marvin_install
