@@ -14,6 +14,8 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+# YAML cannot be indented, therefore only j2 filter operations will be indented, YAML output will not.
+
 # Templating Success Test String
 
 templating_test_string: "{{ templating_test_string }}"
@@ -59,25 +61,24 @@ vcenter_ip: "{{ vcenter_ip | default("NA") }}"
 env_name_clean: "{{ env_name_clean | mandatory }}"
 env_ssh_key_path: {{ env_ssh_key_path | default( def_env_ssh_key_path ) }}
 {% if env_dotted_version is not defined %}
-# -- this is old version b4 dotted notation of version
+  # -- this is old version b4 dotted notation of version
 env_version: "{{ env_version }}"
-{% if env_version[0:2] == "cs" %}
-{% set majorversion = env_version[2:3] %}
-{% set minorversion = env_version[3:6] %}
+  {% if env_version[0:2] == "cs" %}
+    {% set majorversion = env_version[2:3] %}
+    {% set minorversion = env_version[3:6] %}
 env_cs_distribution: "{{ env_cs_distribution | default("cs") }}"
-{% else %}
+  {% else %}
 env_cs_distribution: "{{ env_cs_distribution | default("ccp") }}"
-{% set majorversion = env_version[3:4] %}
-{% set minorversion = env_version[4:7] %}
-{% endif %}
-{% set numversion = majorversion~ "." ~minorversion %}
-{% set env_repo_version_var = numversion %}
-{% set env_cs_minor_version_string = env_version %}
+    {% set majorversion = env_version[3:4] %}
+    {% set minorversion = env_version[4:7] %}
+  {% endif %}
+  {% set numversion = majorversion~ "." ~minorversion %}
+  {% set env_repo_version_var = numversion %}
+  {% set env_cs_minor_version_string = env_version %}
 env_numversion: "{{ numversion }}"
 env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
 env_repo_version_var:  "{{ env_repo_version_var }}"
-{% endif %}
-{% if env_dotted_version is defined %}
+{% else %}
 env_numversion: "{{ env_cs_numeric_version }}"
 env_cs_distribution: "{{ env_cs_distribution }}"
 env_cs_numeric_version: "{{ env_cs_numeric_version }}"
@@ -86,11 +87,14 @@ env_cs_minor_version: "{{ env_cs_minor_version }}"
 env_cs_subminor_version: "{{ env_cs_subminor_version }}"
 env_cs_security_version:  "{{ env_cs_security_version }}"
 env_version: "{{ env_version }}"
-env_repo_version_var: "{{ env_repo_version_var }}"
 env_cs_minor_version_string: "{{ env_cs_minor_version_string }}"
+  {% if env_is_master %}
+env_repo_version_var: "master"
+  {% else %}
+env_repo_version_var: "{{ env_repo_version_var }}"
+  {% endif %}
+
 {% endif %}
-
-
 env_comment: "{{ env_comment }}"
 env_user: "{{ env_user }}"
 env_zonetype:  "{{ env_zonetype | default( def_env_zonetype ) }}"

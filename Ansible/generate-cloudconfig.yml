@@ -168,6 +168,15 @@
       fail: msg="env_dotted_version was not provided."
       when: env_dotted_version is not defined
 
+    - name: Set env_is_master when required version is master
+      set_fact:
+        env_is_master: True
+      when: env_dotted_version = "master"
+
+    - name: Set ACS version when required version is master
+      set_fact:
+        env_dotted_version: env_master_branch_ver
+      when: env_dotted_version = "master"
 
     - name: decode verion string
       cs_version_facts:
