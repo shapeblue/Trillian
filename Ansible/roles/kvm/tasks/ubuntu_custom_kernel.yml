@@ -1,8 +1,5 @@
 ---
 
-- debug:
-    msg: "Ubuntu 20 custom kernel v5.9"
-
 - name: Download kernel DEB packages
   shell: /usr/bin/wget http://10.2.0.4/custom-kernels/{{ item }} -P /tmp
   with_items:
