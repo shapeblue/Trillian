@@ -365,3 +365,9 @@
   async: 0
   poll: 0
   ignore_errors: true
+
+# Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
+- include: ./ubuntu_custom_kernel.yml
+  when: ansible_distribution_version|version_compare('20.04','>=')
+  tags:
+    - kvm
