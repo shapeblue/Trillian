@@ -24,8 +24,13 @@
 - name: Setup ELrepo-kernel yum repository
   template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
 
-- name: Install ELrepo kernel
+- name: Install ELrepo kernel 6/7
   shell: "yum --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
+
+- name: Install ELrepo kernel 8
+  shell: "dnf --enablerepo=elrepo-kernel install {{ kvm_elrepo_kernel_version }} -y"
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
 
 - name: Set ELrepo kernel as the default (CentOS 6)
   shell: sed -i '/default=1/c\default=0' /boot/grub/grub.conf
@@ -34,6 +39,8 @@
 - name: Set ELrepo kernel as the default one (CentOS 7)
   shell: grub2-set-default 0
   when: (ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux') and (ansible_distribution_major_version == "7")
+
+# centos8 - kernel is set as default, by default
 
 - name: Reboot KVM host to load ELrepo kernel
   shell: /sbin/reboot

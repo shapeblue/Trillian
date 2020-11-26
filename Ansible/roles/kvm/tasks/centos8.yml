@@ -210,6 +210,6 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./centos_elrepokernel.yml
-  when: kvm_install_elrepo_kernel
+# when: kvm_install_elrepo_kernel
   tags:
     - kvm
