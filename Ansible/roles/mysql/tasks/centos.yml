@@ -22,7 +22,7 @@
   tags:
     - mysqlconf
 
-- name: Workaround selinux, and the loop requirements...
+- name: Work around selinux, and the loop requirements for CentOS6 and vault
   shell: "setenforce 0"
   when: ansible_distribution_major_version == "6"  
 
@@ -41,6 +41,12 @@
   with_items:
     - "epel.repo"
     - "CentOS-Base.repo"
+    
+- name: Set local mysql55 repo for CentOS6 - mysql not in vault any more
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "mysql55-c6.repo"
+  when: ansible_distribution_major_version == "6"   
   
 - name: ensure yum cache is cleared
   shell: command="yum clean all"
