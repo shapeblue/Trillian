@@ -1,7 +1,26 @@
 ---
 
-- name: Ensure prerequisite libselinux-python installed
+- name: Install selinux python bindings for CentOS6 from local repo (not available in centos6 Vault)
+  shell: command="yum install -y {{ repohost }}/centos/6/libselinux-python-2.0.94-7.el6.x86_64.rpm"
+  tags: services
+  when: ansible_distribution_major_version == "6"  
+    
+- name: Ensure selinux python bindings are installed (Ansible requirement)
   yum: name=libselinux-python state=installed
+  tags:
+    - kvm
+  when: ansible_distribution_major_version == "7"  
+
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+  tags:
+    - kvm
+
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
   tags:
     - kvm
 
@@ -46,14 +65,6 @@
 
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
-  tags:
-    - kvm
 
 - name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
