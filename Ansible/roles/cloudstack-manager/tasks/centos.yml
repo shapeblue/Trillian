@@ -7,7 +7,8 @@
 
 - name: Install selinux python bindings for CentOS6 from local repo (not available in centos6 Vault)
   shell: "rpm -Uvh {{ repohost }}/centos/6/libselinux-python-2.0.94-7.el6.x86_64.rpm"
-  when: ansible_distribution_major_version == "6"  
+  when: ansible_distribution_major_version == "6"
+  ignore_errors: true
   
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
