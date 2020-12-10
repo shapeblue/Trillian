@@ -21,7 +21,16 @@
   setup:
   tags:
     - mysqlconf
+    
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
 
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
+  
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   yum: name=libselinux-python state=present
   tags: services
