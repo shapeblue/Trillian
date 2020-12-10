@@ -1,7 +1,7 @@
 ---
 
 
-- name: Workaround selinux, and the loop requirements...
+- name: Workaround selinux, and the loop requirements with CentOS6
   shell: "setenforce 0"
   when: ansible_distribution_major_version == "6"  
 
@@ -17,9 +17,6 @@
   file: path=/etc/hostname state=absent
   when: ansible_distribution_major_version == "7"
 
-- name: ensure yum cache is cleared
-  shell: command="yum clean all"
-
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
@@ -33,6 +30,9 @@
     - "epel.repo"
     - "CentOS-Base.repo"
 
+- name: ensure yum cache is cleared
+  shell: "yum clean all"
+  
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
 
