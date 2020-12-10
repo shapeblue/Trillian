@@ -1,5 +1,11 @@
 ---
 
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
@@ -16,12 +22,6 @@
 
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
 
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
