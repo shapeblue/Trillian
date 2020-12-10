@@ -37,7 +37,10 @@
   with_items:
     - "epel.repo"
     - "CentOS-Base.repo"
-    
+  
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
+  
 - name: Ensure mysql python are installed (Ansible requirement)
   yum: name=MySQL-python state=present
   tags: services
