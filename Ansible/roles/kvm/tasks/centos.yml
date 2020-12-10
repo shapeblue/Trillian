@@ -1,5 +1,16 @@
 ---
 
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+  tags:
+    - kvm
+    
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
+  
 - name: Ensure prerequisite libselinux-python installed
   yum: name=libselinux-python state=installed
   tags:
@@ -46,14 +57,6 @@
 
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
-  tags:
-    - kvm
 
 - name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
