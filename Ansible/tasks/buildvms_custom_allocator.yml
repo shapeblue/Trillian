@@ -362,7 +362,7 @@
   register: alg_output
   when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
- - debug:
+- debug:
     msg: "{{ alg_output }}"
 
 - name: Start ESXi hosts
