@@ -184,8 +184,18 @@
 - debug:
     msg: "{{ alg_output }}"
 
+- name: find least used host in that cluster
+  custom_allocator:
+    algorithm: least_host_in_cluster_mem
+    clusterid: "{{ allocator_cluster_id }}"
+  register: alg_output
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+
+ debug:
+    msg: "{{ alg_output }}"
+    
 - name: Start KVM hosts
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -269,14 +279,24 @@
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster_mem
-  register: allocator_output
+  register: alg_output
   when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - debug:
-    msg: "{{ allocator_output }}"
+    msg: "{{ alg_output }}"
+
+- name: find least used host in that cluster
+  custom_allocator:
+    algorithm: least_host_in_cluster_mem
+    clusterid: "{{ allocator_cluster_id }}"
+  register: alg_output
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+
+- debug:
+    msg: "{{ alg_output }}"
 
 - name: Start XenServer hosts
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{xs_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -359,14 +379,25 @@
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster_mem
-  register: allocator_output
+  register: alg_output
   when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
 
 - debug:
-    msg: "{{ allocator_output }}"
+    msg: "{{ alg_output }}"
+
+- name: find least used host in that cluster
+  custom_allocator:
+    algorithm: least_host_in_cluster_mem
+    clusterid: "{{ allocator_cluster_id }}"
+  register: alg_output
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+
+ debug:
+    msg: "{{ alg_output }}"
+
 
 - name: Start ESXi hosts
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cs startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
