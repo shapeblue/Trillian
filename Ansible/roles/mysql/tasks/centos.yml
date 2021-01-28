@@ -60,6 +60,9 @@
   action: template src=mariadb-my.cnf.j2 dest=/etc/my.cnf
   when: ansible_distribution_major_version == "7"
 
+- name: Nuke everything since it's starting from scratch
+  shell: rm -rf /var/lib/mysql/*
+
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel6)
   service: name=mysqld state=restarted enabled=yes
   tags: services
