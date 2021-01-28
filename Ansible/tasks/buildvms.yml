@@ -26,22 +26,25 @@
 
 ####################################################################
 
+- name: create mavin cfg file
+  template: src=advanced-cfg.j2 dest="group_vars/{{ env_name_clean }}-advanced-cfg"
+
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
 
-- name: Remove previous SSH key from Project if it exists
-  local_action:
-    module: cs_sshkeypair
-    api_timeout: 120
-    name: "{{ env_name_clean }}"
-    project: "{{ build_project }}"
-    state: absent
+# - name: Remove previous SSH key from Project if it exists
+#   local_action:
+#     module: cs_sshkeypair
+#     api_timeout: 120
+#     name: "{{ env_name_clean }}"
+#     project: "{{ build_project }}"
+#     state: absent
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -60,17 +63,17 @@
 - name: Generate SSH keys
   shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}-{{ env_name_clean }}"
 
-- name: Add new public SSH Key to the project
-  local_action:
-    module: cs_sshkeypair
-    name: "{{ env_name_clean }}"
-    project: "{{ build_project }}"
-    state: present
-    api_timeout: 120
-    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
+# - name: Add new public SSH Key to the project
+#   local_action:
+#     module: cs_sshkeypair
+#     name: "{{ env_name_clean }}"
+#     project: "{{ build_project }}"
+#     state: present
+#     api_timeout: 120
+#     public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
-  local_action: 
+  local_action:
     module: file
     path: "{{ item }}"
     state: absent
@@ -90,7 +93,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -104,7 +107,7 @@
   with_items:
     - "{{ groups['primary_cs_manager'] }}"
   register: mgmtsrv1_retval
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update inventory file with first management server IP addresses
   replace:
@@ -113,7 +116,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update in memory inventory with first management server IP addresses
   add_host:
@@ -121,7 +124,7 @@
     groups="primary_cs_manager"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update inventory file with mgmt host instance names
   replace:
@@ -130,7 +133,7 @@
     replace='{{ item.instance_name }}'
     backup=no
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update in memory inventory with Mgmt host instance names
   add_host:
@@ -138,7 +141,7 @@
     groups="primary_cs_manager"
     instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 
 ####################################################################
@@ -152,7 +155,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -208,7 +211,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -222,7 +225,7 @@
   with_items:
     - "{{ groups['mysql_master_host'] }}"
   register: dbsrv1_retval
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update inventory file with first DB server IP addresses
   replace:
@@ -231,7 +234,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{dbsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update in memory inventory with first DB server IP addresses
   add_host:
@@ -239,7 +242,7 @@
     groups="mysql_master_host"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{dbsrv1_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 ####################################################################
 # Additional DB servers
@@ -252,7 +255,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -266,7 +269,7 @@
   with_items:
     - "{{ groups['mysql_slave_hosts'] }}"
   register: dbsrvs_retval
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update inventory file with additional DB server IP addresseses
   replace:
@@ -275,7 +278,7 @@
     replace='{{ item.default_ip }}'
     backup=no
   with_items: "{{dbsrvs_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 - name: Update in memory inventory with additional DB server IP addresses
   add_host:
@@ -283,7 +286,7 @@
     groups="mysql_slave_hosts"
     ansible_ssh_host={{ item.default_ip }}
   with_items: "{{dbsrvs_retval.results}}"
-  when: not additional_zone 
+  when: not additional_zone
 
 ####################################################################
 # KVM hosts
@@ -296,7 +299,7 @@
     template: "{{ kvm_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -617,7 +620,7 @@
     template: "{{ marvin_server_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:

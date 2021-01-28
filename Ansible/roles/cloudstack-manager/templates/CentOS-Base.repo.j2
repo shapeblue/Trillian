@@ -13,7 +13,7 @@
 [base]
 name=CentOS-$releasever - Base
 #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
-baseurl=http://{{ repohost }}/centos/$releasever/os/$basearch/
+baseurl=http://{{ os_repo }}/centos/$releasever/os/$basearch/
 gpgcheck=0
 enabled = {{ base_repo_enabled }}
 
@@ -21,7 +21,7 @@ enabled = {{ base_repo_enabled }}
 [updates]
 name=CentOS-$releasever - Updates
 #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
-baseurl=http://{{ repohost }}/centos/$releasever/updates/$basearch/
+baseurl=http://{{ os_repo }}/centos/$releasever/updates/$basearch/
 gpgcheck=0
 enabled = {{ update_repo_enabled }}
 
