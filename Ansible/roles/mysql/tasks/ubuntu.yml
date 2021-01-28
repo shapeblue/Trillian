@@ -89,6 +89,9 @@
     - mysql
     - mysqlconf
 
+- name: Nuke everything since it's starting from scratch
+  shell: rm -rf /var/lib/mysql/*
+
 - name: Ensure MySQL service is started and set to start on boot (Ubuntu)
   service: name=mysql state=restarted enabled=yes
   tags:

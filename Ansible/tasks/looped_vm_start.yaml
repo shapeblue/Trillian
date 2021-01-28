@@ -3,4 +3,4 @@
 - debug: msg="clusterid={{ lowestclusterid }} vmid={{ item.id }}"
 
 - name: Start VM
-  shell: "cs startVirtualMachine id={{ item.id }} clusterid={{ lowestclusterid }}"
+  shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ lowestclusterid }}"

@@ -34,7 +34,7 @@
   when: ansible_distribution_version|version_compare('18.04','==')
 
 - apt_key:
-    url: "{{ repohost }}/release.asc"
+    url: "{{ os_repo }}/release.asc"
     state: present
 
 - apt_key:
@@ -131,7 +131,7 @@
 
 - name: netplan on Ubuntu 18 onwards
   block:
- 
+
   - name: write netplan
     shell: rm -rf  /etc/netplan/*
 
@@ -369,7 +369,7 @@
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
-  
+
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
 - include: ./ubuntu_custom_kernel.yml
   when: ansible_distribution_version|version_compare('20.04','>=')

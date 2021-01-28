@@ -1,22 +1,22 @@
 {% if ansible_distribution_release == "trusty" %}
-deb [arch=amd64] {{ repohost }}/ubuntu/ trusty main restricted universe
-deb-src {{ repohost }}/ubuntu/ trusty main restricted
+deb [arch=amd64] {{ os_repo }}/ubuntu/ trusty main restricted universe
+deb-src {{ os_repo }}/ubuntu/ trusty main restricted
 
-deb [arch=amd64] {{ repohost }}/ubuntu/ trusty-updates main restricted universe
-deb-src {{ repohost }}/ubuntu/ trusty-updates main restricted
+deb [arch=amd64] {{ os_repo }}/ubuntu/ trusty-updates main restricted universe
+deb-src {{ os_repo }}/ubuntu/ trusty-updates main restricted
 
-deb [arch=amd64] {{ repohost }}/ubuntu trusty-security main restricted universe
-deb-src {{ repohost }}/ubuntu trusty-security main restricted 
+deb [arch=amd64] {{ os_repo }}/ubuntu trusty-security main restricted universe
+deb-src {{ os_repo }}/ubuntu trusty-security main restricted
 {% endif %}
 
 {% if ansible_distribution_release == "xenial" %}
 
-# deb {{ repohost }}/ubuntu/ xenial main restricted
-# deb {{ repohost }}/ubuntu/ xenial-updates main restricted
-# deb {{ repohost }}/ubuntu/ xenial universe
-# deb {{ repohost }}/ubuntu/ xenial-updates universe
+# deb {{ os_repo }}/ubuntu/ xenial main restricted
+# deb {{ os_repo }}/ubuntu/ xenial-updates main restricted
+# deb {{ os_repo }}/ubuntu/ xenial universe
+# deb {{ os_repo }}/ubuntu/ xenial-updates universe
 
-# 
+#
 
 # deb cdrom:[Ubuntu-Server 16.04.1 LTS _Xenial Xerus_ - Release amd64 (20160719)]/ xenial main restricted
 
@@ -40,9 +40,9 @@ deb http://gb.archive.ubuntu.com/ubuntu/ xenial universe
 deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates universe
 # deb-src http://gb.archive.ubuntu.com/ubuntu/ xenial-updates universe
 
-## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu 
-## team, and may not be under a free licence. Please satisfy yourself as to 
-## your rights to use the software. Also, please note that software in 
+## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+## team, and may not be under a free licence. Please satisfy yourself as to
+## your rights to use the software. Also, please note that software in
 ## multiverse WILL NOT receive any review or updates from the Ubuntu
 ## security team.
 deb http://gb.archive.ubuntu.com/ubuntu/ xenial multiverse
