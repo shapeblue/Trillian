@@ -57,6 +57,8 @@
   - sqlite-devel
   - python-paramiko
   - python-devel
+  - python3-paramiko
+  - python3-devel
   - mysql-devel
   - zlib-devel
   - bzip2-devel
@@ -74,6 +76,7 @@
   - vim
   - tmux
   - python-pip
+  - python3-pip
   tags:
     - marvin
     - marvin_install
@@ -89,6 +92,19 @@
     extra_args: '--upgrade'
   with_items:
   - pip==20.2.1
+  - six
+  - pyOpenSSL
+  - wheel==0.34.2
+  - kubernetes
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Update pip3 and components
+  pip3:
+    name: "{{ item }}"
+    extra_args: '--upgrade'
+  with_items:
   - six
   - pyOpenSSL
   - wheel==0.34.2
@@ -117,8 +133,23 @@
     - marvin
     - marvin_install
 
+- name: install pip3 security components and extras
+  pip3: name={{ item }} extra_args='--upgrade'
+  with_items:
+  - '"requests[security]"'
+  - pyasn1
+  - wget
+  - texttable
+  - lxml
+  tags:
+    - marvin
+    - marvin_install
+
 - name: WORKAROUND **Install pycparser v2.13**
   pip: name=pycparser version=2.13
+
+- name: WORKAROUND **Install pycparser v2.13**
+  pip3: name=pycparser version=2.13
 
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes

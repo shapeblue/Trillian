@@ -20,6 +20,9 @@
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
+- name: Ensure selinux python3 bindings are installed
+  yum: name=libselinux-python3 state=present
+
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
     policy: targeted
@@ -50,7 +53,7 @@
     - marvin_cfg
   when: not force_marvin_fallback
 
-- name: Determine if Marvin Package availble from this repo
+- name: Determine if Marvin Package available from this repo
   package_available: PACKAGE=cloudstack-marvin
   register: marvin_package_check
   ignore_errors: true
@@ -148,6 +151,8 @@
   with_items:
     - "/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc"
     - "/usr/lib/python2.7/site-packages/marvin/config/test_data.py"
+    - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.pyc"
+    - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py"
   tags:
     - marvin
     - marvin_cfg
@@ -160,7 +165,13 @@
 
 - name: create symlink to test_data.py
   file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
-  tags:
+  tags:1
+    - marvin
+    - marvin_cfg
+
+- name: create symlink to test_data.py
+  file: src=/marvin/test_data.py dest=/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py state=link mode=0644
+  tags:1
     - marvin
     - marvin_cfg
 
