@@ -101,8 +101,9 @@
     - marvin_install
 
 - name: Update pip3 and components
-  pip3:
+  pip:
     name: "{{ item }}"
+    executable: pip3
     extra_args: '--upgrade'
   with_items:
   - six
@@ -134,7 +135,8 @@
     - marvin_install
 
 - name: install pip3 security components and extras
-  pip3: name={{ item }} extra_args='--upgrade'
+  pip: name={{ item }} extra_args='--upgrade'
+  executable: pip3
   with_items:
   - '"requests[security]"'
   - pyasn1
