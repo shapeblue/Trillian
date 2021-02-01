@@ -163,7 +163,7 @@
     - marvin
     - marvin_cfg
 
-- name: create symlink to test_data.py
+- name: create python2 symlink to test_data.py
   file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
   tags:1
     - marvin
