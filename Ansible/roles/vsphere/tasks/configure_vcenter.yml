@@ -24,7 +24,7 @@
   shell: "curl https://{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}/sdk/vimService.wsdl  --insecure"
   register: result
   until: result.stdout.find("vim25Service") != -1
-  retries: 60
+  retries: 600
   delay: 10
   delegate_to: localhost
   tags:
