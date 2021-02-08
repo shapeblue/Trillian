@@ -785,6 +785,7 @@ def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
 def_marvin_images_location: "http://<IP_ADDRESS_HERE>/marvin"
 def_openvm_images_location: "http://<IP_ADDRESS_HERE>/openvm"
+def_cks_images_location: "http://<IP_ADDRESS_HERE>/cks"
 def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/centos7/4.13/"
 
 # Webhooks for integration
