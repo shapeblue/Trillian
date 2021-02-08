@@ -307,7 +307,7 @@ kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrep
 {% else %}
 {% set kvmjava = kvm_java_ver %}
 {% endif %}
-kvm_java_ver: "{{ kvmjava }}" 
+kvm_java_ver: "{{ kvmjava }}"
 {% if kvm_java_path is not defined %}
 {% set kvm_os_name = linux_os[kvm_os].os %}
 {% set kvmjavapath = java_paths[kvm_os_name][kvmjava] %}
@@ -373,6 +373,7 @@ marvin_tests_source: "{{ marvin_tests_source | default ( def_marvin_tests_source
 marvin_tests_github_source: "{{ marvin_tests_github_source | default ( def_marvin_tests_github_source ) }}"
 marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images_location ) }}"
 openvm_images_location: "{{ openvm_images_location | default ( def_openvm_images_location ) }}"
+cks_images_location: "{{ cks_images_location | default ( def_cks_images_location ) }}"
 {% if run_component_tests is not defined %}{% set run_component_tests = no %}{% endif %}run_component_tests: {{ run_component_tests }}
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
 {% if baseurl_marvin is not defined %}

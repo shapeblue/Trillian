@@ -1768,7 +1768,7 @@ test_data = {
     },
     "test_34_DeployVM_in_SecondSGNetwork": {
         "zone": "advsg",
-        "config": "D:/ACS-Repo/setup/dev//advancedsg.cfg", 
+        "config": "D:/ACS-Repo/setup/dev//advancedsg.cfg",
         "template": "CentOS 5.3(64-bit) no GUI (Simulator)",
         "dbSvr": {
             "dbSvr": "10.146.0.133",
@@ -2191,25 +2191,25 @@ test_data = {
     "cks_kubernetes_versions": {
         "1.14.9": {
             "semanticversion": "1.14.9",
-            "url": "http://10.2.0.4/cks/setup-1.14.9.iso",
+            "url": "{{ cks_images_location }}/setup-1.14.9.iso",
             "mincpunumber": 2,
             "minmemory": 2048
         },
         "1.15.0": {
             "semanticversion": "1.15.0",
-            "url": "http://10.2.0.4/cks/setup-1.15.0.iso",
+            "url": "{{ cks_images_location }}/setup-1.15.0.iso",
             "mincpunumber": 2,
             "minmemory": 2048
         },
         "1.16.0": {
             "semanticversion": "1.16.0",
-            "url": "http://10.2.0.4/cks/setup-1.16.0.iso",
+            "url": "{{ cks_images_location }}/setup-1.16.0.iso",
             "mincpunumber": 2,
             "minmemory": 2048
         },
         "1.16.3": {
             "semanticversion": "1.16.3",
-            "url": "http://10.2.0.4/cks/setup-1.16.3.iso",
+            "url": "{{ cks_images_location }}/setup-1.16.3.iso",
             "mincpunumber": 2,
             "minmemory": 2048
         }
@@ -2221,7 +2221,7 @@ test_data = {
             "format": "qcow2",
             "hypervisor": "kvm",
             "ostype": "CoreOS",
-            "url": "http://10.2.0.4/cks/coreos_production_cloudstack_image-kvm.qcow2.bz2",
+            "url": "{{ cks_images_location }}/coreos_production_cloudstack_image-kvm.qcow2.bz2",
             "requireshvm": "True",
             "ispublic": "True",
             "isextractable": "True"
@@ -2232,7 +2232,7 @@ test_data = {
             "format": "vhd",
             "hypervisor": "xenserver",
             "ostype": "CoreOS",
-            "url": "http://10.2.0.4/cks/coreos_production_cloudstack_image-xen.vhd.bz2",
+            "url": "{{ cks_images_location }}/coreos_production_cloudstack_image-xen.vhd.bz2",
             "requireshvm": "True",
             "ispublic": "True",
             "isextractable": "True"
@@ -2243,7 +2243,7 @@ test_data = {
             "format": "ova",
             "hypervisor": "vmware",
             "ostype": "CoreOS",
-            "url": "http://10.2.0.4/cks/coreos_production_cloudstack_image-vmware.ova",
+            "url": "{{ cks_images_location }}/coreos_production_cloudstack_image-vmware.ova",
             "requireshvm": "True",
             "ispublic": "True",
             "details": [{"keyboard":"us","nicAdapter":"Vmxnet3","rootDiskController":"pvscsi"}]
