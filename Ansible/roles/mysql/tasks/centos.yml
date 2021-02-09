@@ -39,41 +39,45 @@
 
 - name: Ensure mysql server is installed (centos/rhel6)
   yum: name=mysql-server state=present
+  register: mysqlinstalled
   tags: services
   when: ansible_distribution_major_version == "6"
 
 - name: Ensure mariadb server is installed (centos/rhel7)
   yum: name=mariadb-server state=present
+  register: mysqlinstalled
   tags: services
   when: ansible_distribution_major_version == "7"
 
 - name: Ridiculous fix for mysql permissions
   file: path=/var/lib/mysql state=directory mode=0666
+  when: mysqlinstalled.changed
 
 - name: replace MySQL my.cnf using Template (centos/rhel6)
   action: template src=my.cnf.j2 dest=/etc/my.cnf
-  when: ansible_distribution_major_version == "6"
+  when: ansible_distribution_major_version == "6" and mysqlinstalled.changed
   tags:
     - mysqlconf
 
 - name: replace MySQL my.cnf using Template (centos/rhel7)
   action: template src=mariadb-my.cnf.j2 dest=/etc/my.cnf
-  when: ansible_distribution_major_version == "7"
+  when: ansible_distribution_major_version == "7" and mysqlinstalled.changed
 
-- name: Nuke everything since it's starting from scratch
-  shell: rm -rf /var/lib/mysql/*
+# - name: Nuke everything since it's starting from scratch
+#   shell: rm -rf /var/lib/mysql/*
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel6)
   service: name=mysqld state=restarted enabled=yes
   tags: services
-  when: ansible_distribution_major_version == "6"
+  when: ansible_distribution_major_version == "6" and mysqlinstalled.changed
 
 - name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
   service: name=mariadb state=restarted enabled=yes
   tags: services
-  when: ansible_distribution_major_version == "7"
+  when: ansible_distribution_major_version == "7" and mysqlinstalled.changed
 
 - include: ./secure_mysql.yml
+  when: mysqlinstalled.changed
 
 - name: Ensure Firewall Rules are in place for MySQL
   shell: "iptables -I INPUT -p tcp -m tcp --dport 3306 -j ACCEPT"
