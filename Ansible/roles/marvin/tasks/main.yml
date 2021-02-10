@@ -143,8 +143,6 @@
 - name: remove orginal test_data files
   file: path="{{ item }}" state=absent
   with_items:
-    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc"
-    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.py"
     - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.pyc"
     - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py"
   tags:
@@ -153,12 +151,6 @@
 
 - name: create templated test_data.py
   template: src=test_data.py.j2 dest=/marvin/test_data.py
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: create python2 symlink to test_data.py
-  file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
   tags:
     - marvin
     - marvin_cfg
