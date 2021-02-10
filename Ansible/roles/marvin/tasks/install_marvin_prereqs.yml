@@ -93,6 +93,12 @@
   - pyOpenSSL
   - wheel==0.34.2
   - kubernetes
+  - '"requests[security]"'
+  - pyasn1
+  - wget
+  - texttable
+  - lxml
+  - pycparser==2.13
   tags:
     - marvin
     - marvin_install
@@ -104,25 +110,6 @@
   tags:
     - marvin
     - marvin_install
-
-- name: install pip3 security components and extras
-  pip: name={{ item }} extra_args='--upgrade'
-  executable: pip3
-  with_items:
-  - '"requests[security]"'
-  - pyasn1
-  - wget
-  - texttable
-  - lxml
-  tags:
-    - marvin
-    - marvin_install
-
-- name: WORKAROUND **Install pycparser v2.13**
-  pip:
-    executable: pip3
-    name: pycparser
-    version: 2.13
 
 - name: ensure atd is running to schedule jobs
   service: name=atd state=started enabled=yes
