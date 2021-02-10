@@ -134,7 +134,7 @@ runtest() {
     testcount=0
     while [ $testcount -lt $TESTTRIES ]; do
       cleanoldrunlog $file
-      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=$MARVIN_CONFIG_FILE --hypervisor=$HYPERVISOR -s -a tags=${ZONE_TYPE}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-marvin --marvin-config=$MARVIN_CONFIG_FILE --hypervisor=$HYPERVISOR -s -a tags=${ZONE_TYPE}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
       TESTERRORS=`cat $LOGDIR$(basename $file).json | jq '.stats.failures'`
       TESTFAILURES=`cat $LOGDIR$(basename $file).json | jq '.stats.errors'`
       if [ "$((TESTERRORS+TESTERRORS))" -gt "0" ]; then
