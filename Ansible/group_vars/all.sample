@@ -723,7 +723,7 @@ def_vmware_templates:
     vc_template: "vCenter 65u1"
   "65u2":
     esxi_template: "ESXi 6.5u1"
-    vc_template: "vCenter-65u2"
+    vc_template: "vCenter 65u2"
   "67u0":
     esxi_template: "ESXi 6.7.0"
     vc_template: "vCenter 67u0"
