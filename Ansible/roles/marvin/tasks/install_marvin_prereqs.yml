@@ -55,6 +55,9 @@
   - wget
   - sqlite
   - sqlite-devel
+  - python-paramiko
+  - python-devel
+  - python-pip
   - python3-devel
   - python3-pip
   - mysql-devel
@@ -82,13 +85,32 @@
     name: pyOpenSSL
     state: absent
 
+- name: Update pip and components
+  pip:
+    name: "{{ item }}"
+    extra_args: '--upgrade'
+  with_items:
+  - pip==20.2.1
+  - six
+  - pyOpenSSL
+  - wheel==0.34.2
+  - kubernetes
+  - '"requests[security]"'
+  - pyasn1
+  - wget
+  - texttable
+  - lxml
+  tags:
+    - marvin
+    - marvin_install
+
 - name: Update pip3 and components
   pip:
     name: "{{ item }}"
     executable: pip3
     extra_args: '--upgrade'
   with_items:
-  - pip
+  - pip==20.2.1
   - six
   - pyOpenSSL
   - wheel==0.34.2

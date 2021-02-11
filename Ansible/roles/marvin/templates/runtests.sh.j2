@@ -134,7 +134,7 @@ runtest() {
     testcount=0
     while [ $testcount -lt $TESTTRIES ]; do
       cleanoldrunlog $file
-      nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-marvin --marvin-config=$MARVIN_CONFIG_FILE --hypervisor=$HYPERVISOR -s -a tags=${ZONE_TYPE}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+      ${NOSETESTS} --with-xunit --xunit-file=$LOGDIR/$(basename $file)_$testcount.xml --with-marvin --marvin-config=$MARVIN_CONFIG_FILE --hypervisor=$HYPERVISOR -s -a tags=${ZONE_TYPE}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
       TESTERRORS=`cat $LOGDIR$(basename $file).json | jq '.stats.failures'`
       TESTFAILURES=`cat $LOGDIR$(basename $file).json | jq '.stats.errors'`
       if [ "$((TESTERRORS+TESTERRORS))" -gt "0" ]; then
@@ -217,6 +217,9 @@ rm -f $TESTDIR/test_*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/config/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/lib/*pyc
 
 
 NUMTESTS=`find $TESTDIR/test_*.py | wc -l`
@@ -275,7 +278,7 @@ echo "Smoke tests completed. $GOOD look OK, $BAD have error(s)" >> /marvin/$TEST
 echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
 echo "Only failed tests results shown below:" >> /marvin/$TESTTYPE-summary.txt
 echo "" >> /marvin/$TESTTYPE-summary.txt
-python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/$TESTTYPE-summary.txt
+${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/$TESTTYPE-summary.txt
 cat /marvin/$TESTTYPE-summary.txt
 
 bash /marvin/process_json_results.sh
