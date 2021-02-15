@@ -75,6 +75,7 @@ def_build_zone: "<ZONE_NAME_HERE>"
 def_build_keyboard: "uk"
 parent_vcenter_dc: "<PARENT_VC_DC_NAME_HERE>"
 os_repo: "http://<IP_ADDRESS_HERE>"
+sb_repo: "http://<IP_ADDRESS_HERE>"
 custom_repo: "http://<IP_ADDRESS_HERE>"
 def_env_timezone: "UTC"
 def_use_external_hv_hosts: no
