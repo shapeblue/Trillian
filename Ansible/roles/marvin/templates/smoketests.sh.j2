@@ -239,7 +239,7 @@ launchtest() {
   file=$1
   runtest $file
   # Run tests once again on error or failure
-  $(PYTHON) /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
+  ${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 slackmsg() {
    messagebody=$1
@@ -325,7 +325,7 @@ echo "Smoke tests completed. $GOOD look OK, $BAD have error(s)" >> /marvin/smoke
 echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
 echo "Only failed tests results shown below:" >> /marvin/smoketests-summary.txt
 echo "" >> /marvin/smoketests-summary.txt
-$(PYTHON) /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
+${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
 
 bash /marvin/process_json_results.sh
