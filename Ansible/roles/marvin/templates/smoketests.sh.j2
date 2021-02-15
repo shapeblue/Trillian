@@ -29,8 +29,13 @@ else
   jenkinslink=""
 fi
 
-PYTHON=python3
+## prefer python 3 versions of these:
+PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
+if [ ! -x `tupe -p ${NOSETESTS}` ]
+then
+  NOSETESTS=/usr/bin/nosetest
+fi
 
 STUCKTEMPLATES=0
 STUCKVMS=0
