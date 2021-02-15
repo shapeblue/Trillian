@@ -20,7 +20,7 @@
 
 
 - name: download installer
-  get_url: url="{{ os_repo }}/ccp/{{ccp_install_tarball}}.tar.gz" dest="/tmp/{{ ccp_install_tarball }}.tar.gz"
+  get_url: url="{{ sb_repo }}/ccp/{{ccp_install_tarball}}.tar.gz" dest="/tmp/{{ ccp_install_tarball }}.tar.gz"
 
 - name: extract tarball
   unarchive: src="/tmp/{{ ccp_install_tarball }}.tar.gz" dest=/tmp copy=no
