@@ -22,8 +22,12 @@ TMP_JSON_DIR="/marvin/json_results/"
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 
-PYTHON=python3
+PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
+if [ ! -x `type -p ${NOSETESTS}` ]
+then
+  NOSETESTS=/usr/bin/nosetest
+fi
 
 rm -f /marvin/tests/component/*.pyc
 rm -f /marvin/tests/component/maint/*.pyc
@@ -198,7 +202,7 @@ echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
 
 echo "Only failed tests results shown below:" >> /marvin/componenttest-summary.txt
 echo "" >> /marvin/componenttest-summary.txt
-python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/componenttest-summary.txt
+${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/componenttest-summary.txt
 cat /marvin/componenttest-summary.txt
 
 echo "processing json output"

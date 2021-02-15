@@ -32,7 +32,7 @@ fi
 ## prefer python 3 versions of these:
 PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
-if [ ! -x `tupe -p ${NOSETESTS}` ]
+if [ ! -x `type -p ${NOSETESTS}` ]
 then
   NOSETESTS=/usr/bin/nosetest
 fi

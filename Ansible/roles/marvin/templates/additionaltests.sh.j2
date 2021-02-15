@@ -20,8 +20,12 @@ LOGDIR=/marvin/MarvinLogs/AdditionalTests
 mkdir -p $LOGDIR
 echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 
-PYTHON=python3
+PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
+if [ ! -x `type -p ${NOSETESTS}` ]
+then
+  NOSETESTS=/usr/bin/nosetest
+fi
 
 rm -f /marvin/tests/smoke/*.pyc
 rm -f /marvin/tests/component/*pyc
@@ -67,7 +71,7 @@ runtest() {
         echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
         rm -fr $LOGDIR/$OLDRESULT
     fi
-    ${nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+    ${NOSETESTS} --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
     cleanup || true
 }
 
@@ -117,7 +121,7 @@ echo "Test completed. $GOOD look ok, $BAD have errors"
 echo "" >> /marvin/smoketests-summary.txt
 echo "Additional tests completed. $GOOD look ok, $BAD have error(s)" >> /marvin/smoketests-summary.txt
 echo "" >> /marvin/smoketests-summary.txt
-python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
+${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
 
 bash /marvin/process_json_results.sh
