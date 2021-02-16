@@ -20,8 +20,12 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: get name of eth0 connection
+  shell: nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
+  register: eth0_name
+
 - name: disable ipv6
-  command: nmcli connection modify 'System eth0' ipv6.method ignore
+  command: nmcli connection modify '{{ eth0_name.stdout }}' ipv6.method ignore
 
 - name: change cockpit port
   lineinfile:
@@ -119,5 +123,5 @@
 #  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
 
 # Workaround for https://github.com/apache/cloudstack/issues/4204
-- name: Patch ipmitool yo ipmitool-1.8.18-12.el8_1.x86_64.rpm
-  shell: "rpm -i https://rpmfind.net/linux/centos/8.1.1911/AppStream/x86_64/os/Packages/ipmitool-1.8.18-12.el8_1.x86_64.rpm --force"
+- name: Patch ipmitool yo ipmitool-1.8.18-17.el8.x86_64.rpm
+  shell: "rpm -i https://rpmfind.net/linux/centos/8/AppStream/x86_64/os/Packages/ipmitool-1.8.18-17.el8.x86_64.rpm --force"
