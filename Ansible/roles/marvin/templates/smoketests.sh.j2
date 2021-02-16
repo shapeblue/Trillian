@@ -32,9 +32,9 @@ fi
 ## prefer python 3 versions of these:
 PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
-if [ ! -x `type -p ${NOSETESTS}` ]
+if [ ! -x {NOSETESTS} ]
 then
-  NOSETESTS=/usr/bin/nosetest
+  NOSETESTS=/usr/bin/nosetests
 fi
 
 STUCKTEMPLATES=0
