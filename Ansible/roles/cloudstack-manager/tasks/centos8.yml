@@ -21,7 +21,7 @@
   selinux: policy=targeted state=permissive
 
 - name: disable ipv6
-  command: nmcli connection modify eth0 ipv6.method ignore
+  command: nmcli connection modify 'System eth0' ipv6.method ignore
 
 - name: change cockpit port
   lineinfile:
