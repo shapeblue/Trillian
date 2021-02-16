@@ -51,6 +51,13 @@
     - "8443"
     - "9090"
 
+- name: Stop firewalld CentOS8
+  service:
+    name=firewalld
+    state=stopped
+    enabled=no
+  when: ( ansible_distribution_major_version|int == 8 ) and (use_firewalld|bool == False)
+
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
