@@ -157,8 +157,13 @@
     - marvin
     - marvin_cfg
 
+- name: Check if marvin is installed in python3
+  stat: path=/usr/lib/python2.7/site-packages/marvin/
+  register: marvin2
+
 - name: create symlink to test_data.py
   file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
+  when: marvin2.stat.exists == true
   tags:
     - marvin
     - marvin_cfg
