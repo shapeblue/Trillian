@@ -80,6 +80,12 @@
     - marvin
     - marvin_install
 
+- name: Install mysql-connector-python
+  yum: name=mysql-connector-python state=latest
+  tags:
+    - marvin
+    - marvin_install
+
 - name: remove yum openSSL package
   yum:
     name: pyOpenSSL
