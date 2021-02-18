@@ -29,6 +29,14 @@ else
   jenkinslink=""
 fi
 
+## prefer python 3 versions of these:
+PYTHON=`which python3 || which python`
+NOSETESTS=/usr/local/bin/nosetests
+if [ ! -x ${NOSETESTS} ]
+then
+  NOSETESTS=/usr/bin/nosetests
+fi
+
 STUCKTEMPLATES=0
 STUCKVMS=0
 STUCKNETWORKS=0
@@ -42,6 +50,9 @@ rm -f $TESTDIR/test_*.pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/config/*pyc
 rm -f /usr/lib/python2.7/site-packages/marvin/lib/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/config/*pyc
+rm -f /usr/local/lib/python3.6/site-packages/marvin/lib/*pyc
 rm -f $CLEAN_UP_LOG
 
 cmk list accounts listall=true name="baremetal-system-account" | jq -r '.account[] .id'  > .skipdeletingaccounts
@@ -129,7 +140,7 @@ cleanup() {
     done
     STUCKNETWORKS=$NUM_GCNETWORKS
   fi
- 
+
   tries=$retries
   echo "deleting VPCs"
   NUM_GCVPCS=`cmk list vpcs listall=true | jq -r '.vpc[].id' | wc -l`
@@ -220,7 +231,7 @@ runtest() {
     echo "Found old test results, removing:" $LOGDIR/$OLDRESULT
     rm -fr $LOGDIR/$OLDRESULT
   fi
-  nosetests --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-json --json-file=$LOGDIR/$(basename $file).json --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
+  ${NOSETESTS} --with-xunit --xunit-file=$LOGDIR/$(basename $file).xml --with-marvin --marvin-config=/marvin/{{ env_name_clean }}-advanced-cfg --hypervisor={{ env_hv }} -s -a tags={{ env_zonetype | lower }}{% if marvin_test_categories is defined %}{% for category in marvin_test_categories %},{{ category }}{% endfor %}{% endif %} $file
   cleanup || true
 }
 
@@ -228,7 +239,7 @@ launchtest() {
   file=$1
   runtest $file
   # Run tests once again on error or failure
-  python /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
+  ${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/$(basename $file).xml | grep -e Failure -e Error && cleanup && runtest $file && echo "Intermittent failure detected: $file" >> /marvin/smoketests-summary.txt
 }
 slackmsg() {
    messagebody=$1
@@ -314,7 +325,7 @@ echo "Smoke tests completed. $GOOD look OK, $BAD have error(s)" >> /marvin/smoke
 echo "$GOOD look ok, $BAD have errors" > /marvin/test-summary.txt
 echo "Only failed tests results shown below:" >> /marvin/smoketests-summary.txt
 echo "" >> /marvin/smoketests-summary.txt
-python /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
+${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> /marvin/smoketests-summary.txt
 cat /marvin/smoketests-summary.txt
 
 bash /marvin/process_json_results.sh

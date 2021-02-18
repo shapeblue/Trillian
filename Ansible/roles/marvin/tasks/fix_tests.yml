@@ -6,15 +6,28 @@
     - "/marvin/tests/smoke"
     - "/marvin/tests/component"
     - "/usr/lib/python2.7/site-packages/marvin/lib"
+    - "/usr/local/lib/python3.6/site-packages/marvin/lib"
   tags:
     - marvin
     - marvin_cfg
     - marvin_fix_tests
 
 - name: copy locally fixed tests
-  copy: 
+  copy:
     src: "{{ item }}"
     dest: /usr/lib/python2.7/site-packages/marvin/lib/
+    mode: 0755
+  with_fileglob:
+    - ../files/marvin_lib/*
+  tags:
+    - marvin
+    - marvin_cfg
+    - marvin_fix_tests
+
+- name: copy locally fixed tests to python3 marvin
+  copy: 
+    src: "{{ item }}"
+    dest: /usr/local/lib/python3.6/site-packages/marvin/lib/
     mode: 0755
   with_fileglob:
     - ../files/marvin_lib/*
