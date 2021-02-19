@@ -42,7 +42,7 @@
   when: force_java
 
 
-- debug: 
+- debug:
     msg: "env_cs_distribution - {{ env_cs_distribution }}"
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
@@ -73,7 +73,13 @@
 
 - name: Open 8096 when Marvin is required (CentOS 6)
   shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT && iptables-save > /etc/sysconfig/iptables"
-  when: (num_marv_hosts > 0)
+  when: (num_marv_hosts > 0) and (ansible_distribution_major_version != "6")
+
+- name: Delete rule for Centos6
+  shell: "iptables -D INPUT -p tcp -m tcp --dport 8096 -j ACCEPT && iptables-save > /etc/sysconfig/iptables"
+  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+
+
 # and (ansible_distribution_major_version == "6")
 
 #- name: Open 8096 when Marvin is required (CentOS 7)

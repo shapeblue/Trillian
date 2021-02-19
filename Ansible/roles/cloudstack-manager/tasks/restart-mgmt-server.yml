@@ -1,0 +1,11 @@
+- name: restart mgmt service (inc fix for broken stop)
+  shell: "service cloud-management stop && sleep 5 && service cloud-management stop && sleep 10 && service cloud-management start"
+  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "6")
+  ignore_errors: true
+
+- name: "wait for ACS Management Service to come up"
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 100
+  delay: 10

@@ -261,6 +261,14 @@
     - { role: slack_client, when: (num_marv_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
     - { role: marvin, when: num_marv_hosts | int != 0  and (additional_pod|bool == False) }
 
+- hosts: primary_cs_manager
+  gather_facts: no
+  vars:
+    num_marv_hosts: "{{ groups['marvin_host'] | length }}"
+  tasks:
+    - name: Restart MS to open port 8096
+      include: roles/cloudstack-manager/tasks/restart-mgmt-server.yml
+
 - hosts: localhost
   connection: local
   gather_facts: no
