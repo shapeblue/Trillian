@@ -237,6 +237,13 @@
   roles:
     - cloudstack-config
 
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+  - name: create mavin cfg file
+    template: src=advanced-cfg.j2 dest="./{{ env_name_clean }}-advanced-cfg"
+
 ## update status
 
 - hosts: localhost

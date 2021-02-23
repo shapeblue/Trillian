@@ -42,16 +42,13 @@
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
 
-# - name: Remove previous SSH key from Project if it exists
-#   local_action:
-#     module: cs_sshkeypair
-#     api_timeout: 120
-#     name: "{{ env_name_clean }}"
-#     project: "{{ build_project }}"
-#     state: absent
-
-- name: create mavin cfg file
-  template: src=advanced-cfg.j2 dest="group_vars/{{ env_name_clean }}-advanced-cfg"
+- name: Remove previous SSH key from Project if it exists
+  local_action:
+    module: cs_sshkeypair
+    api_timeout: 120
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
   local_action:
@@ -73,14 +70,17 @@
 - name: Generate SSH keys
   shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}-{{ env_name_clean }}"
 
-# - name: Add new public SSH Key to the project
-#   local_action:
-#     module: cs_sshkeypair
-#     name: "{{ env_name_clean }}"
-#     project: "{{ build_project }}"
-#     state: present
-#     api_timeout: 120
-#     public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
+- name: Copy SSH Key to current directory
+  shell: cp {{ def_env_ssh_key_path }}-{{ env_name_clean }}* ./
+
+- name: Add new public SSH Key to the project
+  local_action:
+    module: cs_sshkeypair
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: present
+    api_timeout: 120
+    public_key: "{{ lookup('file', '{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub') }}"
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
   local_action:
@@ -113,7 +113,7 @@
     template: "{{ kvm_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -453,7 +453,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -520,7 +520,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -588,7 +588,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -639,7 +639,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -691,7 +691,7 @@
     template: "{{ marvin_server_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    # ssh_key: "{{env_name_clean}}"
+    ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
