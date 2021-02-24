@@ -26,7 +26,7 @@ PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
 if [ ! -x `type -p ${NOSETESTS}` ]
 then
-  NOSETESTS=/usr/bin/nosetest
+  NOSETESTS=/usr/bin/nosetests
 fi
 
 rm -f /marvin/tests/component/*.pyc
