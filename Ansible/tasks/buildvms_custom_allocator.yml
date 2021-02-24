@@ -430,7 +430,7 @@
     instance_name={{ item.instance_name }}
   with_items: "{{vc_retval.results}}"
 
-- name: Start VM
+- name: Start VC Host VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{vc_retval.results}}"
@@ -503,7 +503,7 @@
   with_items: "{{mgmtsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: Start VM
+- name: Start Management Server VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{mgmtsrv1_retval.results}}"
@@ -570,7 +570,7 @@
   with_items: "{{mgmtsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: Start VM
+- name: Start Additional Management Servers VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{mgmtsrvs_retval.results}}"
@@ -621,7 +621,7 @@
   with_items: "{{dbsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: Start VM
+- name: Start DB Server VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{dbsrv1_retval.results}}"
@@ -673,7 +673,7 @@
   with_items: "{{dbsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
-- name: Start VM
+- name: Start Additional DB Servers VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{dbsrvs_retval.results}}"
@@ -737,7 +737,7 @@
     instance_name={{ item.instance_name }}
   with_items: "{{marvin_retval.results}}"
 
-- name: Start VM
+- name: Start Marvin VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{marvin_retval.results}}"
