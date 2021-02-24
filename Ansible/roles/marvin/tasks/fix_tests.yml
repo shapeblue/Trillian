@@ -36,17 +36,6 @@
     - marvin_cfg
     - marvin_fix_tests
 
-- name: Copy files to /marvin/tests/smoke/
-  copy:
-    src: "{{ item }}"
-    dest: /marvin/tests/smoke/
-    mode: 0755
-  with_fileglob:
-    - ../files/smoke/*
-  tags:
-    - marvin
-    - marvin_cfg
-    - marvin_fix_tests
 
 
 
