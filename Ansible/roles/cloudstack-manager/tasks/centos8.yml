@@ -131,4 +131,4 @@
 
 # Workaround for https://github.com/apache/cloudstack/issues/4204
 - name: Patch ipmitool yo ipmitool-1.8.18-17.el8.x86_64.rpm
-  shell: "rpm -i https://rpmfind.net/linux/centos/8/AppStream/x86_64/os/Packages/ipmitool-1.8.18-17.el8.x86_64.rpm --force"
+  shell: "dnf install https://rpmfind.net/linux/centos/8/AppStream/x86_64/os/Packages/ipmitool-1.8.18-17.el8.x86_64.rpm --force"
