@@ -71,9 +71,9 @@ def _generate_file_list(args):
 
 
 def parse_reports(file_path_list):
-    print ""
-    print "Test | Result | Time (s) | Test File"
-    print "--- | --- | --- | ---"
+    print("")
+    print("Test | Result | Time (s) | Test File")
+    print("--- | --- | --- | ---")
 
     exit_code = 0
 
@@ -102,8 +102,8 @@ def parse_reports(file_path_list):
                 tests.append([name, status, time, filename])
 
     for test in tests:
-        print "%s | %s | %.2f | %s" % (test[0], test[1], float(test[2]), test[3])
-    print ""
+        print("%s | %s | %.2f | %s" % (test[0], test[1], float(test[2]), test[3]))
+    print("")
     return exit_code
 
 

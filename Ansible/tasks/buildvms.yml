@@ -60,8 +60,16 @@
     state: directory
     mode: 0777
 
-- name: Generate SSH keys
-  shell: "ssh-keygen -t rsa -b 4096 -N '' -f {{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+- name: Copy SSH Key to current directory
+  shell: cp {{ def_env_ssh_key_path }}-{{ env_name_clean }}* ./
+
+- name: Copy SSH Key to current directory
+  copy:
+    src: "{{ item }}"
+    dest: "id_rsa_trillian-{{ env_name_clean }}"
+  with_items:
+    - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}"
+    - "{{ def_env_ssh_key_path }}-{{ env_name_clean }}.pub"
 
 # - name: Add new public SSH Key to the project
 #   local_action:
