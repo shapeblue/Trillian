@@ -1,8 +1,0 @@
-- name: test
-  hosts:
-    - 127.0.0.1
-  connection: local
-  vars:
-    destroy_forced: yes
-  tasks:
-    - include: ./tasks/removeproject-test.yml
