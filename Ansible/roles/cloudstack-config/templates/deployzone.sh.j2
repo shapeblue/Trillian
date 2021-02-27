@@ -153,7 +153,7 @@ then
   else
     WriteOutput "Configuring zone without security groups.";
     WriteOutput "Creating public range.";
-    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" vlan="{{ env_guestnetvlan }}" | tee -i -a ${DEPLOYLOG};
+    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
     WriteOutput "Creating Guest VLAN range."
     cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
   fi
@@ -180,7 +180,7 @@ cloudmonkey create pod zoneid=${ZoneID} name="{{ env_zone_podname }}" gateway="{
 PodID=`cloudmonkey list pods name={{ env_zone_podname }} zoneid=${ZoneID} filter=id | jq -r '.pod[] | .id'`;
 
 if [ "{{ env_zonetype | lower }}" == "basic" ]; then
-  cloudmonkey create vlaniprange podid=${PodID} networkid=${NETIDBAS} gateway="{{ env_guestnetgw }}" netmask="{{ env_guestnetmask }}" startip="{{ env_guestnetstartip }}" endip="{{ env_guestnetendip }}" forvirtualnetwork=false zoneid=${ZoneID} | tee -i -a ${DEPLOYLOG};
+  cloudmonkey create vlaniprange podid=${PodID} networkid=${NETIDBAS} gateway="{{ env_guestnetgw }}" netmask="{{ env_guestnetmask }}" startip="{{ env_guestnetstartip }}" endip="{{ env_guestnetendip }}" forvirtualnetwork=false zoneid=${ZoneID}  vlan="{{ env_guestnetvlan }}" | tee -i -a ${DEPLOYLOG};
 fi
 NEXTCLUSTER=1
 if [ "{{ vmware_ver | lower }}" != "na" ];
