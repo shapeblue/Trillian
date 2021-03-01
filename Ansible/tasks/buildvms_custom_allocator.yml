@@ -378,7 +378,7 @@
     msg: "{{ allocator_output }}"
 
 - name: Start ESXi hosts
-  shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
