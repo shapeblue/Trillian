@@ -42,13 +42,13 @@
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
 
-- name: "Fix: Create affinity group for VMware"
-  local_action:
-    module: cs_affinitygroup
-    api_timeout: 120
-    name: "{{ env_name_clean }}-ag"
-    project: "{{ build_project }}"
-    affinty_type: host affinity
+# - name: "Fix: Create affinity group for VMware"
+#   local_action:
+#     module: cs_affinitygroup
+#     api_timeout: 120
+#     name: "{{ env_name_clean }}-ag"
+#     project: "{{ build_project }}"
+#     affinty_type: host affinity
 
 - name: Remove previous SSH key from Project if it exists
   local_action:
@@ -305,7 +305,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
-    affinity_groups: ["{{ env_name_clean }}-ag"]
+    # affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -377,8 +377,17 @@
 - debug:
     msg: "{{ allocator_output }}"
 
+- name: find least used host
+  custom_allocator:
+    algorithm: least_host
+  register: host_alg_output
+  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
+
+- debug:
+    msg: "{{ host_alg_output }}"
+
 - name: Start ESXi hosts
-  shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{esxi_retval.results}}"
   when: use_external_hv_hosts|bool == false
@@ -397,7 +406,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
-    affinity_groups: ["{{ env_name_clean }}-ag"]
+    # affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -441,7 +450,7 @@
   with_items: "{{vc_retval.results}}"
 
 - name: Start VC Host VM
-  shell: "cmk startVirtualMachine id={{ item.id }}"
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{vc_retval.results}}"
 
