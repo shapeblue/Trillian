@@ -42,16 +42,21 @@
 # Add SSH keys to Cloudstack for this project
 # TODO Add unquieness
 
-# - name: Remove previous SSH key from Project if it exists
-#   local_action:
-#     module: cs_sshkeypair
-#     api_timeout: 120
-#     name: "{{ env_name_clean }}"
-#     project: "{{ build_project }}"
-#     state: absent
+- name: "Fix: Create affinity group for VMware"
+  local_action:
+    module: cs_affinitygroup
+    api_timeout: 120
+    name: "{{ env_name_clean }}-ag"
+    project: "{{ build_project }}"
+    affinty_type: host affinity
 
-- name: create mavin cfg file
-  template: src=advanced-cfg.j2 dest="group_vars/{{ env_name_clean }}-advanced-cfg"
+- name: Remove previous SSH key from Project if it exists
+  local_action:
+    module: cs_sshkeypair
+    api_timeout: 120
+    name: "{{ env_name_clean }}"
+    project: "{{ build_project }}"
+    state: absent
 
 - name: remove old keys from {{ def_env_ssh_key_path | dirname }}/ if they exist
   local_action:
@@ -300,6 +305,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -391,6 +397,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
