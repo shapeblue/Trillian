@@ -6,7 +6,7 @@
 #  gather_facts: no
 #  tasks:
 #    - name: Deregister Licensed XenServers
-#      shell: xe host-license-remove host-uuid=`xe host-list --minimal hostname=$HOSTNAME` 
+#      shell: xe host-license-remove host-uuid=`xe host-list --minimal hostname=$HOSTNAME`
 #      ignore_errors: true
 
 - hosts: localhost
@@ -18,7 +18,7 @@
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( env_priprot | lower == "nfs" ) and not destroy_forced }
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: not destroy_forced }
 
 - hosts: primary_storage_hosts_iscsi
   gather_facts: no

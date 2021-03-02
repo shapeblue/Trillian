@@ -200,7 +200,7 @@
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addprimary', when: env_priprot | lower == "nfs" }
+    - { role: cloudstack-nfsshares, storage_action: 'addprimary' }
 
 - hosts: secondary_storage_hosts
   gather_facts: no
