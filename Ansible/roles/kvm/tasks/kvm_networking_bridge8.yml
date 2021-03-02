@@ -74,9 +74,12 @@
 - pause:
     seconds: 2
 
+- debug:
+  msg: "{{ eth1_name.stdout }}"
+
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
-  when: eth1_name != "--"
+  when: eth1_name.stdout != "--"
 
 - pause:
     seconds: 2
