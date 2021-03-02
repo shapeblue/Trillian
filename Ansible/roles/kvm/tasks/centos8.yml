@@ -140,11 +140,11 @@
     - kvm
     - kvm-agent
 
-- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
-  tags:
-    - kvm
-    - kvm-agent
+# - name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+#   lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+#   tags:
+#     - kvm
+#     - kvm-agent
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
@@ -192,6 +192,7 @@
     - kvm
     - kvm-agent
 
+- name: Comment LIBVIRTD_ARGS
 - name: KVM libvirtd restarted
   service: name=libvirtd state=restarted
   tags:
