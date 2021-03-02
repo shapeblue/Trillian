@@ -65,7 +65,7 @@
   command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method manual ipv4.addresses '192.168.255.254/30'
 
 - pause:
-    seconds: 2
+    seconds: 30
 
 - name: get name of eth1 connection
   shell: nmcli device show eth1 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
@@ -85,7 +85,7 @@
 
 - pause:
     seconds: 2
-    
+
 - name: Bring up interface
   command: nmcli connection up br-eth1
 
