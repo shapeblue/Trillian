@@ -192,7 +192,6 @@
     - kvm
     - kvm-agent
 
-- name: Comment LIBVIRTD_ARGS
 - name: KVM libvirtd restarted
   service: name=libvirtd state=restarted
   tags:
