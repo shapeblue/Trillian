@@ -113,6 +113,9 @@
   tags:
     - kvm
 
+- name: Install gcrypt library on CentOS 8 KVM hosts
+  dnf: name=libgcrypt state=present
+
 - name: ensure rpcbind in started
   service: name=rpcbind state=started enabled=yes
 
