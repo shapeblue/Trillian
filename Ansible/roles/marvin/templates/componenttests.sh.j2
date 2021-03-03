@@ -24,7 +24,7 @@ echo "$(date --iso-8601=minutes)" > /marvin/testrunstartdate
 
 PYTHON=`which python3 || which python`
 NOSETESTS=/usr/local/bin/nosetests
-if [ ! -x `type -p ${NOSETESTS}` ]
+if [ ! -x ${NOSETESTS} ]
 then
   NOSETESTS=/usr/bin/nosetests
 fi
