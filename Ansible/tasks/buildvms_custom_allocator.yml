@@ -395,6 +395,7 @@
     api_timeout: 120
   with_items:
     - "{{ groups['vc_hosts'] }}"
+  when: not esxi_nested_vcenter
   register: vc_retval
 
 - name: Update inventory file with VC host IP addresses
@@ -403,6 +404,7 @@
     regexp='{{ item.name }}-ip'
     replace='{{ item.default_ip }}'
     backup=no
+  when: not esxi_nested_vcenter
   with_items: "{{vc_retval.results}}"
 
 - name: Update in memory inventory with VC host IP addresses
@@ -410,6 +412,7 @@
     name={{ item.name }}
     groups="vc_hosts"
     ansible_ssh_host={{ item.default_ip }}
+  when: not esxi_nested_vcenter
   with_items: "{{vc_retval.results}}"
 
 - name: Update inventory file with VC host instance names
@@ -418,6 +421,7 @@
     regexp='{{ item.name }}-instance_name'
     replace='{{ item.instance_name }}'
     backup=no
+  when: not esxi_nested_vcenter
   with_items: "{{vc_retval.results}}"
 
 - name: Update in memory inventory with VC Mgt host instance names
@@ -425,7 +429,57 @@
     name={{ item.name }}
     groups="vc_hosts"
     instance_name={{ item.instance_name }}
+  when: not esxi_nested_vcenter
   with_items: "{{vc_retval.results}}"
+
+
+####################################################################
+# VMware 7 vCenter Appliance deployment
+#
+
+- name: build dummy VM to obtain its IP and MAC - to be set for vcenter
+  local_action:
+    module: cs_instance
+    name: "{{ esxi_vc_dummy_container }}"
+    service_offering: "Small Instance"
+    template: "macchinina"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: stopped
+    api_timeout: 120
+  when: esxi_nested_vcenter
+  register: dummyVM  
+
+- name: build VC appliance using ESXi container host
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ vc_nested_service_offering }}"
+    template: "{{ vc_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: present
+    api_timeout: 120
+  with_items:
+    - "{{ groups['vc_hosts'] }}"
+  when: esxi_nested_vcenter
+  register: vc_retval  
 
 - name: Start VM
   shell: "cs startVirtualMachine id={{ item.id }}"

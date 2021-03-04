@@ -735,6 +735,9 @@ def_vmware_templates:
   "67u3":
     esxi_template: "ESXi 6.7u3"
     vc_template: "vCenter 67u3"
+  "70u1":
+    esxi_template: "ESXi 7.0u1"
+    vc_template: "vCenter7-Nested"
   kddi:
     esxi_template: "ESXi 5.0u1"
     vc_template: "vCenter 55u3"
@@ -745,6 +748,7 @@ def_vmware_templates:
     esxi_template: "na"
     vc_template: "na"
 def_vc_service_offering: "VC server"
+def_vc_nested_service_offering: "Nested VC Server"
 def_esxi_service_offering: "Nested Hypervisor"
 def_esxi_use_dvswitch: no
 def_esxi_use_mgmt_dvswitch: no
