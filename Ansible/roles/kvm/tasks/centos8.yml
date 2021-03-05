@@ -149,6 +149,9 @@
     - kvm
     - kvm-agent
 
+- name: Mask libvirtd sockets
+  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
+
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
   tags:
