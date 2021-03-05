@@ -122,8 +122,8 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
-- name: Upgrade gcrypt library on CentOS 8 KVM hosts
-  shell: "dnf install -y libgcrypt"
+# - name: Upgrade gcrypt library on CentOS 8 KVM hosts
+#   shell: "dnf install -y libgcrypt"
 
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
@@ -143,11 +143,11 @@
     - kvm
     - kvm-agent
 
-# - name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-#   lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
-#   tags:
-#     - kvm
-#     - kvm-agent
+- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+  tags:
+    - kvm
+    - kvm-agent
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
