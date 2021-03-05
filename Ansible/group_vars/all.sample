@@ -149,6 +149,7 @@ def_local_storage_disk_offering: "Custom"
 def_local_storage_disk_size: "80"
 def_use_s3: no
 def_setshortname: no
+hypervisors_on_same_host: no
 
 base_version_of_master: cs413
 
