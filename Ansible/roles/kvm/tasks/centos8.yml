@@ -122,6 +122,9 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
+- name: Upgrade gcrypt library on CentOS 8 KVM hosts
+  shell: "dnf install -y libgcrypt"
+
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
 
@@ -145,6 +148,9 @@
   tags:
     - kvm
     - kvm-agent
+
+- name: Mask libvirtd sockets
+  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
