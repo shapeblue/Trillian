@@ -482,13 +482,10 @@
     - "{{vc_retval.results}}"
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ item.default_ip }}" timeout={{ ssh_retries }} connect_timeout=5
-  with_items:
-    - "{{vc_retval.results}}"
+  local_action: wait_for port=22 host="hostvars[groups['vc_hosts'][0]]['ansible_ssh_host']" timeout={{ ssh_retries }} connect_timeout=5
 
 - name: SSH into vc and list volumes
-  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ item.default_ip }} 'esxcfg-volume -l'"
-  with_items: "{{vc_retval.results}}"
+  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }} 'esxcfg-volume -l'"
   when: esxi_nested_vcenter
 
 
