@@ -577,40 +577,6 @@
   when: not esxi_nested_vcenter
   register: vc_retval
 
-- name: Update inventory file with VC host IP addresses
-  replace:
-    dest="hosts_{{ env_name_clean }}"
-    regexp='{{ item.name }}-ip'
-    replace='{{ item.default_ip }}'
-    backup=no
-  when: not esxi_nested_vcenter
-  with_items: "{{vc_retval.results}}"
-
-- name: Update in memory inventory with VC host IP addresses
-  add_host:
-    name={{ item.name }}
-    groups="vc_hosts"
-    ansible_ssh_host={{ item.default_ip }}
-  when: not esxi_nested_vcenter
-  with_items: "{{vc_retval.results}}"
-
-- name: Update inventory file with VC host instance names
-  replace:
-    dest="hosts_{{ env_name_clean }}"
-    regexp='{{ item.name }}-instance_name'
-    replace='{{ item.instance_name }}'
-    backup=no
-  when: not esxi_nested_vcenter
-  with_items: "{{vc_retval.results}}"
-
-- name: Update in memory inventory with VC Mgt host instance names
-  add_host:
-    name={{ item.name }}
-    groups="vc_hosts"
-    instance_name={{ item.instance_name }}
-  when: not esxi_nested_vcenter
-  with_items: "{{vc_retval.results}}"
-
 
 ####################################################################
 # VMware 7 vCenter Appliance deployment
@@ -658,7 +624,47 @@
   with_items:
     - "{{ groups['vc_hosts'] }}"
   when: esxi_nested_vcenter
-  register: vc_retval  
+  register: vc_retval
+
+- name: Update inventory file with VC host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{vc_retval.results}}"
+
+- name: Update inventory file with VC host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+
+- name: Update in memory inventory with VC Mgt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    instance_name={{ item.instance_name }}
+  with_items: "{{vc_retval.results}}"
+
+- name: Start VM
+  shell: "cs startVirtualMachine id={{ item.id }}"
+  with_items:
+    - "{{vc_retval.results}}"
+
+- name: SSH into vc and list volumes
+  shell: "sshpass -p 'P@ssword123' ssh root@{{ item.default_ip }} 'esxcfg-volume -l'"
+  with_items: "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
 
 ####################################################################
 # Marvin Server
