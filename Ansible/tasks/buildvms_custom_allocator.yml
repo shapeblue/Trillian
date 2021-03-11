@@ -485,7 +485,7 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 
 - name: SSH into vc and list volumes
-  shell: "sshpass -p 'P@ssword123' ssh root@{{ ansible_ssh_host }} 'esxcfg-volume -l'"
+  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ ansible_ssh_host }} 'esxcfg-volume -l'"
   with_items: "{{vc_retval.results}}"
   when: esxi_nested_vcenter
 
