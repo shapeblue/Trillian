@@ -14,6 +14,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: inventory dir
+  debug:
+    msg: "{{ inventory_dir }}"
+
 - name: set yum repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
