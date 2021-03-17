@@ -106,7 +106,6 @@
   - six
   - pyOpenSSL
   - wheel==0.34.2
-  - kubernetes
   - '"requests[security]"'
   - pyasn1
   - wget
@@ -115,6 +114,11 @@
   tags:
     - marvin
     - marvin_install
+
+- name: Workaround for pip install kubernetes
+  pip:
+    name: "kubernetes"
+    extra_args: '--ignore-installed'
 
 - name: Update pip3 and components
   pip:
