@@ -111,6 +111,7 @@
   - wget
   - texttable
   - lxml
+  - paramiko
   tags:
     - marvin
     - marvin_install
@@ -137,6 +138,7 @@
   - texttable
   - lxml
   - pycparser==2.13
+  - paramiko
   tags:
     - marvin
     - marvin_install
