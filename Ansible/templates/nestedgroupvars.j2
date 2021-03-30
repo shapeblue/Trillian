@@ -36,6 +36,7 @@ use_custom_allocator: {{ use_custom_allocator | default(def_use_custom_allocator
 use_firewalld: {{ use_firewalld | default( def_use_firewalld ) }}
 base_repo_enabled: "{{ base_repo_enabled | default( def_base_repo_enabled ) }}"
 update_repo_enabled: "{{ update_repo_enabled | default( def_update_repo_enabled ) }}"
+hypervisors_on_same_host: "{{ hypervisors_on_same_host | default(def_hypervisors_on_same_host) }}"
 
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"

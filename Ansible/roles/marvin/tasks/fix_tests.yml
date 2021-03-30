@@ -42,11 +42,8 @@
     dest: /marvin/tests/smoke/
     mode: 0755
   with_fileglob:
-    - ../files/smoke/*
+    - ../files/smoke/*.py
   tags:
     - marvin
     - marvin_cfg
     - marvin_fix_tests
-
-
-

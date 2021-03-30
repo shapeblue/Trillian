@@ -110,6 +110,13 @@
   debug:
     msg: "Is addtional pod- {{ additional_pod|bool }}. Is addtional zone- {{ additional_zone|bool }}."
 
+- name: find least used cluster & host
+  custom_allocator:
+    algorithm: least_host_least_cluster
+  register: alg_output
+
+- debug:
+    msg: "{{ alg_output }}"
 
 # KVM hosts
 #
@@ -121,7 +128,7 @@
     template: "{{ kvm_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -186,20 +193,17 @@
   with_items: "{{kvm_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
-- name: find least used cluster
-  custom_allocator:
-    algorithm: least_cluster_mem
-  register: alg_output
-  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-
-- debug:
-    msg: "{{ alg_output }}"
-
 - name: Start KVM hosts
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{kvm_retval.results}}"
-  when: use_external_hv_hosts|bool == false
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == false
+
+- name: Start KVM hosts on the same parent host
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{kvm_retval.results}}"
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == true
 
 
 ####################################################################
@@ -277,20 +281,17 @@
   with_items: "{{xs_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
-- name: find least used cluster
-  custom_allocator:
-    algorithm: least_cluster_mem
-  register: allocator_output
-  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-
-- debug:
-    msg: "{{ allocator_output }}"
-
 - name: Start XenServer hosts
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{xs_retval.results}}"
-  when: use_external_hv_hosts|bool == false
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == false
+
+- name: Start XenServer hosts on the same parent host
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{xs_retval.results}}"
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == true
 
 ####################################################################
 # VMware ESXi hosts
@@ -368,6 +369,7 @@
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
+<<<<<<< HEAD
 - name: find least used cluster
   custom_allocator:
     algorithm: least_cluster_mem
@@ -386,12 +388,19 @@
 - debug:
     msg: "{{ host_alg_output }}"
 
+=======
+>>>>>>> 36c47e7488e6704791ffcfb53e4456f30d23c2c2
 - name: Start ESXi hosts
   shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{esxi_retval.results}}"
-  when: use_external_hv_hosts|bool == false
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == false
 
+- name: Start ESXi hosts on the same parent host
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items:
+    - "{{esxi_retval.results}}"
+  when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == true
 
 ####################################################################
 # VMware VC hosts
@@ -450,9 +459,19 @@
   with_items: "{{vc_retval.results}}"
 
 - name: Start VC Host VM
+<<<<<<< HEAD
+=======
+  shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  with_items:
+    - "{{vc_retval.results}}"
+  when: hypervisors_on_same_host|bool == false
+
+- name: Start VC Host VM on the same parent host as ESXi
+>>>>>>> 36c47e7488e6704791ffcfb53e4456f30d23c2c2
   shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{vc_retval.results}}"
+  when: hypervisors_on_same_host|bool == true
 
 
 ####################################################################
@@ -472,7 +491,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -539,7 +558,7 @@
     template: "{{ mgmtsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -607,7 +626,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -658,7 +677,7 @@
     template: "{{ dbsrv_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:
@@ -710,7 +729,7 @@
     template: "{{ marvin_server_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
-    ssh_key: "{{env_name_clean}}"
+    # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
     tags:

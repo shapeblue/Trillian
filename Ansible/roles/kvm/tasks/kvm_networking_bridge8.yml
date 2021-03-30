@@ -76,6 +76,7 @@
 
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
+  when: eth1_name.stdout != "--"
 
 - pause:
     seconds: 2
@@ -85,7 +86,7 @@
 
 - pause:
     seconds: 2
-    
+
 - name: Bring up interface
   command: nmcli connection up br-eth1
 
