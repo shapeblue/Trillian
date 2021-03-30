@@ -369,27 +369,6 @@
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
-<<<<<<< HEAD
-- name: find least used cluster
-  custom_allocator:
-    algorithm: least_cluster_mem
-  register: allocator_output
-  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-
-- debug:
-    msg: "{{ allocator_output }}"
-
-- name: find least used host
-  custom_allocator:
-    algorithm: least_host
-  register: host_alg_output
-  when: use_external_hv_hosts|bool == false and env_specific_hv_cluster == "na"
-
-- debug:
-    msg: "{{ host_alg_output }}"
-
-=======
->>>>>>> 36c47e7488e6704791ffcfb53e4456f30d23c2c2
 - name: Start ESXi hosts
   shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
@@ -459,15 +438,12 @@
   with_items: "{{vc_retval.results}}"
 
 - name: Start VC Host VM
-<<<<<<< HEAD
-=======
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
     - "{{vc_retval.results}}"
   when: hypervisors_on_same_host|bool == false
 
 - name: Start VC Host VM on the same parent host as ESXi
->>>>>>> 36c47e7488e6704791ffcfb53e4456f30d23c2c2
   shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
   with_items:
     - "{{vc_retval.results}}"
