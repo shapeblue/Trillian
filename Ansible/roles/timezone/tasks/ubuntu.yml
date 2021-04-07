@@ -6,3 +6,15 @@
 
 - name: set new timezone
   file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
+
+- name: Install chrony
+  apt:
+    pkg: chrony
+    state: latest
+    update_cache: yes
+
+- name: Start chrony
+  systemd:
+    name: chrony
+    state: started
+    enabled: yes

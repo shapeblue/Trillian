@@ -4,7 +4,7 @@
   command: "timedatectl set-timezone {{ env_timezone }}"
 
 - name: Install chrony
-  yum:
+  dnf:
     name: chrony
     state: present
 
