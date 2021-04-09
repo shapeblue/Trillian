@@ -16,7 +16,18 @@
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "6" )
 
 - include: ./centos7.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 7 )
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 7 )
+
+- include: ./centos8.yml
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+
+- name: Get timestamp from the system
+  shell: "date"
+  register: tstamp
+
+- name: Display system date
+  debug:
+    msg: "tstamp"

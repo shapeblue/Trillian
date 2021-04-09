@@ -80,6 +80,18 @@
     - marvin
     - marvin_install
 
+- name: Install mysql-connector-python
+  yum: name=mysql-connector-python state=latest
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install mysql-connector-python
+  yum: name=mysql-connector-python state=latest
+  tags:
+    - marvin
+    - marvin_install
+
 - name: remove yum openSSL package
   yum:
     name: pyOpenSSL
@@ -94,15 +106,20 @@
   - six
   - pyOpenSSL
   - wheel==0.34.2
-  - kubernetes
   - '"requests[security]"'
   - pyasn1
   - wget
   - texttable
   - lxml
+  - paramiko
   tags:
     - marvin
     - marvin_install
+
+- name: Workaround for pip install kubernetes
+  pip:
+    name: "kubernetes"
+    extra_args: '--ignore-installed'
 
 - name: Update pip3 and components
   pip:
@@ -121,6 +138,7 @@
   - texttable
   - lxml
   - pycparser==2.13
+  - paramiko
   tags:
     - marvin
     - marvin_install

@@ -12,7 +12,7 @@
 
 - name: copy template and properties.template files
   get_url:
-    url: "{{ repohost }}/builtin_templates/xenserver/{{ item }}"
+    url: "{{ custom_repo }}/builtin_templates/xenserver/{{ item }}"
     dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5/{{ item }}"
   with_items:
     - "b418e433-4ecd-3a1d-a90e-183157a165d5.vhd"
@@ -28,7 +28,7 @@
 
 - name: copy template and properties.template files
   get_url:
-    url: "{{ repohost }}/builtin_templates/kvm/{{ item }}"
+    url: "{{ custom_repo }}/builtin_templates/kvm/{{ item }}"
     dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4/{{ item }}"
   with_items:
     - "0c364cce-8288-3a92-9234-4ffde372aec7.qcow2"
@@ -44,7 +44,7 @@
 
 - name: copy template and properties.template files
   get_url:
-    url: "{{ repohost }}/builtin_templates/esxi/{{ item }}"
+    url: "{{ custom_repo }}/builtin_templates/esxi/{{ item }}"
     dest: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/7/{{ item }}"
   with_items:
     - "0654e777-1660-3d44-a937-431b53f15ed7.ova"

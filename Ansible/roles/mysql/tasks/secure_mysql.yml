@@ -49,7 +49,7 @@
   tags:
     - mysql
     - mysqlconf
-  
+
 - name: delete anonymous MySQL server user for ansible_hostname
   mysql_user: user='' host="{{ item }}" state="absent" login_user="root" login_password="{{ mysql_root_password }}"
   with_items:

@@ -174,7 +174,7 @@
         versionstring: "{{ env_dotted_version }}"
       register: cs_version_data
       when: env_dotted_version is defined
-      
+
     - debug: msg="{{ cs_version_data }}"
 
     - name: Check returned environment name
@@ -207,12 +207,12 @@
 
     - name: set value for additional zone if not defined
       set_fact:
-        additional_zone: no 
+        additional_zone: no
       when: additional_zone is not defined
 
     - name: set value for additional pod if not defined
       set_fact:
-        additional_pod: no 
+        additional_pod: no
       when: additional_pod is not defined
 
     - name: ensure existing_zone is given when env is an additional pod
@@ -260,7 +260,7 @@
 
     - debug:
         msg: "{{ java_ver }}"
-     
+
     - name: Set mgmt os fact
       set_fact:
         mgmt_os_name: "{{ linux_os[mgmt_os].os }}"
@@ -316,7 +316,7 @@
 
 # now do stuff
     - name: Capture account name
-      shell:  cs listAccounts
+      shell:  cmk listAccounts
       register: acct_retval
 
     - name: Register authenticating account
@@ -361,14 +361,14 @@
 
     - name: Build group_vars file
       template: src=templates/nestedgroupvars.j2 dest="{{ inventory_dir }}/group_vars/{{ env_name_clean }}"
-    
+
     - name: check group_vars are OK (read in the file)
       shell: "cat {{ inventory_dir }}/group_vars/{{ env_name_clean }}"
       register: group_vars_file
-      
+
     - name: check group_vars are OK (look for curly braces)
       fail:
         msg: "Curly braces found in group_vars, some var could not be evaluated. Stopping"
       when: group_vars_file.stdout.find("templating_succeeded") == -1
-      
+
     - debug: msg="You can now run{{":"}} ansible-playbook deployvms.yml -i ./hosts_{{ env_name_clean }}  "

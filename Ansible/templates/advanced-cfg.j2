@@ -1,0 +1,263 @@
+{
+	"zones": [{
+		"name": "{{ env_name_clean }}",
+		"guestcidraddress": "{{ env_zone_guestcidr }}",
+		"dns1": "{{ env_zone_dns1 }}",
+		"physical_networks": [{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Guest-Public",
+			"traffictypes": [{
+				"type": "Guest",
+				"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
+			}, {
+				"type": "Public"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
+		},{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Mgmt",
+			"traffictypes": [{
+				"type": "Management"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
+		}],
+{% if env_hv == "vmware" %}
+		"vmwaredc": {
+			"username": "{{ vmware_vcsa_user }}",
+			"vcenter": "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}",
+			"password": "{{ vmware_vcsa_pass }}",
+			"name": "{{ vmware_datacenter_name }}"
+		},
+{% endif %}
+		"ipranges": [{
+			"startip": "{{ env_pubstartip }}",
+			"endip": "{{ env_pubendip }}",
+			"netmask": "{{ env_pubmask }}",
+			"vlan": "{{ env_pubvlan }}",
+			"gateway": "{{ env_pubgw }}"
+		}],
+		"networktype": "{{ env_zonetype }}",
+		"pods": [{
+			"endip": "{{ env_podendip }}",
+			"name": "{{env_zone_podname}}",
+			"startip": "{{ env_podstartip }}",
+			"netmask": "{{ env_podmask }}",
+			"clusters": [{
+					"clustername": "{{ env_zone_clustername }}",
+					"hypervisor": "{{ env_hv }}",
+{% if env_hv == "kvm" %}
+					"hosts": [
+{% for host in groups['kvm_hosts'] %}            {
+						"username": "root",
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
+					"clustertype": "CloudManaged",
+{% elif env_hv == "xenserver" %}
+					"hosts": [
+{% for host in groups['xenserver_hosts'] %}            {
+						"username": "root",
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
+					"clustertype": "CloudManaged",
+{% elif env_hv == "vmware" %}
+					"hosts": [
+{% for host in groups['esxi_hosts'] %}            {
+						"username": "root",
+						"url": "http://{{ hostvars[host]['ansible_ssh_host'] }}",
+						"password": "{{ hostvars[host]['ansible_ssh_pass'] }}"
+					}{% if not loop.last %},{% endif %}{% endfor %}
+					],
+					"clustertype": "CloudManaged",
+{% endif %}
+					"primaryStorages": [
+{% for pripool in env_pripools %}			{
+						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
+						"name": "{{ pripool }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
+					]
+				}
+
+			],
+			"gateway": "{{ env_podgw }}"
+		}],
+		"internaldns1": "{{ env_zone_intdns1 }}",
+		"secondaryStorages": [{
+{% for secpool in env_secpools %}
+			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
+			"name": "{{ secpool }}",
+			"provider": "NFS"}{% if not loop.last %},{% endif %}
+{% endfor %}
+		]
+	}],
+	"dbSvr": {
+{% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
+{% if num_db_hosts != "0" %}	"dbSvr": "{{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }}",{% endif %}
+
+		"passwd": "{{ mysql_cloud_password }}",
+		"db": "cloud",
+		"port": 3306,
+		"user": "cloud"
+	},
+	"logger": {
+		"LogFolderPath": "/marvin/"
+	},
+	"globalConfig": [{
+		"name": "account.cleanup.interval",
+		"value": 60
+	}, {
+		"name": "extract.url.cleanup.interval",
+		"value": 300
+	}, {
+		"name": "network.securitygroups.work.cleanup.interval",
+		"value": 120
+	}, {
+		"name": "task.cleanup.retry.interval",
+		"value": 600
+	}, {
+		"name": "vm.op.cleanup.interval",
+		"value": 600
+	}, {
+		"name": "vm.op.cleanup.wait",
+		"value": 600
+	}, {
+		"name": "vpc.cleanup.interval",
+		"value": 600
+	}, {
+		"name": "alert.wait",
+		"value": 300
+	}, {
+		"name": "backup.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "copy.volume.wait",
+		"value": 600
+	}, {
+		"name": "create.private.template.from.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "create.private.template.from.volume.wait",
+		"value": 600
+	}, {
+		"name": "create.volume.from.snapshot.wait",
+		"value": 600
+	}, {
+		"name": "migratewait",
+		"value": 1200
+	}, {
+		"name": "primary.storage.download.wait",
+		"value": 900
+	}, {
+		"name": "storage.pool.max.waitseconds",
+		"value": 900
+	}, {
+		"name": "update.wait",
+		"value": 300
+	}, {
+		"name": "vm.op.cleanup.wait",
+		"value": 600
+	}, {
+		"name": "vm.tranisition.wait.interval",
+		"value": 300
+	}, {
+		"name": "vmsnapshot.create.wait",
+		"value": 900
+	}, {
+		"name": "xapiwait",
+		"value": 300
+	}, {
+		"name": "router.alerts.check.interval",
+		"value": 300
+	}, {
+		"name": "network.gc.wait",
+		"value": "60"
+	}, {
+		"name": "storage.cleanup.interval",
+		"value": "300"
+	}, {
+		"name": "vm.op.wait.interval",
+		"value": "5"
+	}, {
+		"name": "default.page.size",
+		"value": "10000"
+	}, {
+		"name": "network.gc.interval",
+		"value": "60"
+	}, {
+		"name": "instance.name",
+		"value": "QA"
+	}, {
+		"name": "workers",
+		"value": "10"
+	}, {
+		"name": "guest.domain.suffix",
+		"value": "sandbox.simulator"
+	}, {
+		"name": "expunge.delay",
+		"value": "60"
+	}, {
+		"name": "vm.allocation.algorithm",
+		"value": "random"
+	}, {
+		"name": "expunge.interval",
+		"value": "60"
+	}, {
+		"name": "expunge.workers",
+		"value": "3"
+	}, {
+		"name": "check.pod.cidrs",
+		"value": "true"
+	}, {
+		"name": "secstorage.allowed.internal.sites",
+		"value": "10.0.0.0/8"
+	}, {
+		"name": "direct.agent.load.size",
+		"value": "1000"
+	}, {
+		"name": "enable.dynamic.scale.vm",
+		"value": "true"
+	}],
+	"mgtSvr": [{
+		"mgtSvrIp": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",
+		"port": 8096,
+		"user": "root",
+		"passwd": "{{ mgmtsrv_password }}",
+		"hypervisor": "{{ env_hv }}",
+                "useHttps": "False",
+                "certCAPath":  "NA",
+                "certPath":  "NA"
+	}]
+}
