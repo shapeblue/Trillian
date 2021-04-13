@@ -388,7 +388,7 @@
   local_action:
     module: cs_instance
     name: "{{ item }}"
-    service_offering: "{{ vc_service_offering }}"
+    service_offering: "{{ vc_nested_service_offering if esxi_nested_vcenter else vc_service_offering }}"
     template: "{{ vc_template }}"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
@@ -406,6 +406,35 @@
   with_items:
     - "{{ groups['vc_hosts'] }}"
   register: vc_retval
+
+####################################################################
+# VMware 7 vCenter Appliance deployment
+#
+
+- name: build dummy VM to obtain its IP and MAC - to be set for vcenter
+  local_action:
+    module: cs_instance
+    name: "{{ esxi_vc_dummy_container }}"
+    service_offering: "Small Instance"
+    template: "macchinina"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+    state: started
+    api_timeout: 120
+  when: esxi_nested_vcenter
+  register: dummyVM
+
+- name: Stop dummy VM
+  shell: "cmk stopVirtualMachine id={{ dummyVM.id }}"
+  when: esxi_nested_vcenter
 
 - name: Update inventory file with VC host IP addresses
   replace:
@@ -448,6 +477,76 @@
   with_items:
     - "{{vc_retval.results}}"
   when: hypervisors_on_same_host|bool == true
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ item.default_ip }}" timeout={{ ssh_retries }} connect_timeout=5
+  with_items:
+    - "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
+
+- name: Obtain the MAC address of the dummy VM
+  shell: "cmk listNics virtualmachineid={{ dummyVM.id }} | grep macaddress | cut -d '\"' -f4"
+  when: esxi_nested_vcenter
+  register: dummyVMMAC
+
+- name: SSH into VC container and restart services
+  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ vc_retval.results[0].default_ip }} '{{ item }}'"
+  with_items:
+    - "services.sh restart"
+    - "sleep 200"
+  when: esxi_nested_vcenter
+
+- name: SSH into VC container and replace vmx file for VC
+  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ vc_retval.results[0].default_ip }} '{{ item }}'"
+  with_items:
+    - "echo \"ethernet0.addressType = \"static\"\" >> $(find -name VC.vmx)"
+    - "echo \"ethernet0.address = \"{{ dummyVMMAC.stdout }}\"\" >> $(find -name VC.vmx)"
+  when: esxi_nested_vcenter
+
+- name: SSH into VC container and power on VC VM
+  shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ vc_retval.results[0].default_ip }} '{{ item }}'"
+  with_items:
+    - "vim-cmd hostsvc/autostartmanager/enable_autostart 0"
+    - "vim-cmd vmsvc/getallvms"
+    - "vim-cmd vmsvc/power.on 1"
+  when: esxi_nested_vcenter
+  register: vmsout
+
+- debug: msg={{ vmsout }}
+
+- name: Update inventory file with VC host IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ dummyVM.default_ip }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
+
+- name: Update in memory inventory with VC host IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    ansible_ssh_host={{ dummyVM.default_ip }}
+  with_items: "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
+
+- name: Update inventory file with VC host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ dummyVM.instance_name }}'
+    backup=no
+  with_items: "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
+
+- name: Update in memory inventory with VC Mgt host instance names
+  add_host:
+    name={{ item.name }}
+    groups="vc_hosts"
+    instance_name={{ dummyVM.instance_name }}
+  with_items: "{{vc_retval.results}}"
+  when: esxi_nested_vcenter
 
 
 ####################################################################

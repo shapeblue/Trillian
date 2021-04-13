@@ -344,6 +344,7 @@ esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esx
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
 vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
+vc_nested_service_offering: "{{ vc_nested_service_offering | default ( def_vc_nested_service_offering ) }}"
 esxi_use_dvswitch: {{ esxi_use_dvswitch | default( def_esxi_use_dvswitch ) }}
 esxi_use_mgmt_dvswitch: {{ esxi_use_mgmt_dvswitch | default( def_esxi_use_mgmt_dvswitch ) }}
 esxi_mgmt_network_label: "{{ esxi_mgmt_network_label | default( def_esxi_mgmt_network_label ) }}"
@@ -352,6 +353,12 @@ esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_pub
 esxi_mgmt_dvs_network_label: "{{ esxi_mgmt_dvs_network_label | default( def_esxi_mgmt_dvs_network_label ) }}"
 esxi_guest_dvs_network_label: "{{ esxi_guest_dvs_network_label | default( def_esxi_guest_dvs_network_label ) }}"
 esxi_public_dvs_network_label: "{{ esxi_public_dvs_network_label | default( def_esxi_public_dvs_network_label ) }}"
+
+# VMware 7 support - deploy vCenter appliance on a dedicated host
+{% if vmware_ver == "70u1" %}esxi_nested_vcenter: yes
+esxi_vc_dummy_container: "{{ env_name_clean }}-dummy"
+{% else %}esxi_nested_vcenter: no
+{% endif %}
 
 # VMware datacentre configuration
 {% if vmware_ver == "50u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
