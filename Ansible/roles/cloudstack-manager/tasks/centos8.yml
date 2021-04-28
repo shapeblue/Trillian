@@ -133,5 +133,5 @@
 - name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
   shell: "dnf install {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
 
-- name: Upgrade gcrypt library on CentOS 8 MS
-  dnf: name=libgcrypt state=present
+# - name: Upgrade gcrypt library on CentOS 8 MS
+#   dnf: name=libgcrypt state=present

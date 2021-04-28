@@ -122,8 +122,8 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
-- name: Upgrade gcrypt library on CentOS 8 KVM hosts
-  shell: "dnf install -y libgcrypt"
+# - name: Upgrade gcrypt library on CentOS 8 KVM hosts
+#   shell: "dnf install -y libgcrypt"
 
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
