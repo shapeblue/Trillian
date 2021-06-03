@@ -252,11 +252,11 @@
 # messy but necessary check.
 
     - debug:
-        msg: "{{ env_version }}"
+        msg: "{{ env_cs_minor_version_string }}"
 
     - name: set mgmt java version
       set_fact:
-        java_ver: "{{ java_vers[env_version] }}"
+        java_ver: "{{ java_vers[env_cs_minor_version_string] }}"
 
     - debug:
         msg: "{{ java_ver }}"
