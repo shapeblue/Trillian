@@ -1,0 +1,16 @@
+---
+
+- name: "set Timezone to {{ env_timezone }}"
+  command: "timedatectl set-timezone {{ env_timezone }}"
+
+- name: Install chrony
+  zypper:
+    name: chrony
+    state: present
+    update_cache: yes
+
+- name: Start chrony openSUSE
+  service:
+    name: chronyd
+    state: started
+    enabled: yes

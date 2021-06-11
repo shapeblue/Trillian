@@ -1,0 +1,45 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+# Copyright (C) ShapeBlue Ltd - All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential
+# Released by ShapeBlue <info@shapeblue.com>, April 2014
+
+- name: Ensure the Apache Cloudstack Repo file is configured
+  template: src=cloudstack.repo.j2 dest=/etc/zypp/repos.d/cloudstack.repo
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure CloudStack packages are installed
+  zypper:
+    name:
+      - "{{ cloudstack_agent_package }}*"
+      - "{{ cloudstack_common_package }}*"
+    state: present
+    update_cache: yes
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Configure agent.properties for OVS
+  lineinfile:
+    path: /etc/cloudstack/agent/agent.properties
+    line: "{{ item }}"
+  with_items:
+    - "network.bridge.type=openvswitch"
+    - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
+  when: kvm_network_mode == "ovs"

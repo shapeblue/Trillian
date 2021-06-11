@@ -39,6 +39,18 @@
   tags:
     - kvm
 
+# For some weird reason, it thinks opensuse is ubuntu
+- name: Check if opensuse
+  shell: cat /etc/os-release | grep -i opensuse
+  register: result
+  when: ansible_distribution == 'Ubuntu'
+  ignore_errors: yes
+
+- name: Set VM as opensuse
+  set_fact:
+      ansible_distribution: "openSUSE"
+  when: ansible_distribution == 'Ubuntu' and result is succeeded
+
 #- name: retrieve environment data
 #  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
 #  tags:
@@ -61,7 +73,11 @@
   tags:
     - kvm
 
-
+- name: Configure openSUSE VMs for KVM
+  include: ./opensuse.yml
+  when: ansible_distribution == 'openSUSE'
+  tags:
+    - kvm
 
 - name: Configure Ubuntu VMs for KVM
   include: ./ubuntu.yml
