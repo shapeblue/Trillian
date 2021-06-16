@@ -15,20 +15,20 @@
 #limitations under the License.
 
 - name: Configure eth0
-  template: src=kvm-opensuse-eth0.j2 dest=/etc/sysconfig/network/ifcfg-eth0
+  template: src=kvm-suse-eth0.j2 dest=/etc/sysconfig/network/ifcfg-eth0
 
 - name: Configure bridge 1
-  template: src=kvm-opensuse-cloudbr0.j2 dest="/etc/sysconfig/network/ifcfg-{{ kvm_mgmt_network_label }}"
+  template: src=kvm-suse-cloudbr0.j2 dest="/etc/sysconfig/network/ifcfg-{{ kvm_mgmt_network_label }}"
 
 - name: Configure eth1
-  template: src=kvm-opensuse-eth1.j2 dest=/etc/sysconfig/network/ifcfg-eth1
+  template: src=kvm-suse-eth1.j2 dest=/etc/sysconfig/network/ifcfg-eth1
 
 - name: Configure eth1.vlan (Basic Networking)
-  template: src=kvm-opensuse-eth1-basic-vlan.j2 dest=/etc/sysconfig/network/ifcfg-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
+  template: src=kvm-suse-eth1-basic-vlan.j2 dest=/etc/sysconfig/network/ifcfg-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
   when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: Configure bridge 2
-  template: src=kvm-opensuse-cloudbr1.j2 dest="/etc/sysconfig/network/ifcfg-{{ kvm_guest_network_label }}"
+  template: src=kvm-suse-cloudbr1.j2 dest="/etc/sysconfig/network/ifcfg-{{ kvm_guest_network_label }}"
 
 - name: restart networking
   service: name=network state=restarted

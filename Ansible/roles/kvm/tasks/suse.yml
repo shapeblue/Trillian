@@ -1,30 +1,33 @@
 ---
 
 - debug:
-    msg: "openSUSE Specific KVM host Build"
+    msg: "SUSE Specific KVM host Build"
 
-# - name: Ensure selinux python bindings are installed (Ansible requirement)
-#   dnf:
-#     name: python3-libselinux
-#     state: present
-#   tags:
-#     - kvm
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  zypper:
+    name: python3-selinux
+    state: present
+  tags:
+    - kvm
+  ignore_errors: yes
 
-# - name: Set selinux to permissive
-#   command: setenforce permissive
-#   changed_when: false
-#   tags:
-#     - kvm
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+  tags:
+    - kvm
+  ignore_errors: yes
 
-# - name: Ensure selinux is set permanently
-#   selinux: policy=targeted state=permissive
-#   tags:
-#     - kvm
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+  tags:
+    - kvm
+  ignore_errors: yes
 
-- include: ./kvm_networking_bridge_opensuse.yml
+- include: ./kvm_networking_bridge_suse.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
-- include: ./kvm_networking_opensuse_ovs.yml
+- include: ./kvm_networking_ovs_suse.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
 
 - name: wait for ssh
@@ -83,7 +86,7 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
-- include: ./opensuse-acs.yml
+- include: ./suse-acs.yml
   when: env_cs_distribution == "cs"
 
 # TODO ???

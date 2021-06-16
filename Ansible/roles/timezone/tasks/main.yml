@@ -12,16 +12,16 @@
 - name: Now I'm connected, get facts
   os_facts:
 
-# For some weird reason, it thinks opensuse is ubuntu
-- name: Check if opensuse
-  shell: cat /etc/os-release | grep -i opensuse
+# For some weird reason, it thinks SUSE is Ubuntu
+- name: Check if SUSE
+  shell: cat /etc/os-release | grep -i suse
   register: result
   when: ansible_distribution == 'Ubuntu'
   ignore_errors: yes
 
-- name: Set VM as opensuse
+- name: Set distro as SUSE
   set_fact:
-      ansible_distribution: "openSUSE"
+      ansible_distribution: "SUSE"
   when: ansible_distribution == 'Ubuntu' and result is succeeded
 
 - include: ./centos6.yml
@@ -36,8 +36,8 @@
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
-- include: ./opensuse.yml
-  when: ansible_distribution == 'openSUSE'
+- include: ./suse.yml
+  when: ansible_distribution == 'SUSE'
 
 - name: Get timestamp from the system
   shell: "date"

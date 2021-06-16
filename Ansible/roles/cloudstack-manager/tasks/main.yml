@@ -32,18 +32,31 @@
 - name: now i'm connected, get facts
   os_facts:
 
+# For some weird reason, it thinks SUSE is Ubuntu
+- name: Check if SUSE
+  shell: cat /etc/os-release | grep -i suse
+  register: result
+  when: ansible_distribution == 'Ubuntu'
+  ignore_errors: yes
+
+- name: Set distro as SUSE
+  set_fact:
+      ansible_distribution: "SUSE"
+  when: ansible_distribution == 'Ubuntu' and result is succeeded
+
 - include: ./centos.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
 
 - include: ./centos8.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
 
+- include: ./suse.yml
+  when: ansible_distribution == 'SUSE'
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - "global_settings"
-
 
 - name: copy cloudutil script to /usr/bin
   copy:

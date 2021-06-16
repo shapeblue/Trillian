@@ -50,7 +50,11 @@
   tags:
     - setup_mgmt
 
-
+- name: Setup CloudStack Manager (SUSE)
+  shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
+  when: ansible_distribution == "SUSE"
+  tags:
+    - setup_mgmt
 
 - name: Setup CloudStack Manager (Ubuntu)
   shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management

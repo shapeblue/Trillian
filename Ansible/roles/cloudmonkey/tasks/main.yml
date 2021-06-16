@@ -23,3 +23,6 @@
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+
+- include: ./suse.yml
+  when: ansible_distribution == 'SUSE'

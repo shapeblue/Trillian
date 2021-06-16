@@ -9,7 +9,7 @@
     state: present
     update_cache: yes
 
-- name: Start chrony openSUSE
+- name: Start chrony SUSE
   service:
     name: chronyd
     state: started
