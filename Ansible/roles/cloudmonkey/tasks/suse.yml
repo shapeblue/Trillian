@@ -14,13 +14,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-# - name: Ensure selinux python bindings are installed (Ansible requirement)
-#   zypper:
-#     name: python3-libselinux
-#     state: present
-#   tags: services
-
 - name: install jq
   zypper:
    name: jq

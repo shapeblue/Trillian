@@ -91,8 +91,3 @@
 - name: Open 8096 when Marvin is required
   shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT && iptables-save > /etc/sysconfig/iptables"
   when: (num_marv_hosts > 0)
-
-# Workaround for https://github.com/apache/cloudstack/issues/4204
-# Maybe ??
-# - name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
-#   shell: "zypper install {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
