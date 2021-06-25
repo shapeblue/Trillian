@@ -62,13 +62,7 @@
 - include: ./suse-acs.yml
   when: env_cs_distribution == "cs"
 
-# TODO ??
-# - include: ./centos-shortname.yml
-#   when: env_cs_distribution == "ccp" and setshortname|bool
-
-# TODO ??
-# - include: ./centos-ccp.yml
-#   when: env_cs_distribution == "ccp"
+# Don't really need suse support for ccp
 
 - name: ensure rpcbind in installed
   zypper:

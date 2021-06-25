@@ -38,9 +38,7 @@
   setup:
   when: (not use_phys_hosts)
 
-# TODO ????
-# - include: ./kvm_networking_phys_host.yml
-#   when: use_phys_hosts
+# Don't really need suse for phy hosts
 
 - name: Install basic utilities and tools - all versions
   zypper: name={{ item }} state=present update_cache=yes
@@ -89,9 +87,7 @@
 - include: ./suse-acs.yml
   when: env_cs_distribution == "cs"
 
-# TODO ???
-# - include: ./centos-ccp.yml
-#   when: env_cs_distribution == "ccp"
+# Don't really need suse support for ccp
 
 - name: Update libvirtd.conf - listen_tls
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
