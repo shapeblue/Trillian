@@ -1,0 +1,185 @@
+---
+
+#Copyright 2016-2021 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- debug:
+    msg: "SUSE Specific KVM host Build"
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  zypper:
+    name: python3-selinux
+    state: present
+  tags:
+    - kvm
+  ignore_errors: yes
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+  tags:
+    - kvm
+  ignore_errors: yes
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+  tags:
+    - kvm
+  ignore_errors: yes
+
+- include: ./kvm_networking_bridge_suse.yml
+  when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
+
+- include: ./kvm_networking_ovs_suse.yml
+  when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: (not use_phys_hosts)
+
+- name: Now Im connected, get facts
+  setup:
+  when: (not use_phys_hosts)
+
+# Don't really need suse for phy hosts
+
+- name: Install basic utilities and tools - all versions
+  zypper: name={{ item }} state=present update_cache=yes
+  with_items:
+    - bind-utils
+    - openssh
+    - pciutils
+    - telnet
+    - tcpdump
+    - traceroute
+    - nano
+    - iftop
+    - rpcbind
+    - parted
+    - vim
+  tags:
+    - kvm
+
+- name: install python-argparse
+  pip:
+    name: argparse
+    state: present
+  tags:
+    - kvm
+
+- name: Disable firewalld
+  service:
+    name=firewalld
+    state=stopped
+    enabled=no
+
+- include: ./add_local_storage.yml
+  when: use_local_storage
+  tags:
+    - kvm
+
+- name: ensure rpcbind in started
+  service: name=rpcbind state=started enabled=yes
+
+- debug: msg="Set Java on VM"
+- set_fact: java_ver="{{ kvm_java_ver }}"
+- set_fact: java_path="{{ kvm_java_path }}"
+- include: ../../../tasks/set_java.yml
+  when: force_java
+
+- include: ./suse-acs.yml
+  when: env_cs_distribution == "cs"
+
+# Don't really need suse support for ccp
+
+- name: Update libvirtd.conf - listen_tls
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
+  with_items:
+    - { regexp: "listen_tls", line: "listen_tls = 0" }
+    - { regexp: "listen_tcp", line: "listen_tcp = 1" }
+    - { regexp: "tcp_port", line: "tcp_port = \"16509\"" }
+    - { regexp: "auth_tcp", line: "auth_tcp = \"none\"" }
+    - { regexp: "mdns_adv", line: "mdns_adv = 0" }
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Mask libvirtd sockets
+  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
+
+- name: Update /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Add iptables rules
+  shell: "iptables -I INPUT -p tcp -m tcp --dport {{ item }} -j ACCEPT"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900:6100"
+    - "49152:49216"
+  when: not use_firewalld
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Add iptables rules
+  shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900-6100"
+    - "49152-49216"
+  when: use_firewalld
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: IPtables save config
+  shell: "iptables-save > /etc/sysconfig/iptables"
+  when: not use_firewalld
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: load updated config
+  shell: "firewall-cmd --reload"
+  when: use_firewalld
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: KVM libvirtd restarted
+  service: name=libvirtd state=restarted
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Check for authorized_keys presence
+  stat: path=/root/.ssh/authorized_keys
+  register: authkeys_present
+
+- name: Enable the root user because Cloudstack uses root account to add host
+  shell: "sed -i 's/^.*\\(ssh-rsa .*$\\)/\\1/' /root/.ssh/authorized_keys"
+  when: authkeys_present.stat.exists == True

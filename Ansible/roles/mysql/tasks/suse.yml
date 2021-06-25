@@ -1,0 +1,113 @@
+---
+
+#Copyright 2016-2021 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+- debug:
+    msg: "SUSE Specific MySQL Build"
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout=300 connect_timeout=5
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: now i'm connected, get facts
+  setup:
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
+  zypper:
+    name:
+       - python3-PyMySQL
+       - python3-selinux
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  zypper:
+    name: python3-selinux
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
+  ignore_errors: yes
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+  tags:
+    - mysql
+    - mysqlconf
+  ignore_errors: yes
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+  tags:
+    - kvm
+  ignore_errors: yes
+
+- name: Ensure mysql server is installed
+  zypper:
+    name: mysql-server
+    state: present
+  register: mysqlinstalled
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: replace MySQL my.cnf using Template
+  template:
+    src: mariadb-suse-my.cnf.j2
+    dest: /etc/my.cnf
+  when: mysqlinstalled.changed
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Ensure MySQL service is started and set to start on boot
+  service:
+    name: mysql
+    state: restarted
+    enabled: yes
+  when: mysqlinstalled.changed
+  tags:
+    - mysql
+    - mysqlconf
+
+# - name: Nuke everything since it's starting from scratch
+#   shell: rm -rf /var/lib/mysql/*
+
+- name: set root password
+  shell: mysql -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
+  when: mysqlinstalled.changed
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: grant permissions
+  shell: mysql -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
+  ignore_errors: yes
+  when: mysqlinstalled.changed
+  tags:
+    - mysql
+    - mysqlconf

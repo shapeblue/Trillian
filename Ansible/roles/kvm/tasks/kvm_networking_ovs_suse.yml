@@ -1,0 +1,99 @@
+---
+
+#Copyright 2016-2021 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: get OS facts
+  setup:
+
+- name: Blacklist bridge module
+  template: src=bridge-blacklist.j2 dest="/etc/modprobe.d/bridge-blacklist.conf"
+
+- name: Install OVS
+  zypper: name={{ item }} state=present
+  with_items:
+    - openvswitch
+    - openvswitch-switch
+
+- name: Start OVS
+  systemd:
+    name: openvswitch
+    state: started
+    enabled: yes
+
+- name: Configure eth0
+  template: src=kvm-suse-eth0.j2 dest=/etc/sysconfig/network/ifcfg-eth0
+
+- name: Configure eth1
+  template: src=kvm-suse-eth1.j2 dest=/etc/sysconfig/network/ifcfg-eth1
+
+- name: Configure bridges - advanced networking
+  template: src=kvm-suse-ovs-bridges.j2 dest=/etc/sysconfig/network/ifcfg-{{ item.bridge }}
+  with_items:
+    - { bridge: "{{ kvm_mgmt_network_label }}", bootproto: static, port: eth0 }
+    - { bridge: "{{ kvm_guest_network_label }}", bootproto: none, port: eth1 }
+    - { bridge: "cloud0", bootproto: static }
+
+- name: Set default gateway for {{ kvm_mgmt_network_label }}
+  lineinfile:
+    path: /etc/sysconfig/network/routes
+    create: yes
+    regexp: default
+    line: default {{ ansible_default_ipv4.gateway }} - {{ kvm_mgmt_network_label }}
+
+- name: Get the dns servers
+  shell: grep 'nameserver' /etc/resolv.conf | sed 's/nameserver //g' | tr '\n' ' '
+  register: dns_servers
+
+- name: Get the dns search list
+  shell: grep 'search' /etc/resolv.conf | sed 's/search //g'
+  register: dns_search_list
+
+- name: Set the dns server
+  lineinfile:
+    path: /etc/sysconfig/network/config
+    regexp: NETCONFIG_DNS_STATIC_SERVERS=
+    line: NETCONFIG_DNS_STATIC_SERVERS='{{ dns_servers.stdout }}'
+
+- name: Set the dns search list
+  lineinfile:
+    path: /etc/sysconfig/network/config
+    regexp: NETCONFIG_DNS_STATIC_SEARCHLIST=
+    line: NETCONFIG_DNS_STATIC_SEARCHLIST='{{ dns_search_list.stdout }}'
+
+- name: Set static hostname
+  shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
+
+- name: Configure sysctl.conf for OVS
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: "{{ item }}"
+  with_items:
+    - "net.ipv4.ip_forward=1"
+    - "net.ipv4.conf.default.rp_filter=0"
+    - "net.ipv4.conf.all.rp_filter=0"
+    - "net.ipv6.conf.all.disable_ipv6=1"
+    - "net.ipv6.conf.default.disable_ipv6=1"
+
+- name: Reboot KVM host to implement new networking (reboot scheduled in 1min)
+  command: /sbin/shutdown -r +1 "Ansible-triggered Reboot"
+  async: 0
+  poll: 0
+
+- name: Reboot KVM host to implement new networking (wait for server to restart)
+  wait_for_connection:
+    delay: 120
+    sleep: 5
+    timeout: 900
+    connect_timeout: 2

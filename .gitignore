@@ -1,1 +1,2 @@
 Ansible/group_vars/all
+*.pyc

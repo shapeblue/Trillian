@@ -1,6 +1,5 @@
----
 
-#Copyright 2016 ShapeBlue
+#Copyright 2016-2021 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -14,15 +13,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-
-- include: ./centos.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
-
-- include: ./centos8.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
-
-- include: ./ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
-
-- include: ./suse.yml
-  when: ansible_distribution == 'SUSE'
+BOOTPROTO='none'
+STARTMODE='auto'
+BRIDGE='yes'
+{% if env_zonetype | lower == "advanced" %}
+BRIDGE_PORTS='eth1'
+{% else %}
+BRIDGE_PORTS='eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}'
+{% endif %}
+BRIDGE_STP='off'
+BRIDGE_FORWARDDELAY='15'
