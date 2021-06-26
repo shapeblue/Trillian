@@ -18,9 +18,6 @@
 # Proprietary and confidential
 # Released by ShapeBlue <info@shapeblue.com>, April 2014
 
-# - name: Now I'm connected, get facts
-#   setup:
-
 - name: Setup ELrepo-kernel yum repository
   template: src=elrepo.repo.j2 dest=/etc/yum.repos.d/elrepo.repo
 

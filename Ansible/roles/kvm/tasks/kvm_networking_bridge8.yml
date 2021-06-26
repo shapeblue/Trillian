@@ -31,9 +31,6 @@
     fi
   become: true
 
-# - name: Now Im connected, get facts
-#   os_facts:
-
 - name: Create {{ kvm_mgmt_network_label }} bridge interface
   command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes
 

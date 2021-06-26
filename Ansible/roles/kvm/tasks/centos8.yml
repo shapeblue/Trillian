@@ -45,10 +45,6 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
 
-# - name: Now Im connected, get facts
-#   setup:
-#   when: (not use_phys_hosts)
-
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
@@ -56,8 +52,6 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-#     - "CentOS8-Base.repo"
-#     - "CentOS-AppStream.repo"
   tags:
     - kvm
 
