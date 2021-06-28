@@ -27,12 +27,6 @@
     - mysql
     - mysqlconf
 
-- name: now i'm connected, get facts
-  setup:
-  tags:
-    - mysql
-    - mysqlconf
-
 - name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
   dnf:
     name:

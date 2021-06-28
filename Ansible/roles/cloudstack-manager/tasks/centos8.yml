@@ -62,8 +62,6 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS8-Base.repo"
-    - "CentOS-AppStream.repo"
 
 - name: Ensure CA Certs are latest
   dnf: name=ca-certificates state=latest enablerepo=base

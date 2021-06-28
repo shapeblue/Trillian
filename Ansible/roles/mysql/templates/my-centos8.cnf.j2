@@ -22,6 +22,8 @@ datadir=/var/lib/mysql
 max_connections={{ mysql_max_connections }}
 skip_name_resolve
 
+default_authentication_plugin=mysql_native_password
+
 innodb_buffer_pool_size={{ mysql_innodb_buffer_pool_size }}
 innodb_file_per_table=1
 innodb_log_buffer_size=16MB
@@ -36,13 +38,13 @@ log_error=/var/log/mysql/error.log
 slow_query_log_file=slow.log
 slow_query_log=0
 log_queries_not_using_indexes=1
-long_query_time=0.5 
+long_query_time=0.5
 min_examined_row_limit=100
 sort_buffer_size=2M
 tmp_table_size=32M
 
-max_heap_table_size=64M 
-  
+max_heap_table_size=64M
+
 log-bin=mysql-bin
 binlog_cache_size=1M
 max_binlog_size=128M
