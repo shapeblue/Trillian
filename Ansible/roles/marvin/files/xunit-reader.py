@@ -80,7 +80,7 @@ def parse_reports(file_path_list):
     tests = []
     for file_path in file_path_list:
         filename = file_path[file_path.find('test_'):].replace('.xml', '')
-        data = lxml.etree.iterparse(file_path, tag='testcase')
+        data = lxml.etree.iterparse(file_path, tag='testcase', huge_tree=True)
         for event, elem in data:
             name = ''
             status = 'Success'
