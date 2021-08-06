@@ -83,7 +83,7 @@
   when: ("{{ env_zonetype | lower }}" == "advanced")
 
 - name: Configure eth1 (Basic Networking)
-  command: nmcli con add type ethernet ifname eth1 autoconnect yes con-name br-eth1 ipv4.method disabled ipv6.method disabled
+  command: nmcli con add type ethernet ifname eth1 autoconnect yes con-name br-eth1 ipv4.method disabled ipv6.method ignore
   when: ("{{ env_zonetype | lower }}" == "basic")
 
 - name: Configure eth1.vlan (Basic Networking)
