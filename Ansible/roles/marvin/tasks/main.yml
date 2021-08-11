@@ -180,7 +180,7 @@
     - marvin_cfg
 
 - name: create common functions file
-  template: src="common_functions.sh.j2" dest="/marvin/common_funtions.sh" mode=0755
+  template: src="common_functions.sh.j2" dest="/marvin/common_functions.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
