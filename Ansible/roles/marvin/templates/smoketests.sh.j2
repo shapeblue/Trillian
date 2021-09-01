@@ -51,12 +51,12 @@ retries=12
 remove_old_files
 record_existing_entities
 
-NUMTESTS=`find $TESTDIR -name test_*.py | wc -l`
+NUMTESTS=`ls $TESTDIR/test_*.py | wc -l`
 run_start_time="$(date -u +%s)"
 PASSES=0
 counter=1
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
-FILES=$(find $TESTDIR/ -name "test_*py" | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
 if [ -f /$TESTDIR/test_host_maintenance.py ]; then
     FILES="$FILES $TESTDIR/test_host_maintenance.py"
 fi
