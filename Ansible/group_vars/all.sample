@@ -883,7 +883,7 @@ global_settings:
     - {name: "vm.destroy.forcestop", value: "true", condition: "marvin"}
     - {name: "vpc.max.networks", value: "5", condition: "marvin"}
     - {name: "router.redundant.vrrp.interval", value: "1", condition: "marvin"}
-    - {name: "router.aggregation.command.each.timeout", value: "10", condition: "marvin"}
+    - {name: "router.aggregation.command.each.timeout", value: "120", condition: "marvin"}
   dvswitch:
     - {name: "vmware.use.dvswitch", value: "true", condition: "dvswitch"}
   systemvmlocalstorage:
