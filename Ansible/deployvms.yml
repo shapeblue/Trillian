@@ -26,6 +26,9 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Ensure cmk is pointing to the right env
+      shell: cmk set profile cloudstack
+
     - name: Capture build date
       set_fact: env_builddate="{{lookup('pipe','date +%d/%m/%y_%H:%M')}}"
 

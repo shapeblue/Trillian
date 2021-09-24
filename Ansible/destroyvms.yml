@@ -6,13 +6,16 @@
 #  gather_facts: no
 #  tasks:
 #    - name: Deregister Licensed XenServers
-#      shell: xe host-license-remove host-uuid=`xe host-list --minimal hostname=$HOSTNAME` 
+#      shell: xe host-license-remove host-uuid=`xe host-list --minimal hostname=$HOSTNAME`
 #      ignore_errors: true
 
 - hosts: localhost
   connection: local
   gather_facts: no
   tasks:
+    - name: Ensure cmk is pointing to the right env
+      shell: cmk set profile cloudstack
+
     - include: ./tasks/removeproject.yml
 
 - hosts: primary_storage_hosts
@@ -40,6 +43,7 @@
       env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=rel
       register: db_manage_output
       when: not destroy_forced
+      # ignore_errors: true
 
     - debug:
         msg: "{{ db_manage_output }}"
@@ -47,6 +51,7 @@
     - name: Check for environments db failure
       fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
       when: env_return != "success"
+      # ignore_errors: true
 
     - name: Update inventory file - remove server IP addresses
       replace:

@@ -315,6 +315,9 @@
     - debug: msg="{{ dbcheck }}"
 
 # now do stuff
+    - name: Ensure cmk is pointing to the right env
+      shell: cmk set profile cloudstack
+
     - name: Capture account name
       shell:  cmk listAccounts
       register: acct_retval
