@@ -98,7 +98,7 @@ cleanup() {
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
     sleep $sleepduration
-    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.network[].id' | wc -l`
+    NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[].id' | wc -l`
     if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
       tries=$((tries)-1)
     else
