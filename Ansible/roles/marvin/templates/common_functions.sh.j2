@@ -69,7 +69,7 @@ cleanup() {
       echo "Still $NUM_GCVMS left. waiting.."
       sleep $sleepduration
       tries=$((tries)-1)
-      if [ retries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
+      if [ $tries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
     else
       tries=0
     fi
@@ -98,9 +98,9 @@ cleanup() {
       done
     echo "wait ${sleepduration}s to give Networks some time to destroy"
     sleep $sleepduration
-    NUM_GCNETWORKS=`cmk networks listall=true | jq -r '.network[].id' | wc -l`
+    NUM_GCNETWORKS=`cmk list networks listall=true | jq -r '.network[].id' | wc -l`
     if [[ $NUM_GCNETWORKS -gt $STUCKVMS ]]; then
-      tries=$((retries)-1)
+      tries=$((tries)-1)
     else
       tries=0
     fi
@@ -120,7 +120,7 @@ cleanup() {
       sleep $sleepduration
       NUM_GCVPCS=`cmk list vpcs listall=true |jq -r '.vpc[].id' | wc -l`
       if [ $NUM_GCVPCS -gt $STUCKVPCS ]; then
-        tries=$((retries)-1)
+        tries=$(($tries)-1)
       else
         tries=0
       fi
