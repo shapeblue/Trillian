@@ -499,6 +499,8 @@
 - name: SSH into VC container and replace vmx file for VC
   shell: "sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ vc_retval.results[0].default_ip }} '{{ item }}'"
   with_items:
+    - "sed -i \"/^ethernet0.address =/d\" $(find -name VC.vmx)"
+    - "sed -i \"/^ethernet0.addressType =/d\" $(find -name VC.vmx)"
     - "echo \"ethernet0.addressType = \"static\"\" >> $(find -name VC.vmx)"
     - "echo \"ethernet0.address = \"{{ dummyVMMAC.stdout }}\"\" >> $(find -name VC.vmx)"
   when: esxi_nested_vcenter
@@ -508,6 +510,7 @@
   with_items:
     - "vim-cmd hostsvc/autostartmanager/enable_autostart 0"
     - "vim-cmd vmsvc/getallvms"
+    - "vim-cmd vmsvc/reload 1"
     - "vim-cmd vmsvc/power.on 1"
   when: esxi_nested_vcenter
   register: vmsout
