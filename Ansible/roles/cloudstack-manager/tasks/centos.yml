@@ -35,6 +35,9 @@
 - name: install qemu-img
   yum: name=qemu-img state=present
 
+- name: install qemu-kvm-ev
+  yum: name=qemu-kvm-ev state=present
+
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ mgmt_java_ver }}"
 - set_fact: java_path="{{ mgmt_java_path }}"
