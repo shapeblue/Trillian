@@ -72,6 +72,7 @@
     - rpcbind
     - parted
     - vim
+    - wget
   tags:
     - kvm
 
@@ -121,6 +122,26 @@
   tags:
     - kvm
     - kvm-agent
+
+- name: Install centos-release
+  shell: /usr/bin/wget http://10.0.3.122/centos-release/{{ item }} -P /tmp
+  with_items:
+    - centos-release-7-9.2009.0.el7.centos.x86_64.rpm
+
+- name: Cleanup old repos
+  shell: rm /etc/yum.repos.d/CentOS- -f; rpm -ivh --replacepkgs --replacefiles /tmp/centos-release-7-9.2009.0.el7.centos.x86_64.rpm
+
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"      
+
+- name: Ensure centos-release-qemu-ev is installed
+  yum: name=centos-release-qemu-ev state=present
+
+- name: Ensure qemu-kvm-ev is installed
+  yum: name=qemu-kvm-ev state=present
+
+- name: Remove centos-release-qemu-ev
+  shell: "yum remove centos-release-qemu-ev -y"
 
 - name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
   lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
@@ -199,6 +220,6 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./centos_elrepokernel.yml
-  when: kvm_install_elrepo_kernel 
+  #when: kvm_install_elrepo_kernel
   tags:
     - kvm
