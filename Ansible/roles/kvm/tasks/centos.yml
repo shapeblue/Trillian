@@ -223,3 +223,10 @@
   #when: kvm_install_elrepo_kernel
   tags:
     - kvm
+
+- name: Install cryptsetup to support encryption
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
+    - cryptsetup
+  tags:
+    - kvm
