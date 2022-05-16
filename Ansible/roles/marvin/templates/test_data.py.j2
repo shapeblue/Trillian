@@ -71,6 +71,15 @@ test_data = {
         "endip": "10.200.100.20",
         "forvirtualnetwork": "false"
     },
+    "publicip6range": {
+        "ip6gateway": "fd17:ac56:1234:2000::1",
+        "ip6cidr": "fd17:ac56:1234:2000::/64",
+        "vlan": 301,
+        "forvirtualnetwork": "true"
+    },
+    "guestip6prefix": {
+        "prefix": "fd17:ac56:1234:1000::/52"
+    },
     "private_gateway": {
         "ipaddress": "172.16.1.2",
         "gateway": "172.16.1.1",
@@ -227,7 +236,7 @@ test_data = {
     "network2": {
         "name": "Test Network Shared",
         "displaytext": "Test Network Shared",
-        "vlan": 1201,
+        "vlan": 4000,
         "gateway": "172.16.15.1",
         "netmask": "255.255.255.0",
         "startip": "172.16.15.21",
@@ -1954,7 +1963,7 @@ test_data = {
                 "netmask": "255.255.255.0",
                 "startip": "10.223.59.200",
                 "endip": "10.223.59.240",
-                "vlan": "1000"
+                "vlan": "4005"
             },
             "netscaler": {
                 "ipaddress": "",
@@ -2292,6 +2301,18 @@ test_data = {
         "1.21.5": {
             "semanticversion": "1.21.5",
             "url": "{{ cks_images_location }}/setup-1.21.5.iso",
+            "mincpunumber": 2,
+            "minmemory": 2048
+        },
+        "1.23.3": {
+            "semanticversion": "1.23.3",
+            "url": "{{ cks_images_location }}/setup-1.23.3.iso",
+            "mincpunumber": 2,
+            "minmemory": 2048
+        },
+        "1.24.0": {
+            "semanticversion": "1.24.0",
+            "url": "{{ cks_images_location }}/setup-1.24.0.iso",
             "mincpunumber": 2,
             "minmemory": 2048
         }
