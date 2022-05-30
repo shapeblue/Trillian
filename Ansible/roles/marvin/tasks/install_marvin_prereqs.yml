@@ -127,7 +127,7 @@
     executable: pip3
     extra_args: '--upgrade'
   with_items:
-  - pip==20.2.1
+  - pip==21.3.1
   - six
   - pyOpenSSL
   - wheel==0.34.2
