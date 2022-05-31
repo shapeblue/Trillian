@@ -214,16 +214,10 @@
   tags:
     - kvm
 
-- name: Install cryptsetup to support encryption
-  yum: name={{ item }} state=present enablerepo=base
+- name: Install cryptsetup and rng-tools to support encryption and entropy respectively
+  dnf: name={{ item }} state=present enablerepo=base
   with_items:
     - cryptsetup
-  tags:
-    - kvm
-
-- name: Install rng-tools to support entropy
-  yum: name={{ item }} state=present enablerepo=base
-  with_items:
     - rng-tools
   tags:
     - kvm
