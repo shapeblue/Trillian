@@ -224,9 +224,13 @@
   tags:
     - kvm
 
-- name: Install cryptsetup to support encryption
+- name: Install cryptsetup and rng-tools to support encryption and entropy respectively
   yum: name={{ item }} state=present enablerepo=base
   with_items:
     - cryptsetup
+    - rng-tools
   tags:
     - kvm
+
+- name: Start rng service
+  shell: "systemctl start rngd"
