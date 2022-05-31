@@ -230,3 +230,13 @@
     - cryptsetup
   tags:
     - kvm
+
+- name: Install rng-tools to support entropy
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
+    - rng-tools
+  tags:
+    - kvm
+
+- name: Start rng service
+  shell: "systemctl start rngd"
