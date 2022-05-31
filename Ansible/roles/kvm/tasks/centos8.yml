@@ -213,3 +213,20 @@
 # when: kvm_install_elrepo_kernel
   tags:
     - kvm
+
+- name: Install cryptsetup to support encryption
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
+    - cryptsetup
+  tags:
+    - kvm
+
+- name: Install rng-tools to support entropy
+  yum: name={{ item }} state=present enablerepo=base
+  with_items:
+    - rng-tools
+  tags:
+    - kvm
+
+- name: Start rng service
+  shell: "systemctl start rngd"
