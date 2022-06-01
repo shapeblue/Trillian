@@ -66,8 +66,14 @@
 - name: Ensure CA Certs are latest
   dnf: name=ca-certificates state=latest enablerepo=base
 
-- name: install rng-tools to get entropy
+- name: install haveged to get entropy
   dnf: name=haveged state=present
+
+- name: start haveged for entropy
+  service:
+    name: haveged
+    state: started
+    enabled: yes
 
 - name: determine number of db hosts
   set_fact: num_xen_hosts="{{ groups['xenserver_hosts'] | length }}"
