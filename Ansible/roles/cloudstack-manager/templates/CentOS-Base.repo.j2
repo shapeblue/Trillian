@@ -16,6 +16,7 @@ name=CentOS-$releasever - Base
 baseurl=http://{{ os_repo }}/centos/$releasever/os/$basearch/
 gpgcheck=0
 enabled = {{ base_repo_enabled }}
+deltarpm=0
 
 #released updates
 [updates]
@@ -24,6 +25,7 @@ name=CentOS-$releasever - Updates
 baseurl=http://{{ os_repo }}/centos/$releasever/updates/$basearch/
 gpgcheck=0
 enabled = {{ update_repo_enabled }}
+deltarpm=0
 
 #additional packages that may be useful
 [extras]
