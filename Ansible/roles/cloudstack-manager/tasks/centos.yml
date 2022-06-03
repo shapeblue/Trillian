@@ -23,6 +23,9 @@
     - "epel.repo"
     - "CentOS-Base.repo"
 
+- name: Clear all yum cache
+  command: yum clean all
+
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
 
@@ -48,7 +51,7 @@
   when: force_java
 
 
-- debug: 
+- debug:
     msg: "env_cs_distribution - {{ env_cs_distribution }}"
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
