@@ -143,6 +143,9 @@
     - marvin
     - marvin_install
 
+- name: Clear all yum cache
+  command: yum clean all
+
 - name: Ensure CA-Certificates are up to date
   yum:
     name: ca-certificates
