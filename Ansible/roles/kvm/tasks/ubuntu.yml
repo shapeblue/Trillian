@@ -244,7 +244,7 @@
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_version|version_compare('20.04','==')
+  when: ansible_distribution_version|version_compare('20.04','>=')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -372,6 +372,6 @@
 
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
 - include: ./ubuntu_custom_kernel.yml
-  when: ansible_distribution_version|version_compare('20.04','>=')
+  when: ansible_distribution_version|version_compare('20.04','==')
   tags:
     - kvm
