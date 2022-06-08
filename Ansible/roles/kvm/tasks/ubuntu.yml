@@ -316,7 +316,14 @@
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version|version_compare('16.04','>=')
+  when: ansible_distribution_version|version_compare('16.04','>=') and ansible_distribution_version|version_compare('22.04','<')
+
+- name: Update /etc/default/libvirtd in Ubuntu 22.04
+  lineinfile:
+    dest: "/etc/default/libvirtd"
+    regexp: '^LIBVIRTD_ARGS=*'
+    line: 'LIBVIRTD_ARGS="-l"'
+  when: ansible_distribution_version|version_compare('22.04','>=')
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
