@@ -57,6 +57,16 @@
   apt:
     update_cache: yes
 
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
+
+
 - name: Install basic utilities and tools - all OS versions
   apt:
     pkg: "{{ item }}"
@@ -244,7 +254,7 @@
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_version|version_compare('20.04','==')
+  when: ansible_distribution_version|version_compare('20.04','>=')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -316,7 +326,14 @@
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version|version_compare('16.04','>=')
+  when: ansible_distribution_version|version_compare('16.04','>=') and ansible_distribution_version|version_compare('22.04','<')
+
+- name: Update /etc/default/libvirtd in Ubuntu 22.04
+  lineinfile:
+    dest: "/etc/default/libvirtd"
+    regexp: '^LIBVIRTD_ARGS=*'
+    line: 'LIBVIRTD_ARGS="-l"'
+  when: ansible_distribution_version|version_compare('22.04','>=')
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -372,6 +389,6 @@
 
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
 - include: ./ubuntu_custom_kernel.yml
-  when: ansible_distribution_version|version_compare('20.04','>=')
+  when: ansible_distribution_version|version_compare('20.04','==')
   tags:
     - kvm
