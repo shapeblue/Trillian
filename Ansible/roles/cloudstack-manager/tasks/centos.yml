@@ -35,6 +35,14 @@
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   yum: name=lvm2 state=latest
 
+- name: install qemu-img Dependancies
+  yum: name={{ item }} state=installed
+  with_items:
+  - librados2
+  - libiscsi
+  - librbd1
+  - gperftools-libs
+
 - name: install qemu-img
   yum: name=qemu-img state=present
 
