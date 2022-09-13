@@ -115,11 +115,13 @@
 			"gateway": "{{ env_podgw }}"
 		}],
 		"internaldns1": "{{ env_zone_intdns1 }}",
-		"secondaryStorages": [{
+		"secondaryStorages": [
 {% for secpool in env_secpools %}
+                    {
 			"url": "nfs://{{ env_sechost }}{{ env_secpath }}{{ env_name_clean }}/{{ secpool }}/",
 			"name": "{{ secpool }}",
-			"provider": "NFS"}{% if not loop.last %},{% endif %}
+			"provider": "NFS"}
+                    }{% if not loop.last %},{% endif %}
 {% endfor %}
 		]
 	}],
