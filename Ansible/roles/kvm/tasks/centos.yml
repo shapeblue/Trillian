@@ -11,6 +11,11 @@
   tags:
     - kvm
 
+- name: ensure yum cache is cleared
+  shell: command="yum clean all"
+  tags:
+    - kvm
+
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
@@ -199,6 +204,6 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./centos_elrepokernel.yml
-  when: kvm_install_elrepo_kernel 
+  when: kvm_install_elrepo_kernel
   tags:
     - kvm
