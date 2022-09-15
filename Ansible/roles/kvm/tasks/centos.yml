@@ -11,11 +11,6 @@
   tags:
     - kvm
 
-- name: ensure yum cache is cleared
-  shell: command="yum clean all"
-  tags:
-    - kvm
-
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
@@ -59,6 +54,11 @@
     - "CentOS-Base.repo"
   tags:
     - kvm
+
+- name: ensure yum cache is cleared
+  command: yum clean all
+  tags:
+    - kvm    
 
 - name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
