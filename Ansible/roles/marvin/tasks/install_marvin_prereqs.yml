@@ -139,6 +139,7 @@
   - lxml
   - pycparser==2.13
   - paramiko
+  - mysql-connector-python==8.0.29
   tags:
     - marvin
     - marvin_install
