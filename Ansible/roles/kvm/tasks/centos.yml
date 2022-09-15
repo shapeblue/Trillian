@@ -12,7 +12,7 @@
     - kvm
 
 - name: ensure yum cache is cleared
-  shell: command="yum clean all"
+  command: yum clean all
   tags:
     - kvm
 
