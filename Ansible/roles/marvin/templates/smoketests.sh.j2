@@ -53,8 +53,11 @@ record_existing_entities
 
 NUMTESTS=`find $TESTDIR -name test_*.py | wc -l`
 run_start_time="$(date -u +%s)"
-PASSES=0
 counter=1
+GOOD=0
+BAD=0
+SKIPPED=0
+SKIPPED_TESTS=""
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
 FILES=$(find $TESTDIR/ -name "test_*py" | grep -v test_host_maintenance | grep -v test_hostha_kvm)
 if [ -f /$TESTDIR/test_host_maintenance.py ]; then
@@ -79,37 +82,33 @@ for file in $FILES; do
   tests_left="$(($NUMTESTS-$counter))"
   echo "$(basename $file): $elapsed seconds" >> $LOGDIR/tests-time.txt
 
-  LASTUPDATEDIR=`ls $LOGDIR/*/ -td | head -n 1`
-  if [[ -s ${LASTUPDATEDIR}failed_plus_exceptions.txt ]]; then
-    echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
-    {% if use_hipchat %}
-      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
-    {% endif %}
-    {% if use_slack %}
-      slackmsg "Test $TESTFILENAME looks to have *errors*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
-    {% endif %}
-  else
-    PASSES=$((PASSES+1))
-    echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
-    {% if use_hipchat %}
-      hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $PASSES of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
-    {% endif %}
-    {% if use_slack %}
-      slackmsg "Test $TESTFILENAME looks *OK*.\n$PASSES of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
-    {% endif %}
-  fi
-  counter=$((counter+1))
-done
-
-GOOD=0
-BAD=0
-for file in $LOGDIR/*.xml; do
-  if grep --q 'errors="0" failures="0"' ${file}
-    then
+  TESTRESULTXML=${LOGDIR}/${TESTFILENAME}.xml
+  if [[ -s ${TESTRESULTXML} ]]; then
+    if grep --q 'errors="0" failures="0"' ${TESTRESULTXML}; then
       GOOD=$((GOOD+1))
+      echo "test $TESTFILENAME in {{ env_name_clean }} looks OK"
+      {% if use_hipchat %}
+        hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks <span style="color:#2F962F">OK</span>. $GOOD of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      {% endif %}
+      {% if use_slack %}
+        slackmsg "Test $TESTFILENAME looks *OK*.\n$GOOD of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "good"
+      {% endif %}
     else
       BAD=$((BAD+1))
+      echo "test $(basename $file) in {{ env_name_clean }} looks to have errors"
+      {% if use_hipchat %}
+        hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "test $TESTFILENAME in {{ env_name_clean }} looks to have <span style="color:#FF0000">errors</span>. $GOOD of $counter good so far.<br>Tests have taken $all_tests_elapsed hours so far. $tests_left tests to go."
+      {% endif %}
+      {% if use_slack %}
+        slackmsg "Test $TESTFILENAME looks to have *errors*.\n$GOOD of $counter good so far.\nTests have taken $all_tests_elapsed hours so far. $tests_left tests to go." "warning"
+      {% endif %}
+    fi
+  else
+    echo "test $TESTFILENAME in {{ env_name_clean }} did not run"
+    SKIPPED_TESTS="$SKIPPED_TESTS `echo $TESTFILENAME | sed 's/.py$//g'`"
+    SKIPPED=$((SKIPPED+1))
   fi
+  counter=$((counter+1))
 done
 
 # Cleanup tmp files
@@ -118,18 +117,22 @@ rm -f .skipdeletingdomains
 rm -f .skipdeleteofferings
 rm -f .skipdeletediskofferings
 
-echo "$TESTTYPE completed. $GOOD look ok, $BAD have errors"
+echo "$TESTTYPE completed. $GOOD look ok, $BAD have errors, $SKIPPED did not run"
 {% if use_hipchat %}
-  hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$TESTTYPE for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors" --colour "green" --notify
+  hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --message "$TESTTYPE for <b>{{ env_name_clean }}</b> completed. <br><b>$GOOD</b> look ok, <b>$BAD</b> have errors, <b>$SKIPPED</b> did not run" --colour "green" --notify
 {% endif %}
 {% if use_slack %}
-  slackmsg "$TESTTYPE completed.\n*$GOOD* look ok, *$BAD* have errors" "good"
+  slackmsg "$TESTTYPE completed.\n*$GOOD* look ok, *$BAD* have errors, *$SKIPPED* did not run" "good"
 {% endif %}
 
-echo "$TESTTYPE completed. $GOOD look OK, $BAD have errors" > $SUMMARY_FILE
-echo "Only failed tests results shown below:" >> $SUMMARY_FILE
+echo "$TESTTYPE completed. $GOOD look OK, $BAD have errors, $SKIPPED did not run" > $SUMMARY_FILE
+echo "Only failed and skipped tests results shown below:" >> $SUMMARY_FILE
 echo "" >> $SUMMARY_FILE
 ${PYTHON} /marvin/tools/xunit-reader.py $LOGDIR/ >> $SUMMARY_FILE
+for test in $SKIPPED_TESTS; do
+  echo "all_$test | \`Skipped\` | --- | $test.py"  >> $SUMMARY_FILE
+done
+echo "" >> $SUMMARY_FILE
 cat $SUMMARY_FILE
 
 echo "processing json output"

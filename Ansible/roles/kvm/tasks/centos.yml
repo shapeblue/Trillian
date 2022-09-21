@@ -11,6 +11,11 @@
   tags:
     - kvm
 
+- name: Clear all yum cache
+  command: yum clean all
+  tags:
+    - kvm
+
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
@@ -220,9 +225,7 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./centos_elrepokernel.yml
-  #when: kvm_install_elrepo_kernel
-  tags:
-    - kvm
+  when: kvm_install_elrepo_kernel
 
 - name: Install cryptsetup and rng-tools to support encryption and entropy respectively
   yum: name={{ item }} state=present enablerepo=base

@@ -21,6 +21,11 @@
   tags:
     - kvm
 
+- name: Clear all dnf cache
+  command: dnf clean all
+  tags:
+    - kvm
+
 - name: change cockpit port
   lineinfile:
     path: /usr/lib/systemd/system/cockpit.socket
