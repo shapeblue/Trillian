@@ -11,6 +11,11 @@
   tags:
     - kvm
 
+- name: Clear all yum cache
+  command: yum clean all
+  tags:
+    - kvm
+
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false

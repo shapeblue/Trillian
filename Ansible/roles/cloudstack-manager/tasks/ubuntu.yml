@@ -65,11 +65,20 @@
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_major_version|int == 20
+  when: ansible_distribution_major_version|int >= 20
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
+
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
 
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:

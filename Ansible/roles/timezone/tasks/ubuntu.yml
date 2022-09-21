@@ -7,10 +7,6 @@
 - name: set new timezone
   file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
 
-- name: Make sure /var/lib/dpkg/lock-frontend is not in use
-  shell: "lsof -t /var/lib/dpkg/lock-frontend | kill -9"
-  ignore_errors: yes
-
 - name: Install chrony
   apt:
     pkg: chrony
