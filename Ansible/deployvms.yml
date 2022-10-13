@@ -20,7 +20,7 @@
   tasks:
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
-      when:  ("{{ all-file_version|int }}" < 5 )
+      when:  (all_file_version|int < 5 )
 
 - hosts: localhost
   connection: local
@@ -142,7 +142,7 @@
     - { role: xenserver, when: num_xen_hosts | int != 0 }
 
 - hosts: kvm_hosts
-  gather_facts: no
+  gather_facts: yes
   vars:
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
   roles:

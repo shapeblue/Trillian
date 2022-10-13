@@ -31,7 +31,7 @@
     dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-  when: ansible_distribution_version|version_compare('18.04','==')
+  when: ansible_distribution_version is version_compare('18.04','==')
 
 - apt_key:
     url: "{{ os_repo }}/release.asc"
@@ -78,6 +78,7 @@
     - tcpdump
     - qemu-kvm
     - parted
+    - net-tools
 
 - name: Install basic utilities and tools - pre bionic
   apt:
@@ -88,7 +89,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_version|version_compare('18.04','<')
+  when: ansible_distribution_version is version_compare('18.04','<')
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -116,26 +117,26 @@
     - "KexAlgorithms=+diffie-hellman-group1-sha1"
   tags:
     - kvm
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version_compare('20.04','<=')
 
 - name: Restart sshd
   systemd:
     name: sshd
     state: restarted
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version_compare('20.04','<=')
   tags:
     - kvm
 
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version_compare('20.04','<=')
   tags:
     - kvm
   delegate_to: localhost
 
 - name: Added network instances file to precise/trusty/xenial
   template: src=interfaces.j2 dest="/etc/network/interfaces"
-  when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
+  when: ansible_distribution_version is version_compare('16.04','<=') and kvm_network_mode == "bridge"
 
 ## start block
 
@@ -153,7 +154,7 @@
   - name: apply netplan
     command: netplan apply
 
-  when: ansible_distribution_version|version_compare('18.04','>=') and kvm_network_mode == "bridge"
+  when: ansible_distribution_version is version_compare('18.04','>=') and kvm_network_mode == "bridge"
 
 ## end block
 
@@ -183,11 +184,9 @@
       - nplan
       - netplan
     ignore_errors: true
-    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Delete netplan startup file
     shell: rm -f /etc/netplan/*
-    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
@@ -218,6 +217,10 @@
       src=interfaces-ovs.j2
       dest="/etc/network/interfaces"
 
+  - name: update DNS server
+    shell: unlink /etc/resolv.conf && echo nameserver 8.8.8.8 >> /etc/resolv.conf
+    ignore_errors: yes
+
   when: kvm_network_mode == "ovs"
 
 - name: UFW firerules
@@ -228,12 +231,6 @@
     - "16509"
     - "5900:6100"
     - "49152:49216"
-
-- name: add CloudStack ubuntu repo keys
-  apt_key:
-    url: "{{ baseurl_kvm }}Release.gpg"
-    state: present
-  ignore_errors: yes
 
 - name: add CloudStack ubuntu repo keys
   apt_key:
@@ -250,11 +247,11 @@
     state: present
     validate_certs: no
   ignore_errors: yes
-  when: ansible_distribution_version|version_compare('20.04','<')
+  when: ansible_distribution_version is version_compare('20.04','<')
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_version|version_compare('20.04','>=')
+  when: ansible_distribution_version is version_compare('20.04','>=')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -294,6 +291,10 @@
     dest="/etc/modprobe.d/bridge-blacklist.conf"
   when: kvm_network_mode == "ovs"
 
+- name: Updated /etc/modules
+  lineinfile: dest=/etc/modules regexp="^br_netfilter" line="#br_netfilter"
+  when: kvm_network_mode == "ovs"
+
 - name: Updated /etc/libvirt/libvirtd.conf
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp="#listen_tls = 0" line="listen_tls = 0"
 
@@ -319,21 +320,24 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
-  when: ansible_distribution_version|version_compare('14.04','==')
+  when: ansible_distribution_version is version_compare('14.04','==')
 
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version|version_compare('16.04','>=') and ansible_distribution_version|version_compare('22.04','<')
+  when: ansible_distribution_version is version_compare('16.04','>=') and ansible_distribution_version is version_compare('22.04','<')
 
 - name: Update /etc/default/libvirtd in Ubuntu 22.04
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '^LIBVIRTD_ARGS=*'
     line: 'LIBVIRTD_ARGS="-l"'
-  when: ansible_distribution_version|version_compare('22.04','>=')
+  when: ansible_distribution_version is version_compare('22.04','>=')
+
+- name: Mask libvirtd sockets
+  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -360,7 +364,7 @@
   with_items:
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
-  when: ansible_distribution_version|version_compare('18.04','>=')
+  when: ansible_distribution_version is version_compare('18.04','>=')
 
 # Note - Ubuntu18 startup of OVS bridges is not robust and does
 # sometime lead to race conditions where bridges don't come online
@@ -375,6 +379,11 @@
     - "add-br {{ kvm_guest_network_label }}"
     - "add-port {{ kvm_guest_network_label }} eth1"
     - "add-port {{ kvm_mgmt_network_label }} eth0"
+  ignore_errors: true
+  when: kvm_network_mode == "ovs"
+
+- name: Disable networking
+  shell: systemctl disable networking
   when: kvm_network_mode == "ovs"
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
@@ -389,6 +398,6 @@
 
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
 - include: ./ubuntu_custom_kernel.yml
-  when: ansible_distribution_version|version_compare('20.04','==')
+  when: ansible_distribution_version is version_compare('20.04','==')
   tags:
     - kvm

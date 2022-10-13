@@ -18,14 +18,12 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-iface eth0 inet manual
-iface eth1 inet manual
 
 auto {{ kvm_mgmt_network_label }}
 allow-ovs {{ kvm_mgmt_network_label }}
 iface {{ kvm_mgmt_network_label }} inet static
-  address {{ ansible_eth0.ipv4.address }}
-  netmask {{ ansible_eth0.ipv4.netmask }}
+  address {{ ansible_default_ipv4.address }}
+  netmask {{ ansible_default_ipv4.netmask }}
   gateway {{ ansible_default_ipv4.gateway }}
   ovs_type OVSBridge
   ovs_ports eth0
