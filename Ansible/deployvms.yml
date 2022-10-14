@@ -142,7 +142,7 @@
     - { role: xenserver, when: num_xen_hosts | int != 0 }
 
 - hosts: kvm_hosts
-  gather_facts: yes
+  gather_facts: no
   vars:
     num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
   roles:

@@ -18,6 +18,18 @@ else
 fi
 ETH0_MAC="`cat /sys/class/net/eth0/address`"
 
+devinfo=$(ip -4 route get 1.1.1.1 |head -n1)
+for info in $devinfo;do
+  if [ "$old" = "dev" ];then
+    IPV4_INTERFACE=$info
+  elif [ "$old" = "src" ];then
+    IPV4_ADDRESS=$info
+  elif [ "$old" = "via" ];then
+    IPV4_GATEWAY=$info
+  fi
+  old=$info
+done
+
 cat << EOF
 {
 "ansible_facts": {
@@ -25,6 +37,11 @@ cat << EOF
   "ansible_distribution_version": "${OS_VER}",
   "ansible_distribution_major_version": "${OS_VER_MAJOR}",
   "ansible_eth0": { "macaddress": "${ETH0_MAC}"},
+  "ansible_default_ipv4": {
+    "interface": "${IPV4_INTERFACE}",
+    "address": "${IPV4_ADDRESS}",
+    "gateway": "${IPV4_GATEWAY}"
+  },
   "env_return": "success",
   "env_retmsg": "Data successfully returned."
  }
