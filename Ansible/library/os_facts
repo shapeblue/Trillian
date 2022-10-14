@@ -30,6 +30,14 @@ for info in $devinfo;do
   old=$info
 done
 
+cidr_to_netmask() {
+    value=$(( 0xffffffff ^ ((1 << (32 - $1)) - 1) ))
+    echo "$(( (value >> 24) & 0xff )).$(( (value >> 16) & 0xff )).$(( (value >> 8) & 0xff )).$(( value & 0xff ))"
+}
+
+IPV4_ADDR_NETMASK=$(ip addr show dev $IPV4_INTERFACE |grep 'inet ' |grep -w $IPV4_ADDRESS |awk '{print $2}' |cut -d '/' -f2)
+IPV4_NETMASK=$(cidr_to_netmask $IPV4_ADDR_NETMASK)
+
 cat << EOF
 {
 "ansible_facts": {
@@ -40,6 +48,7 @@ cat << EOF
   "ansible_default_ipv4": {
     "interface": "${IPV4_INTERFACE}",
     "address": "${IPV4_ADDRESS}",
+    "netmask": "${IPV4_NETMASK}",
     "gateway": "${IPV4_GATEWAY}"
   },
   "env_return": "success",
