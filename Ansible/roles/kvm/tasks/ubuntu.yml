@@ -25,6 +25,9 @@
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
+- name: Set hostname in /etc/hosts to fix issue with 'hostname -f'
+  shell: "sed -i \"s/^127.0.1.1 .*/127.0.1.1 {{ inventory_hostname }}/g\" /etc/hosts"
+
 - name: set apt repo
   template:
     src: "{{ inventory_dir }}/templates/{{ item }}-u18.j2"
