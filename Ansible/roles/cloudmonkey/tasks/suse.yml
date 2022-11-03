@@ -27,6 +27,7 @@
     url: "{{ def_linux_cm_url }}"
     dest: /usr/bin/cmk
     mode: 0755
+    timeout: 30
 
 - name: link cmk to cloudmonkey
   file:
