@@ -79,6 +79,21 @@
   tags:
     - "global_settings"
 
+- name: test for cloudstack-utils.jar
+  stat: path=/usr/share/cloudstack-common/lib/cloudstack-utils.jar
+  register: path_is_cloudstack_utils_jar
+
+- name: Generate new cm_secretkey_enc
+  shell: java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.crypt.EncryptionCLI -p password -i {{ cm_secretkey }}
+  register: cm_secretkey_enc_result
+  when: path_is_cloudstack_utils_jar.stat.exists
+
+- name: Update cm_secretkey_enc
+  set_fact: cm_secretkey_enc="{{ cm_secretkey_enc_result.stdout }}"
+  when: cm_secretkey_enc_result is defined
+
+- debug: msg="api_key = {{ cm_apikey }}, cm_secretkey_enc = {{ cm_secretkey_enc }}"
+
 - name: add admin keys for cloudmonkey
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
 
