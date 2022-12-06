@@ -89,3 +89,5 @@
   when: ("primary_cs_manager" in group_names)
 
 - include: ./preconfig_globalsettings.yml
+
+- include: ./migrate_databases.yml

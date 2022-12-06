@@ -43,8 +43,26 @@
   tags:
   - setup_db
 
+- name: Update encryptor version to V1
+  set_fact: db_encryptor_version="--encryptor-version V1"
+  when: encryptor_version == "V1" or encryptor_version == "V1_TO_V2"
+  tags:
+  - setup_db
+
+- name: Update encryptor version to V2
+  set_fact: db_encryptor_version="--encryptor-version V2"
+  when: encryptor_version == "V2"
+  tags:
+  - setup_db
+
+- name: Update encryptor version to ""
+  set_fact: db_encryptor_version=""
+  when: encryptor_version == "default"
+  tags:
+  - setup_db
+
 - name: cloudstack-setup-databases
-  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_ssh_host }}"
+  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}' --deploy-as=root:'{{ mysql_root_password }}' -i {{ ansible_ssh_host }} {{ db_encryptor_version }}"
   when: ("primary_cs_manager" in group_names) and ("{{ cloudbd_exists }}" == "no") and (path_is_cloudstack.stat.exists == True)
   tags:
     - setup_db
@@ -64,14 +82,14 @@
 
 - debug: msg="{{ dbstate }}"
 
-- name: Setup Secondary CloudStack Databases for older builds
-  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}'"
+- name: Setup Secondary CloudStack Databases
+  shell: "/usr/bin/cloudstack-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}' {{ db_encryptor_version }}"
   when: ("secondary_cs_manager" in group_names) and (path_is_cloudstack.stat.exists == True)
   tags:
     - setup_db
 ##and ("{{ ansible_ssh_host }}" not in "{{ [registered_mgmt_ips].[mgmt_ip] }}")
 
-- name: Setup Secondary CloudStack Databases
+- name: Setup Secondary CloudStack Databases for older builds
   shell: "/usr/bin/cloud-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}'"
   when: ("secondary_cs_manager" in group_names) and (path_is_cloudstack.stat.exists == False)
   tags:
