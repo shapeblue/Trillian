@@ -86,7 +86,7 @@
 - name: Generate new cm_secretkey_enc
   shell: java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.crypt.EncryptionCLI -p password -i {{ cm_secretkey }}
   register: cm_secretkey_enc_result
-  when: path_is_cloudstack_utils_jar.stat.exists and (encryptor_version == "default" or encryptor_version == "V2")
+  when: path_is_cloudstack_utils_jar.stat.exists and (encryptor_version == "default" or encryptor_version == "V2" or encryptor_version == "V1_AND_V2")
 
 - name: Update cm_secretkey_enc
   set_fact: cm_secretkey_enc="{{ cm_secretkey_enc_result.stdout }}"

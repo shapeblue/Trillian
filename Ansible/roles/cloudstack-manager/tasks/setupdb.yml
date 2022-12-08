@@ -45,7 +45,7 @@
 
 - name: Update encryptor version to V1
   set_fact: db_encryptor_version="--encryptor-version V1"
-  when: encryptor_version == "V1" or encryptor_version == "V1_UPGRADE_TO_V2"
+  when: encryptor_version == "V1" or encryptor_version == "V1_UPGRADE_TO_V2" or encryptor_version == "V1_AND_V2" or encryptor_version == "V2_AND_V1"
   tags:
   - setup_db
 
@@ -92,6 +92,15 @@
 - name: Setup Secondary CloudStack Databases for older builds
   shell: "/usr/bin/cloud-setup-databases 'cloud':'{{ mysql_cloud_password }}'@'{{ mysql_master_ip }}'"
   when: ("secondary_cs_manager" in group_names) and (path_is_cloudstack.stat.exists == False)
+  tags:
+    - setup_db
+
+- name: Update db.cloud.encryptor.version in db.properties to V2
+  lineinfile:
+    dest: "/etc/cloudstack/management/db.properties"
+    regexp: '^db.cloud.encryptor.version=*'
+    line: 'db.cloud.encryptor.version=V2'
+  when: encryptor_version == "V1_AND_V2"
   tags:
     - setup_db
 
