@@ -5,15 +5,15 @@
   when: encryptor_version == "V1_UPGRADE_TO_V2" or encryptor_version == "V2_AND_V1"
 
 - name: update db.properties and perform database migration
-  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n newmgmtkey -e newdbpassword --force-database-migration
+  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n newmgmtkey -e newdbpassword --force-database-migration --version V2
   when: ("primary_cs_manager" in group_names) and (encryptor_version == "V1_UPGRADE_TO_V2")
 
 - name: update db.properties on secondary management servers
-  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n newmgmtkey -e newdbpassword --skip-database-migration
+  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n newmgmtkey -e newdbpassword --skip-database-migration --version V2
   when: ("secondary_cs_manager" in group_names) and (encryptor_version == "V1_UPGRADE_TO_V2")
 
 - name: update db.properties only if encryptor version is V2_AND_V1
-  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n password -e password --skip-database-migration
+  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n password -e password --skip-database-migration --version V1
   when: encryptor_version == "V2_AND_V1"
 
 - name: restart mgmt service after db.properties update or database migration
