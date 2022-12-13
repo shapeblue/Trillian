@@ -2,7 +2,7 @@
 
 - name: stop mgmt service before db.properties update or database migration
   shell: "systemctl stop cloudstack-management && sleep 5 && systemctl stop cloudstack-management && sleep 10"
-  when: encryptor_version == "V1_UPGRADE_TO_V2" or encryptor_version == "V2_AND_V1"
+  when: encryptor_version in ["V1_UPGRADE_TO_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]
 
 - name: update db.properties and perform database migration
   shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n newmgmtkey -e newdbpassword --force-database-migration --version V2
@@ -16,6 +16,21 @@
   shell: /usr/bin/cloudstack-migrate-databases -m password -d password -n password -e password --skip-database-migration --version V1
   when: encryptor_version == "V2_AND_V1"
 
+- name: add CLOUD_SECRET_KEY_NEW to /etc/environment
+  lineinfile:
+    path: /etc/environment
+    regexp: '^CLOUD_SECRET_KEY_NEW='
+    line: "CLOUD_SECRET_KEY_NEW=newmgmtkey"
+  when: encryptor_version == "V1_UPGRADE_TO_V2_ENV"
+
+- name: update db.properties and perform database migration
+  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -l -e newdbpassword --force-database-migration --version V2
+  when: ("primary_cs_manager" in group_names) and (encryptor_version == "V1_UPGRADE_TO_V2_ENV")
+
+- name: update db.properties on secondary management servers
+  shell: /usr/bin/cloudstack-migrate-databases -m password -d password -l -e newdbpassword --skip-database-migration --version V2
+  when: ("secondary_cs_manager" in group_names) and (encryptor_version == "V1_UPGRADE_TO_V2_ENV")
+
 - name: restart mgmt service after db.properties update or database migration
   shell: "systemctl restart cloudstack-management"
-  when: encryptor_version == "V1_UPGRADE_TO_V2" or encryptor_version == "V2_AND_V1"
+  when: encryptor_version in ["V1_UPGRADE_TO_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]

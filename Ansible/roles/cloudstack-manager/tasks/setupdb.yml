@@ -45,7 +45,7 @@
 
 - name: Update encryptor version to V1
   set_fact: db_encryptor_version="--encryptor-version V1"
-  when: encryptor_version == "V1" or encryptor_version == "V1_UPGRADE_TO_V2" or encryptor_version == "V1_AND_V2" or encryptor_version == "V2_AND_V1"
+  when: encryptor_version in ["V1", "V1_UPGRADE_TO_V2", "V1_AND_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]
   tags:
   - setup_db
 
