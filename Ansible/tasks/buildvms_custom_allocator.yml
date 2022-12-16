@@ -433,7 +433,7 @@
   register: dummyVM
 
 - name: Stop dummy VM
-  shell: "cmk stopVirtualMachine id={{ dummyVM.id }}"
+  shell: "sleep 60 && cmk stopVirtualMachine id={{ dummyVM.id }}"
   when: esxi_nested_vcenter
 
 - name: Update inventory file with VC host IP addresses
