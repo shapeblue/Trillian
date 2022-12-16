@@ -34,3 +34,9 @@
 - name: restart mgmt service after db.properties update or database migration
   shell: "systemctl restart cloudstack-management"
   when: encryptor_version in ["V1_UPGRADE_TO_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]
+
+- name: test for API on 8080
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 25
