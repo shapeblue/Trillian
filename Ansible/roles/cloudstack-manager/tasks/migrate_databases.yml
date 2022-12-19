@@ -1,7 +1,7 @@
 ---
 
 - name: stop mgmt service before db.properties update or database migration
-  shell: "systemctl stop cloudstack-management && sleep 5 && systemctl stop cloudstack-management && sleep 10"
+  shell: "systemctl stop cloudstack-management && sleep 5 && systemctl stop cloudstack-management && systemctl stop cloudstack-usage && sleep 10"
   when: encryptor_version in ["V1_UPGRADE_TO_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]
 
 - name: update db.properties and perform database migration
@@ -32,7 +32,7 @@
   when: ("secondary_cs_manager" in group_names) and (encryptor_version == "V1_UPGRADE_TO_V2_ENV")
 
 - name: restart mgmt service after db.properties update or database migration
-  shell: "systemctl restart cloudstack-management"
+  shell: "systemctl restart cloudstack-management && systemctl restart cloudstack-usage"
   when: encryptor_version in ["V1_UPGRADE_TO_V2", "V2_AND_V1", "V1_UPGRADE_TO_V2_ENV"]
 
 - name: test for API on 8080
