@@ -386,9 +386,9 @@ cks_images_location: "{{ cks_images_location | default ( def_cks_images_location
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
 {% if baseurl_marvin is not defined %}
 {% if rooturl_cloudstack is defined %}
-{% set marvinbaseurl = rooturl_cloudstack~"centos7"~"/"~env_repo_version_var~"/" %}
+{% set marvinbaseurl = rooturl_cloudstack~baseurl_mgmt_suffix~"/"~env_repo_version_var~"/" %}
 {% else %}
-{% set marvinbaseurl = def_rooturl_cloudstack~"centos7"~"/"~env_repo_version_var~"/" %}
+{% set marvinbaseurl = def_rooturl_cloudstack~baseurl_mgmt_suffix~"/"~env_repo_version_var~"/" %}
 {% endif %}
 {% else %}
 {% set marvinbaseurl = baseurl_marvin %}
