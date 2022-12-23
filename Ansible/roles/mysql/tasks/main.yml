@@ -29,7 +29,6 @@
   tags:
     - mysql
     - mysqlconf
-  
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
@@ -53,6 +52,18 @@
     - mysql
     - mysqlconf
 
+# For some weird reason, it thinks SUSE is Ubuntu
+- name: Check if SUSE
+  shell: cat /etc/os-release | grep -i suse
+  register: result
+  when: ansible_distribution == 'Ubuntu'
+  ignore_errors: yes
+
+- name: Set distro as SUSE
+  set_fact:
+      ansible_distribution: "SUSE"
+  when: ansible_distribution == 'Ubuntu' and result is succeeded
+
 - include: ./centos.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
   tags:
@@ -65,6 +76,11 @@
     - mysql
     - mysqlconf
 
+- include: ./suse.yml
+  when: ansible_distribution == 'SUSE'
+  tags:
+    - mysql
+    - mysqlconf
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'

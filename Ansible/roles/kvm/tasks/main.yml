@@ -39,6 +39,18 @@
   tags:
     - kvm
 
+# For some weird reason, it thinks SUSE is Ubuntu
+- name: Check if SUSE
+  shell: cat /etc/os-release | grep -i suse
+  register: result
+  when: ansible_distribution == 'Ubuntu'
+  ignore_errors: yes
+
+- name: Set distro as SUSE
+  set_fact:
+      ansible_distribution: "SUSE"
+  when: ansible_distribution == 'Ubuntu' and result is succeeded
+
 #- name: retrieve environment data
 #  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
 #  tags:
@@ -61,7 +73,11 @@
   tags:
     - kvm
 
-
+- name: Configure SUSE VMs for KVM
+  include: ./suse.yml
+  when: ansible_distribution == 'SUSE'
+  tags:
+    - kvm
 
 - name: Configure Ubuntu VMs for KVM
   include: ./ubuntu.yml

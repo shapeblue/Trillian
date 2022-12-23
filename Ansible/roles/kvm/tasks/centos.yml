@@ -55,6 +55,11 @@
   tags:
     - kvm
 
+- name: ensure yum cache is cleared
+  command: yum clean all
+  tags:
+    - kvm    
+
 - name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
   with_items:
@@ -199,6 +204,6 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./centos_elrepokernel.yml
-  when: kvm_install_elrepo_kernel 
+  when: kvm_install_elrepo_kernel
   tags:
     - kvm

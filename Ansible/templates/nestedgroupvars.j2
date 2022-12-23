@@ -36,6 +36,7 @@ use_custom_allocator: {{ use_custom_allocator | default(def_use_custom_allocator
 use_firewalld: {{ use_firewalld | default( def_use_firewalld ) }}
 base_repo_enabled: "{{ base_repo_enabled | default( def_base_repo_enabled ) }}"
 update_repo_enabled: "{{ update_repo_enabled | default( def_update_repo_enabled ) }}"
+hypervisors_on_same_host: "{{ hypervisors_on_same_host | default(def_hypervisors_on_same_host) }}"
 
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"
@@ -307,7 +308,7 @@ kvm_elrepo_kernel_version: "{{ kvm_elrepo_kernel_version| default( def_kvm_elrep
 {% else %}
 {% set kvmjava = kvm_java_ver %}
 {% endif %}
-kvm_java_ver: "{{ kvmjava }}" 
+kvm_java_ver: "{{ kvmjava }}"
 {% if kvm_java_path is not defined %}
 {% set kvm_os_name = linux_os[kvm_os].os %}
 {% set kvmjavapath = java_paths[kvm_os_name][kvmjava] %}
@@ -343,6 +344,7 @@ esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esx
 vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
 vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
+vc_nested_service_offering: "{{ vc_nested_service_offering | default ( def_vc_nested_service_offering ) }}"
 esxi_use_dvswitch: {{ esxi_use_dvswitch | default( def_esxi_use_dvswitch ) }}
 esxi_use_mgmt_dvswitch: {{ esxi_use_mgmt_dvswitch | default( def_esxi_use_mgmt_dvswitch ) }}
 esxi_mgmt_network_label: "{{ esxi_mgmt_network_label | default( def_esxi_mgmt_network_label ) }}"
@@ -351,6 +353,12 @@ esxi_public_network_label: "{{ esxi_public_network_label | default( def_esxi_pub
 esxi_mgmt_dvs_network_label: "{{ esxi_mgmt_dvs_network_label | default( def_esxi_mgmt_dvs_network_label ) }}"
 esxi_guest_dvs_network_label: "{{ esxi_guest_dvs_network_label | default( def_esxi_guest_dvs_network_label ) }}"
 esxi_public_dvs_network_label: "{{ esxi_public_dvs_network_label | default( def_esxi_public_dvs_network_label ) }}"
+
+# VMware 7 support - deploy vCenter appliance on a dedicated host
+{% if vmware_ver == "70u1" or vmware_ver == "70u2" or vmware_ver == "70u3" %}esxi_nested_vcenter: yes
+esxi_vc_dummy_container: "{{ env_name_clean }}-dummy"
+{% else %}esxi_nested_vcenter: no
+{% endif %}
 
 # VMware datacentre configuration
 {% if vmware_ver == "50u1" %}vmware_vcsa_user: "{{ vmware_vcsa_user | default( def_vmware_vcsa_50_51_user ) }}"
@@ -373,6 +381,7 @@ marvin_tests_source: "{{ marvin_tests_source | default ( def_marvin_tests_source
 marvin_tests_github_source: "{{ marvin_tests_github_source | default ( def_marvin_tests_github_source ) }}"
 marvin_images_location: "{{ marvin_images_location | default ( def_marvin_images_location ) }}"
 openvm_images_location: "{{ openvm_images_location | default ( def_openvm_images_location ) }}"
+cks_images_location: "{{ cks_images_location | default ( def_cks_images_location ) }}"
 {% if run_component_tests is not defined %}{% set run_component_tests = no %}{% endif %}run_component_tests: {{ run_component_tests }}
 {% if run_smoke_tests is not defined %}{% set run_smoke_tests = no %}{% endif %}run_smoke_tests: {{ run_smoke_tests }}
 {% if baseurl_marvin is not defined %}
@@ -429,9 +438,4 @@ slack_color: "{{ slack_color | default( def_slack_color ) }}"
 slack_webhook: "{{ slack_webhook | default( def_slack_webhook ) }}"
 
 # cks
-
-env_cks_coreos_template_hyperv: "{{ env_cks_coreos_template_hyperv | default( def_cks_coreos_template_hyperv ) }}"
-env_cks_coreos_template_kvm: "{{ env_cks_coreos_template_kvm | default( def_cks_coreos_template_kvm )}}"
-env_cks_coreos_template_vmware: "{{ env_cks_coreos_template_vmware | default( def_cks_coreos_template_vmware )}}"
-env_cks_coreos_template_xenserver: "{{ env_cks_coreos_template_xenserver | default( def_cks_coreos_template_xenserver )}}"
 env_enable_cks: "{{ env_enable_cks | default( def_enable_cks ) }}"

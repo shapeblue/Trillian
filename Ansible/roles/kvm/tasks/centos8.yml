@@ -21,6 +21,11 @@
   tags:
     - kvm
 
+- name: Clear all dnf cache
+  command: dnf clean all
+  tags:
+    - kvm
+
 - name: change cockpit port
   lineinfile:
     path: /usr/lib/systemd/system/cockpit.socket
@@ -45,10 +50,6 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
 
-- name: Now Im connected, get facts
-  setup:
-  when: (not use_phys_hosts)
-
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
@@ -56,8 +57,6 @@
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS8-Base.repo"
-    - "CentOS-AppStream.repo"
   tags:
     - kvm
 
@@ -122,6 +121,9 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
+- name: Upgrade gcrypt library on CentOS 8 KVM hosts
+  shell: "dnf install -y libgcrypt"
+
 - include: ./centos-acs.yml
   when: env_cs_distribution == "cs"
 
@@ -145,6 +147,9 @@
   tags:
     - kvm
     - kvm-agent
+
+- name: Mask libvirtd sockets
+  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present

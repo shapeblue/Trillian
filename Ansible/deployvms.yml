@@ -26,6 +26,9 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Ensure cmk is pointing to the right env
+      shell: cmk set profile cloudstack
+
     - name: Capture build date
       set_fact: env_builddate="{{lookup('pipe','date +%d/%m/%y_%H:%M')}}"
 
@@ -62,17 +65,17 @@
 # Create build project if it doesn't exist.
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
-    
+
     - name: Capture all accounts in domain
-      shell: cs listAccounts listall=true | jq -c -r '.account[] | select(.domain == "ROOT")' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
+      shell: cmk listAccounts listall=true | jq -c -r '.account[] | select(.domain == "ROOT")' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
       register: allaccts_retval
 
     - name: get projectid
-      shell: cs listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
+      shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
       register: projectid
 
     - name: Add accounts to project
-      shell: "cs addAccountToProject account={{ item }} projectid={{ projectid.stdout }}"
+      shell: "cmk addAccountToProject account={{ item }} projectid={{ projectid.stdout }}"
       with_items:
         - "{{ allaccts_retval.stdout.split(',') }}"
 
@@ -236,6 +239,13 @@
   gather_facts: no
   roles:
     - cloudstack-config
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+  - name: create mavin cfg file
+    template: src=advanced-cfg.j2 dest="./{{ env_name_clean }}-advanced-cfg"
 
 ## update status
 

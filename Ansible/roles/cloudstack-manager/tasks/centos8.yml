@@ -20,8 +20,12 @@
 - name: Ensure selinux is set permanently
   selinux: policy=targeted state=permissive
 
+- name: get name of eth0 connection
+  shell: nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
+  register: eth0_name
+
 - name: disable ipv6
-  command: nmcli connection modify eth0 ipv6.method ignore
+  command: nmcli connection modify '{{ eth0_name.stdout }}' ipv6.method ignore
 
 - name: change cockpit port
   lineinfile:
@@ -47,12 +51,20 @@
     - "8443"
     - "9090"
 
+- name: Stop firewalld CentOS8
+  service:
+    name=firewalld
+    state=stopped
+    enabled=no
+  when: ( ansible_distribution_major_version|int == 8 ) and (use_firewalld|bool == False)
+
 - name: set dnf repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
     - "epel.repo"
-    - "CentOS8-Base.repo"
-    - "CentOS-AppStream.repo"
+
+- name: Clear all dnf cache
+  command: dnf clean all
 
 - name: Ensure CA Certs are latest
   dnf: name=ca-certificates state=latest enablerepo=base
@@ -119,5 +131,8 @@
 #  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
 
 # Workaround for https://github.com/apache/cloudstack/issues/4204
-- name: Patch ipmitool yo ipmitool-1.8.18-12.el8_1.x86_64.rpm
-  shell: "rpm -i https://rpmfind.net/linux/centos/8.1.1911/AppStream/x86_64/os/Packages/ipmitool-1.8.18-12.el8_1.x86_64.rpm --force"
+- name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
+  shell: "dnf install -y {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
+
+- name: Upgrade gcrypt library on CentOS 8 MS
+  dnf: name=libgcrypt state=present

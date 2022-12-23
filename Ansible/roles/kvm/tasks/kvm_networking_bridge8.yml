@@ -31,9 +31,6 @@
     fi
   become: true
 
-- name: Now Im connected, get facts
-  os_facts:
-
 - name: Create {{ kvm_mgmt_network_label }} bridge interface
   command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes
 
@@ -76,18 +73,32 @@
 
 - name: delete old eth1
   command: nmcli connection delete '{{ eth1_name.stdout }}'
+  when: eth1_name.stdout != "--"
 
 - pause:
     seconds: 2
 
-- name: Add interfaces to bridge
+- name: Configure eth1 (Advanced Networking)
   command: nmcli con add type bridge-slave ifname eth1 master {{ kvm_guest_network_label }} autoconnect yes con-name br-eth1
+  when: ("{{ env_zonetype | lower }}" == "advanced")
+
+- name: Configure eth1 (Basic Networking)
+  command: nmcli con add type ethernet ifname eth1 autoconnect yes con-name br-eth1 ipv4.method disabled ipv6.method ignore
+  when: ("{{ env_zonetype | lower }}" == "basic")
+
+- name: Configure eth1.vlan (Basic Networking)
+  command: nmcli con add type vlan ifname eth1.{{ hostvars['localhost']['env_guestnetvlan'] }} dev eth1 autoconnect yes id {{ hostvars['localhost']['env_guestnetvlan'] }} master {{ kvm_guest_network_label }} con-name br-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
+  when: ("{{ env_zonetype | lower }}" == "basic")
 
 - pause:
     seconds: 2
-    
-- name: Bring up interface
+
+- name: Bring up eth1
   command: nmcli connection up br-eth1
+
+- name: Bring up eth1.vlan
+  command: nmcli connection up br-eth1.{{ hostvars['localhost']['env_guestnetvlan'] }}
+  when: ("{{ env_zonetype | lower }}" == "basic")
 
 - pause:
     seconds: 2

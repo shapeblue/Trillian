@@ -36,12 +36,12 @@
   ignore_errors: true
   when: not esxi_use_dvswitch
 
-- name: Set MTU on vSwitch 0 to 4500
-  raw: esxcfg-vswitch -m 4500 vSwitch0
+- name: Set MTU on vSwitch 0 to 1500
+  raw: esxcfg-vswitch -m 1500 vSwitch0
   ignore_errors: true
 
-- name: Set MTU on vmk0 to 4500
-  raw: esxcli network ip interface set -m 4500 -i vmk0
+- name: Set MTU on vmk0 to 1500
+  raw: esxcli network ip interface set -m 1500 -i vmk0
   ignore_errors: true
 
 - name: Enable software iSCSI

@@ -34,7 +34,7 @@
   when: ansible_distribution_version|version_compare('18.04','==')
 
 - apt_key:
-    url: "{{ repohost }}/release.asc"
+    url: "{{ os_repo }}/release.asc"
     state: present
 
 - apt_key:
@@ -56,6 +56,16 @@
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
+
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
+
 
 - name: Install basic utilities and tools - all OS versions
   apt:
@@ -131,7 +141,7 @@
 
 - name: netplan on Ubuntu 18 onwards
   block:
- 
+
   - name: write netplan
     shell: rm -rf  /etc/netplan/*
 
@@ -221,7 +231,7 @@
 
 - name: add CloudStack ubuntu repo keys
   apt_key:
-    url: "{{ baseurl_cloudstack }}Release.gpg"
+    url: "{{ baseurl_kvm }}Release.gpg"
     state: present
   ignore_errors: yes
 
@@ -236,15 +246,15 @@
 
 - name: Add CloudStack repository into sources list.
   apt_repository:
-    repo: 'deb "{{ baseurl_cloudstack }}" /'
+    repo: 'deb "{{ baseurl_kvm }}" /'
     state: present
     validate_certs: no
   ignore_errors: yes
   when: ansible_distribution_version|version_compare('20.04','<')
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_version|version_compare('20.04','==')
+  shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_version|version_compare('20.04','>=')
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
@@ -316,7 +326,14 @@
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version|version_compare('16.04','>=')
+  when: ansible_distribution_version|version_compare('16.04','>=') and ansible_distribution_version|version_compare('22.04','<')
+
+- name: Update /etc/default/libvirtd in Ubuntu 22.04
+  lineinfile:
+    dest: "/etc/default/libvirtd"
+    regexp: '^LIBVIRTD_ARGS=*'
+    line: 'LIBVIRTD_ARGS="-l"'
+  when: ansible_distribution_version|version_compare('22.04','>=')
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -369,9 +386,9 @@
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
-  
+
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
 - include: ./ubuntu_custom_kernel.yml
-  when: ansible_distribution_version|version_compare('20.04','>=')
+  when: ansible_distribution_version|version_compare('20.04','==')
   tags:
     - kvm

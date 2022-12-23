@@ -19,7 +19,7 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0 inet manual
-    mtu 4500
+    mtu 1500
 auto eth1
 {% if env_zonetype | lower == "advanced" %}
 iface eth1 inet manual
@@ -34,7 +34,7 @@ iface cloudbr0 inet dhcp
     bridge_fd 5
     bridge_stp off
     bridge_maxwait 1
-    mtu 4500
+    mtu 1500
 
 # Public network
 auto cloudbr1
@@ -47,4 +47,4 @@ iface cloudbr1 inet  manual
     bridge_fd 5
     bridge_stp off
     bridge_maxwait 1
- 
+

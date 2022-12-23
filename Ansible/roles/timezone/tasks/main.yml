@@ -12,11 +12,37 @@
 - name: Now I'm connected, get facts
   os_facts:
 
+# For some weird reason, it thinks SUSE is Ubuntu
+- name: Check if SUSE
+  shell: cat /etc/os-release | grep -i suse
+  register: result
+  when: ansible_distribution == 'Ubuntu'
+  ignore_errors: yes
+
+- name: Set distro as SUSE
+  set_fact:
+      ansible_distribution: "SUSE"
+  when: ansible_distribution == 'Ubuntu' and result is succeeded
+
 - include: ./centos6.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version == "6" )
 
 - include: ./centos7.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 7 )
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 7 )
+
+- include: ./centos8.yml
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
 
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
+
+- include: ./suse.yml
+  when: ansible_distribution == 'SUSE'
+
+- name: Get timestamp from the system
+  shell: "date"
+  register: tstamp
+
+- name: Display system date
+  debug:
+    msg: "tstamp"

@@ -74,7 +74,9 @@ def_management_vm_hypervisor: "VMware"
 def_build_zone: "<ZONE_NAME_HERE>"
 def_build_keyboard: "uk"
 parent_vcenter_dc: "<PARENT_VC_DC_NAME_HERE>"
-repohost: "http://<IP_ADDRESS_HERE>"
+os_repo: "http://<IP_ADDRESS_HERE>"
+sb_repo: "http://<IP_ADDRESS_HERE>"
+custom_repo: "http://<IP_ADDRESS_HERE>"
 def_env_timezone: "UTC"
 def_use_external_hv_hosts: no
 def_use_phys_hosts: no
@@ -147,6 +149,7 @@ def_local_storage_disk_offering: "Custom"
 def_local_storage_disk_size: "80"
 def_use_s3: no
 def_setshortname: no
+hypervisors_on_same_host: no
 
 base_version_of_master: cs413
 
@@ -710,7 +713,7 @@ def_vmware_templates:
     vc_template: "vCenter 5.1u2d"
   55u3:
     esxi_template: "ESXi 5.5u3"
-    vc_template: "vCenter 55u3"
+    vc_template: "vCenter 5.5u3"
   60u2:
     esxi_template: "ESXi 6.0u2"
     vc_template: "vCenter 60u2"
@@ -722,7 +725,7 @@ def_vmware_templates:
     vc_template: "vCenter 65u1"
   "65u2":
     esxi_template: "ESXi 6.5u1"
-    vc_template: "vCenter-65u2"
+    vc_template: "vCenter 65u2"
   "67u0":
     esxi_template: "ESXi 6.7.0"
     vc_template: "vCenter 67u0"
@@ -784,6 +787,7 @@ def_marvin_tests_source: "github"
 def_marvin_tests_github_source: "https://github.com/apache/cloudstack"
 def_marvin_images_location: "http://<IP_ADDRESS_HERE>/marvin"
 def_openvm_images_location: "http://<IP_ADDRESS_HERE>/openvm"
+def_cks_images_location: "http://<IP_ADDRESS_HERE>/cks"
 def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/upstream/centos7/4.13/"
 
 # Webhooks for integration
@@ -879,7 +883,7 @@ global_settings:
     - {name: "vm.destroy.forcestop", value: "true", condition: "marvin"}
     - {name: "vpc.max.networks", value: "5", condition: "marvin"}
     - {name: "router.redundant.vrrp.interval", value: "1", condition: "marvin"}
-    - {name: "router.aggregation.command.each.timeout", value: "10", condition: "marvin"}
+    - {name: "router.aggregation.command.each.timeout", value: "120", condition: "marvin"}
   dvswitch:
     - {name: "vmware.use.dvswitch", value: "true", condition: "dvswitch"}
   systemvmlocalstorage:

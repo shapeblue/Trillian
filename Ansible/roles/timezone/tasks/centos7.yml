@@ -2,3 +2,14 @@
 
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
+
+- name: Install chrony
+  yum:
+    name: chrony
+    state: present
+
+- name: Start chrony CentOS
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
