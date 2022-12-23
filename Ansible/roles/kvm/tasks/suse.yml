@@ -84,6 +84,15 @@
     state=stopped
     enabled=no
 
+- name: Check if AMD processors
+  shell: "sed -ne '/^flags/s/^.*: //p' /proc/cpuinfo | egrep -q '(vmx)'"
+  register: amd_virt
+  ignore_errors: true
+
+- name: Ignore msrs if amd processors present on host
+  shell: echo 1 > /sys/module/kvm/parameters/ignore_msrs
+  when: amd_virt.rc == 1
+
 - include: ./add_local_storage.yml
   when: use_local_storage
   tags:
