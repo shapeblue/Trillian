@@ -14,10 +14,17 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Ensure python pre-req mysql repo is installed
+- name: Ensure python pre-req mysql repo is installed for el8
+  when: ansible_distribution_major_version|int == 8
   dnf:
     name: http://repo.mysql.com/mysql80-community-release-el8.rpm
     state: present 
+
+- name: Ensure python pre-req mysql repo is installed for el9
+  when: ansible_distribution_major_version|int == 9
+  dnf:
+    name: http://repo.mysql.com/mysql80-community-release-el9.rpm
+    state: present
 
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
