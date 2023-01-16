@@ -225,7 +225,7 @@
   with_items:
     - "22"
     - "1798"
-    - "16509"
+    - "16514"
     - "5900:6100"
     - "49152:49216"
 
@@ -298,7 +298,10 @@
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp="#listen_tls = 0" line="listen_tls = 0"
 
 - name: Updated /etc/libvirt/libvirtd.conf
-  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#listen_tcp = 1' line='listen_tcp = 1'
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#listen_tcp = 1' line='listen_tcp = 0'
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#tls_port= "16514"' line='tls_port = "16514"'
 
 - name: Updated /etc/libvirt/libvirtd.conf
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#tcp_port= "16509"' line='tcp_port = "16509"'

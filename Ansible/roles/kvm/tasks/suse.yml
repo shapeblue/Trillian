@@ -116,7 +116,8 @@
   lineinfile: dest=/etc/libvirt/libvirtd.conf regexp={{ item.regexp }} line={{ item.line }}  state=present
   with_items:
     - { regexp: "listen_tls", line: "listen_tls = 0" }
-    - { regexp: "listen_tcp", line: "listen_tcp = 1" }
+    - { regexp: "listen_tcp", line: "listen_tcp = 0" }
+    - { regexp: "tls_port", line: "tcp_port = \"16514\"" }
     - { regexp: "tcp_port", line: "tcp_port = \"16509\"" }
     - { regexp: "auth_tcp", line: "auth_tcp = \"none\"" }
     - { regexp: "mdns_adv", line: "mdns_adv = 0" }
@@ -144,7 +145,7 @@
   with_items:
     - "22"
     - "1798"
-    - "16509"
+    - "16514"
     - "5900:6100"
     - "49152:49216"
   when: not use_firewalld
@@ -157,7 +158,7 @@
   with_items:
     - "22"
     - "1798"
-    - "16509"
+    - "16514"
     - "5900-6100"
     - "49152-49216"
   when: use_firewalld
