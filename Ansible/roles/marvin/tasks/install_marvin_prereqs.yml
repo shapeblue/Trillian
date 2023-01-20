@@ -144,6 +144,17 @@
     - marvin
     - marvin_install
 
+- name: Downgrade pyvmomi for 4.11 or below
+  when: env_numversion | version_compare('4.11','<=')
+  pip:
+    name: "{{ item }}"
+    executable: pip2
+  with_items:
+  - pyvmomi==5.5.0.2014.1.1
+  tags:
+    - marvin
+    - marvin_install
+
 - name: Clear all yum cache
   command: yum clean all
 
