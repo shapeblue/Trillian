@@ -27,6 +27,16 @@
     - mysql
     - mysqlconf
 
+- name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
+  dnf:
+    name:
+       - python3-libselinux
+       - python3-PyMySQL
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
+
 - name: Set selinux to permissive
   command: setenforce permissive
   changed_when: false
