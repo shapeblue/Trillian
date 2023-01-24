@@ -74,6 +74,7 @@
     - rpcbind
     - parted
     - vim
+    - python3-pip
   tags:
     - kvm
 
