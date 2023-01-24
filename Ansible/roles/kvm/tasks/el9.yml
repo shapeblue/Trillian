@@ -71,7 +71,6 @@
     - tcpdump
     - traceroute
     - nano
-    - iftop
     - rpcbind
     - parted
     - vim
