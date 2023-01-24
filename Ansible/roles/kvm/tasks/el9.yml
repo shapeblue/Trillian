@@ -53,12 +53,12 @@
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
-- name: set dnf repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-  tags:
-    - kvm
+# - name: set dnf repo to local
+#   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+#   with_items:
+#     - "epel.repo"
+#   tags:
+#     - kvm
 
 - name: Install basic utilities and tools - all versions
   dnf: name={{ item }} state=present enablerepo=base
@@ -85,7 +85,7 @@
   tags:
     - kvm
 
-- name: Firewalld for CentOS7
+- name: Firewalld for EL9
   dnf: name={{ item }} state=present enablerepo=base
   with_items:
     - firewalld
@@ -100,7 +100,7 @@
     enabled=yes
   when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
 
-- name: Stop firewalld CentOS7/8
+- name: Stop firewalld EL9
   service:
     name=firewalld
     state=stopped
@@ -121,7 +121,7 @@
 - include: ../../../tasks/set_java.yml
   when: force_java
 
-- name: Upgrade gcrypt library on CentOS 8 KVM hosts
+- name: Upgrade gcrypt library on EL9 KVM hosts
   shell: "dnf install -y libgcrypt"
 
 - include: ./centos-acs.yml
