@@ -93,18 +93,12 @@
     - kvm
   when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
 
-- name: Start firewalld CentOS7
-  service:
-    name=firewalld
-    state=started
-    enabled=yes
+- name: Start firewalld EL9
+  shell: systemctl enable firewalld && systemctl start firewalld
   when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
 
 - name: Stop firewalld EL9
-  service:
-    name=firewalld
-    state=stopped
-    enabled=no
+  shell: systemctl disable firewalld && systemctl stop firewalld
   when: ( ansible_distribution_major_version|int >= 7 ) and (use_firewalld|bool == False)
 
 - include: ./add_local_storage.yml
@@ -113,7 +107,7 @@
     - kvm
 
 - name: ensure rpcbind in started
-  service: name=rpcbind state=started enabled=yes
+  shell: systemctl enable rpcbind && systemctl start rpcbind
 
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ kvm_java_ver }}"
