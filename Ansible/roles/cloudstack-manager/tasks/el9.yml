@@ -56,13 +56,16 @@
 #   with_items:
 #     - "epel.repo"
 
+- name: install epel-release repo
+  dnf: name=epel-release state=present
+
 - name: Clear all dnf cache
   command: dnf clean all
 
 - name: Ensure CA Certs are latest
   shell: dnf install -y ca-certificates --enablerepo=baseos
 
-- name: install rng-tools to get entropy
+- name: install haveged to get entropy
   dnf: name=haveged state=present
 
 - name: determine number of db hosts
