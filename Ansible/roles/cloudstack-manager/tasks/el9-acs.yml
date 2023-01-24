@@ -1,4 +1,4 @@
-﻿---
+---
 
 #Copyright 2016 ShapeBlue
 #
@@ -14,10 +14,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-- name: Ensure python pre-req mysql repo is installed
+- name: Ensure python pre-req mysql repo is installed for el9
   dnf:
-    name: http://repo.mysql.com/mysql80-community-release-el8.rpm
-    state: present 
+    name: http://repo.mysql.com/mysql80-community-release-el9.rpm
+    state: present
 
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
@@ -30,11 +30,6 @@
     state: present
     enablerepo: base
 
-- name: Ensure MySQL Client is present
-  dnf: 
-    name: mysql
-    state: present
-
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
@@ -44,5 +39,5 @@
 - include: ./setupdb.yml
 
 - name: Start cloudstack-usage service
-  service: name=cloudstack-usage state=started enabled=yes
+  shell: systectl enable cloudstack-usage && systemctl start cloudstack-usage
 
