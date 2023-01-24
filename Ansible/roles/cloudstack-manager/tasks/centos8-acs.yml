@@ -52,4 +52,9 @@
 
 - name: Start cloudstack-usage service
   service: name=cloudstack-usage state=started enabled=yes
+  when: ansible_distribution_major_version|int == 8
+
+- name: Start cloudstack-usage service
+  shell: systectl enable cloudstack-usage && systemctl start cloudstack-usage
+  when: ansible_distribution_major_version|int == 9
 

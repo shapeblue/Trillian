@@ -1,0 +1,128 @@
+---
+
+- debug:
+    msg: "EL9 Specific Management Server Build"
+
+- name: Ensure selinux python bindings are installed (Ansible requirement)
+  dnf:
+    name: python3-libselinux
+    state: present
+  tags: services
+
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+
+- name: get name of eth0 connection
+  shell: nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'
+  register: eth0_name
+
+- name: disable ipv6
+  command: nmcli connection modify '{{ eth0_name.stdout }}' ipv6.method ignore
+
+- name: change cockpit port
+  lineinfile:
+    path: /usr/lib/systemd/system/cockpit.socket
+    regexp: '^ListenStream='
+    line: ListenStream=9091
+
+- name: reload daemon
+  command: systemctl daemon-reload
+
+- name: stop cockpit service
+  systemd:
+    name: cockpit
+    state: stopped
+
+- name: Allow connections on management server required ports with firewall
+  shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
+  with_items:
+    - "3306"
+    - "8080"
+    - "8096"
+    - "8250"
+    - "8443"
+    - "9090"
+
+- name: Stop firewalld EL9
+  shell: systemctl stop firewalld && systemctl disable firewalld
+  when: use_firewalld|bool == False
+
+- name: set dnf repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+
+- name: Clear all dnf cache
+  command: dnf clean all
+
+- name: Ensure CA Certs are latest
+  dnf: name=ca-certificates state=latest enablerepo=base
+
+- name: install rng-tools to get entropy
+  dnf: name=haveged state=present
+
+- name: determine number of db hosts
+  set_fact: num_xen_hosts="{{ groups['xenserver_hosts'] | length }}"
+
+- name: lower rsa requiremnet for Xen ver < 8
+  shell: sed -i 's/jdk.certpath.disabledAlgorithms=MD2, MD5, DSA, RSA keySize < 2048/jdk.certpath.disabledAlgorithms=MD2, MD5, DSA, RSA keySize < 1024/g' /etc/crypto-policies/back-ends/java.config
+  when: num_xen_hosts > 0 and xen_ver < 8
+
+- name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
+  dnf: name=lvm2 state=latest
+
+- name: install qemu-img
+  dnf: name=qemu-img state=present
+
+- debug: msg="Set Java on VM"
+- set_fact: java_ver="{{ mgmt_java_ver }}"
+- set_fact: java_path="{{ mgmt_java_path }}"
+- include: ../../../tasks/set_java.yml
+  when: force_java
+
+
+- debug:
+    msg: "env_cs_distribution - {{ env_cs_distribution }}"
+- include: ./centos8-acs.yml
+  when: env_cs_distribution == "cs"
+
+- include: ./centos-shortname.yml
+  when: env_cs_distribution == "ccp" and setshortname|bool
+
+- include: ./centos-ccp.yml
+  when: env_cs_distribution == "ccp"
+
+- name: ensure rpcbind in installed
+  dnf:
+    name: rpcbind
+    state: present
+
+- name: ensure rpcbind in started
+  shell: systemctl start rpcbind
+
+- debug: msg="Some Marvin Stuff"
+  when: (num_marv_hosts > 0)
+
+- name: Ensure sshpass is installed (CentOS 7)
+  dnf: name=sshpass state=present
+  when: (num_marv_hosts > 0)
+
+- name: Open 8096 when Marvin is required (CentOS 6)
+  shell: "iptables -I INPUT -p tcp -m tcp --dport 8096 -j ACCEPT && iptables-save > /etc/sysconfig/iptables"
+  when: (num_marv_hosts > 0)
+# and (ansible_distribution_major_version == "6")
+
+#- name: Open 8096 when Marvin is required (CentOS 7)
+#  shell: firewall-cmd --permanent --zone=public --add-port=8096/tcp && firewall-cmd --reload
+#  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
+
+# Workaround for https://github.com/apache/cloudstack/issues/4204
+- name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
+  shell: "dnf install -y {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
+
+- name: Upgrade gcrypt library on CentOS 8 MS
+  dnf: name=libgcrypt state=present
