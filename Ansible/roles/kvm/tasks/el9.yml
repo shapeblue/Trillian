@@ -137,7 +137,7 @@
     - kvm-agent
 
 - name: Create file /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  template: src=libvirtd dest=/etc/sysconfig/libvirtd
+  template: src=libvirtd.j2 dest=/etc/sysconfig/libvirtd
   tags:
     - kvm
     - kvm-agent
