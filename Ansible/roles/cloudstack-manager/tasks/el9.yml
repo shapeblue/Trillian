@@ -124,8 +124,8 @@
 #  when: (num_marv_hosts > 0) and (ansible_distribution_major_version == "7")
 
 # Workaround for https://github.com/apache/cloudstack/issues/4204
-- name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
-  shell: "dnf install -y {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
+# - name: Patch ipmitool to ipmitool-1.8.18-12.el8_1.x86_64.rpm
+#   shell: "dnf install -y {{ sb_repo }}/ipmi/{{ ipmitool_binary }}"
 
-- name: Upgrade gcrypt library on CentOS 8 MS
+- name: Upgrade gcrypt library on EL9 MS
   dnf: name=libgcrypt state=present
