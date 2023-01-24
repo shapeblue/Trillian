@@ -136,14 +136,17 @@
     - kvm
     - kvm-agent
 
-- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+- name: Create file /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+  template: src=libvirtd dest=/etc/sysconfig/libvirtd
   tags:
     - kvm
     - kvm-agent
 
 - name: Mask libvirtd sockets
   shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
+
+- name: Mask virtqemu sockets
+  shell: systemctl mask virtqemud.socket virtqemud-ro.socket virtqemud-admin.socket virtqemud virtnetworkd virtstoraged
 
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
