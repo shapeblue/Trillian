@@ -42,7 +42,7 @@
       - "{{ cloudstack_agent_package }}*"
       - "{{ cloudstack_common_package }}*"
     state: present
-  when: ansible_distribution_major_version|int == 8
+  when: ansible_distribution_major_version|int >= 8
   tags:
     - kvm
     - kvm-agent
