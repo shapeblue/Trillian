@@ -39,5 +39,5 @@
 - include: ./setupdb.yml
 
 - name: Start cloudstack-usage service
-  shell: systectl enable cloudstack-usage && systemctl start cloudstack-usage
+  shell: systemctl enable cloudstack-usage && systemctl start cloudstack-usage
 
