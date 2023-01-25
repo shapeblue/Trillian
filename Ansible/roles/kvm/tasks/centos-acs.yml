@@ -24,7 +24,7 @@
     - kvm
     - kvm-agent
 
-- name: Ensure CloudStack packages are installed
+- name: Ensure CloudStack packages are installed (EL7 or lower)
   yum:
     name:
       - "{{ cloudstack_agent_package }}*"
@@ -36,7 +36,7 @@
     - kvm
     - kvm-agent
 
-- name: Ensure CloudStack packages are installed
+- name: Ensure CloudStack packages are installed (EL8 or higher)
   dnf:
     name:
       - "{{ cloudstack_agent_package }}*"
