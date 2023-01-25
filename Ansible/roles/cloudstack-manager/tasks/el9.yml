@@ -65,13 +65,10 @@
   shell: systemctl stop firewalld && systemctl disable firewalld
   when: use_firewalld|bool == False
 
-# - name: set dnf repo to local
-#   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-#   with_items:
-#     - "epel.repo"
-
-- name: install epel-release repo
-  dnf: name=epel-release state=present
+- name: set dnf repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
 
 - name: Clear all dnf cache
   command: dnf clean all

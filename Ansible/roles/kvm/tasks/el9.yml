@@ -67,12 +67,12 @@
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
-# - name: set dnf repo to local
-#   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-#   with_items:
-#     - "epel.repo"
-#   tags:
-#     - kvm
+- name: set dnf repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+  tags:
+    - kvm
 
 - name: Install basic utilities and tools - all versions
   dnf: name={{ item }} state=present enablerepo=base
