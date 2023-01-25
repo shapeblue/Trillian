@@ -74,7 +74,7 @@
   command: dnf clean all
 
 - name: Ensure CA Certs are latest
-  shell: dnf install -y ca-certificates --enablerepo=baseos
+  shell: dnf install -y ca-certificates
 
 - name: install haveged to get entropy
   dnf: name=haveged state=present
