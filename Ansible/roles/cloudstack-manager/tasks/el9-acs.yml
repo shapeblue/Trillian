@@ -1,0 +1,43 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: Ensure python pre-req mysql repo is installed for el9
+  dnf:
+    name: http://repo.mysql.com/mysql80-community-release-el9.rpm
+    state: present
+
+- name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
+  template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
+
+- name: Ensure CloudStack packages are installed
+  dnf:
+    name:
+      - "{{ cloudstack_management_package }}*"
+      - "{{ cloudstack_common_package }}*"
+    state: present
+    enablerepo: base
+
+- name: Ensure vhd-util is present
+  get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
+
+- name: Ensure CloudStack Usage Service is installed
+  dnf: name="{{ cloudstack_usage_package }}*" state=present
+
+- include: ./setupdb.yml
+
+- name: Start cloudstack-usage service
+  shell: systemctl enable cloudstack-usage && systemctl start cloudstack-usage
+

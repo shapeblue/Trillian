@@ -14,15 +14,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: "set Timezone to {{ env_timezone }}"
+  command: "timedatectl set-timezone {{ env_timezone }}"
 
-- include: ./centos.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
+- name: Install chrony
+  dnf:
+    name: chrony
+    state: present
 
-- include: ./centos8.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 8 )
-
-- include: ./ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
-
-- include: ./suse.yml
-  when: ansible_distribution == 'SUSE'
+- name: Start chrony CentOS
+  shell: systemctl start chronyd

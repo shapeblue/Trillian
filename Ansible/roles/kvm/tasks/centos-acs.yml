@@ -24,7 +24,7 @@
     - kvm
     - kvm-agent
 
-- name: Ensure CloudStack packages are installed
+- name: Ensure CloudStack packages are installed (EL7 or lower)
   yum:
     name:
       - "{{ cloudstack_agent_package }}*"
@@ -36,13 +36,13 @@
     - kvm
     - kvm-agent
 
-- name: Ensure CloudStack packages are installed
+- name: Ensure CloudStack packages are installed (EL8 or higher)
   dnf:
     name:
       - "{{ cloudstack_agent_package }}*"
       - "{{ cloudstack_common_package }}*"
     state: present
-  when: ansible_distribution_major_version|int == 8
+  when: ansible_distribution_major_version|int >= 8
   tags:
     - kvm
     - kvm-agent
