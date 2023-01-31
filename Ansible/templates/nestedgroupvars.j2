@@ -251,6 +251,8 @@ old_mysql_root_password: "{{ old_mysql_root_password | default( def_old_mysql_ro
 db_type: "{{ db_type | default( def_db_type ) }}"
 mysql_max_connections: "{{ mysql_max_connections | default( def_mysql_max_connections ) }}"
 mysql_innodb_buffer_pool_size: "{{ mysql_innodb_buffer_pool_size | default( def_mysql_innodb_buffer_pool_size ) }}"
+{% if encryptor_version is undefined or encryptor_version == "" %}{% set encryptor_version = "default" %}{% endif %}
+encryptor_version: "{{ encryptor_version }}"
 
 # KVM
 {% if kvm_os is undefined %}{% set kvm_os = "na" %}{% endif %}
