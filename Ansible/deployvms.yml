@@ -78,6 +78,7 @@
       shell: "cmk addAccountToProject account={{ item }} projectid={{ projectid.stdout }}"
       with_items:
         - "{{ allaccts_retval.stdout.split(',') }}"
+      ignore_errors: true
 
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
