@@ -26,8 +26,14 @@
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base
 
-- name: install rng-tools to get entropy
+- name: install haveged to get entropy
   yum: name=haveged state=present
+
+- name: start haveged for entropy
+  service:
+    name: haveged
+    state: started
+    enabled: yes
 
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   yum: name=lvm2 state=latest
