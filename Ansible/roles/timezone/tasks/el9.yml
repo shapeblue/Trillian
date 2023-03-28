@@ -17,6 +17,14 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
+- name: "Remove $rltype from rocky repos"
+  command: sed -i "s/\$rltype//g" /etc/yum.repos.d/{{ item }}
+  with_items:
+    - "rocky-addons.repo"
+    - "rocky-devel.repo"
+    - "rocky-extras.repo"
+    - "rocky.repo"
+
 - name: Install chrony
   dnf:
     name: chrony
