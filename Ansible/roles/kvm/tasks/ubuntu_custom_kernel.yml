@@ -1,7 +1,7 @@
 ---
 
 - name: Download kernel DEB packages
-  shell: /usr/bin/wget "{{ custom_kernel_repo}}"/custom-kernels/{{ item }} -P /tmp
+  shell: /usr/bin/wget "{{ custom_kernel_repo }}"/custom-kernels/{{ item }} -P /tmp
   with_items:
     - linux-headers-5.9.0-050900_5.9.0-050900.202010112230_all.deb
     - linux-headers-5.9.0-050900-generic_5.9.0-050900.202010112230_amd64.deb
