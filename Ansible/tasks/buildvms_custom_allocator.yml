@@ -415,7 +415,7 @@
   local_action:
     module: cs_instance
     name: "{{ esxi_vc_dummy_container }}"
-    service_offering: "Small Instance"
+    service_offering: "VMware-dummy-VM"
     template: "macchinina"
     hypervisor: "{{ management_vm_hypervisor }}"
     project: "{{ build_project }}"
