@@ -90,14 +90,11 @@
 #  when: (removeproject is defined) or destroy_forced
 #  ignore_errors: yes
 ####################################################################
-#- name: config
-#  shell: cat .cmk/config
-- name: hostname show
-  shell: hostname --fqdn
-#- name: get projectid
-#  shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
-#  register: projectid
+
+- name: get projectid
+  shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
+  register: projectid
 #- debug: msg="{{ projectid.stdout }}"
-#
-#- name: Delete project (using cmk, with cleanup)
-#  shell: "cmk deleteproject id={{ projectid.stdout }} cleanup=true"
+
+- name: Delete project (using cmk, with cleanup)
+  shell: "cmk deleteproject id={{ projectid.stdout }} cleanup=true"
