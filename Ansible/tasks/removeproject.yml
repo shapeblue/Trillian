@@ -95,5 +95,4 @@
   register: projectid
 
 - name: Delete project (using cmk, with cleanup)
-  shell: cmk deleteproject id={{ projectid }} cleanup=true
-  
+  shell: cmk deleteproject id={{ projectid.stdout }} cleanup=true
