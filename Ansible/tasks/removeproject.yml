@@ -96,3 +96,4 @@
 	  
 - name: Delete project (using cmk, with "cleanup)
   shell: cmk deleteproject id={{ build_project }} cleanup=true
+  
