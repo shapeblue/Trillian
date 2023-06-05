@@ -94,7 +94,5 @@
 - name: get projectid
   shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
   register: projectid
-#- debug: msg="{{ projectid.stdout }}"
-
 - name: Delete project (using cmk, with cleanup)
   shell: "cmk deleteproject id={{ projectid.stdout }} cleanup=true"
