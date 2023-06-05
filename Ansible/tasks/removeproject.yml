@@ -75,15 +75,24 @@
 #   ignore_errors: yes
 
 
+#####################################################################
+## cs_project doesn't support cleanup=true parameter, so can't delete manually created resources
+## that are not manually destroyed
+##
+## Remove project
+##
+#- name: Delete project
+#  local_action:
+#    module: cs_project
+#    name: "{{ build_project }}"
+#    state: absent
+#    api_timeout: 120
+#  when: (removeproject is defined) or destroy_forced
+#  ignore_errors: yes
 ####################################################################
-# Remove project
-#
-- name: Delete project
-  local_action:
-    module: cs_project
-    name: "{{ build_project }}"
-    state: absent
-    api_timeout: 120
-  when: (removeproject is defined) or destroy_forced
-  ignore_errors: yes
-####################################################################
+
+- name: get projectid
+  shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
+  register: projectid
+- name: Delete project (using cmk, with cleanup)
+  shell: "cmk deleteproject id={{ projectid.stdout }} cleanup=true"
