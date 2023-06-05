@@ -90,8 +90,8 @@
 #  when: (removeproject is defined) or destroy_forced
 #  ignore_errors: yes
 ####################################################################
-- name: config
-  shell: cat .cmk/config
+#- name: config
+#  shell: cat .cmk/config
 - name: hostname show
   shell: hostname --fqdn
 #- name: get projectid
