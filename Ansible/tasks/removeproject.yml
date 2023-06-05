@@ -91,7 +91,7 @@
 #  ignore_errors: yes
 ####################################################################
 - name: get projectid
-  shell: "cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'"
+  shell: cmk listProjects | jq -c '.project[] | select(.name | contains("{{ build_project }}"))' | jq '.id'
   register: projectid
 - debug: msg="{{ projectid.stdout }}"
 
