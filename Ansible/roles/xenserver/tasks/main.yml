@@ -20,7 +20,7 @@
   register: pong
   until: pong.rc == 0
   retries: "{{ ssh_retries }}"
-  delay: 1
+  delay: 30
   ignore_errors: yes
 
 - name: Wait for SSH
