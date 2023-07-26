@@ -29,6 +29,7 @@
     name:
       - "{{ cloudstack_agent_package }}*"
       - "{{ cloudstack_common_package }}*"
+      - tzdata-java
     state: present
     enablerepo: base
   when: ansible_distribution_major_version|int < 8
@@ -41,6 +42,7 @@
     name:
       - "{{ cloudstack_agent_package }}*"
       - "{{ cloudstack_common_package }}*"
+      - tzdata-java
     state: present
   when: ansible_distribution_major_version|int >= 8
   tags:

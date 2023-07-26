@@ -23,6 +23,7 @@
     name: 
       - "{{ cloudstack_management_package }}*"
       - "{{ cloudstack_common_package }}*"
+      - tzdata-java
     state: present
     enablerepo: base
 
