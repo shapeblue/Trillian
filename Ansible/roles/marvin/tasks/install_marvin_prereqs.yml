@@ -112,6 +112,8 @@
   - texttable
   - lxml
   - paramiko
+  - setuptools
+  - pyvmomi==7.0.3
   tags:
     - marvin
     - marvin_install
