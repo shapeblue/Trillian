@@ -68,7 +68,7 @@ cleanup() {
     if [[ $NUM_GCVMS -gt $STUCKVMS ]]; then
       echo "Still $NUM_GCVMS left. waiting.."
       sleep $sleepduration
-      tries=$((tries)-1)
+      tries=$((tries-1))
       if [ $tries -eq 0 ]; then STUCKVMS=$NUM_GCVMS; fi
     else
       tries=0
