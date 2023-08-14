@@ -31,4 +31,5 @@
       - { key: comment, value: "{{ env_comment | regex_replace(' ', '_') }}" }
       - { key: updated, value: "{{lookup('pipe','date +%d/%m/%y_%H:%M')}}" }
       - { key: sensitive_data, value: "{{lookup('pipe', 'echo ${SENSITIVE_DATA:-false}')}}" }
+      - { key: long_running, value: "{{lookup('pipe', 'echo ${LONG_RUNNING:-false}')}}" }
   ignore_errors: true
