@@ -34,12 +34,14 @@
     src: /usr/lib64/libssl.so.1.1
     dest: /usr/lib64/python3.6/site-packages/mysql-vendor/libssl.so.1.1
     remote_src: yes
+  ignore_errors: yes
 
 - name: Fix messed up python mysql crypto libs
   copy:
     src: /usr/lib64/libcrypto.so.1.1
     dest: /usr/lib64/python3.6/site-packages/mysql-vendor/libcrypto.so.1.1
     remote_src: yes
+  ignore_errors: yes
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
