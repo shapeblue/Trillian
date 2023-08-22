@@ -102,6 +102,14 @@
   when: ( env_hv == "xenserver" )
   ignore_errors: true
 
+- name: enable CKS for ACS >= 4.14
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.configuration SET value='{{ item.value }}' WHERE name='{{ item.name }}';"
+  with_items:
+  - {name: "cloud.kubernetes.service.enabled", value: "true"}
+  when: env_numversion | version_compare('4.14','>=')
+  tags:
+    - "global_settings"
+
 - name: test for cloud or cloudstack Usage
   stat: path=/etc/init.d/cloudstack-management
   register: path_is_cloudstack
