@@ -97,6 +97,11 @@
 - name: add admin keys for cloudmonkey
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
 
+- name: enable RSA 1024 bit key for xenserver
+  shell: sed -i 's,RSA keySize < 2048,RSA keySize < 1024,g' /etc/crypto-policies/back-ends/java.config
+  when: ( env_hv == "xenserver" )
+  ignore_errors: true
+
 - name: test for cloud or cloudstack Usage
   stat: path=/etc/init.d/cloudstack-management
   register: path_is_cloudstack
