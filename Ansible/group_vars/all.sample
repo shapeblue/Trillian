@@ -895,6 +895,6 @@ def_use_local_templates: true
 local_builtin_templates:
   - {id: "2", url: "http://<IP_ADDRESS_HERE>/builtin_templates/f59f18fb-ae94-4f97-afd2-f84755767aca.vhd.bz2"} #CentOS 5.3(64-bit) no GUI (XenServer)
   - {id: "4", url: "http://<IP_ADDRESS_HERE>/builtin_templates/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2"} #CentOS 5.5(64-bit) no GUI (KVM)
-  - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos56-x86_64.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
+  - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/default-tmpl-centos8.0.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
   - {id: "6", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos6_4_64bit.vhd.bz2"} #CentOS 6.4(64-bit) GUI (Hyperv)
   - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/CentOS5.3-x86_64.ova"} #CentOS 5.3(64-bit) no GUI (vSphere)
