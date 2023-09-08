@@ -27,7 +27,7 @@
   command: "/usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /mnt/secstoragetmp {{ item }}"
   with_items:
     - "{{ env_zone_systemplate_str }}"
-  when: path_is_cloud.stat.exists == False and (env_numversion | version_compare('4.17','<'))
+  when: path_is_cloud.stat.exists == False and ((env_numversion | version_compare('4.17','<')) or (env_zone_systemplate != 'na'))
   ignore_errors: true
   changed_when: false
   tags:
