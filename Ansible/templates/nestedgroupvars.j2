@@ -168,6 +168,8 @@ env_zone_systemplate_str:
 {% if kvm_os | lower != "na" %}  - "-u {{ env_zone_systemplate | default ( def_system_templates[env_version].kvm_url ) }} -h kvm -F"
 {% endif %}
 
+{% if env_zone_systemplate is undefined %}{% set env_zone_systemplate = "na" %}{% endif %}
+env_zone_systemplate: "{{ env_zone_systemplate }}"
 
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default( def_build_marvin ) }}
