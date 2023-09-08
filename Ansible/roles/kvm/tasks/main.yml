@@ -96,3 +96,8 @@
   when: use_local_storage
   tags:
     - kvm
+
+- name: Enable debugging for cloudstack-agent service
+  shell: sed -i 's/INFO/DEBUG/g' /etc/cloudstack/agent/log4j-cloud.xml
+  tags:
+    - kvm
