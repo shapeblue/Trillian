@@ -65,7 +65,17 @@
 
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
-  when: ansible_distribution_major_version|int >= 20
+  when: ansible_distribution_major_version|int >= 20 and "download.cloudstack.org" not in baseurl_cloudstack
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int >= 20 and "download.cloudstack.org" in baseurl_cloudstack
+
+- apt_key:
+    url: "https://download.cloudstack.org/release.asc"
+    state: present
+    validate_certs: no
+  when: '"download.cloudstack.org" in baseurl_cloudstack'
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
