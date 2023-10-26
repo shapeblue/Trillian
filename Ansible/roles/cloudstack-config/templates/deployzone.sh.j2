@@ -53,9 +53,9 @@ then
   ZoneID=`cloudmonkey create zone networktype=Advanced securitygroupenabled=${SECURITYGROUPENABLED} guestcidraddress={{ env_zone_guestcidr }} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} dns2={{ env_zone_dns2 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network - Management.";
-  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VXLAN' | tee -i -a ${DEPLOYLOG};
   WriteOutput "Creating Physical Network - Guest / Public.";
-  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VXLAN' | tee -i -a ${DEPLOYLOG};
   PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
   PhysNetPubID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
   PhysNetGuestID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
