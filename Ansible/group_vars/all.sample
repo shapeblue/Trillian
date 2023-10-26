@@ -850,7 +850,6 @@ global_settings:
     - {name: "storage.cleanup.enabled", value: "TRUE", condition: "marvin"}
     - {name: "storage.cleanup.interval", value: "10800", condition: "marvin"}
     - {name: "storage.template.cleanup.enabled", value: "TRUE", condition: "marvin"}
-    - {name: "task.cleanup.retry.interval", value: "3600", condition: "marvin"}
     - {name: "vm.op.cleanup.interval", value: "1200", condition: "marvin"}
     - {name: "vm.op.cleanup.wait", value: "1200", condition: "marvin"}
     - {name: "vpc.cleanup.interval", value: "1200", condition: "marvin"}

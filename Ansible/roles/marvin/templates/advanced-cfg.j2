@@ -7,7 +7,7 @@
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
-				"type": "Guest",
+				"typ": "Guest",
 				"providers": [{
 				"broadcastdomainrange": "ZONE",
 				"name": "VirtualRouter"
@@ -20,7 +20,7 @@
 			}],
 			"isolationmethods": "VXLAN"
 			}, {
-				"type": "Public"
+				"typ": "Public"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -37,7 +37,7 @@
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Mgmt",
 			"traffictypes": [{
-				"type": "Management"
+				"typ": "Management"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -146,9 +146,6 @@
 	}, {
 		"name": "network.securitygroups.work.cleanup.interval",
 		"value": 120
-	}, {
-		"name": "task.cleanup.retry.interval",
-		"value": 600
 	}, {
 		"name": "vm.op.cleanup.interval",
 		"value": 600
