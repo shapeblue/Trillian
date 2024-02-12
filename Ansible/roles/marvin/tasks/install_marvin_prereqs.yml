@@ -142,6 +142,7 @@
   - pycparser==2.13
   - paramiko
   - mysql-connector-python==8.0.29
+  - netaddr==0.10.1
   tags:
     - marvin
     - marvin_install
