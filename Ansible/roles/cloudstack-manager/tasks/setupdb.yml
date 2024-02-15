@@ -104,6 +104,14 @@
   tags:
     - setup_db
 
+- name: Set db.cloud.useSSL to true in /etc/cloudstack/management/db.properties
+  lineinfile:
+    path: /etc/cloudstack/management/db.properties
+    regexp: '^db.cloud.useSSL='
+    line: "db.cloud.useSSL=true"
+  tags:
+    - setup_db
+
 ## run cloudstack-setup-management
 - name: Setup management on primary cloudstack management server
   include: ./setup-mgmt.yml
