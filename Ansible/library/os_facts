@@ -12,9 +12,15 @@ if [ -e "/etc/redhat-release" ]; then
     OS_VER_MAJOR=$OS_VER
   fi
 else
-  OS_DIST="Ubuntu"
-  OS_VER=`cat /etc/*-release | grep 'DISTRIB_RELEASE=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
-  OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
+    if [ "`cat /etc/os-release | grep 'ID=debian'`" ] ; then
+        OS_DIST="Debian"
+        OS_VER=`cat /etc/os-release | grep 'VERSION_ID=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
+    else
+        OS_DIST="Ubuntu"
+        OS_VER=`cat /etc/*-release | grep 'DISTRIB_RELEASE=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
+    fi
+    OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
+    
 fi
 ETH0_MAC="`cat /sys/class/net/eth0/address`"
 
