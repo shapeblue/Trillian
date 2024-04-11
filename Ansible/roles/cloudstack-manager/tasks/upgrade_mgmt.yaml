@@ -22,3 +22,6 @@
 
 - include: upgrade_ubuntu_mgmt.yaml
   when: ansible_distribution == 'Ubuntu'
+
+- include: upgrade_debian_mgmt.yaml
+  when: ansible_distribution == 'Debian'

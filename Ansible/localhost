@@ -1,2 +1,2 @@
 [local]
-localhost ansible_connection=local
+ll-acsmgmt-01.london.shapeblue.com ansible_connection=ll-acsmgmt-01.london.shapeblue.com

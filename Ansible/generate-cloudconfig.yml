@@ -121,44 +121,28 @@
   gather_facts: no
 
   vars_prompt:
-    - name: "env_name"
-      prompt: "Environment name"
-      private: no
-      when: env_name is undefined
+    - name: env_name
+      prompt: Environment name
+      private: false
 
-#    - name: "env_version"
-#      prompt: "CloudStack version (cs45 / cs46 / custom)"
-#      private: no
-#      default: "cs45"
-#      when: (env_version is undefined) and (env_dotted_version is undefined)
-
-    - name: "mgmt_os"
+    - name: mgmt_os
       prompt: "Management OS - CentOS6 (6) / CentOS7 (7) / Ubuntu (u)"
       private: no
       default: "6"
-      when: mgmt_os is undefined
 
     - name: "env_accounts"
       prompt: "Accounts to be added to project"
       private: no
-      when: env_accounts is undefined
-
-#    - name: "hvtype"
-#      prompt: "Hypervisor family - vmware (v) / xenserver (x) / kvm (k)"
-#      private: no
-#      when: ( hvtype is undefined ) and ( hv > 0 )
 
     - name: "hv"
       prompt: "Number of hypervisor hosts"
       default: "2"
       private: no
-      when: hv is undefined
 
     - name: "pri"
       prompt: "Number of primary storage pools"
       default: "1"
       private: no
-      when: ( pri is undefined ) and ( hv > 0 )
 
   tasks:
 
