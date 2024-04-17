@@ -49,5 +49,5 @@
     mode: 0755
 
 - name: base configuration
-  shell: "cmk set prompt 'cmk-SB>' ; cmk set log_file /var/log/cloud-cli.log ; cmk set apikey {{ cm_apikey }} ; cmk set secretkey {{ cm_secretkey }} ; cmk set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api"
+  shell: "cmk set prompt 'cmk-SB>' ; cmk set log_file /var/log/cloud-cli.log ; cmk set apikey {{ cm_apikey }} ; cmk set secretkey {{ cm_secretkey }} ; cmk set url http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client/api ; cmk sync"
   ignore_errors: true
