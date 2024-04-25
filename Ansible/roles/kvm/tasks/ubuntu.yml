@@ -394,7 +394,11 @@
   ignore_errors: true
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  wait_for_connection:
+    delay: 120
+    sleep: 5
+    timeout: 900
+    connect_timeout: 2
   when: (not use_phys_hosts)
 
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
