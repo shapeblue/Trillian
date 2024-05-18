@@ -100,7 +100,7 @@
 - name: Update pip and components
   pip:
     name: "{{ item }}"
-    extra_args: '--upgrade'
+    extra_args: '--upgrade --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org'
   with_items:
   - pip==20.2.1
   - six
@@ -127,7 +127,7 @@
   pip:
     name: "{{ item }}"
     executable: pip3
-    extra_args: '--upgrade'
+    extra_args: '--upgrade --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org'
   with_items:
   - pip==21.3.1
   - six
