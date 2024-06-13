@@ -157,7 +157,7 @@
     - marvin
     - marvin_cfg
 
-- name: Check if marvin is installed in python2
+- name: Check if marvin is installed in python3
   stat: path=/usr/lib/python2.7/site-packages/marvin/
   register: marvin2
 
