@@ -35,6 +35,8 @@
     state: present
   with_items:
     - python-setuptools
+    - python3-setuptools
+  ignore_errors: yes
   tags:
     - mysql
     - mysqlconf
