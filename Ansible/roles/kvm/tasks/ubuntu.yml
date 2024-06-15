@@ -387,6 +387,10 @@
     - "add-port {{ kvm_mgmt_network_label }} eth0"
   when: kvm_network_mode == "ovs"
 
+- name: copy ipmi_modules.conf on Ubuntu 24.04
+  copy: src=ipmi_modules.conf dest=/etc/modules-load.d/ipmi_modules.conf
+  when: ansible_distribution_version|version_compare('24.04','>=')
+
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
   async: 0
