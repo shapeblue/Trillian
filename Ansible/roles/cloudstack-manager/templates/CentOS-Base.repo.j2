@@ -12,7 +12,7 @@
 
 [base]
 name=CentOS-$releasever - Base
-#mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=os
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
 baseurl=http://{{ os_repo }}/centos/$releasever/os/$basearch/
 gpgcheck=0
 enabled = {{ base_repo_enabled }}
@@ -20,7 +20,7 @@ enabled = {{ base_repo_enabled }}
 #released updates
 [updates]
 name=CentOS-$releasever - Updates
-#mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=updates
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
 baseurl=http://{{ os_repo }}/centos/$releasever/updates/$basearch/
 gpgcheck=0
 enabled = {{ update_repo_enabled }}
@@ -28,7 +28,7 @@ enabled = {{ update_repo_enabled }}
 #additional packages that may be useful
 [extras]
 name=CentOS-$releasever - Extras
-mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=extras
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras
 #baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
@@ -37,7 +37,7 @@ enabled = 0
 #additional packages that extend functionality of existing packages
 [centosplus]
 name=CentOS-$releasever - Plus
-mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=centosplus
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus
 #baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/
 gpgcheck=1
 enabled=0
@@ -46,7 +46,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
 #contrib - packages by Centos Users
 [contrib]
 name=CentOS-$releasever - Contrib
-mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=contrib
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=contrib
 #baseurl=http://mirror.centos.org/centos/$releasever/contrib/$basearch/
 gpgcheck=1
 enabled=0

@@ -12,7 +12,7 @@
 
 [base]
 name=CentOS-$releasever - Base
-#mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=os
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
 baseurl={{ os_repo }}/centos/$releasever/os/$basearch/
 gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
@@ -21,7 +21,7 @@ enabled = {{ base_repo_enabled | default(1) }}
 #released updates
 [updates]
 name=CentOS-$releasever - Updates
-#mirrorlist=http://vault.centos.org/?release=$releasever&arch=$basearch&repo=updates
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
 baseurl={{ os_repo }}/centos/$releasever/updates/$basearch/
 gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
