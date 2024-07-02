@@ -9,6 +9,12 @@
     - "CentOS-Base.repo"
     - "epel.repo"
 
+
+- name: Ensure prerequisite libselinux-python installed
+  yum:
+    name: libselinux-python
+    state: installed
+
 - name: Install chrony
   yum:
     name: chrony
