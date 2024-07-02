@@ -3,15 +3,6 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
-- name: Ensure selinux python bindings are installed
-  yum: name=libselinux-python state=present
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
-
 - name: Install chrony
   yum:
     name: chrony
