@@ -28,13 +28,6 @@
     - marvin_cfg
     - marvin_install
 
-- name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed update_cache=yes
-  tags:
-    - marvin
-    - marvin_cfg
-    - marvin_install
-
 - name: set yum repo to local
   template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
   with_items:
@@ -42,6 +35,13 @@
     - "CentOS-Base.repo"
   tags:
     - marvin
+    - marvin_install
+
+- name: Install Dev Tools Group
+  yum: name="@Development tools" state=installed update_cache=yes
+  tags:
+    - marvin
+    - marvin_cfg
     - marvin_install
 
 - name: Install other dependancies
