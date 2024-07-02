@@ -22,6 +22,19 @@
   tags:
     - kvm
 
+- name: set yum repo to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+  tags:
+    - kvm
+
+- name: ensure yum cache is cleared
+  command: yum clean all
+  tags:
+    - kvm
+
 - name: Install bridge utilities
   yum: name={{ item }} state=present enablerepo=base
   with_items:
@@ -46,19 +59,6 @@
 
 - include: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
-
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
-  tags:
-    - kvm
-
-- name: ensure yum cache is cleared
-  command: yum clean all
-  tags:
-    - kvm    
 
 - name: Install basic utilities and tools - all versions
   yum: name={{ item }} state=present enablerepo=base
