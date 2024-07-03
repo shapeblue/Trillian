@@ -1,5 +1,11 @@
 ---
 
+- name: set centos yum repo to local
+  shell: "echo -e '[base]\nname=CentOS-$releasever - Base\nbaseurl={{ os_repo }}/centos/$releasever/os/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n\n#released updates\n[updates]\nname=CentOS-$releasever - Updates\nbaseurl={{ os_repo }}/centos/$releasever/updates/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n' > /etc/yum.repos.d/CentOS-Base.repo && chmod 644 /etc/yum.repos.d/CentOS-Base.repo"
+
+- name: set epel yum repo to local
+  shell: "echo -e '[epel]\nname=Extra Packages for Enterprise Linux - $basearch\nbaseurl={{ os_repo }}/epel/$releasever/$basearch\nfailovermethod=priority\nenabled=1\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever\n' > /etc/yum.repos.d/epel.repo && chmod 644 /etc/yum.repos.d/epel.repo"
+
 - name: Ensure prerequisite libselinux-python installed
   yum: name=libselinux-python state=installed
   tags:
