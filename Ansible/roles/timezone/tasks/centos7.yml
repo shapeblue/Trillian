@@ -4,10 +4,10 @@
   command: "timedatectl set-timezone {{ env_timezone }}"
 
 - name: set centos yum repo to local
-  shell: "echo -e '[base]\nname=CentOS-$releasever - Base\nbaseurl=http://10.0.3.121/centos/$releasever/os/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n\n#released updates\n[updates]\nname=CentOS-$releasever - Updates\nbaseurl=http://10.0.3.121/centos/$releasever/updates/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n' > /etc/yum.repos.d/CentOS-Base.repo && chmod 644 /etc/yum.repos.d/CentOS-Base.repo"
+  shell: "echo -e '[base]\nname=CentOS-$releasever - Base\nbaseurl={{ def_centos7_repo_base_url }}$releasever/os/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n\n#released updates\n[updates]\nname=CentOS-$releasever - Updates\nbaseurl={{ def_centos7_repo_base_url }}$releasever/updates/$basearch/\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever\nenabled = 1\n' > /etc/yum.repos.d/CentOS-Base.repo && chmod 644 /etc/yum.repos.d/CentOS-Base.repo"
 
 - name: set epel yum repo to local
-  shell: "echo -e '[epel]\nname=Extra Packages for Enterprise Linux 6 - $basearch\nbaseurl=http://10.0.3.121/epel/$releasever/$basearch\nfailovermethod=priority\nenabled=1\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever\n' > /etc/yum.repos.d/epel.repo && chmod 644 /etc/yum.repos.d/epel.repo"
+  shell: "echo -e '[epel]\nname=Extra Packages for Enterprise Linux 6 - $basearch\nbaseurl={{ def_epel_repo_base_url }}$releasever/$basearch\nfailovermethod=priority\nenabled=1\ngpgcheck=0\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever\n' > /etc/yum.repos.d/epel.repo && chmod 644 /etc/yum.repos.d/epel.repo"
 
 - name: Install chrony
   yum:
