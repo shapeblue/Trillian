@@ -1,0 +1,41 @@
+---
+
+- name: Cleanup centos repo files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/yum.repos.d/epel.repo
+    - /etc/yum.repos.d/CentOS-Base.repo
+
+- name: Add epel repo
+  yum_repository:
+    name: epel
+    description: Extra Packages for Enterprise Linux 7 - $basearch
+    file: epel
+    baseurl: "{{ os_repo }}/epel/$releasever/$basearch"
+    failovermethod: priority
+    gpgcheck: no
+    enabled: true
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
+
+- name: Add CentOS-Base repo
+  yum_repository:
+    name: base
+    description: CentOS-$releasever - Base
+    file: CentOS-Base
+    baseurl: "{{ os_repo }}/centos/$releasever/os/$basearch/"
+    gpgcheck: no
+    enabled: "{{ update_repo_enabled | default(1) }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
+- name: Add CentOS-Base repo for updates
+  yum_repository:
+    name: updates
+    description: CentOS-$releasever - Updates
+    file: CentOS-Base
+    baseurl: "{{ os_repo }}/centos/$releasever/updates/$basearch/"
+    gpgcheck: no
+    enabled: "{{ update_repo_enabled | default(1) }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
