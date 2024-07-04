@@ -11,7 +11,7 @@
 - name: Add epel repo
   yum_repository:
     name: epel
-    description: Extra Packages for Enterprise Linux 7 - $basearch
+    description: Extra Packages for Enterprise Linux - $basearch
     file: epel
     baseurl: "{{ os_repo }}/epel/$releasever/$basearch"
     failovermethod: priority
