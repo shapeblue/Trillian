@@ -28,11 +28,7 @@
     - marvin_cfg
     - marvin_install
 
-- name: set yum repo to local
-  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
-  with_items:
-    - "epel.repo"
-    - "CentOS-Base.repo"
+- include: ../../../tasks/set_centos_repos.yml
   tags:
     - marvin
     - marvin_install
