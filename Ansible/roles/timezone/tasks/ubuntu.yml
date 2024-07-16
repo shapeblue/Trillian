@@ -12,6 +12,7 @@
     pkg: chrony
     state: latest
     update_cache: yes
+  retries: 3
 
 - name: Start chrony
   systemd:

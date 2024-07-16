@@ -21,6 +21,7 @@
   dnf:
     name: chrony
     state: present
+  retries: 3
 
 - name: Start chrony CentOS
   shell: systemctl start chronyd

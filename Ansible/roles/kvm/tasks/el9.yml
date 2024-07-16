@@ -91,6 +91,7 @@
     - python3-pip
   tags:
     - kvm
+  retries: 3
 
 - name: install python-argparse
   pip:

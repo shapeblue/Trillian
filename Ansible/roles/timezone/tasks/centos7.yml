@@ -9,6 +9,7 @@
   yum:
     name: chrony
     state: present
+  retries: 3
 
 - name: Start chrony CentOS
   service:

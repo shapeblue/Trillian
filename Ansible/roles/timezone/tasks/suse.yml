@@ -22,6 +22,7 @@
     name: chrony
     state: present
     update_cache: yes
+  retries: 3
 
 - name: Start chrony SUSE
   service:
