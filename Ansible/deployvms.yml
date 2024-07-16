@@ -67,7 +67,7 @@
       include: tasks/updateproject.yml project_tag=Deploying_VMs
 
     - name: Capture all accounts in domain
-      shell: cmk listAccounts listall=true | jq -c -r '.account[] | select(.domain == "ROOT")' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
+      shell: cmk listAccounts listall=true state=enabled | jq -c -r '.account[] | select(.domain == "ROOT")' | jq -c -r '.name' | sed -e ':a;N;$!ba;s/\n/,/g'
       register: allaccts_retval
 
     - name: get projectid
