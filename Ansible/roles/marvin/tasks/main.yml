@@ -192,6 +192,19 @@
     - marvin
     - marvin_cfg
 
+# Install specific version of mysql-connector-python for compatibility with MariaDB
+# For more details: https://stackoverflow.com/a/73254598/3428543
+- name: Install mysql-connector-python==8.0.29
+  pip:
+    name: "{{ item }}"
+    executable: pip3
+    extra_args: '--upgrade'
+  with_items:
+  - mysql-connector-python==8.0.29
+  tags:
+    - marvin
+    - marvin_install
+
 - name: create common functions file
   template: src="common_functions.sh.j2" dest="/marvin/common_functions.sh" mode=0755
   tags:
