@@ -77,6 +77,8 @@
     - marvin_install
 
 - name: remove yum openSSL package
+  vars:
+    ansible_python_interpreter: /usr/bin/python3 
   dnf:
     name: pyOpenSSL
     state: absent
@@ -131,10 +133,11 @@
     - marvin
     - marvin_install
 
-- name: Clear all yum cache
-  command: yum clean all
+
 
 - name: Ensure CA-Certificates are up to date
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   dnf:
     name: ca-certificates
     state: latest
