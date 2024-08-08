@@ -84,6 +84,8 @@
     state: absent
 
 - name: Update pip and components
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "{{ item }}"
     extra_args: '--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --upgrade'
@@ -105,11 +107,15 @@
     - marvin_install
 
 - name: Workaround for pip install kubernetes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "kubernetes"
     extra_args: '--ignore-installed'
 
 - name: Update pip3 and components
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "{{ item }}"
     executable: pip3
@@ -146,4 +152,6 @@
     - marvin_install
 
 - name: ensure atd is running to schedule jobs
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   service: name=atd state=started enabled=yes
