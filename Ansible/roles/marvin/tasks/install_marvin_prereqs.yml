@@ -34,6 +34,8 @@
     - marvin_install
 
 - name: Install Dev Tools Group
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   yum: name="@Development tools" state=installed update_cache=yes
   tags:
     - marvin
