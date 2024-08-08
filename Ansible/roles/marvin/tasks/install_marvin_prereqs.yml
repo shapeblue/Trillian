@@ -36,7 +36,7 @@
 - name: Ensure CA-Certificates are up to date
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  yum:
+  dnf:
     name: ca-certificates
     state: latest
   tags:
