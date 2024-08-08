@@ -33,12 +33,15 @@
     - marvin
     - marvin_install
 
-- Name: update all packages
+- name: Ensure CA-Certificates are up to date
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  ansible.builtin.dnf:
-    name: "*"
+  yum:
+    name: ca-certificates
     state: latest
+  tags:
+    - marvin
+    - marvin_install
 
 - name: Install Dev Tools Group
   vars:
@@ -150,15 +153,7 @@
 
 
 
-- name: Ensure CA-Certificates are up to date
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  yum:
-    name: ca-certificates
-    state: latest
-  tags:
-    - marvin
-    - marvin_install
+
 
 - name: ensure atd is running to schedule jobs
   vars:
