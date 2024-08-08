@@ -34,14 +34,14 @@
     - marvin_install
 
 - name: Install Dev Tools Group
-  dnf: name="@Development tools" state=present update_cache=yes
+  dnf: name="@Development tools" state=present
   tags:
     - marvin
     - marvin_cfg
     - marvin_install
 
 - name: Install other dependancies
-  dnf: name={{ item }} state=present update_cache=yes
+  dnf: name={{ item }} state=present
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
