@@ -34,7 +34,7 @@
     - marvin_install
 
 - name: Install Dev Tools Group
-  dnf: name="@Development tools" state=present
+  yum: name="@Development tools" state=installed update_cache=yes
   tags:
     - marvin
     - marvin_cfg
@@ -43,7 +43,7 @@
 - name: Install other dependancies
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  dnf: name={{ item }} state=present
+  yum: name={{ item }} state=installed update_cache=yes
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
@@ -144,7 +144,7 @@
 - name: Ensure CA-Certificates are up to date
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  dnf:
+  yum:
     name: ca-certificates
     state: latest
   tags:
