@@ -43,6 +43,13 @@
     - marvin
     - marvin_install
 
+- name: Upgrade all packages
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+
 - name: Install Dev Tools Group
   vars:
     ansible_python_interpreter: /usr/bin/python3
