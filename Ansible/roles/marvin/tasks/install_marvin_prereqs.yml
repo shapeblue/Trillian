@@ -33,7 +33,9 @@
     - marvin
     - marvin_install
 
-- name: update all packages - this is like running the 'dnf update' command
+- Name: update all packages
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   ansible.builtin.dnf:
     name: "*"
     state: latest
