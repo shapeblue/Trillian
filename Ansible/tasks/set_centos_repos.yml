@@ -29,13 +29,4 @@
     enabled: "{{ update_repo_enabled | default(1) }}"
     gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
 
-- name: Add CentOS-Base repo for updates
-  yum_repository:
-    name: updates
-    description: CentOS-$releasever - Updates
-    file: CentOS-Base
-    baseurl: "{{ os_repo }}/centos/$releasever/updates/$basearch/"
-    gpgcheck: no
-    enabled: "{{ update_repo_enabled | default(1) }}"
-    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
 
