@@ -33,8 +33,10 @@
     - marvin
     - marvin_install
 
-- name: DNF update the system
-  dnf: name="*" state:latest
+- name: update all packages - this is like running the 'dnf update' command
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
 
 - name: Install Dev Tools Group
   vars:
@@ -83,7 +85,7 @@
 
 - name: remove yum openSSL package
   vars:
-    ansible_python_interpreter: /usr/bin/python3 
+    ansible_python_interpreter: /usr/bin/python3
   dnf:
     name: pyOpenSSL
     state: absent
