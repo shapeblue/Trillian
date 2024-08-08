@@ -41,6 +41,8 @@
     - marvin_install
 
 - name: Install other dependancies
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   dnf: name={{ item }} state=present
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
