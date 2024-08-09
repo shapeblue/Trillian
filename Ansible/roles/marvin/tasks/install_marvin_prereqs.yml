@@ -55,9 +55,7 @@
   - wget
   - sqlite
   - sqlite-devel
-  - python-paramiko
-  - python-devel
-  - python-pip
+  - python3-paramiko
   - python3-devel
   - python3-pip
   - mysql-devel
