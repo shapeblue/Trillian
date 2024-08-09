@@ -78,7 +78,7 @@
 - name: Install Marvin package
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  yum: name=cloudstack-marvin state=present
+  dnf: name=cloudstack-marvin state=present
   tags:
     - marvin
     - marvin_cfg
@@ -86,7 +86,7 @@
 - name: Ensure integration test packages are installed
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  yum: name=cloudstack-integration-tests state=present
+  dnf: name=cloudstack-integration-tests state=present
   tags:
     - marvin
     - marvin_cfg
