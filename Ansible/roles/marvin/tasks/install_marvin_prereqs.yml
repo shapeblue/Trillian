@@ -34,14 +34,18 @@
     - marvin_install
 
 - name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed update_cache=yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf: name="@Development tools" state=present
   tags:
     - marvin
     - marvin_cfg
     - marvin_install
 
 - name: Install other dependancies
-  yum: name={{ item }} state=installed update_cache=yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf: name={{ item }} state=present
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
@@ -77,11 +81,15 @@
     - marvin_install
 
 - name: remove yum openSSL package
-  yum:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf:
     name: pyOpenSSL
     state: absent
 
 - name: Update pip and components
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "{{ item }}"
     extra_args: '--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --upgrade'
@@ -103,11 +111,15 @@
     - marvin_install
 
 - name: Workaround for pip install kubernetes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "kubernetes"
     extra_args: '--ignore-installed'
 
 - name: Update pip3 and components
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "{{ item }}"
     executable: pip3
@@ -131,11 +143,12 @@
     - marvin
     - marvin_install
 
-- name: Clear all yum cache
-  command: yum clean all
+
 
 - name: Ensure CA-Certificates are up to date
-  yum:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf:
     name: ca-certificates
     state: latest
   tags:
@@ -143,4 +156,6 @@
     - marvin_install
 
 - name: ensure atd is running to schedule jobs
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   service: name=atd state=started enabled=yes

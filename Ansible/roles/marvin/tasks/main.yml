@@ -19,8 +19,7 @@
 
 - include: ../../../tasks/set_centos_repos.yml
 
-- name: Ensure selinux python bindings are installed
-  yum: name=libselinux-python state=present
+
 
 - name: Ensure selinux python3 bindings are installed
   yum: name=libselinux-python3 state=present
@@ -49,6 +48,8 @@
 - include: ./install_marvin_prereqs.yml
 
 - name: Set repo to install PR tests from
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
   tags:
     - marvin
@@ -56,47 +57,65 @@
   when: not force_marvin_fallback
 
 - name: Determine if Marvin Package available from this repo
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   package_available: PACKAGE=cloudstack-marvin
   register: marvin_package_check
   ignore_errors: true
   when: not force_marvin_fallback
 
 - debug: msg="{{ marvin_package_check }}"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   when: not force_marvin_fallback
 
 - name: If cloudstack-marvin package does not exist, add fallback repo
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src=marvin.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
   when: ("{{ mypackage_available }}" == "false") or (force_marvin_fallback)
 
 - name: Install Marvin package
-  yum: name=cloudstack-marvin state=present
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf: name=cloudstack-marvin state=present
   tags:
     - marvin
     - marvin_cfg
 
 - name: Ensure integration test packages are installed
-  yum: name=cloudstack-integration-tests state=present
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  dnf: name=cloudstack-integration-tests state=present
   tags:
     - marvin
     - marvin_cfg
 
 - name: Install wheel
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: wheel
   tags:
     - marvin
 
 - name: Install nose
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: nose
   tags:
     - marvin
 
 - name: Check if marvin is installed in python3
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   stat: path=/usr/local/lib/python3.6/site-packages/marvin/
   register: marvin3
 
 - name: install marvin in python3 if not exist
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   shell: "pip3 install /usr/share/cloudstack-marvin/Marvin-*.tar.gz"
   when: marvin3.stat.exists == false
   tags:
@@ -104,12 +123,16 @@
     - marvin_cfg
 
 - name: retrieve environment data
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
   tags:
     - marvin
     - marvin_cfg
 
 - name: clear marvin dirs if exists
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   file: path="{{ item }}" state=absent
   with_items:
     - "/marvin"
@@ -118,6 +141,8 @@
     - marvin_cfg
 
 - name: create Marvin dirs if required
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   file: path="{{ item }}" state=directory
   with_items:
     - "/marvin"
@@ -129,6 +154,8 @@
     - marvin_cfg
 
 - name: Retrieve cloud SSH keys from mgmt server
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
   tags:
     - marvin
@@ -136,24 +163,32 @@
   ignore_errors: yes
 
 - name: copy tests
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   command: cp -r /usr/share/cloudstack-integration-tests /marvin/tests
   tags:
     - marvin
     - marvin_cfg
 
 - name: create mavin cfg file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src=advanced-cfg.j2 dest="/marvin/{{ env_name_clean }}-advanced-cfg"
   tags:
     - marvin
     - marvin_cfg
 
 - name: copy travis xunit parser
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   copy: src=xunit-reader.py dest=/marvin/tools/xunit-reader.py
   tags:
     - marvin
     - marvin_cfg
 
 - name: remove orginal test_data files
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   file: path="{{ item }}" state=absent
   with_items:
     - "/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc"
@@ -165,16 +200,22 @@
     - marvin_cfg
 
 - name: create templated test_data.py
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src=test_data.py.j2 dest=/marvin/test_data.py
   tags:
     - marvin
     - marvin_cfg
 
 - name: Check if marvin is installed in python2
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   stat: path=/usr/lib/python2.7/site-packages/marvin/
   register: marvin2
 
 - name: create symlink to test_data.py
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
   when: marvin2.stat.exists == true
   tags:
@@ -182,10 +223,14 @@
     - marvin_cfg
 
 - name: Check if marvin is installed in python3
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   stat: path=/usr/local/lib/python3.6/site-packages/marvin/
   register: marvin3
 
 - name: create python3 symlink to test_data.py
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   file: src=/marvin/test_data.py dest=/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py state=link mode=0644
   when: marvin3.stat.exists == true
   tags:
@@ -195,6 +240,8 @@
 # Install specific version of mysql-connector-python for compatibility with MariaDB
 # For more details: https://stackoverflow.com/a/73254598/3428543
 - name: Install mysql-connector-python==8.0.29
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pip:
     name: "{{ item }}"
     executable: pip3
@@ -206,30 +253,40 @@
     - marvin_install
 
 - name: create common functions file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="common_functions.sh.j2" dest="/marvin/common_functions.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
 
 - name: create smoketest file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="smoketests.sh.j2" dest="/marvin/smoketests.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
 
 - name: create componenttest file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="componenttests.sh.j2" dest="/marvin/componenttests.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
 
 - name: create additional tests file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="additionaltests.sh.j2" dest="/marvin/additionaltests.sh" mode=0755
   tags:
     - marvin
     - marvin_cfg
 
 - name: create marvintest file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="runtests.sh.j2" dest="/marvin/runtests.sh" mode=0755
   tags:
     - marvin
@@ -237,6 +294,8 @@
     - mavintest
 
 - name: add test result collation script
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   copy: src="collate_results.sh" dest="/marvin/collate_results.sh" mode=0755
   tags:
     - marvin
@@ -244,6 +303,8 @@
     - mavintest
 
 - name: add upload results to elasticsearch script
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   copy: src="upload_to_es.sh" dest="/marvin/upload_to_es.sh" mode=0755
   tags:
     - marvin
@@ -252,12 +313,16 @@
 
 
 - name: add extra config data file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="additional_test_data.json.j2" dest="/marvin/additional_test_data.json" mode=0644
   tags:
     - marvin
     - marvin_cfg
 
 - name: add test result collation script
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template: src="process_json_results.sh.j2" dest="/marvin/process_json_results.sh" mode=0755
   tags:
     - marvin
@@ -265,6 +330,8 @@
     - mavintest
 
 - name: Write testuuid file
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   template:
     src: testuuid.j2
     dest: "/marvin/testuuid"
@@ -274,4 +341,6 @@
     - marvin_cfg
 
 - include: ./fix_tests.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   when: fixtests
