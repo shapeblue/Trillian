@@ -22,7 +22,7 @@
 
 
 - name: Ensure selinux python3 bindings are installed
-  yum: name=libselinux-python3 state=present
+  dnf: name=libselinux-python3 state=present
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
