@@ -38,7 +38,7 @@
 - name: Upgrade all packages
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  dnf: name="*" state=latest sslverify=false
+  dnf: name="*" state=latest
   tags:
     - marvin
     - marvin_cfg
@@ -47,7 +47,7 @@
 - name: Install Dev Tools Group
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  dnf: name="@Development tools" state=present sslverify=false
+  dnf: name="@Development tools" state=present
   tags:
     - marvin
     - marvin_cfg
@@ -56,7 +56,7 @@
 - name: Install other dependancies
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  dnf: name={{ item }} state=present sslverify=false
+  dnf: name={{ item }} state=present
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
