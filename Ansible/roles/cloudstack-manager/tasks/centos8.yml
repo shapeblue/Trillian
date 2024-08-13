@@ -67,7 +67,7 @@
   command: dnf clean all
 
 - name: Ensure CA Certs are latest
-  dnf: name=ca-certificates state=latest enablerepo=base
+  dnf: name=ca-certificates state=latest
 
 - name: install rng-tools to get entropy
   dnf: name=haveged state=present
