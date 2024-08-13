@@ -3,12 +3,11 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
-- name: Install chrony
-  dnf:
-    name: chrony
-    state: present
+
 
 - name: Start chrony CentOS
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   service:
     name: chronyd
     state: started
