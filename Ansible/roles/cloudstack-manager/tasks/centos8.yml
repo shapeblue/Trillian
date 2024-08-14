@@ -63,12 +63,11 @@
   with_items:
     - "epel.repo"
 
-
+- name: Clear all dnf cache
+  command: dnf clean all
 
 - name: Ensure CA Certs are latest
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  dnf: name=ca-certificates state=latest
+  dnf: name=ca-certificates state=latest enablerepo=base
 
 - name: install rng-tools to get entropy
   dnf: name=haveged state=present
