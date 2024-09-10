@@ -92,17 +92,6 @@
   tags:
     - marvin
 
-- name: Check if marvin is installed in python3
-  stat: path=/usr/local/lib/python3.6/site-packages/marvin/
-  register: marvin3
-
-- name: install marvin in python3 if not exist
-  shell: "pip3 install /usr/share/cloudstack-marvin/Marvin-*.tar.gz"
-  when: marvin3.stat.exists == false
-  tags:
-    - marvin
-    - marvin_cfg
-
 - name: retrieve environment data
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
   tags:
@@ -170,7 +159,7 @@
     - marvin
     - marvin_cfg
 
-- name: Check if marvin is installed in python2
+- name: Check if marvin is installed in python3
   stat: path=/usr/lib/python2.7/site-packages/marvin/
   register: marvin2
 
