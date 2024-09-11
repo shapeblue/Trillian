@@ -142,6 +142,13 @@
       src: netplan.j2
       dest: /etc/netplan/00-trillian-config.yaml
 
+  - name: replace cloudbr1 address
+    replace:
+      dest="/etc/netplan/00-trillian-config.yaml"
+      regexp="cloudbr1.ipaddress"
+      replace="{{ ansible_ssh_host | replace('10.0.', '10.250.') }}/20"
+      backup=no
+
   - name: apply netplan
     command: netplan apply
 
