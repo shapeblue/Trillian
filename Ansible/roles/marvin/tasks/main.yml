@@ -17,6 +17,12 @@
   tags:
     - kvm
 
+- name: Update mtu to 1450 for vxlan
+  shell: ip link set eth0 mtu 1450 && echo "MTU=1450" |tee -a /etc/sysconfig/network-scripts/ifcfg-eth0
+  tags:
+    - marvin
+    - marvin_cfg
+
 - include: ../../../tasks/set_centos_repos.yml
 
 - name: Ensure selinux python bindings are installed
