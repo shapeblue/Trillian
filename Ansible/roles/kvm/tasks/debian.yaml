@@ -62,6 +62,7 @@
     - tcpdump
     - qemu-kvm
     - parted
+    - nplan
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
