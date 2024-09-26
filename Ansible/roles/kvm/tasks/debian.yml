@@ -26,7 +26,7 @@
 
 - apt_key:
     keyserver: keyring.debian.org
-    id: 0x2404C9546E145360
+    id: '0x2404C9546E145360'
 
 - name: add CloudStack ubuntu repo keys
   apt_key:
@@ -63,6 +63,7 @@
     - qemu-kvm
     - parted
     - nplan
+    - ufw
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -74,6 +75,7 @@
     pkg: "{{ kvm_java_path }}"
     state: latest
     update_cache: yes
+  ignore_errors: true
 
 - include: ./add_local_storage.yml
   when: use_local_storage
