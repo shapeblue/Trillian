@@ -24,7 +24,7 @@
 - include: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
-- include: ./debian.yml
+- include: ./ubuntu.yml
   when: ansible_distribution == 'Debian'
 
 - include: ./suse.yml

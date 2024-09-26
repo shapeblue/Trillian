@@ -91,6 +91,12 @@
   tags:
     - kvm
 
+- name: Configure Debian VMs for KVM
+  include: ./debian.yml
+  when: ansible_distribution == 'Debian'
+  tags:
+    - kvm
+
 - name: Update agent with local storage path
   lineinfile: dest=/etc/cloudstack/agent/agent.properties line="local.storage.path={{ kvm_localstorage_mount }}" state=present
   when: use_local_storage

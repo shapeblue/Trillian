@@ -1,0 +1,307 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: gather OS facts
+  os_facts:
+
+- name: Set hostname pt2
+  shell: "hostnamectl set-hostname {{ inventory_hostname }}"
+
+- apt_key:
+    url: "{{ os_repo }}/release.asc"
+    state: present
+
+- apt_key:
+    keyserver: keyring.debian.org
+    id: 0x2404C9546E145360
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
+
+
+- name: Install basic utilities and tools - all OS versions
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - openssh-client
+    - telnet
+    - tcpdump
+    - qemu-kvm
+    - parted
+
+- set_fact: java_ver="{{ kvm_java_ver }}"
+- set_fact: java_path="{{ kvm_java_path }}"
+
+- debug: msg="Java version required is {{ java_ver }}"
+
+- name: Ensure correct open-jdk is installed
+  apt:
+    pkg: "{{ kvm_java_path }}"
+    state: latest
+    update_cache: yes
+
+- include: ./add_local_storage.yml
+  when: use_local_storage
+  tags:
+    - kvm
+
+## start block
+
+- name: netplan on Ubuntu 18 onwards
+  block:
+
+  - name: write netplan
+    shell: rm -rf  /etc/netplan/*
+
+  - name: write netplan
+    template:
+      src: netplan.j2
+      dest: /etc/netplan/00-trillian-config.yaml
+
+  - name: apply netplan
+    command: netplan apply
+
+  when: ansible_distribution_major_version|int >= 12 and kvm_network_mode == "bridge"
+
+## end block
+
+- name: OVS on Ubuntu 18 onwards
+  block:
+  - name: Revert U18 from netplan to legacy networking due to no OVS support
+    replace:
+      path=/etc/default/grub
+      regexp='ipv6.disable=1'
+      replace='ipv6.disable=1 netcfg/do_not_use_netplan=true'
+
+  - name: Rebuild grub
+    shell: /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+
+  - name: Set static hostname
+    shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
+
+  - name: Updated /etc/cloud/cloud.cfg
+    lineinfile:
+      dest=/etc/cloud/cloud.cfg
+      regexp='preserve_hostname{{ ':' }} false'
+      line='preserve_hostname{{ ':' }} true'
+
+  - name: Purge netplan - shell as apt module doesnt work
+    shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
+    with_items:
+      - nplan
+      - netplan
+    ignore_errors: true
+    when: ansible_distribution_version|version_compare('18.04','<=')
+
+  - name: Delete netplan startup file
+    shell: rm -f /etc/netplan/*
+    when: ansible_distribution_version|version_compare('18.04','<=')
+
+  - name: Install OVS
+    apt: pkg={{ item }} state=present
+    with_items:
+      - openvswitch-switch
+      - ifupdown
+
+  - name: Configure sysctl.conf for OVS
+    lineinfile:
+      path: /etc/sysctl.conf
+      line: "{{ item }}"
+    with_items:
+      - "net.bridge.bridge-nf-call-ip6tables=0"
+      - "net.bridge.bridge-nf-call-iptables=0"
+      - "net.bridge.bridge-nf-call-arptables=0"
+      - "net.ipv6.conf.all.disable_ipv6=1"
+      - "net.ipv6.conf.default.disable_ipv6=1"
+      - "net.ipv6.conf.lo.disable_ipv6=1"
+
+  - name: Start OVS
+    systemd:
+      name: openvswitch-switch
+      state: started
+      enabled: yes
+
+  - name: New interfaces file
+    template:
+      src=interfaces-ovs.j2
+      dest="/etc/network/interfaces"
+
+  when: kvm_network_mode == "ovs"
+
+- name: UFW firerules
+  shell: "ufw allow proto tcp from any to any port {{ item }}"
+  with_items:
+    - "22"
+    - "1798"
+    - "16509"
+    - "5900:6100"
+    - "49152:49216"
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    url: "{{ baseurl_kvm }}Release.gpg"
+    state: present
+  ignore_errors: yes
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyring.debian.org
+    id: "{{ item }}"
+  with_items:
+    - 0x2404C9546E145360
+  ignore_errors: yes
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" not in baseurl_cloudstack
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" in baseurl_cloudstack
+
+- apt_key:
+    url: "https://download.cloudstack.org/release.asc"
+    state: present
+    validate_certs: no
+  when: '"download.cloudstack.org" in baseurl_cloudstack'
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Installs cloudstack-agent
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-agent
+    - cloudstack-common
+
+# no need to remove - same as for CentOS
+#- name: remove CloudStack repository into sources list.
+#  apt_repository:
+#    repo: 'deb {{ baseurl_kvm }} /'
+#    state: absent
+
+#- name: Run the equivalent of "apt-get update" as a separate step
+#  apt:
+#    update_cache: yes
+
+- name: Configure agent.properties for OVS
+  lineinfile:
+    path: /etc/cloudstack/agent/agent.properties
+    line: "{{ item }}"
+  with_items:
+    - "network.bridge.type=openvswitch"
+    - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
+  when: kvm_network_mode == "ovs"
+
+- name: Blacklist bridge module post agent install
+  template:
+    src=bridge-blacklist.j2
+    dest="/etc/modprobe.d/bridge-blacklist.conf"
+  when: kvm_network_mode == "ovs"
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp="#listen_tls = 0" line="listen_tls = 0"
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#listen_tcp = 1' line='listen_tcp = 1'
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#tcp_port= "16509"' line='tcp_port = "16509"'
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#auth_tcp = "sasl"' line='auth_tcp = "none"'
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile: dest=/etc/libvirt/libvirtd.conf regexp='#mdns_adv = 1' line='mdns_adv = 0'
+
+- name: Updated /etc/libvirt/libvirtd.conf
+  lineinfile:
+    dest: "/etc/libvirt/libvirtd.conf"
+    line: 'log_outputs="1:file:/var/log/libvirt/libvirtd.log"'
+
+- name: Update /etc/default/libvirtd in Debian
+  lineinfile:
+    dest: "/etc/default/libvirtd"
+    regexp: '^LIBVIRTD_ARGS=*'
+    line: 'LIBVIRTD_ARGS="-l"'
+
+#- name: Updated /etc/init/libvirt-bin.conf
+#  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
+
+- name: update /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
+
+- name: Symlink to disable
+  file: src=/etc/apparmor.d/usr.sbin.libvirtd dest=/etc/apparmor.d/disable/usr.sbin.libvirtd state=link
+
+- name: Symlink to disable
+  file: src=/etc/apparmor.d/usr.lib.libvirt.virt-aa-helper dest=/etc/apparmor.d/disable/usr.lib.libvirt.virt-aa-helper state=link
+
+- name: Apparmor parser libvirt
+  shell: apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
+  ignore_errors: yes
+
+- name: Apparmor parser libvirt helper
+  shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
+  ignore_errors: yes
+
+- name: Delete DHCP leases file - bionic onwards
+  file: path={{ item }} state=absent
+  with_items:
+    - "/var/lib/dhcp/dhclient.leases"
+    - "/run/systemd/netif/leases"
+
+# Note - Ubuntu18 startup of OVS bridges is not robust and does
+# sometime lead to race conditions where bridges don't come online
+# after reboot. In addition the bridges require to be defined - they
+# will not come up just based on config files, possibly
+# due to issues or bugs with the ifupdown.sh U18 startup script.
+# More info: https://github.com/openvswitch/ovs/blob/master/debian/openvswitch-switch.README.Debian
+- name: Configure OVS bridges and reboot
+  shell: /usr/bin/ovs-vsctl {{ item }}
+  with_items:
+    - "add-br {{ kvm_mgmt_network_label }}"
+    - "add-br {{ kvm_guest_network_label }}"
+    - "add-port {{ kvm_guest_network_label }} eth1"
+    - "add-port {{ kvm_mgmt_network_label }} eth0"
+  when: kvm_network_mode == "ovs"
+
+- name: restart machine (Ubuntu networking restart bug #1301015)
+  command: shutdown -r now "Ansible updates triggered"
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: kvm_network_mode == "ovs"
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  when: (not use_phys_hosts)

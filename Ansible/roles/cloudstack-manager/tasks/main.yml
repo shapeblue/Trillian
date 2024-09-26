@@ -61,6 +61,11 @@
   tags:
     - "global_settings"
 
+- include: ./debian.yml
+  when: ansible_distribution == 'Debian'
+  tags:
+    - "global_settings"
+
 - name: copy cloudutil script to /usr/bin
   copy:
     src: cloudutil

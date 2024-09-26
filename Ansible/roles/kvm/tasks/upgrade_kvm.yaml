@@ -21,3 +21,6 @@
 
 - include: upgrade_ubuntu_kvm.yaml
   when: ansible_distribution == 'Ubuntu'
+
+- include: upgrade_debian_kvm.yaml
+  when: ansible_distribution == 'Debian'
