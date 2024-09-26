@@ -14,6 +14,9 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+- name: Install DEB package for mysql
+  shell: 'wget https://dev.mysql.com/get/mysql-apt-config_0.8.32-1_all.deb -O /tmp/mysql-apt-config_0.8.32-1_all.deb && DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/mysql-apt-config_0.8.32-1_all.deb'
+
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes
@@ -23,7 +26,8 @@
     pkg: "{{ item }}"
     state: present
   with_items:
-    - python-setuptools
+    - python3-setuptools
+    - ufw
   tags:
     - mysql
     - mysqlconf
@@ -47,7 +51,7 @@
 #  file: path=/var/lib/mysql state=directory mode=0666
 
 - name: replace MySQL my.cnf using Template (Ubuntu)
-  template: src=my-centos8.cnf.j2 dest=/etc/mysql/my.cnf
+  template: src=my-debian.cnf.j2 dest=/etc/mysql/my.cnf
   tags:
     - mysql
     - mysqlconf

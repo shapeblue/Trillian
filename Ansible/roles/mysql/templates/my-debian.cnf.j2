@@ -1,0 +1,65 @@
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+
+[mysqld]
+{% if inventory_hostname in groups["mysql_hosts"] %}
+server-id={{ hostvars[inventory_hostname]['serverid'] }}
+{% endif %}
+datadir=/var/lib/mysql
+max_connections={{ mysql_max_connections }}
+skip_name_resolve
+
+innodb_buffer_pool_size={{ mysql_innodb_buffer_pool_size }}
+innodb_file_per_table=1
+innodb_log_buffer_size=16MB
+innodb_flush_log_at_trx_commit=2
+innodb_rollback_on_timeout=1
+innodb_lock_wait_timeout=600
+
+max_allowed_packet=16M
+
+log_error=/var/log/mysql/error.log
+
+slow_query_log_file=slow.log
+slow_query_log=0
+log_queries_not_using_indexes=1
+long_query_time=0.5
+min_examined_row_limit=100
+sort_buffer_size=2M
+tmp_table_size=32M
+
+max_heap_table_size=64M
+
+log-bin=mysql-bin
+binlog_cache_size=1M
+max_binlog_size=128M
+
+sync_binlog=1
+binlog_expire_logs_seconds=86400
+binlog-format=ROW
+
+user=mysql
+socket=/var/run/mysqld/mysqld.sock
+pid-file=/var/run/mysqld/mysqld.pid
+
+
+[mysqld_safe]
+log-error=/var/log/mysql/mysql.log
+pid-file=/var/run/mysqld/mysqld.pid
+
+
+[client]
+socket=/var/run/mysqld/mysqld.sock

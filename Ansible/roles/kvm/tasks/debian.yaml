@@ -28,6 +28,15 @@
     keyserver: keyring.debian.org
     id: 0x2404C9546E145360
 
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
+  ignore_errors: yes
+
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
     update_cache: yes

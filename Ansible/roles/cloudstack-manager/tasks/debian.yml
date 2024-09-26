@@ -34,6 +34,15 @@
     - 0x2404C9546E145360
   ignore_errors: yes
 
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
+  ignore_errors: yes
+
 - name: Add CloudStack repository into sources list.
   shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
   when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" not in baseurl_cloudstack
@@ -61,6 +70,9 @@
     - unattended-upgrades
   ignore_errors: yes
 
+- name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
+  shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
+
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
     pkg: "{{ item }}"
@@ -85,6 +97,7 @@
     - mysql-client
     - haveged
     - qemu-utils
+    - curl
 
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
@@ -100,9 +113,10 @@
     - cloudstack-usage
 
 - name: Ensure CloudStack Usage Service is started
-  service: 
+  systemd:
     name: cloudstack-usage
     state: started
+    enabled: yes
 
 - name: Ensure MySQL service is started and set to start on boot (Ubuntu)
   systemd:
