@@ -20,6 +20,18 @@
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install gnupg (apt-key relies on it)
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - gnupg
+
 - apt_key:
     url: "{{ os_repo }}/release.asc"
     state: present
