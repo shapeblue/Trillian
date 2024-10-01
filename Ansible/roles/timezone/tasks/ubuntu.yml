@@ -7,6 +7,9 @@
 - name: set new timezone
   file: src="/usr/share/zoneinfo/{{ env_timezone }}" dest=/etc/localtime state=link
 
+- name: update /etc/timezone
+  shell: "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure tzdata"
+
 - name: Install chrony
   apt:
     pkg: chrony

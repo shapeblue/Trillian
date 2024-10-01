@@ -1,0 +1,154 @@
+﻿---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: gather OS facts
+  os_facts:
+
+- name: Set hostname pt2
+  shell: "hostnamectl set-hostname {{ inventory_hostname }}"
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install gnupg (apt-key relies on it)
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - gnupg
+
+- name: Update /etc/hosts file
+  lineinfile:
+    dest="/etc/hosts"
+    insertafter=EOF
+    line="{{ ansible_ssh_host }}   {{ inventory_hostname }}"
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    url: "{{ baseurl_cloudstack }}Release.gpg"
+    state: present
+  ignore_errors: yes
+
+- name: add CloudStack debian repo keys
+  apt_key:
+    keyserver: keyring.debian.org
+    id: "{{ item }}"
+  with_items:
+    - 0x2404C9546E145360
+  ignore_errors: yes
+
+- name: add CloudStack ubuntu repo keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  with_items:
+    - 86F44E2A
+    - BDF0E176584DF93F
+  ignore_errors: yes
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" not in baseurl_cloudstack
+
+- name: Add CloudStack repository into sources list.
+  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" in baseurl_cloudstack
+
+- apt_key:
+    url: "https://download.cloudstack.org/release.asc"
+    state: present
+    validate_certs: no
+  when: '"download.cloudstack.org" in baseurl_cloudstack'
+
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
+
+- name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
+  shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
+
+- name: Ensure CloudStack management-server only is installed (we install usage server later)
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-management
+
+# no need to remove - same as for CentOS
+#- name: remove CloudStack repository into sources list.
+#  apt_repository: repo='deb "{{ baseurl_cloudstack }}" /' state=absent
+#
+#- name: Run the equivalent of "apt-get update" as a separate step
+#  apt:
+#    update_cache: yes
+
+- name: Ensure extra packages are installed
+  apt:
+    pkg: "{{ item }}"
+    state: present
+  with_items:
+    - mysql-client
+    - haveged
+    - qemu-utils
+    - curl
+    - iptables
+
+- name: Ensure vhd-util is present
+  get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
+
+- include: ./setupdb.yml
+
+- name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - cloudstack-usage
+
+- name: Ensure CloudStack Usage Service is started
+  systemd:
+    name: cloudstack-usage
+    state: started
+    enabled: yes
+
+- name: Ensure MySQL service is started and set to start on boot (Ubuntu)
+  systemd:
+    name: mysql
+    state: restarted
+    enabled: yes
+
+- name: copy cloudutil script to /usr/bin
+  copy: src=cloudutil dest=/usr/bin/ mode=0755
+
+- name: Ensure sshpass is installed
+  apt: name=sshpass state=present update_cache=true
+
+- name: Open 8096 when Marvin is required (Ubuntu)
+  shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
+  when: num_marv_hosts > 0

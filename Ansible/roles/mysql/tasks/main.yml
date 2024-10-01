@@ -94,6 +94,12 @@
     - mysql
     - mysqlconf
 
+- include: ./debian.yml
+  when: ansible_distribution == 'Debian'
+  tags:
+    - mysql 
+    - mysqlconf
+
 - include: ./mysql_replication.yml
   when: num_db_hosts | int > 1
   tags:
