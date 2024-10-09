@@ -143,3 +143,24 @@
 - name: Open 8096 when Marvin is required (Ubuntu)
   shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
   when: num_marv_hosts > 0
+
+- name: Ensure ipmitool is installed
+  apt: name=ipmitool state=present update_cache=true
+
+- name: stat /usr/share/cloudstack-common/ipmitool
+  stat: path=/usr/share/cloudstack-common/ipmitool
+  register: ipmitool_stat
+
+- name: copy /usr/bin/ipmitool to /usr/share/cloudstack-common/ipmitool
+  copy:
+    remote_src: True
+    src: /usr/bin/ipmitool
+    dest: /usr/share/cloudstack-common/ipmitool
+    mode: 0755
+  when: (ipmitool_stat.stat.exists == False)
+
+- name: copy ipmitool-C3 script to /usr/bin/ipmitool
+  copy:
+    src: ipmitool-C3
+    dest: /usr/bin/ipmitool
+    mode: 0755
