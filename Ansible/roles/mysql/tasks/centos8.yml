@@ -52,47 +52,27 @@
     - mysql
     - mysqlconf
 
-- name: Ensure mysql server is installed
+- name: Ensure mariadb server is installed
   dnf:
-    name: mysql-server
+    name: mariadb-server
     state: present
   register: mysqlinstalled
   tags:
     - mysql
     - mysqlconf
 
-- name: replace MySQL my.cnf using Template
+- name: replace MariaDB my.cnf using Template
   template:
-    src: my-centos8.cnf.j2
+    src: mariadb-my-centos8.cnf.j2
     dest: /etc/my.cnf
   when: mysqlinstalled.changed
   tags:
     - mysql
     - mysqlconf
 
-- name: Initialise MySQL
-  shell: mysqld --initialize-insecure --user=mysql
-  when: mysqlinstalled.changed
-  tags:
-    - mysql
-    - mysqlconf
-
-- name: Ridiculous fix for mysql permissions
-  file:
-    path: /var/log/mysql
-    state: directory
-    mode: 0750
-  when: mysqlinstalled.changed
-  tags:
-    - mysql
-    - mysqlconf
-
-# - name: Nuke everything since it's starting from scratch
-#   shell: rm -rf /var/lib/mysql/*
-
-- name: Ensure MySQL service is started and set to start on boot (centos/rhel7)
-  service:
-    name: mysqld
+- name: Ensure mariadb service is started and set to start on boot (centos/rhel7)
+  systemd:
+    name: mariadb
     state: restarted
     enabled: yes
   when: mysqlinstalled.changed
