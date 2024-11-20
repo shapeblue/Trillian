@@ -33,7 +33,7 @@
 
 - name: Ensure MySQL Client is present
   dnf: 
-    name: mysql
+    name: mariadb
     state: present
 
 - name: Ensure vhd-util is present
