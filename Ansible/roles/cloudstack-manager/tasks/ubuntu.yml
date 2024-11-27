@@ -81,15 +81,6 @@
   apt:
     update_cache: yes
 
-- name: Remove package unattended-upgrades
-  apt:
-    pkg: "{{ item }}"
-    state: absent
-    force: true
-  with_items:
-    - unattended-upgrades
-  ignore_errors: yes
-
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
     pkg: "{{ item }}"

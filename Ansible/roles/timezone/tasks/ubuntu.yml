@@ -10,6 +10,18 @@
 - name: update /etc/timezone
   shell: "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure tzdata"
 
+- name: Stop service unattended-upgrades
+  shell: systemctl stop unattended-upgrades
+
+- name: Remove package unattended-upgrades
+  apt:
+    pkg: "{{ item }}"
+    state: absent
+    force: true
+  with_items:
+    - unattended-upgrades
+  ignore_errors: yes
+
 - name: Install chrony
   apt:
     pkg: chrony

@@ -79,15 +79,6 @@
   apt:
     update_cache: yes
 
-- name: Remove package unattended-upgrades
-  apt:
-    pkg: "{{ item }}"
-    state: absent
-    force: true
-  with_items:
-    - unattended-upgrades
-  ignore_errors: yes
-
 - name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
   shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
 

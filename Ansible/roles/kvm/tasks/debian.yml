@@ -53,16 +53,6 @@
   apt:
     update_cache: yes
 
-- name: Remove package unattended-upgrades
-  apt:
-    pkg: "{{ item }}"
-    state: absent
-    force: true
-  with_items:
-    - unattended-upgrades
-  ignore_errors: yes
-
-
 - name: Install basic utilities and tools - all OS versions
   apt:
     pkg: "{{ item }}"
