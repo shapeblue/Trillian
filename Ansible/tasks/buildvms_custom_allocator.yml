@@ -50,6 +50,14 @@
 #     project: "{{ build_project }}"
 #     affinty_type: host affinity
 
+- name: "Fix: Create affinity group for VXLAN and OVS"
+  local_action:
+    module: cs_affinitygroup
+    api_timeout: 120
+    name: "{{ env_name_clean }}-ag"
+    project: "{{ build_project }}"
+    affinty_type: host affinity
+
 - name: Remove previous SSH key from Project if it exists
   local_action:
     module: cs_sshkeypair
@@ -131,6 +139,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
