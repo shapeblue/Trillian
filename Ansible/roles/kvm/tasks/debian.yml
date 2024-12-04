@@ -107,37 +107,8 @@
 
 ## end block
 
-- name: OVS on Ubuntu 18 onwards
+- name: OVS on Debian
   block:
-  - name: Revert U18 from netplan to legacy networking due to no OVS support
-    replace:
-      path=/etc/default/grub
-      regexp='ipv6.disable=1'
-      replace='ipv6.disable=1 netcfg/do_not_use_netplan=true'
-
-  - name: Rebuild grub
-    shell: /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
-
-  - name: Set static hostname
-    shell: /usr/bin/hostnamectl set-hostname --static --transient --pretty {{ inventory_hostname }}
-
-  - name: Updated /etc/cloud/cloud.cfg
-    lineinfile:
-      dest=/etc/cloud/cloud.cfg
-      regexp='preserve_hostname{{ ':' }} false'
-      line='preserve_hostname{{ ':' }} true'
-
-  - name: Purge netplan - shell as apt module doesnt work
-    shell: /usr/bin/apt-get remove {{ item }} --purge --allow-remove-essential
-    with_items:
-      - nplan
-      - netplan
-    ignore_errors: true
-    when: ansible_distribution_version|version_compare('18.04','<=')
-
-  - name: Delete netplan startup file
-    shell: rm -f /etc/netplan/*
-    when: ansible_distribution_version|version_compare('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
@@ -145,28 +116,29 @@
       - openvswitch-switch
       - ifupdown
 
-  - name: Configure sysctl.conf for OVS
-    lineinfile:
-      path: /etc/sysctl.conf
-      line: "{{ item }}"
-    with_items:
-      - "net.bridge.bridge-nf-call-ip6tables=0"
-      - "net.bridge.bridge-nf-call-iptables=0"
-      - "net.bridge.bridge-nf-call-arptables=0"
-      - "net.ipv6.conf.all.disable_ipv6=1"
-      - "net.ipv6.conf.default.disable_ipv6=1"
-      - "net.ipv6.conf.lo.disable_ipv6=1"
-
   - name: Start OVS
     systemd:
       name: openvswitch-switch
       state: started
       enabled: yes
 
-  - name: New interfaces file
+  - name: write netplan
+    shell: rm -rf  /etc/netplan/*
+
+  - name: write netplan
     template:
-      src=interfaces-ovs.j2
-      dest="/etc/network/interfaces"
+      src: netplan-ovs.j2
+      dest: /etc/netplan/00-trillian-config.yaml
+
+  - name: replace cloudbr1 address
+    replace:
+      dest="/etc/netplan/00-trillian-config.yaml"
+      regexp="cloudbr1.ipaddress"
+      replace="{{ ansible_ssh_host | replace('10.0.', '10.250.') | replace('10.1.', '10.251.') }}/20"
+      backup=no
+
+  - name: apply netplan
+    command: netplan apply
 
   when: kvm_network_mode == "ovs"
 
@@ -297,27 +269,6 @@
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
 
-# Note - Ubuntu18 startup of OVS bridges is not robust and does
-# sometime lead to race conditions where bridges don't come online
-# after reboot. In addition the bridges require to be defined - they
-# will not come up just based on config files, possibly
-# due to issues or bugs with the ifupdown.sh U18 startup script.
-# More info: https://github.com/openvswitch/ovs/blob/master/debian/openvswitch-switch.README.Debian
-- name: Configure OVS bridges and reboot
-  shell: /usr/bin/ovs-vsctl {{ item }}
-  with_items:
-    - "add-br {{ kvm_mgmt_network_label }}"
-    - "add-br {{ kvm_guest_network_label }}"
-    - "add-port {{ kvm_guest_network_label }} eth1"
-    - "add-port {{ kvm_mgmt_network_label }} eth0"
-  when: kvm_network_mode == "ovs"
-
-- name: copy uefi.properties
-  copy:
-    src: uefi.properties.Ubuntu
-    dest: /etc/cloudstack/agent/uefi.properties
-    mode: 0644
-
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
   async: 0
@@ -326,5 +277,9 @@
   when: kvm_network_mode == "ovs"
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  wait_for_connection:
+    delay: 120
+    sleep: 5
+    timeout: 900
+    connect_timeout: 2
   when: (not use_phys_hosts)
