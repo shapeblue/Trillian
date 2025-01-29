@@ -53,7 +53,7 @@
     - mysqlconf
 
 - name: Ensure mariadb repo is installed
-  shell: "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash"
+  shell: "curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | sudo bash"
 
 - name: Ensure mariadb server is installed
   dnf:
