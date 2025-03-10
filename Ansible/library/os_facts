@@ -6,10 +6,8 @@ if [ -e "/etc/redhat-release" ]; then
   OS_DIST="CentOS"
   if [ "`cat /etc/*-release | grep 'VERSION_ID='`" == "" ]; then
     OS_VER=`cat /etc/*-release | grep -i 'centos' | awk -F ' ' '{print $3}' | sed 's/\"//g' | head -1`
-    OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
   else
     OS_VER=`cat /etc/*-release | grep 'VERSION_ID=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
-    OS_VER_MAJOR=$OS_VER
   fi
 else
     if [ "`cat /etc/os-release | grep 'ID=debian'`" ] ; then
@@ -19,9 +17,9 @@ else
         OS_DIST="Ubuntu"
         OS_VER=`cat /etc/*-release | grep 'DISTRIB_RELEASE=' | awk -F '=' '{print $2}' | sed 's/\"//g'`
     fi
-    OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
-    
 fi
+OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
+
 ETH0_MAC="`cat /sys/class/net/eth0/address`"
 
 cat << EOF
