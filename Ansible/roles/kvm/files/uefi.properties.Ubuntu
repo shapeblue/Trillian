@@ -1,0 +1,5 @@
+guest.nvram.template.secure=/usr/share/OVMF/OVMF_VARS_4M.ms.fd
+guest.nvram.template.legacy=/usr/share/OVMF/OVMF_VARS_4M.fd
+guest.nvram.path=/var/lib/libvirt/qemu/nvram/
+guest.loader.secure=/usr/share/OVMF/OVMF_CODE_4M.secboot.fd
+guest.loader.legacy=/usr/share/OVMF/OVMF_CODE_4M.fd

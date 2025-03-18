@@ -12,6 +12,7 @@
 
 - name: Stop service unattended-upgrades
   shell: systemctl stop unattended-upgrades
+  ignore_errors: yes
 
 - name: Remove package unattended-upgrades
   apt:
