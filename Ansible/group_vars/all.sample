@@ -839,6 +839,7 @@ global_settings:
     - {name: "kvm.ha.recover.failure.threshold", value: "2", condition: "all"}
     - {name: "kvm.ha.recover.timeout", value: "30", condition: "all"}
     - {name: "kvm.ha.recover.wait.period", value: "30", condition: "all"}
+    - {name: "backup.framework.enabled", value: "true", condition: "all"}
   marvin:
     - {name: "ping.interval", value: "20", condition: "marvin"}
     - {name: "ping.timeout", value: "2.0", condition: "marvin"}
