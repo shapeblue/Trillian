@@ -142,3 +142,19 @@
 
 - name: Upgrade gcrypt library on CentOS 8 MS
   dnf: name=libgcrypt state=present
+
+- name: install gnutls-devel
+  dnf: name=gnutls-devel state=present
+
+- name: Enable FIPS mode
+  shell: fips-mode-setup --enable
+
+- name: Reboot EL8 host to enable FIPS mode
+  shell: /sbin/reboot
+  async: 0 
+  poll: 0
+  ignore_errors: true
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
