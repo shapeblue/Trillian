@@ -239,6 +239,15 @@
   tags:
     - kvm
 
+- name: Reboot EL8 host to enable FIPS mode
+  shell: /sbin/reboot
+  async: 0 
+  poll: 0 
+  ignore_errors: true
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
 - include: ./centos_elrepokernel.yml
   when: kvm_install_elrepo_kernel
   tags:
