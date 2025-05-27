@@ -144,6 +144,27 @@
   shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
   when: num_marv_hosts > 0
 
+- name: Ensure ipmitool is installed
+  apt: name=ipmitool state=present update_cache=true
+
+- name: stat /usr/share/cloudstack-common/ipmitool
+  stat: path=/usr/share/cloudstack-common/ipmitool
+  register: ipmitool_stat
+
+- name: copy /usr/bin/ipmitool to /usr/share/cloudstack-common/ipmitool
+  copy:
+    remote_src: True
+    src: /usr/bin/ipmitool
+    dest: /usr/share/cloudstack-common/ipmitool
+    mode: 0755
+  when: (ipmitool_stat.stat.exists == False)
+
+- name: copy ipmitool-C3 script to /usr/bin/ipmitool
+  copy:
+    src: ipmitool-C3
+    dest: /usr/bin/ipmitool
+    mode: 0755
+
 - name: Enable kernel FIPS mode
   shell: |
     sed -i 's,GRUB_CMDLINE_LINUX_DEFAULT=",GRUB_CMDLINE_LINUX_DEFAULT="fips=1 ,g' /etc/default/grub && \
