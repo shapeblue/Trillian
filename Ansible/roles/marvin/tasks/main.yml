@@ -224,3 +224,6 @@
 
 - include: ./fix_tests.yml
   when: fixtests
+
+- name: Fix ipmisim.py
+  shell: "wget http://10.0.3.130/fips/ipmisim.py -O /usr/local/lib/python3.6/site-packages/ipmisim/ipmisim.py"
