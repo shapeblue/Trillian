@@ -359,7 +359,7 @@ esxi_guest_dvs_network_label: "{{ esxi_guest_dvs_network_label | default( def_es
 esxi_public_dvs_network_label: "{{ esxi_public_dvs_network_label | default( def_esxi_public_dvs_network_label ) }}"
 
 # VMware 7 support - deploy vCenter appliance on a dedicated host
-{% if vmware_ver in ["70u1", "70u2", "70u3", "80", "80u1", "80u2", "80u3"] %}esxi_nested_vcenter: yes
+{% if vmware_ver in ["70u1", "70u2", "70u3", "80", "80u1", "80u2", "80u3", "80u3e"] %}esxi_nested_vcenter: yes
 esxi_vc_dummy_container: "{{ env_name_clean }}-dummy"
 {% else %}esxi_nested_vcenter: no
 {% endif %}
