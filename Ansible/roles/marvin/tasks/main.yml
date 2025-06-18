@@ -95,6 +95,8 @@
 - name: Install pyvmomi
   pip:
     name: "{{ item }}"
+    executable: pip3
+    extra_args: '--upgrade'
   with_items:
   - pyvmomi==8.0.3.0.1
   tags:
