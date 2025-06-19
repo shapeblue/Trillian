@@ -97,7 +97,7 @@
   - lxml
   - paramiko
   - setuptools
-  - pyvmomi==7.0.3
+  - pyvmomi==8.0.0.1
   tags:
     - marvin
     - marvin_install
@@ -127,6 +127,7 @@
   - paramiko
   - mysql-connector-python==8.0.29
   - netaddr==0.10.1
+  - pyvmomi==8.0.3.0.1
   tags:
     - marvin
     - marvin_install
