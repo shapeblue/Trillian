@@ -125,7 +125,7 @@
   - lxml
   - pycparser==2.13
   - paramiko
-  - mysql-connector-python==8.0.29
+  - mysql-connector-python
   - netaddr==0.10.1
   tags:
     - marvin
