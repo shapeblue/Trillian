@@ -92,16 +92,6 @@
   tags:
     - marvin
 
-- name: Install pyvmomi
-  pip:
-    name: "{{ item }}"
-    executable: pip3
-    extra_args: '--upgrade'
-  with_items:
-  - pyvmomi==8.0.3.0.1
-  tags:
-    - marvin
-
 - name: Check if marvin is installed in python3
   stat: path=/usr/local/lib/python3.6/site-packages/marvin/
   register: marvin3
