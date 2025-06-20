@@ -17,6 +17,18 @@
 - debug:
     msg: "EL9 Specific Management Server Build"
 
+- name: Enable FIPS mode
+  shell: fips-mode-setup --enable
+
+- name: Reboot EL9 host to enable FIPS mode
+  shell: /sbin/reboot
+  async: 0
+  poll: 0
+  ignore_errors: true
+
+- name: wait for ssh
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+
 - name: gather OS facts
   os_facts:
 
@@ -149,16 +161,4 @@
 
 - name: install gnutls-devel
   dnf: name=gnutls-devel state=present
-
-- name: Enable FIPS mode
-  shell: fips-mode-setup --enable
-
-- name: Reboot EL9 host to enable FIPS mode
-  shell: /sbin/reboot
-  async: 0
-  poll: 0
-  ignore_errors: true
-
-- name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 
