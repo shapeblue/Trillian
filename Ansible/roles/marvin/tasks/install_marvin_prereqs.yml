@@ -52,6 +52,7 @@
   - python-pip
   - python3-devel
   - python3-pip
+  - python3-requests
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -87,13 +88,11 @@
   - pyOpenSSL
   - wheel==0.34.2
   - kubernetes
-  - '"requests[security]"'
   - pyasn1
   - wget
   - texttable
   - lxml
   - pycparser==2.13
-  - paramiko
   - mysql-connector-python==8.0.29
   - netaddr==0.10.1
   - pyvmomi==8.0.3.0.1
