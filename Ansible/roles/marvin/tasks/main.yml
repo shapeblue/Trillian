@@ -131,8 +131,8 @@
 - name: remove orginal test_data files
   file: path="{{ item }}" state=absent
   with_items:
-    - "{{ marvin3 }}/config/test_data.pyc"
-    - "{{ marvin3 }}/config/test_data.py"
+    - "{{ package_dir.stdout }}/marvin/config/test_data.pyc"
+    - "{{ package_dir.stdout }}/marvin/config/test_data.py"
   tags:
     - marvin
     - marvin_cfg
@@ -144,7 +144,7 @@
     - marvin_cfg
 
 - name: create python3 symlink to test_data.py
-  file: src=/marvin/test_data.py dest={{ marvin3 }}/config/test_data.py state=link mode=0644
+  file: src=/marvin/test_data.py dest={{ package_dir.stdout }}/marvin/config/test_data.py state=link mode=0644
   when: marvin3.stat.exists == true
   tags:
     - marvin
