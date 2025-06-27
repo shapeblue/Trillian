@@ -28,20 +28,16 @@
     - marvin_cfg
     - marvin_install
 
-- include: ../../../tasks/set_centos_repos.yml
-  tags:
-    - marvin
-    - marvin_install
 
 - name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed update_cache=yes
+  dnf: name="@Development tools" state=installed update_cache=yes
   tags:
     - marvin
     - marvin_cfg
     - marvin_install
 
 - name: Install other dependancies
-  yum: name={{ item }} state=installed update_cache=yes
+  dnf: name={{ item }} state=installed update_cache=yes
   with_items:
   - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
@@ -77,7 +73,7 @@
     - marvin_install
 
 - name: remove yum openSSL package
-  yum:
+  dnf:
     name: pyOpenSSL
     state: absent
 
@@ -136,7 +132,7 @@
   command: yum clean all
 
 - name: Ensure CA-Certificates are up to date
-  yum:
+  dnf:
     name: ca-certificates
     state: latest
   tags:

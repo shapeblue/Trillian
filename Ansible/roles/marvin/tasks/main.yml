@@ -16,7 +16,10 @@
   os_facts:
 
 - name: Ensure selinux python3 bindings are installed
-  yum: name=python3-libselinux state=present
+  dnf: name=python3-libselinux state=present
+
+- name: Ensure sshpass is installed
+  dnf: name=sshpass state=present
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
@@ -68,7 +71,7 @@
     - marvin_cfg
 
 - name: Ensure integration test packages are installed
-  yum: name=cloudstack-integration-tests state=present
+  dnf: name=cloudstack-integration-tests state=present
   tags:
     - marvin
     - marvin_cfg
