@@ -74,8 +74,11 @@
 
 - name: remove yum openSSL package
   dnf:
-    name: pyOpenSSL
+    name: "{{ item }}"
     state: absent
+  with_items:
+  - pyOpenSSL
+  - python3-paramiko
 
 - name: Update pip3 and components
   pip:
@@ -83,25 +86,26 @@
     executable: pip3
     extra_args: '--upgrade'
   with_items:
-  - pip==21.3.1
+  - pip
   - six
   - pyOpenSSL
-  - wheel==0.34.2
+  - paramiko
+  - wheel
   - kubernetes
   - pyasn1
   - wget
   - texttable
   - lxml
-  - pycparser==2.13
-  - mysql-connector-python==8.0.29
-  - netaddr==0.10.1
-  - pyvmomi==8.0.3.0.1
+  - pycparser
+  - mysql-connector-python==8.0.30
+  - netaddr
+  - pyvmomi
   tags:
     - marvin
     - marvin_install
 
 - name: Clear all yum cache
-  command: yum clean all
+  command: dnf clean all
 
 - name: Ensure CA-Certificates are up to date
   dnf:
