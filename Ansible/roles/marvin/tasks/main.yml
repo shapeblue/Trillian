@@ -13,9 +13,7 @@
     - kvm
 
 - name: Now I'm connected, get facts
-  setup:
-  tags:
-    - kvm
+  os_facts:
 
 - include: ../../../tasks/set_centos_repos.yml
 
