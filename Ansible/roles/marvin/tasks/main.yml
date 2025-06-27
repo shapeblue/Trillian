@@ -119,11 +119,20 @@
     - marvin
     - marvin_cfg
 
+- name get site packages location
+  shell: pip show requests | awk '/^Location:/{print $2}'
+  register:
+    package_dir
+
+- name: Check if marvin is installed in python3
+  stat: path={{ package_dir.stdout }}/marvin/
+  register: marvin3
+
 - name: remove orginal test_data files
   file: path="{{ item }}" state=absent
   with_items:
-    - "/usr/lib/python3.9/site-packages/marvin/config/test_data.pyc"
-    - "/usr/lib/python3.9/site-packages/marvin/config/test_data.py"
+    - "{{ marvin3 }}/config/test_data.pyc"
+    - "{{ marvin3 }}/config/test_data.py"
   tags:
     - marvin
     - marvin_cfg
@@ -134,13 +143,8 @@
     - marvin
     - marvin_cfg
 
-
-- name: Check if marvin is installed in python3
-  stat: path=/usr/lib/python3.9/site-packages/marvin/
-  register: marvin3
-
 - name: create python3 symlink to test_data.py
-  file: src=/marvin/test_data.py dest=/usr/lib/python3.9/site-packages/marvin/config/test_data.py state=link mode=0644
+  file: src=/marvin/test_data.py dest={{ marvin3 }}/config/test_data.py state=link mode=0644
   when: marvin3.stat.exists == true
   tags:
     - marvin
