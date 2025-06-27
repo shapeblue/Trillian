@@ -69,17 +69,6 @@
     - marvin
     - marvin_cfg
 
-- name: Check if marvin is installed in python3
-  stat: path=/usr/lib/python3.9/site-packages/marvin/
-  register: marvin3
-
-- name: install marvin in python3 if not exist
-  shell: "pip3 install /usr/share/cloudstack-marvin/Marvin-*.tar.gz"
-  when: marvin3.stat.exists == false
-  tags:
-    - marvin
-    - marvin_cfg
-
 - name: retrieve environment data
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
   tags:
@@ -156,19 +145,6 @@
   tags:
     - marvin
     - marvin_cfg
-
-# Install specific version of mysql-connector-python for compatibility with MariaDB
-# For more details: https://stackoverflow.com/a/73254598/3428543
-- name: Install mysql-connector-python==8.0.29
-  pip:
-    name: "{{ item }}"
-    executable: pip3
-    extra_args: '--upgrade'
-  with_items:
-  - mysql-connector-python==8.0.29
-  tags:
-    - marvin
-    - marvin_install
 
 - name: create common functions file
   template: src="common_functions.sh.j2" dest="/marvin/common_functions.sh" mode=0755

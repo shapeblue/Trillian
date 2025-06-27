@@ -39,7 +39,6 @@
 - name: Install other dependancies
   dnf: name={{ item }} state=installed
   with_items:
-  - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -47,12 +46,8 @@
   - wget
   - sqlite
   - sqlite-devel
-  - python-paramiko
-  - python-devel
-  - python-pip
   - python3-devel
   - python3-pip
-  - python3-requests
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -78,7 +73,6 @@
     state: absent
   with_items:
   - pyOpenSSL
-  - python3-paramiko
 
 - name: Update pip3 and components
   pip:
