@@ -119,7 +119,7 @@
     - marvin
     - marvin_cfg
 
-- name get site packages location
+- name: get site packages location
   shell: pip show requests | awk '/^Location:/{print $2}'
   register:
     package_dir
