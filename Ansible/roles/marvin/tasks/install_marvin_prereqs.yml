@@ -113,6 +113,6 @@
 
 - name: ensure atd is running to schedule jobs
   systemd:
-    name=atd
-    state=started
-    enabled=true
+    name: atd
+    state: started
+    enabled: true
