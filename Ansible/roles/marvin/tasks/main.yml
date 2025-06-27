@@ -65,7 +65,7 @@
   when: ("{{ mypackage_available }}" == "false") or (force_marvin_fallback)
 
 - name: Install Marvin package
-  yum: name=cloudstack-marvin state=present
+  dnf: name=cloudstack-marvin state=present
   tags:
     - marvin
     - marvin_cfg

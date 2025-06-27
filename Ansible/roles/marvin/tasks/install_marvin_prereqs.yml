@@ -52,7 +52,6 @@
   - python-pip
   - python3-devel
   - python3-pip
-  - mysql-devel
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -76,32 +75,6 @@
   dnf:
     name: pyOpenSSL
     state: absent
-
-- name: Update pip and components
-  pip:
-    name: "{{ item }}"
-    extra_args: '--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --upgrade'
-  with_items:
-  - pip==20.2.1
-  - six
-  - pyOpenSSL
-  - wheel==0.34.2
-  - '"requests[security]"'
-  - pyasn1
-  - wget
-  - texttable
-  - lxml
-  - paramiko
-  - setuptools
-  - pyvmomi==8.0.0.1
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Workaround for pip install kubernetes
-  pip:
-    name: "kubernetes"
-    extra_args: '--ignore-installed'
 
 - name: Update pip3 and components
   pip:
