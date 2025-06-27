@@ -112,4 +112,7 @@
     - marvin_install
 
 - name: ensure atd is running to schedule jobs
-  service: name=atd state=started enabled=yes
+  systemd:
+    name=atd
+    state=started
+    enabled=true
