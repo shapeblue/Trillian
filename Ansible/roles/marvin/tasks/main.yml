@@ -15,8 +15,6 @@
 - name: Now I'm connected, get facts
   os_facts:
 
-- include: ../../../tasks/set_centos_repos.yml
-
 - name: Ensure selinux python bindings are installed
   yum: name=libselinux-python state=present
 
