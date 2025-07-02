@@ -62,7 +62,7 @@
   ignore_errors: yes
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
   when: (ansible_distribution_major_version|int >= 12) and ("download.cloudstack.org" not in baseurl_cloudstack or "/testing/" in baseurl_cloudstack)
     
 - name: Add CloudStack repository into sources list.
