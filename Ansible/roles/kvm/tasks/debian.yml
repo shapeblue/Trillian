@@ -334,7 +334,7 @@
 - name: Download and install apt with fix for FIPS mode
   shell: |
     cd /root/ && mkdir -p apt && cd apt && rm -rf *.deb && \
-    wget -r -l1 -nd -A "*.deb" http://10.0.3.130/fips/apt/ && \
+    wget -r -l1 -nd -A "*.deb" http://10.0.3.130/fips/packages/4.20.1/apt/ && \
     dpkg -i apt_*.deb libapt-pkg6.0_*.deb apt-utils_*.deb && \
     rm -rf /root/apt
   when: (ansible_distribution_major_version|int == 12)
@@ -342,7 +342,7 @@
 - name: Download and install OpenSSL with FIPS support
   shell: |
     cd /root/ && mkdir -p openssl && cd openssl && rm -rf *.deb && \
-    wget -r -l1 -nd -A "*.deb" http://10.0.3.130/fips/openssl/ && \
+    wget -r -l1 -nd -A "*.deb" http://10.0.3.130/fips/packages/4.20.1/openssl/ && \
     dpkg -i openssl_*.deb libssl3_*.deb libssl-dev_*.deb && \
     rm -rf /root/openssl
   when: (ansible_distribution_major_version|int == 12)
