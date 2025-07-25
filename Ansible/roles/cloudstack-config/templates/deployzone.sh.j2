@@ -285,4 +285,12 @@ cloudmonkey create account domainid="$DOM_ID" accounttype=0 username="user" acco
 {% endif %}
 
 
+{% set mgmt_ip_list = [] %}
+{% for mgmt_host in groups['cloudstack_manager_hosts'] %}
+{%   set _ = mgmt_ip_list.append(hostvars[mgmt_host]['ansible_ssh_host']) %}
+{% endfor %}
+{% if mgmt_ip_list | length > 1 %}
+cloudmonkey update configuration name=host value={{ mgmt_ip_list | join(',') }} | tee -i -a ${DEPLOYLOG};
+{% endif %}
+
 WriteOutput "You're done. Good luck!";
