@@ -28,22 +28,17 @@
     - marvin_cfg
     - marvin_install
 
-- include: ../../../tasks/set_centos_repos.yml
-  tags:
-    - marvin
-    - marvin_install
 
 - name: Install Dev Tools Group
-  yum: name="@Development tools" state=installed update_cache=yes
+  dnf: name="@Development tools" state=installed
   tags:
     - marvin
     - marvin_cfg
     - marvin_install
 
 - name: Install other dependancies
-  yum: name={{ item }} state=installed update_cache=yes
+  dnf: name={{ item }} state=installed
   with_items:
-  - 'http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm'
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -51,12 +46,8 @@
   - wget
   - sqlite
   - sqlite-devel
-  - python-paramiko
-  - python-devel
-  - python-pip
   - python3-devel
   - python3-pip
-  - mysql-devel
   - zlib-devel
   - bzip2-devel
   - openssl-devel
@@ -77,35 +68,14 @@
     - marvin_install
 
 - name: remove yum openSSL package
-  yum:
-    name: pyOpenSSL
-    state: absent
-
-- name: Update pip and components
-  pip:
+  dnf:
     name: "{{ item }}"
-    extra_args: '--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --upgrade'
+    state: absent
   with_items:
-  - pip==20.2.1
-  - six
-  - pyOpenSSL
-  - wheel==0.34.2
-  - '"requests[security]"'
-  - pyasn1
-  - wget
-  - texttable
-  - lxml
-  - paramiko
-  - setuptools
-  - pyvmomi==8.0.0.1
-  tags:
-    - marvin
-    - marvin_install
-
-- name: Workaround for pip install kubernetes
-  pip:
-    name: "kubernetes"
-    extra_args: '--ignore-installed'
+  - python3-pyOpenSSL
+  - python3-six
+  - python3-urllib3
+  - python3-requests
 
 - name: Update pip3 and components
   pip:
@@ -113,30 +83,29 @@
     executable: pip3
     extra_args: '--upgrade'
   with_items:
-  - pip==21.3.1
+  - pip
   - six
   - pyOpenSSL
-  - wheel==0.34.2
+  - paramiko
+  - wheel
   - kubernetes
-  - '"requests[security]"'
   - pyasn1
   - wget
   - texttable
   - lxml
-  - pycparser==2.13
-  - paramiko
-  - mysql-connector-python==8.0.29
-  - netaddr==0.10.1
-  - pyvmomi==8.0.3.0.1
+  - pycparser
+  - mysql-connector-python==8.0.30
+  - netaddr
+  - pyvmomi
   tags:
     - marvin
     - marvin_install
 
 - name: Clear all yum cache
-  command: yum clean all
+  command: dnf clean all
 
 - name: Ensure CA-Certificates are up to date
-  yum:
+  dnf:
     name: ca-certificates
     state: latest
   tags:
@@ -144,4 +113,7 @@
     - marvin_install
 
 - name: ensure atd is running to schedule jobs
-  service: name=atd state=started enabled=yes
+  systemd:
+    name: atd
+    state: started
+    enabled: true
