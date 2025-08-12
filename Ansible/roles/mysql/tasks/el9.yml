@@ -52,6 +52,14 @@
     - mysql
     - mysqlconf
 
+- name: Ensure openssh is upgraded
+  dnf:
+    name: openssh
+    state: latest
+  tags:
+    - mysql
+    - mysqlconf
+
 - name: Ensure mysql server is installed
   dnf:
     name: mysql-server
