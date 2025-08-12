@@ -17,10 +17,10 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
-- name: Install chrony
-  dnf:
-    name: chrony
-    state: present
+# name: Install chrony
+#  dnf:
+#    name: chrony
+#   state: present
 
-- name: Start chrony CentOS
-  shell: systemctl start chronyd
+# name: Start chrony CentOS
+#  shell: systemctl start chronyd
