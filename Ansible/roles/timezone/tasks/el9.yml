@@ -17,6 +17,26 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
+- name: Find repo files on remote
+  find:
+    paths:
+      - /etc/yum.repos.d
+    patterns: "*.repo"
+    file_type: file
+  register: repo_files
+  failed_when: false
+  become: true
+
+- name: Remove $rltype from mirrorlist entries
+  replace:
+    path: "{{ item.path }}"
+    regexp: '\$rltype'
+    replace: ''
+    backup: yes
+  with_items: "{{ repo_files.files | default([]) }}"
+  when: (repo_files.matched | default(0)) > 0
+  become: true
+
 - name: Install chrony
   dnf:
     name: chrony
