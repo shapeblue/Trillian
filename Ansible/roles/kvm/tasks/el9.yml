@@ -97,6 +97,7 @@
     - python3-pip
     - edk2-ovmf
     - swtpm
+    - nfs-utils
   tags:
     - kvm
 
