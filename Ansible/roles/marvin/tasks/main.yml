@@ -13,17 +13,16 @@
     - kvm
 
 - name: Now I'm connected, get facts
-  setup:
-  tags:
-    - kvm
+  os_facts:
 
-- include: ../../../tasks/set_centos_repos.yml
-
-- name: Ensure selinux python bindings are installed
-  yum: name=libselinux-python state=present
+- name: Set hostname pt2
+  shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
 - name: Ensure selinux python3 bindings are installed
-  yum: name=libselinux-python3 state=present
+  dnf: name=python3-libselinux state=present
+
+- name: Ensure sshpass is installed
+  dnf: name=sshpass state=present
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
@@ -35,16 +34,6 @@
 
 - name: sync time with mgmt server
   shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`
-
-- name: restart machine for clean time application
-  command: sleep 2 && /sbin/shutdown -r now "set time"
-  async: 1
-  poll: 0
-  ignore_errors: true
-
-- name: waiting 60 secs for server to come back
-  become: false
-  local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started delay=60 timeout=300
 
 - include: ./install_marvin_prereqs.yml
 
@@ -69,36 +58,13 @@
   when: ("{{ mypackage_available }}" == "false") or (force_marvin_fallback)
 
 - name: Install Marvin package
-  yum: name=cloudstack-marvin state=present
+  dnf: name=cloudstack-marvin state=present
   tags:
     - marvin
     - marvin_cfg
 
 - name: Ensure integration test packages are installed
-  yum: name=cloudstack-integration-tests state=present
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: Install wheel
-  pip:
-    name: wheel
-  tags:
-    - marvin
-
-- name: Install nose
-  pip:
-    name: nose
-  tags:
-    - marvin
-
-- name: Check if marvin is installed in python3
-  stat: path=/usr/local/lib/python3.6/site-packages/marvin/
-  register: marvin3
-
-- name: install marvin in python3 if not exist
-  shell: "pip3 install /usr/share/cloudstack-marvin/Marvin-*.tar.gz"
-  when: marvin3.stat.exists == false
+  dnf: name=cloudstack-integration-tests state=present
   tags:
     - marvin
     - marvin_cfg
@@ -153,13 +119,20 @@
     - marvin
     - marvin_cfg
 
+- name: get site packages location
+  shell: pip show requests | awk '/^Location:/{print $2}'
+  register:
+    package_dir
+
+- name: Check if marvin is installed in python3
+  stat: path={{ package_dir.stdout }}/marvin/
+  register: marvin3
+
 - name: remove orginal test_data files
   file: path="{{ item }}" state=absent
   with_items:
-    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.pyc"
-    - "/usr/lib/python2.7/site-packages/marvin/config/test_data.py"
-    - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.pyc"
-    - "/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py"
+    - "{{ package_dir.stdout }}/marvin/config/test_data.pyc"
+    - "{{ package_dir.stdout }}/marvin/config/test_data.py"
   tags:
     - marvin
     - marvin_cfg
@@ -170,40 +143,12 @@
     - marvin
     - marvin_cfg
 
-- name: Check if marvin is installed in python2
-  stat: path=/usr/lib/python2.7/site-packages/marvin/
-  register: marvin2
-
-- name: create symlink to test_data.py
-  file: src=/marvin/test_data.py dest=/usr/lib/python2.7/site-packages/marvin/config/test_data.py state=link mode=0644
-  when: marvin2.stat.exists == true
-  tags:
-    - marvin
-    - marvin_cfg
-
-- name: Check if marvin is installed in python3
-  stat: path=/usr/local/lib/python3.6/site-packages/marvin/
-  register: marvin3
-
 - name: create python3 symlink to test_data.py
-  file: src=/marvin/test_data.py dest=/usr/local/lib/python3.6/site-packages/marvin/config/test_data.py state=link mode=0644
+  file: src=/marvin/test_data.py dest={{ package_dir.stdout }}/marvin/config/test_data.py state=link mode=0644
   when: marvin3.stat.exists == true
   tags:
     - marvin
     - marvin_cfg
-
-# Install specific version of mysql-connector-python for compatibility with MariaDB
-# For more details: https://stackoverflow.com/a/73254598/3428543
-- name: Install mysql-connector-python==8.0.29
-  pip:
-    name: "{{ item }}"
-    executable: pip3
-    extra_args: '--upgrade'
-  with_items:
-  - mysql-connector-python==8.0.29
-  tags:
-    - marvin
-    - marvin_install
 
 - name: create common functions file
   template: src="common_functions.sh.j2" dest="/marvin/common_functions.sh" mode=0755
