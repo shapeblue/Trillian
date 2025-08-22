@@ -18,7 +18,7 @@ set +e # stop erroneous failures reported by Jenkins
 TESTTYPE="Component tests"
 LOGDIR=/marvin/MarvinLogs
 TESTDIR="/marvin/tests/component"
-SUMMARY_FILE=/marvin/componenttests-summary.txt
+SUMMARY_FILE=/marvin/componenttest-summary.txt
 TMP_JSON_DIR="/marvin/json_results/"
 CLEAN_UP_LOG="/marvin/cleanup.log"
 mkdir -p $LOGDIR
@@ -74,8 +74,7 @@ for file in $FILES; do
   {% if use_hipchat %}
     hipchat --action sendNotification --room "Marvin Notifications" --messageFormat "html" --colour "gray" --message "Starting <b>$(basename $file)</b> on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }} in: <br><b>{{ env_name_clean }}</b> - test ($counter of $NUMTESTS)"
   {% endif %}
-  {% if use_slack %}
-    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
+  {% if use_slack %}    slackmsg "Starting $TESTFILENAME on {{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}.\nTest ($counter of $NUMTESTS) " "#808080"
   {% endif %}
   start_time="$(date -u +%s)"
   launchtest $file
