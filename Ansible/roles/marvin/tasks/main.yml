@@ -18,6 +18,10 @@
 - name: Set hostname pt2
   shell: "hostnamectl set-hostname {{ inventory_hostname }}"
 
+- name: Stop and disable firewalld on OL9
+  shell: systemctl stop firewalld && systemctl disable firewalld
+  ignore_errors: true
+
 - name: Ensure selinux python3 bindings are installed
   dnf: name=python3-libselinux state=present
 
