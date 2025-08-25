@@ -230,5 +230,13 @@
 - name: Run chronyc to make sure time is synced
   shell: "chronyc makestep"
 
+- name: get ipmisim packages location
+  shell: pip show ipmisim | awk '/^Location:/{print $2}'
+  register:
+    ipmisim_dir
+
 - name: Fix ipmisim.py
-  shell: "wget http://10.0.3.130/fips/ipmisim.py.compliant -O /usr/local/lib/python3.6/site-packages/ipmisim/ipmisim.py"
+  copy:
+    src: ipmisim.py.compliant
+    dest: "{{ ipmisim_dir.stdout }}/ipmisim/ipmisim.py"
+    mode: 0644
