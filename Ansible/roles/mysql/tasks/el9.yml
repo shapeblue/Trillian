@@ -62,7 +62,7 @@
 
 - name: Ensure mysql server is installed
   dnf:
-    name: mysql-server
+    name: mysql*-server
     state: present
   register: mysqlinstalled
   tags:
@@ -98,7 +98,7 @@
 # - name: Nuke everything since it's starting from scratch
 #   shell: rm -rf /var/lib/mysql/*
 
-- name: Ensure MySQL service is started and set to start on boot (el9)
+- name: Ensure MySQL service is started and set to start on boot (el9/el10)
   shell: systemctl enable mysqld && systemctl restart mysqld
   when: mysqlinstalled.changed
   tags:

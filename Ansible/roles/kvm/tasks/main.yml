@@ -73,9 +73,9 @@
   tags:
     - kvm
 
-- name: Configure EL9 VMs for KVM
+- name: Configure EL9 or EL10 VMs for KVM
   include: ./el9.yml
-  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 9 )
+  when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 9 )
   tags:
     - kvm
 
