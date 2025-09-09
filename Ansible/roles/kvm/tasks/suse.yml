@@ -18,12 +18,17 @@
     msg: "SUSE Specific KVM host Build"
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
-  zypper:
-    name: python3-selinux
-    state: present
+  shell: "zypper install -y python3-selinux"
   tags:
     - kvm
   ignore_errors: yes
+
+- name: install net-tools
+  shell: "zypper install -y net-tools"
+
+- name: install net-tools
+  shell: "zypper install -y net-tools-deprecated"
+  ignore_errors: yes # This package is deprecated. ignoring errors for older distros
 
 - name: Set selinux to permissive
   command: setenforce permissive
@@ -38,7 +43,7 @@
     - kvm
   ignore_errors: yes
 
-- include: ./kvm_networking_bridge_suse.yml
+- include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
 - include: ./kvm_networking_ovs_suse.yml
@@ -55,19 +60,7 @@
 # Don't really need suse for phy hosts
 
 - name: Install basic utilities and tools - all versions
-  zypper: name={{ item }} state=present update_cache=yes
-  with_items:
-    - bind-utils
-    - openssh
-    - pciutils
-    - telnet
-    - tcpdump
-    - traceroute
-    - nano
-    - iftop
-    - rpcbind
-    - parted
-    - vim
+  shell: "zypper install -y bind-utils openssh pciutils telnet tcpdump traceroute nano iftop rpcbind parted vim"
   tags:
     - kvm
 
@@ -124,8 +117,19 @@
     - kvm
     - kvm-agent
 
-- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+- name: Update libvirtd service - Environment LIBVIRTD_ARGS
+  lineinfile: 
+    dest: /usr/lib/systemd/system/libvirtd.service
+    regexp: '^Environment=LIBVIRTD_ARGS'
+    line: 'Environment=LIBVIRTD_ARGS="--listen"'
+    insertafter: '^\[Service\]'
+    state: present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Reload systemd daemon after libvirtd service modification
+  command: systemctl daemon-reload
   tags:
     - kvm
     - kvm-agent

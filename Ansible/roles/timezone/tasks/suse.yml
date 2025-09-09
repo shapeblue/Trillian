@@ -18,10 +18,7 @@
   command: "timedatectl set-timezone {{ env_timezone }}"
 
 - name: Install chrony
-  zypper:
-    name: chrony
-    state: present
-    update_cache: yes
+  shell: zypper install -y chrony
 
 - name: Start chrony SUSE
   service:

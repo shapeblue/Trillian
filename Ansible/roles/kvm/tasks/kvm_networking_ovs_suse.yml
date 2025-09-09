@@ -21,10 +21,7 @@
   template: src=bridge-blacklist.j2 dest="/etc/modprobe.d/bridge-blacklist.conf"
 
 - name: Install OVS
-  zypper: name={{ item }} state=present
-  with_items:
-    - openvswitch
-    - openvswitch-switch
+  shell: "zypper install -y openvswitch openvswitch-switch"
 
 - name: Start OVS
   systemd:
