@@ -117,13 +117,8 @@
     - kvm
     - kvm-agent
 
-- name: Update libvirtd service - Environment LIBVIRTD_ARGS
-  lineinfile: 
-    dest: /usr/lib/systemd/system/libvirtd.service
-    regexp: '^Environment=LIBVIRTD_ARGS'
-    line: 'Environment=LIBVIRTD_ARGS="--listen"'
-    insertafter: '^\[Service\]'
-    state: present
+- name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present create=yes
   tags:
     - kvm
     - kvm-agent
@@ -134,11 +129,20 @@
     - kvm
     - kvm-agent
 
+- name: Update /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
 - name: Mask libvirtd sockets
   shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 
-- name: Update /etc/libvirt/qemu.conf
-  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
+- name: Mask virtqemu sockets
+  shell: systemctl mask virtqemud.socket virtqemud-ro.socket virtqemud-admin.socket virtqemud virtnetworkd virtstoraged
+
+- name: Enable libvirtd service on reboot
+  shell: systemctl enable --now libvirtd
   tags:
     - kvm
     - kvm-agent
