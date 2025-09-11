@@ -117,28 +117,23 @@
     - kvm
     - kvm-agent
 
-- name: Update libvirtd service - Environment LIBVIRTD_ARGS
-  lineinfile: 
-    dest: /usr/lib/systemd/system/libvirtd.service
-    regexp: '^Environment=LIBVIRTD_ARGS'
-    line: 'Environment=LIBVIRTD_ARGS="--listen"'
-    insertafter: '^\[Service\]'
-    state: present
-  tags:
-    - kvm
-    - kvm-agent
-
 - name: Reload systemd daemon after libvirtd service modification
   command: systemctl daemon-reload
   tags:
     - kvm
     - kvm-agent
 
-- name: Mask libvirtd sockets
-  shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
-
 - name: Update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Stop libvirtd
+  shell: systemctl stop libvirtd
+
+- name: Enable libvirtd tcp
+  shell: systemctl enable --now libvirtd-tcp.socket
   tags:
     - kvm
     - kvm-agent
@@ -183,8 +178,8 @@
     - kvm
     - kvm-agent
 
-- name: KVM libvirtd restarted
-  service: name=libvirtd state=restarted
+- name: start libvirtd
+  shell: systemctl start libvirtd
   tags:
     - kvm
     - kvm-agent
