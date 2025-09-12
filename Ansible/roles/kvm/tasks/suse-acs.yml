@@ -25,12 +25,7 @@
     - kvm-agent
 
 - name: Ensure CloudStack packages are installed
-  zypper:
-    name:
-      - "{{ cloudstack_agent_package }}*"
-      - "{{ cloudstack_common_package }}*"
-    state: present
-    update_cache: yes
+  shell: "zypper install -y {{ cloudstack_agent_package }}* {{ cloudstack_common_package }}*"
   tags:
     - kvm
     - kvm-agent
