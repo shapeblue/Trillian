@@ -18,12 +18,17 @@
     msg: "SUSE Specific KVM host Build"
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
-  zypper:
-    name: python3-selinux
-    state: present
+  shell: "zypper install -y python3-selinux"
   tags:
     - kvm
   ignore_errors: yes
+
+- name: install net-tools
+  shell: "zypper install -y net-tools"
+
+- name: install net-tools
+  shell: "zypper install -y net-tools-deprecated"
+  ignore_errors: yes # This package is deprecated. ignoring errors for older distros
 
 - name: Set selinux to permissive
   command: setenforce permissive
@@ -38,7 +43,7 @@
     - kvm
   ignore_errors: yes
 
-- include: ./kvm_networking_bridge_suse.yml
+- include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
 - include: ./kvm_networking_ovs_suse.yml
@@ -55,19 +60,7 @@
 # Don't really need suse for phy hosts
 
 - name: Install basic utilities and tools - all versions
-  zypper: name={{ item }} state=present update_cache=yes
-  with_items:
-    - bind-utils
-    - openssh
-    - pciutils
-    - telnet
-    - tcpdump
-    - traceroute
-    - nano
-    - iftop
-    - rpcbind
-    - parted
-    - vim
+  shell: "zypper install -y bind-utils openssh pciutils telnet tcpdump traceroute nano iftop rpcbind parted vim"
   tags:
     - kvm
 
@@ -125,7 +118,19 @@
     - kvm-agent
 
 - name: Update /etc/sysconfig/libvirtd - LIBVIRTD_ARGS
-  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present
+  lineinfile: dest=/etc/sysconfig/libvirtd regexp='LIBVIRTD_ARGS' line='LIBVIRTD_ARGS="--listen"' state=present create=yes
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Reload systemd daemon after libvirtd service modification
+  command: systemctl daemon-reload
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Update /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
   tags:
     - kvm
     - kvm-agent
@@ -133,8 +138,11 @@
 - name: Mask libvirtd sockets
   shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 
-- name: Update /etc/libvirt/qemu.conf
-  lineinfile: dest=/etc/libvirt/qemu.conf regexp='vnc_listen' line='vnc_listen = "0.0.0.0"' state=present
+- name: Mask virtqemu sockets
+  shell: systemctl mask virtqemud.socket virtqemud-ro.socket virtqemud-admin.socket virtqemud virtnetworkd virtstoraged
+
+- name: Enable libvirtd service on reboot
+  shell: systemctl enable --now libvirtd
   tags:
     - kvm
     - kvm-agent

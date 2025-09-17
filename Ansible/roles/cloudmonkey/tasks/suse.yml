@@ -15,9 +15,7 @@
 #limitations under the License.
 
 - name: install jq
-  zypper:
-   name: jq
-   state: latest
+  shell: "zypper install -y jq"
 
 - name: ensure cm config is removed
   file: path=/root/.cloudmonkey/config state=absent

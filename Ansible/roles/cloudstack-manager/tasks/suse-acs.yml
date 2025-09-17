@@ -18,16 +18,10 @@
   template: src=cloudstack.repo.j2 dest=/etc/zypp/repos.d/cloudstack.repo
 
 - name: Ensure CloudStack packages are installed
-  zypper:
-    name:
-      - "{{ cloudstack_management_package }}*"
-      - "{{ cloudstack_common_package }}*"
-    state: present
+  shell: "zypper install -y {{ cloudstack_management_package }}* {{ cloudstack_common_package }}*"
 
 - name: Ensure MySQL Client is present
-  zypper:
-    name: mysql
-    state: present
+  shell: "zypper install -y mysql"
 
 - name: Fix messed up python mysql ssl libs
   copy:
@@ -47,7 +41,7 @@
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - name: Ensure CloudStack Usage Service is installed
-  zypper: name="{{ cloudstack_usage_package }}*" state=present
+  shell: "zypper install -y {{ cloudstack_usage_package }}*"
 
 - include: ./setupdb.yml
 

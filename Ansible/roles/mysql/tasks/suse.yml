@@ -34,19 +34,13 @@
     - mysqlconf
 
 - name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
-  zypper:
-    name:
-       - python3-PyMySQL
-       - python3-selinux
-    state: present
+  shell: "zypper install -y python3-PyMySQL python3-mysql-connector-python"
   tags:
     - mysql
     - mysqlconf
 
 - name: Ensure selinux python bindings are installed (Ansible requirement)
-  zypper:
-    name: python3-selinux
-    state: present
+  shell: "zypper install -y python3-selinux"
   tags:
     - mysql
     - mysqlconf
@@ -66,11 +60,16 @@
     - kvm
   ignore_errors: yes
 
+- name: Check if mysql server is installed
+  shell: rpm -q mysql-server
+  register: mysql_check
+  failed_when: false
+  changed_when: false
+
 - name: Ensure mysql server is installed
-  zypper:
-    name: mysql-server
-    state: present
+  shell: "zypper install -y mysql-server"
   register: mysqlinstalled
+  when: mysql_check.rc != 0
   tags:
     - mysql
     - mysqlconf
