@@ -68,8 +68,6 @@
     - tcpdump
     - qemu-kvm
     - parted
-    - ovmf
-    - swtpm
 
 - name: Install basic utilities and tools - pre bionic
   apt:
@@ -378,12 +376,6 @@
     - "add-port {{ kvm_guest_network_label }} eth1"
     - "add-port {{ kvm_mgmt_network_label }} eth0"
   when: kvm_network_mode == "ovs"
-
-- name: copy uefi.properties
-  copy:
-    src: uefi.properties.Ubuntu
-    dest: /etc/cloudstack/agent/uefi.properties
-    mode: 0644
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"

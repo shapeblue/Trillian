@@ -95,8 +95,6 @@
     - parted
     - vim
     - python3-pip
-    - edk2-ovmf
-    - swtpm
     - nfs-utils
   tags:
     - kvm
@@ -213,15 +211,6 @@
 - name: load updated config
   shell: "firewall-cmd --reload"
   when: ( ansible_distribution_major_version|int >= 7 ) and use_firewalld
-  tags:
-    - kvm
-    - kvm-agent
-
-- name: copy uefi.properties
-  copy:
-    src: uefi.properties.EL
-    dest: /etc/cloudstack/agent/uefi.properties
-    mode: 0644
   tags:
     - kvm
     - kvm-agent
