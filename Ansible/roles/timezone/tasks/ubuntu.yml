@@ -23,6 +23,14 @@
     - unattended-upgrades
   ignore_errors: yes
 
+- name: Use nl.archive.ubuntu.com instead of bg.archive.ubuntu.com (ubuntu 22)
+  shell: "sed -i 's/bg.archive.ubuntu.com/nl.archive.ubuntu.com/g' /etc/apt/sources.list"
+  ignore_errors: yes
+
+- name: Use nl.archive.ubuntu.com instead of bg.archive.ubuntu.com (ubuntu 24)
+  shell: "sed -i 's/bg.archive.ubuntu.com/nl.archive.ubuntu.com/g' /etc/apt/sources.list.d/ubuntu.sources"
+  ignore_errors: yes
+
 - name: Install chrony
   apt:
     pkg: chrony
