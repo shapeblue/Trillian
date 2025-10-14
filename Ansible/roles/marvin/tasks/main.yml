@@ -41,6 +41,9 @@
 
 - include: ./install_marvin_prereqs.yml
 
+- include: ./setup_iscsi_target.yml
+  when: env_iscsi_test_host == "marvin"
+
 - name: Set repo to install PR tests from
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
   tags:

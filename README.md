@@ -84,6 +84,8 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `env_zone_systemplate`: URL to system template, overrides version variable
 + `build_marvin`: whether or not to build a marvin vm for testing purposes (default is false)
 + `wait_till_setup`: only return once system VMs are running. (default is no)
++ `env_iscsi_test_host`: hostname or IP address of iSCSI target for testing, or 'marvin' to use marvin box as iSCSI target (default is 'marvin')
++ `env_iscsi_test_target`: iSCSI IQN target name for testing (default is 'iqn.2016-10.local.marvin:tgt1/0')
 
 
 #### Some example --extra-args:
