@@ -25,6 +25,32 @@
     - marvin
     - marvin_iscsi
 
+- name: Load target_core_mod kernel module
+  modprobe:
+    name: target_core_mod
+    state: present
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Load iscsi_target_mod kernel module
+  modprobe:
+    name: iscsi_target_mod
+    state: present
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Ensure configfs is mounted
+  mount:
+    path: /sys/kernel/config
+    src: configfs
+    fstype: configfs
+    state: mounted
+  tags:
+    - marvin
+    - marvin_iscsi
+
 - name: Ensure iSCSI target service is enabled and started
   systemd:
     name: target
