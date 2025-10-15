@@ -139,7 +139,7 @@ def_env_zone_localstorage: "false"
 def_env_zone_podname: "Pod1"
 def_env_zone_clustername: "p1-c1"
 def_env_zone_addhosts: "true"
-def_env_iscsi_test_target: "iqn.2016-10.local.marvin:tgt1"
+def_env_iscsi_test_target: "iqn.2016-10.local.marvin:tgt1/0"
 def_env_iscsi_test_host: "marvin"
 def_use_dvfilter: yes
 def_use_local_storage: no

@@ -135,8 +135,15 @@
     - marvin
     - marvin_iscsi
 
+- name: Parse iSCSI target IQN (strip /LUN suffix if present)
+  set_fact:
+    iscsi_target_iqn: "{{ env_iscsi_test_target | regex_replace('/[0-9]+$', '') }}"
+  tags:
+    - marvin
+    - marvin_iscsi
+
 - name: Create iSCSI target
-  shell: targetcli iscsi/ create {{ env_iscsi_test_target }}
+  shell: targetcli iscsi/ create {{ iscsi_target_iqn }}
   register: create_target_result
   failed_when: create_target_result.rc != 0 and 'already exists' not in create_target_result.stderr
   changed_when: create_target_result.rc == 0
@@ -145,7 +152,7 @@
     - marvin_iscsi
 
 - name: Configure target TPG attributes
-  shell: targetcli iscsi/{{ env_iscsi_test_target }}/tpg1 set attribute {{ item }}
+  shell: targetcli iscsi/{{ iscsi_target_iqn }}/tpg1 set attribute {{ item }}
   with_items:
     - "authentication=0"
     - "generate_node_acls=1"
@@ -158,7 +165,7 @@
     - marvin_iscsi
 
 - name: Create LUN in target
-  shell: targetcli iscsi/{{ env_iscsi_test_target }}/tpg1/luns/ create /backstores/fileio/test-lun
+  shell: targetcli iscsi/{{ iscsi_target_iqn }}/tpg1/luns/ create /backstores/fileio/test-lun
   register: create_lun_result
   failed_when: create_lun_result.rc != 0 and 'already exists' not in create_lun_result.stderr
   changed_when: create_lun_result.rc == 0
