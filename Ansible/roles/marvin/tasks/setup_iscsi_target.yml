@@ -51,11 +51,18 @@
     - marvin
     - marvin_iscsi
 
-- name: Ensure iSCSI target service is enabled and started
+- name: Stop target service if running (to clear any existing config)
   systemd:
     name: target
-    state: started
-    enabled: true
+    state: stopped
+  ignore_errors: yes
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Clear any existing targetcli configuration
+  shell: targetcli clearconfig confirm=true
+  ignore_errors: yes
   tags:
     - marvin
     - marvin_iscsi
@@ -110,6 +117,15 @@
 
 - name: Save targetcli configuration
   shell: targetcli saveconfig
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Ensure iSCSI target service is enabled and started
+  systemd:
+    name: target
+    state: started
+    enabled: true
   tags:
     - marvin
     - marvin_iscsi
