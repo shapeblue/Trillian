@@ -62,6 +62,39 @@
     - marvin
     - marvin_iscsi
 
+- name: Remove any leftover iSCSI target configuration from configFS
+  shell: |
+    if [ -d /sys/kernel/config/target/iscsi ]; then
+      for target in /sys/kernel/config/target/iscsi/iqn.* 2>/dev/null; do
+        if [ -d "$target" ]; then
+          echo "Removing leftover target: $(basename $target)"
+          # Remove TPGs
+          for tpg in "$target"/tpgt_* 2>/dev/null; do
+            if [ -d "$tpg" ]; then
+              # Remove LUNs
+              for lun in "$tpg"/lun/lun_* 2>/dev/null; do
+                [ -d "$lun" ] && rmdir "$lun" 2>/dev/null || true
+              done
+              # Remove ACLs
+              for acl in "$tpg"/acls/* 2>/dev/null; do
+                [ -d "$acl" ] && rmdir "$acl" 2>/dev/null || true
+              done
+              # Remove portals
+              for portal in "$tpg"/np/* 2>/dev/null; do
+                [ -d "$portal" ] && rmdir "$portal" 2>/dev/null || true
+              done
+              rmdir "$tpg" 2>/dev/null || true
+            fi
+          done
+          rmdir "$target" 2>/dev/null || true
+        fi
+      done
+    fi
+  ignore_errors: yes
+  tags:
+    - marvin
+    - marvin_iscsi
+
 - name: Reload target_core_mod kernel module
   modprobe:
     name: target_core_mod
