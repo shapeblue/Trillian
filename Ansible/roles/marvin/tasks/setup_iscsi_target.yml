@@ -1,0 +1,68 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+- name: Install iSCSI target packages
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - targetcli
+    - iscsi-initiator-utils
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Ensure iSCSI target service is enabled and started
+  systemd:
+    name: target
+    state: started
+    enabled: true
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Create iSCSI backstore directory
+  file:
+    path: /var/iscsi_disks
+    state: directory
+    mode: 0755
+
+- name: Create iSCSI backstore file if it does not exist
+  command: "dd if=/dev/zero of=/var/iscsi_disks/disk01.img bs=1M count=1024"
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Parse iSCSI target IQN (strip /LUN suffix if present)
+  set_fact:
+    iscsi_target_iqn: "{{ env_iscsi_test_target | regex_replace('/[0-9]+$', '') }}"
+  tags:
+    - marvin
+    - marvin_iscsi
+
+- name: Setup iSCSI target configuration
+  shell: >
+    targetcli backstores/fileio create disk01 /var/iscsi_disks/disk01.img 1G &&
+    targetcli /iscsi create {{ iscsi_target_iqn }} &&
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/luns/ create /backstores/fileio/disk01 &&
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/acls/ create iqn.2016-10.local.client:node01 &&
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1 set attribute authentication=0 &&
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1 set attribute demo_mode_write_protect=0 &&
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1 set attribute generate_node_acls=1 &&
+    targetcli saveconfig
+  tags:
+    - marvin
+    - marvin_iscsi
