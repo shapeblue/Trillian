@@ -1,0 +1,26 @@
+---
+
+- name: get OpenSSH version
+  shell: "ssh -V 2>&1 | awk '{print $1}' | cut -d '_' -f2 | cut -d 'p' -f1"
+  register: openssh_version
+
+- name: update sshd_config
+  shell: |
+    echo "KexAlgorithms ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group14-sha256" >> /etc/ssh/sshd_config &&
+    echo "Ciphers aes256-ctr,aes192-ctr,aes128-ctr" >> /etc/ssh/sshd_config &&
+    echo "MACs hmac-sha2-512,hmac-sha2-256" >> /etc/ssh/sshd_config &&
+    echo "HostKeyAlgorithms ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256" >> /etc/ssh/sshd_config
+  ignore_errors: yes
+
+- name: update sshd_config for OpenSSH >= 8.5
+  shell: |
+    echo "PubkeyAcceptedAlgorithms ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256" >> /etc/ssh/sshd_config
+  when: openssh_version.stdout is version_compare('8.5','>=')
+  ignore_errors: yes
+
+- name: update sshd_config for OpenSSH < 8.5
+  shell: |
+    echo "PubkeyAcceptedKeyTypes ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256" >> /etc/ssh/sshd_config
+  when: openssh_version.stdout is version_compare('8.5','<')
+  ignore_errors: yes
+

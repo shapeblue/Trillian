@@ -6,6 +6,8 @@
 - name: Enable FIPS mode
   shell: fips-mode-setup --enable
 
+- include: ../../../tasks/configure_sshd.yml
+
 - name: Reboot EL8 host to enable FIPS mode
   shell: /sbin/reboot
   async: 0
