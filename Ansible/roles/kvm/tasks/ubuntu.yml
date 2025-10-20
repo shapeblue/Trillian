@@ -68,8 +68,16 @@
     - tcpdump
     - qemu-kvm
     - parted
+
+- name: Install packages for UEFI
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
     - ovmf
     - swtpm
+  when: ansible_distribution_major_version|int >= 22
 
 - name: Install basic utilities and tools - pre bionic
   apt:
@@ -384,6 +392,7 @@
     src: uefi.properties.Ubuntu
     dest: /etc/cloudstack/agent/uefi.properties
     mode: 0644
+  when: ansible_distribution_major_version|int >= 22
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
