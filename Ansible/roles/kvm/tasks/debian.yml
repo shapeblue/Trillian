@@ -359,6 +359,8 @@
     openssl list --providers
   when: (ansible_distribution_major_version|int == 12)
 
+- include: ../../../tasks/configure_sshd.yml
+
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
   async: 0
