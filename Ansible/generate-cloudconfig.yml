@@ -355,7 +355,9 @@
         templating_test_string: "templating_succeeded"
 
     - name: Create inventory file
-      template: src=templates/nestedinventory.j2 dest="{{ inventory_dir }}/hosts_{{ env_name_clean }}"
+      template:
+        src: templates/nestedinventory.j2
+        dest: "{{ inventory_dir }}/hosts_{{ env_name_clean }}"
 
     - name: Build group_vars file
       template: src=templates/nestedgroupvars.j2 dest="{{ inventory_dir }}/group_vars/{{ env_name_clean }}"
