@@ -107,7 +107,6 @@
 # "env_name=cs49-kvm6-pga env_version=cs49 mgmt_os=6 env_accounts=all hvtype=k kvm_os=6 hv=2 pri=2 env_accounts=all build_marvin=yes wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/"
 
 ################################################################################
-
 - hosts: localhost
   connection: local
   gather_facts: no
@@ -283,6 +282,18 @@
 
     - name: Sanitise environment name
       set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-]', '-') | regex_replace('[-]+', '-') }}
+
+    - name: Set fallback for env_name_clean if not defined
+      set_fact:
+        env_name_clean: "{{ env_name }}"
+      when:
+        - env_name_clean is not defined
+        - env_name is defined
+
+    - name: Remove old inventory file if exists
+      file:
+        path: "{{ inventory_dir }}/hosts_{{ env_name_clean }}"
+        state: absent
 
     - name: set use_external_hv_hosts
       set_fact: use_external_hv_hosts="{{ def_use_external_hv_hosts }}"
