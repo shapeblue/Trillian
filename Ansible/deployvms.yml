@@ -281,6 +281,17 @@
       with_items:
         - "{{ groups[ env_name_clean ] }}"
 
+## Configure Playwright host
+
+- hosts: playwright_host
+  gather_facts: no
+  vars:
+    num_playwright_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
+  roles:
+    - { role: timezone, when: num_playwright_hosts | int != 0 and (additional_pod|bool == False) }
+    - { role: cloudmonkey, when: num_playwright_hosts | int != 0 and (additional_pod|bool == False) }
+    - { role: playwright, when: num_playwright_hosts | int != 0 and (additional_pod|bool == False) }
+
 ## update status
 
 - hosts: localhost

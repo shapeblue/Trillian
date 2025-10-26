@@ -23,6 +23,7 @@ mysql_hosts
 vc_hosts
 storage_hosts
 marvin_host
+playwright_host
 
 [local]
 localhost ansible_connection=local
@@ -130,6 +131,11 @@ ansible_python_interpreter=/usr/bin/python3
 [marvin_host]
 {% if (build_marvin | bool) and not (additional_pod | bool) %}
 {{ env_name_clean }}-marvin ansible_ssh_host={{ env_name_clean }}-marvin-ip ansible_ssh_pass={{ marvin_password | default( def_marvin_password ) }} instance_name={{ env_name_clean }}-marvin-instance_name
+{% endif %}
+
+[playwright_host]
+{% if (build_playwright_vm | bool) and not (additional_pod | bool) %}
+{{ env_name_clean }}-playwright ansible_ssh_host={{ env_name_clean }}-playwright-ip ansible_ssh_pass={{ playwright_password | default( def_playwright_password ) }} instance_name={{ env_name_clean }}-playwright-instance_name
 {% endif %}
 
 [storage_hosts:children]

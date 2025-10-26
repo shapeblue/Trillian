@@ -106,6 +106,14 @@ def_ssh_timeout: 10
 destroy_forced: no
 def_env_uuid: "unknown"
 
+# Playwright VM Configuration
+def_build_playwright_vm: no
+def_playwright_username: "root"
+def_playwright_password: "password"
+def_playwright_network: "{{ def_management_network }}"
+def_playwright_service_offering: "Medium Instance"
+def_playwright_server_template: "Ubuntu 22.04"
+
 # Environment database settings
 def_env_db_name: "trillian_envs"
 def_env_db_ip: "<IP_ADDRESS_HERE>"

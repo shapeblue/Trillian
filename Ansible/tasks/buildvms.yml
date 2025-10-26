@@ -674,6 +674,61 @@
     instance_name={{ item.instance_name }}
   with_items: "{{marvin_retval.results}}"
 
+####################################################################
+# Playwright Server
+#
+- name: Build Playwright server
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ playwright_service_offering }}"
+    template: "{{ playwright_server_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+      - { key: purpose, value: "playwright-ui-tests" }
+    networks:
+      - "{{ playwright_network }}"
+    state: present
+    api_timeout: 120
+  with_items:
+    - "{{ groups['playwright_host'] }}"
+  register: playwright_retval
+
+- name: Update inventory file with Playwright server IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{playwright_retval.results}}"
+
+- name: Update in memory inventory with Playwright server IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="playwright_host"
+    ansible_ssh_host={{ item.default_ip }}
+  with_items: "{{playwright_retval.results}}"
+
+- name: Update inventory file with Playwright host instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{playwright_retval.results}}"
+
+- name: Update in memory inventory with Playwright host instance names
+  add_host:
+    name={{ item.name }}
+    groups="playwright_host"
+    instance_name={{ item.instance_name }}
+  with_items: "{{playwright_retval.results}}"
 
 ####################################################################
 # Work out lists of hosts to be used in zone create script
