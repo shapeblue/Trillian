@@ -15,6 +15,7 @@
     - { regexpression: "^https.keystore=.*$", newline: "https.keystore=/etc/cloudstack/management/keystore.pkcs12" }
     - { regexpression: "^https.keystore.password=.*$", newline: "https.keystore.password={{ ssl_keystore_password }}" }
     - { regexpression: "^https.port=.*$", newline: "https.port={{ ssl_port }}" }
+    - { regexpression: "^system.vm.templates.download.repository=.*$", newline: "system.vm.templates.download.repository=http://{{ stagingserverip }}/systemvmtemplate/" }
 
 - name: restart mgmt service
   service: name=cloudstack-management state=restarted
