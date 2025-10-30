@@ -168,8 +168,18 @@
       when: env_name is not defined or ( env_name is defined and env_name =="" )
 
     - name: Check that env_version is recognised
-      fail: msg="env_version {{ env_version }} is not recognised"
-      when: env_version not in def_system_templates
+      block:
+        - name: Check if env_version starts with 'cs4'
+          debug:
+            msg: "Auto-accepting env_version {{ env_version }} (CloudStack 4.x)"
+          when: env_version is match("cs4[0-9]+")
+        - name: Fail for truly unknown versions
+          fail:
+            msg: "env_version {{ env_version }} is not recognised"
+          when:
+            - env_version not in def_system_templates
+            - env_version is not match("cs4[0-9]+")
+
 
     - name: Check returned hypervisor type
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"

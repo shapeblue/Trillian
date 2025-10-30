@@ -521,6 +521,14 @@ def_system_templates:
     xs_url: "<XS_URL_HERE>"
     vmware_url: "<VMWARE_URL_HERE>"
     hyperv_url: "<HYPERV_URL_HERE>"
+  cs4x:
+    kvm_url: "<KVM_URL_HERE>"
+    kvm_systemvm_name: "systemvm-kvm-latest"
+    xs_url: "<XS_URL_HERE>"
+    xs_systemvm_name: "systemvm-xenserver-latest"
+    vmware_url: "<VMWARE_URL_HERE>"
+    vmware_systemvm_name: "systemvm-vmware-latest"
+   
 
 linux_os:
   "6":
