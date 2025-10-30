@@ -357,7 +357,7 @@
     # Write Ansible variables to JSON file
     - name: Write variables to temp file
       copy:
-        content: "{{ hostvars['localhost'] | to_json }}"
+        content: "{{ vars | to_json }}"
         dest: "/tmp/ansible_vars_{{ env_name_clean }}.json"
 
     # Copy the Python template processor script
