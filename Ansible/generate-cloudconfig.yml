@@ -360,6 +360,20 @@
         content: "{{ vars | to_json }}"
         dest: "/tmp/ansible_vars_{{ env_name_clean }}.json"
 
+    # ADD DEBUG TASKS 
+    - name: Debug - Check if passwords are in JSON
+      shell: |
+        echo "=== Checking for passwords in JSON ==="
+        grep -i "password" /tmp/ansible_vars_{{ env_name_clean }}.json || echo "NO PASSWORDS FOUND"
+        echo "=== Checking vars directly ==="
+        echo "mgmtsrv_password={{ mgmtsrv_password | default('NOT_DEFINED') }}"
+        echo "def_mgmtsrv_password={{ def_mgmtsrv_password | default('NOT_DEFINED') }}"
+      register: password_debug
+
+    - name: Show debug output
+      debug:
+        var: password_debug.stdout_lines
+
     # Copy the Python template processor script
     - name: Copy template processor script
       copy:
