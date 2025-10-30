@@ -179,6 +179,8 @@ java_vers:
   cs412: java-1.8.0-openjdk
   cs413: java-1.8.0-openjdk
   cs414: java-1.8.0-openjdk
+  cs420: java-11-openjdk
+  cs4x: java-11-openjdk
   custom: custom
   na: na
 
