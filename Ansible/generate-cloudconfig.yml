@@ -275,13 +275,16 @@
     - name: Check that java version is specified for KVM OS and CloudStack version combination
       fail:
         msg: "Combination of OS and CloudStack version does not have a Java version specified in 'all' file"
-      when: ("java_paths" in "{{ java_paths[kvm_os_name][java_ver] }}") and (kvm_os is defined) and (kvm_os_name|lower != "NA")
-
-
+      when:
+        - kvm_os is defined
+        - kvm_os_name|lower != "na"
+        - (java_paths[kvm_os_name] is not defined) or (java_ver not in java_paths[kvm_os_name])
+      
     - name: Check that java version is specified for Mgmt OS and CloudStack version combination
       fail:
         msg: "Combination of OS and CloudStack version does not have a Java version specified in 'all' file"
-      when: ("java_paths" in "{{ java_paths[mgmt_os_name][java_ver] }}")
+      when:
+        - (java_paths[mgmt_os_name] is not defined) or (java_ver not in java_paths[mgmt_os_name])
 
       # -phew
 
