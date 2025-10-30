@@ -252,10 +252,10 @@
 
     - name: set mgmt java version
       set_fact:
-        java_ver: "{{ java_vers[env_cs_minor_version_string] }}"
+        java_ver: "{{ java_vers[env_cs_minor_version_string] | default('java-11-openjdk') }}"
 
     - debug:
-        msg: "{{ java_ver }}"
+        msg: "Resolved java_ver = {{ java_ver }}"
 
     - name: Set mgmt os fact
       set_fact:
