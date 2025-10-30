@@ -119,6 +119,9 @@
   connection: local
   gather_facts: no
 
+  vars_files:
+    - ../trillian_groupvars/all.sample
+
   vars_prompt:
     - name: env_name
       prompt: Environment name
