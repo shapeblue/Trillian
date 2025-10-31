@@ -142,10 +142,13 @@ primary_storage_hosts_iscsi
 secondary_storage_hosts
 
 [primary_storage_hosts]
-{{ env_prihost | default( def_env_prihost ) }} ansible_ssh_host={{ env_prihost | default( def_env_prihost ) }} ansible_ssh_pass={{ pri_password | default( def_pri_password ) }}
+{% if env_prihost and env_prihost != '' %}{{ pri_host | default('') }} ansible_ssh_host={{ env_prihost }} ansible_ssh_pass={{ pri_password }}
+{% endif %}
 
 [primary_storage_hosts_iscsi]
-{{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }} ansible_ssh_host={{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }} ansible_ssh_pass={{ pri_password_iscsi | default( def_pri_password_iscsi ) }}
+{% if env_prihost_iscsi and env_prihost_iscsi != '' %}{{ pri_host_iscsi | default('') }} ansible_ssh_host={{ env_prihost_iscsi }} ansible_ssh_pass={{ pri_password_iscsi }}
+{% endif %}
 
 [secondary_storage_hosts]
-{{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}
+{% if env_sechost and env_sechost != '' %}{{ sec_host | default('') }} ansible_ssh_host={{ env_sechost }} ansible_ssh_pass={{ sec_password }}
+{% endif %}
