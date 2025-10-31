@@ -409,6 +409,12 @@ marvin_test_categories:
 {% endfor %}
 {% endif %}
 
+# Playwright server
+playwright_service_offering: "{{ playwright_service_offering | default( def_playwright_service_offering ) }}"
+playwright_server_template: "{{ playwright_server_template | default( def_playwright_server_template ) }}"
+playwright_username: "{{ playwright_username | default( def_playwright_username ) }}"
+playwright_password: "{{ playwright_password | default( def_playwright_password ) }}"
+
 # SSL
 ssl_systemvm: "{{ ssl_systemvm | default ( def_ssl_systemvm ) }}"
 ssl_mgmt: "{{ ssl_mgmt | default ( def_ssl_mgmt ) }}"

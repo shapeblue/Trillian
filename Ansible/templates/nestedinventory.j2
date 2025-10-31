@@ -133,7 +133,7 @@ ansible_python_interpreter=/usr/bin/python3
 
 [playwright_host]
 {% if (build_playwright_vm | bool) and not (additional_pod | bool) %}
-{{ env_name_clean }}-playwright ansible_ssh_host={{ env_name_clean }}-playwright-ip ansible_ssh_pass={{ playwright_password | default( def_playwright_password ) }} instance_name={{ env_name_clean }}-playwright-instance_name
+{{ env_name_clean }}-playwright ansible_ssh_host={{ playwright_ip }} ansible_ssh_pass={{ playwright_password | default( def_playwright_password ) }} instance_name={{ playwright_instance_name }}
 {% endif %}
 
 [storage_hosts:children]
