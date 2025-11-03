@@ -10,7 +10,7 @@ output_file = sys.argv[3]    # Output file path
 
 # Load variables from JSON
 with open(vars_file, 'r') as f:
-    vars_dict = json.load(f)\
+    vars_dict = json.load(f)
     
 # Pre-populate missing password variables with their def_ versions
 password_vars = [
@@ -67,11 +67,19 @@ def default_filter(value, default='', boolean=False):
         return value if value else default
     return value if value is not None else default
 
+def mandatory_filter(value, msg=None):
+    """Raise error if value is undefined/none (like Ansible's mandatory filter)"""
+    if value is None or value == '':
+        error_msg = msg if msg else "Mandatory variable is undefined"
+        raise ValueError(error_msg)
+    return value
+
 # Setup Jinja2 with custom filters
 env = Environment(loader=FileSystemLoader('.'), undefined=SilentUndefined)
 env.filters['bool'] = bool_filter
 env.filters['to_json'] = to_json_filter
 env.filters['default'] = default_filter
+env.filters['mandatory'] = mandatory_filter
 
 template = env.get_template(template_file)
 
