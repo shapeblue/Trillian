@@ -391,17 +391,17 @@
       args:
         chdir: "{{ playbook_dir }}"
     
-    # Comment this task out if you need to debug template processing
-    - name: Clean up temp files
-      file:
-        path: "{{ item }}"
-        state: absent
-      with_items:
-        - /tmp/ansible_vars_{{ env_name_clean }}.json
-        - /tmp/process_inventory_template.py
-        
-    - name: Build group_vars file
-      template: src=templates/nestedgroupvars.j2 dest="{{ inventory_dir }}/group_vars/{{ env_name_clean }}"
+    - name: Build group_vars file (manual Jinja2 processing)
+      command: >
+        python2 /tmp/process_inventory_template.py
+        /tmp/ansible_vars_{{ env_name_clean }}.json
+        templates/nestedgroupvars.j2
+        {{ inventory_dir }}/group_vars/{{ env_name_clean }}
+      register: group_vars_creation
+  
+    - name: Show group_vars creation output
+      debug:
+        msg: "{{ group_vars_creation.stdout_lines }}"
 
     - name: check group_vars are OK (read in the file)
       shell: "cat {{ inventory_dir }}/group_vars/{{ env_name_clean }}"
@@ -413,3 +413,13 @@
       when: group_vars_file.stdout.find("templating_succeeded") == -1
 
     - debug: msg="You can now run{{":"}} ansible-playbook deployvms.yml -i ./hosts_{{ env_name_clean }}  "
+
+    # Comment this task out if you need to debug template processing
+    - name: Clean up temp files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /tmp/ansible_vars_{{ env_name_clean }}.json
+        - /tmp/process_inventory_template.py
+        
