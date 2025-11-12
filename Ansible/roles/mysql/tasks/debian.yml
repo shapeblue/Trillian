@@ -15,10 +15,10 @@
 #limitations under the License.
 
 - name: Download DEB package for mysql
-  shell: 'wget https://dev.mysql.com/get/mysql-apt-config_0.8.32-1_all.deb -O /tmp/mysql-apt-config_0.8.32-1_all.deb'
+  shell: 'wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb -O /tmp/mysql-apt-config_0.8.36-1_all.deb'
 
 - name: Install DEB package for mysql
-  shell: 'DEBIAN_FRONTEND=noninteractive apt install -y /tmp/mysql-apt-config_0.8.32-1_all.deb && apt update'
+  shell: 'DEBIAN_FRONTEND=noninteractive apt install -y /tmp/mysql-apt-config_0.8.36-1_all.deb && apt update'
 
 - name: Run the equivalent of "apt-get update" as a separate step
   apt:
