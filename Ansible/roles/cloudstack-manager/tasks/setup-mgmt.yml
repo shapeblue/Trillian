@@ -20,10 +20,13 @@
         | union(['xenserver']   if (num_xen_hosts | int) > 0 else [])
       }}"
     systemvm_templates_hypervisor_arg: "{{ ('--systemvm-templates ' ~ (systemvm_templates_list | join(',')))
-         if (systemvm_templates_list | length) > 0 else '' }}"
+      if ((systemvm_templates_list | length) > 0 and (env_numversion | version_compare('4.23','>='))) else '' }}"
 
 - name: systemvm template repository
-  set_fact: systemvm_templates_repository_arg="--systemvm-templates-repository http://{{ stagingserverip }}/systemvmtemplate/"
+  set_fact:
+    systemvm_templates_repository_arg: "{{ ('--systemvm-templates-repository http://' ~ stagingserverip ~ '/systemvmtemplate/')
+      if (env_numversion | version_compare('4.23','>=')) else '' }}"
+
 
 - debug:
     msg: "cloudstack not cloud is {{ path_is_cloudstack.stat.exists }} and the OS version is {{ ansible_distribution_major_version }}"
