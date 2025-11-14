@@ -77,10 +77,8 @@
     validate_certs: no
   when: '"download.cloudstack.org" in baseurl_cloudstack'
 
-- name: Run the equivalent of "apt-get update" as a separate step
-  apt:
-    update_cache: yes
-    cache_valid_time: 0
+- name: update apt cache
+  shell: "apt update"
 
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
