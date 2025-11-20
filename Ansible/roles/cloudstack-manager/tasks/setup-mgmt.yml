@@ -8,11 +8,31 @@
   tags:
     - setup_mgmt
 
+- name: systemvm template hypervisors
+  set_fact:
+    num_esxi_hosts: "{{ groups['esxi_hosts'] | length }}"
+    num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
+    num_xen_hosts: "{{ groups['xenserver_hosts'] | length }}"
+    systemvm_templates_list: "{{
+        []
+        | union(['kvm-x86_64'] if (num_kvm_hosts | int) > 0 else [])
+        | union(['vmware']      if (num_esxi_hosts | int) > 0 else [])
+        | union(['xenserver']   if (num_xen_hosts | int) > 0 else [])
+      }}"
+    systemvm_templates_hypervisor_arg: "{{ ('--systemvm-templates ' ~ (systemvm_templates_list | join(',')))
+      if ((systemvm_templates_list | length) > 0 and (env_numversion | version_compare('4.23','>='))) else '' }}"
+
+- name: systemvm template repository
+  set_fact:
+    systemvm_templates_repository_arg: "{{ ('--systemvm-templates-repository http://' ~ stagingserverip ~ '/systemvmtemplate/')
+      if (env_numversion | version_compare('4.23','>=')) else '' }}"
+
+
 - debug:
     msg: "cloudstack not cloud is {{ path_is_cloudstack.stat.exists }} and the OS version is {{ ansible_distribution_major_version }}"
 
 - name: Setup CloudStack Manager (centos/rhel8+/suse/ubuntu/debian or centos/rhel7 ACS < 4.6)
-  shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management
+  shell: sleep {{ play_hosts.index(inventory_hostname) | int * 15 }} && /usr/bin/cloudstack-setup-management {{ systemvm_templates_hypervisor_arg }} {{ systemvm_templates_repository_arg }}
   when: >
     ((ansible_distribution_major_version|int == 6) and (path_is_cloudstack.stat.exists|bool == True)) or
     ((ansible_distribution_major_version == "7") and (env_numversion | version_compare('4.6','<'))) or
