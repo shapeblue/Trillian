@@ -28,6 +28,16 @@
     - marvin_cfg
     - marvin_install
 
+- name: Install newest openssh dependencies
+  dnf: name={{ item }} state=installed
+  with_items:
+  - openssh
+  - openssh-askpass
+  - openssh-server
+  - openssh-clients
+  tags:
+    - marvin
+    - marvin_install
 
 - name: Install Dev Tools Group
   dnf: name="@Development tools" state=installed
@@ -39,30 +49,26 @@
 - name: Install other dependancies
   dnf: name={{ item }} state=installed
   with_items:
-  - zlib-devel
+  - at
   - bzip2-devel
+  - git
+  - jq
+  - libffi-devel
+  - libxslt-devel
+  - mariadb
+  - ncurses-devel
   - openssl-devel
-  - xz-libs
-  - wget
-  - sqlite
-  - sqlite-devel
   - python3-devel
   - python3-pip
-  - zlib-devel
-  - bzip2-devel
-  - openssl-devel
-  - ncurses-devel
-  - libxslt-devel
-  - libffi-devel
-  - openssh-askpass
-  - jq
-  - mariadb
-  - git
   - screen
+  - sqlite
+  - sqlite-devel
   - sshpass
-  - at
-  - vim
   - tmux
+  - vim
+  - wget
+  - xz-libs
+  - zlib-devel
   tags:
     - marvin
     - marvin_install
