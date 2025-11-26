@@ -2,6 +2,8 @@
 
 More detailed information can be found in the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 
+**For UI automation testing with Marvin:** See the [Marvin Box Setup Guide](MARVIN_BOX_SETUP_GUIDE.md)
+
 ## Trillian makes use a 'parent' CloudStack' environment which is used to build virtualised nested environments.
 
 Trillian leverages ESXi's ability to virtualise the VT-x features allowing the creation of VT-x enabled virtualised hosts
@@ -82,7 +84,7 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `env_prihost`: primary storage host fqdn or IP address
 + `env_sechost`: secondary storage host fqdn or IP address
 + `env_zone_systemplate`: URL to system template, overrides version variable
-+ `build_marvin`: whether or not to build a marvin vm for testing purposes (default is false)
++ `build_marvin`: whether or not to build a marvin vm for testing purposes (default is false). See [Marvin Box Setup Guide](MARVIN_BOX_SETUP_GUIDE.md) for details
 + `wait_till_setup`: only return once system VMs are running. (default is no)
 
 
