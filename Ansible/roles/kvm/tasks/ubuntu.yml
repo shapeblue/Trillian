@@ -68,6 +68,7 @@
     - tcpdump
     - qemu-kvm
     - parted
+    - unzip
 
 - name: Install packages for UEFI
   apt:
@@ -393,6 +394,18 @@
     dest: /etc/cloudstack/agent/uefi.properties
     mode: 0644
   when: ansible_distribution_major_version|int >= 22
+
+- name: Download libvirt 10.6.0 packages
+  shell: "/usr/bin/wget https://github.com/weizhouapache/ubuntu-libvirt-packages/archive/refs/heads/main.zip -O /tmp/ubuntu-libvirt-packages.zip"
+  when: ansible_distribution_major_version|int == 24
+
+- name: Uncompress libvirt 10.6.0 packages
+  shell: "unzip /tmp/ubuntu-libvirt-packages.zip -d /tmp/"
+  when: ansible_distribution_major_version|int == 24
+
+- name: Install libvirt 10.6.0 packages
+  shell: "echo n | /usr/bin/dpkg -i /tmp/ubuntu-libvirt-packages-main/libvirt-10.6.0-1ubuntu3.3/libvirt*.deb"
+  when: ansible_distribution_major_version|int == 24
 
 - name: restart machine (Ubuntu networking restart bug #1301015)
   command: shutdown -r now "Ansible updates triggered"
