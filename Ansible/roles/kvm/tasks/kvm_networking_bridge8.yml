@@ -59,7 +59,7 @@
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
 
 - name: Create {{ kvm_guest_network_label }} bridge interface
-  command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method disabled
+  command: nmcli con add ifname {{ kvm_guest_network_label }} type bridge con-name {{ kvm_guest_network_label }} autoconnect yes ipv4.method disabled ipv6.method ignore
 
 - pause:
     seconds: 2
