@@ -80,13 +80,18 @@
 - name: update apt cache
   shell: "apt update"
 
+- name: get CloudStack package version (for example, 4.20.2.0-shapeblue0)
+  shell: "apt list -a cloudstack-common |awk '{print $2}' |grep '^{{ env_cs_security_version }}' |head -n1"
+  register: cloudstack_package_version
+
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
-    pkg: "{{ item }}"
+    pkg: "{{ item }}={{ cloudstack_package_version.stdout }}"
     state: present
     allow_unauthenticated: yes
   with_items:
     - cloudstack-management
+    - cloudstack-common
 
 # no need to remove - same as for CentOS
 #- name: remove CloudStack repository into sources list.
@@ -112,7 +117,7 @@
 
 - name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
   apt:
-    pkg: "{{ item }}"
+    pkg: "{{ item }}={{ cloudstack_package_version.stdout }}"
     state: present
     allow_unauthenticated: yes
   with_items:
