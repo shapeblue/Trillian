@@ -93,7 +93,7 @@
   - six
   - pyOpenSSL
   - paramiko
-  - wheel
+  - wheel==0.45.1
   - kubernetes
   - pyasn1
   - wget
