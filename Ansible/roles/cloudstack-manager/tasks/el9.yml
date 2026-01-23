@@ -19,6 +19,17 @@
 
 - name: Enable FIPS mode
   shell: fips-mode-setup --enable
+  when: ansible_distribution_major_version < "10"
+
+- name: Install packages for FIPS in EL10
+  dnf:
+    name: crypto-policies
+    state: present
+  when: ansible_distribution_major_version == "10"
+
+- name: Enable FIPS mode in EL10
+  shell: sed -i 's,GRUB_CMDLINE_LINUX=",GRUB_CMDLINE_LINUX="fips=1 ,g' /etc/default/grub && grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: ansible_distribution_major_version == "10"
 
 - include: ../../../tasks/configure_sshd.yml
 
