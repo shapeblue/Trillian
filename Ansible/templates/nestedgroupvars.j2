@@ -180,6 +180,7 @@ playwright_tests_branch: "{{ playwright_tests_branch | default( def_playwright_t
 playwright_es_host: "{{ playwright_es_host | default( def_playwright_es_host ) }}"
 playwright_es_index: "{{ playwright_es_index | default( def_playwright_es_index ) }}"
 playwright_docker_image: "{{ playwright_docker_image | default( def_playwright_docker_image ) }}"
+playwright_password: "{{ playwright_password | default( def_playwright_password ) }}"
 wait_for_template: {{ wait_for_template | default( "no" ) }}
 force_java: {{ force_java | default( "no" ) }}
 use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}
