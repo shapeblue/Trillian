@@ -1,0 +1,77 @@
+---
+# Playwright role - main tasks (Ubuntu)
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install prerequisites for Docker and Git
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - git
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add Docker apt repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+  when: ansible_os_family == 'Debian'
+
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure docker service is started
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create playwright directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - /playwright
+    - /playwright/tests
+    - /playwright/results
+
+- name: Clone Playwright tests repo
+  git:
+    repo: "{{ playwright_tests_repo | default(def_playwright_tests_repo) }}"
+    dest: /playwright/tests
+    version: "{{ playwright_tests_branch | default(def_playwright_tests_branch) }}"
+    update: yes
+    accept_hostkey: yes
+  when: playwright_tests_repo is defined
+
+- name: Copy runtests script
+  template:
+    src: runtests.sh.j2
+    dest: /playwright/runtests.sh
+    mode: '0755'
+
+- name: Copy upload_to_es script
+  copy:
+    src: upload_to_es.sh
+    dest: /playwright/upload_to_es.sh
+    mode: '0755'

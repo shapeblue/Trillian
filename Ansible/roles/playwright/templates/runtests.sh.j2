@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+mkdir -p /playwright/results
+cd /playwright/tests
+
+# Run Playwright tests inside the official Playwright docker image
+docker run --rm \
+    -v /playwright/tests:/tests:ro \
+    -v /playwright/results:/results \
+    -e CLOUDSTACK_URL="{{ cloudstack_url | default('http://' + hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] + ':8080/client') }}" \
+    {{ playwright_docker_image | default(def_playwright_docker_image) }} \
+    /bin/bash -lc "cd /tests && npm ci && npx playwright test --reporter=json --output=/results/results.json || true"
+
+# Upload results to Elasticsearch
+/playwright/upload_to_es.sh /playwright/results/results.json

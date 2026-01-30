@@ -173,6 +173,13 @@ env_zone_systemplate: "{{ env_zone_systemplate }}"
 
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default( def_build_marvin ) }}
+# Playwright on-demand host
+build_playwright: {{ build_playwright | default( def_build_playwright ) }}
+playwright_tests_repo: "{{ playwright_tests_repo | default( def_playwright_tests_repo ) }}"
+playwright_tests_branch: "{{ playwright_tests_branch | default( def_playwright_tests_branch ) }}"
+playwright_es_host: "{{ playwright_es_host | default( def_playwright_es_host ) }}"
+playwright_es_index: "{{ playwright_es_index | default( def_playwright_es_index ) }}"
+playwright_docker_image: "{{ playwright_docker_image | default( def_playwright_docker_image ) }}"
 wait_for_template: {{ wait_for_template | default( "no" ) }}
 force_java: {{ force_java | default( "no" ) }}
 use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}

@@ -1,0 +1,16 @@
+---
+- hosts: playwright_host
+  gather_facts: no
+  tasks:
+    - name: Run Playwright tests on Playwright host
+      become: yes
+      shell: /playwright/runtests.sh
+      args:
+        chdir: /playwright
+      register: playwright_result
+      ignore_errors: yes
+
+    - name: Display test results
+      debug:
+        var: playwright_result.stdout_lines
+      when: playwright_result is defined
