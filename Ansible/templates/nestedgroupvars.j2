@@ -175,11 +175,13 @@ wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default( def_build_marvin ) }}
 # Playwright on-demand host
 build_playwright: {{ build_playwright | default( def_build_playwright ) }}
+run_playwright_tests: {{ run_playwright_tests | default( def_run_playwright_tests ) }}
 playwright_tests_repo: "{{ playwright_tests_repo | default( def_playwright_tests_repo ) }}"
 playwright_tests_branch: "{{ playwright_tests_branch | default( def_playwright_tests_branch ) }}"
 playwright_es_host: "{{ playwright_es_host | default( def_playwright_es_host ) }}"
+playwright_es_port: {{ playwright_es_port | default( def_playwright_es_port ) }}
 playwright_es_index: "{{ playwright_es_index | default( def_playwright_es_index ) }}"
-playwright_docker_image: "{{ playwright_docker_image | default( def_playwright_docker_image ) }}"
+playwright_test_retries: {{ playwright_test_retries | default( def_playwright_test_retries ) }}
 playwright_password: "{{ playwright_password | default( def_playwright_password ) }}"
 wait_for_template: {{ wait_for_template | default( "no" ) }}
 force_java: {{ force_java | default( "no" ) }}

@@ -317,6 +317,10 @@
       set_fact: run_smoke_tests=no
       when: run_smoke_tests is undefined
 
+    - name: set playwright auto test
+      set_fact: run_playwright_tests="{{ def_run_playwright_tests | default('no') }}"
+      when: run_playwright_tests is undefined
+
     - name: Generate environment tagged project name
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined

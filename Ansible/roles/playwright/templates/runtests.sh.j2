@@ -1,16 +1,223 @@
 #!/bin/bash
-set -e
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 
-mkdir -p /playwright/results
-cd /playwright/tests
+set +e
 
-# Run Playwright tests inside the official Playwright docker image
-docker run --rm \
-    -v /playwright/tests:/tests:ro \
-    -v /playwright/results:/results \
-    -e CLOUDSTACK_URL="{{ cloudstack_url | default('http://' + hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] + ':8080/client') }}" \
-    {{ playwright_docker_image | default(def_playwright_docker_image) }} \
-    /bin/bash -lc "cd /tests && npm ci && npx playwright test --reporter=json --output=/results/results.json || true"
+# Configuration
+LOGDIR="/playwright/logs"
+RESULTSDIR="/playwright/results"
+TESTDIR="/playwright/tests"
+TESTTRIES="{{ playwright_test_retries | default(2) }}"
+CLOUDSTACK_URL="{{ cloudstack_url | default('http://' + hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] + ':8080/client') }}"
+ELASTICSEARCH_HOST="{{ playwright_es_host | default(def_playwright_es_host) }}"
+ELASTICSEARCH_PORT="{{ playwright_es_port | default(9200) }}"
+ENV_NAME="{{ env_name_clean }}"
+
+# Initialize counters
+PASSES=0
+FAILS=0
+SKIPPED=0
+
+# Create directories
+mkdir -p "$LOGDIR" "$RESULTSDIR"
+
+# Logging function
+log_msg() {
+    local msg="$1"
+    echo "[$(date --iso-8601=seconds)] $msg" | tee -a "$LOGDIR/runtests.log"
+}
+
+# Pre-flight checks
+preflight_checks() {
+    log_msg "Starting pre-flight environment checks"
+    
+    # Check if CloudStack API is accessible
+    log_msg "Checking CloudStack API accessibility: $CLOUDSTACK_URL"
+    if curl -s -f "$CLOUDSTACK_URL" >/dev/null 2>&1; then
+        log_msg "✓ CloudStack API is accessible"
+    else
+        log_msg "✗ CloudStack API is NOT accessible at $CLOUDSTACK_URL"
+        return 1
+    fi
+    
+    # Check if Elasticsearch is accessible
+    if [ -n "$ELASTICSEARCH_HOST" ]; then
+        log_msg "Checking Elasticsearch accessibility: $ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT"
+        if curl -s -f "http://$ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT" >/dev/null 2>&1; then
+            log_msg "✓ Elasticsearch is accessible"
+        else
+            log_msg "⚠ Elasticsearch is NOT accessible at $ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT (results will not be uploaded)"
+        fi
+    fi
+    
+    # Check if test directory exists
+    if [ ! -d "$TESTDIR" ]; then
+        log_msg "✗ Test directory not found: $TESTDIR"
+        return 1
+    fi
+    log_msg "✓ Test directory exists: $TESTDIR"
+    
+    # Check if npm is installed
+    if ! command -v npm >/dev/null 2>&1; then
+        log_msg "✗ npm is not installed"
+        return 1
+    fi
+    log_msg "✓ npm is installed"
+    
+    log_msg "Pre-flight checks completed successfully"
+    return 0
+}
+
+# Run tests with retry logic
+run_tests() {
+    local attempt=1
+    local test_status=0
+    
+    log_msg "Starting test execution (up to $TESTTRIES attempts)"
+    log_msg "Test directory: $TESTDIR"
+    log_msg "CloudStack URL: $CLOUDSTACK_URL"
+    
+    while [ $attempt -le $TESTTRIES ]; do
+        log_msg "Test attempt $attempt of $TESTTRIES"
+        
+        cd "$TESTDIR"
+        export CLOUDSTACK_URL="$CLOUDSTACK_URL"
+        
+        # Run Playwright tests
+        npx playwright test \
+            --reporter=json \
+            --output="$RESULTSDIR/results.json" \
+            2>&1 | tee -a "$LOGDIR/playwright-run.log"
+        
+        test_status=$?
+        
+        if [ $test_status -eq 0 ]; then
+            log_msg "Test attempt $attempt completed successfully"
+            break
+        else
+            if [ $attempt -lt $TESTTRIES ]; then
+                log_msg "Test attempt $attempt failed, retrying in 10 seconds..."
+                sleep 10
+            else
+                log_msg "Test attempt $attempt failed (final attempt)"
+            fi
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    return $test_status
+}
+
+# Parse results
+parse_results() {
+    log_msg "Parsing test results"
+    
+    if [ ! -f "$RESULTSDIR/results.json" ]; then
+        log_msg "✗ Results file not found: $RESULTSDIR/results.json"
+        return 1
+    fi
+    
+    # Call result parser script
+    /playwright/tools/parse-results.sh "$RESULTSDIR/results.json" "$LOGDIR/playwright-summary.txt"
+    local parser_status=$?
+    
+    if [ $parser_status -eq 0 ]; then
+        log_msg "✓ All tests passed"
+    else
+        log_msg "✗ Some tests failed (see summary for details)"
+    fi
+    
+    # Display summary
+    if [ -f "$LOGDIR/playwright-summary.txt" ]; then
+        log_msg "Test Summary:"
+        cat "$LOGDIR/playwright-summary.txt" | tee -a "$LOGDIR/runtests.log"
+    fi
+    
+    return $parser_status
+}
 
 # Upload results to Elasticsearch
-/playwright/upload_to_es.sh /playwright/results/results.json
+upload_results() {
+    log_msg "Uploading results to Elasticsearch"
+    
+    if [ ! -f "$RESULTSDIR/results.json" ]; then
+        log_msg "⚠ Results file not found, skipping upload"
+        return 0
+    fi
+    
+    if [ -x "/playwright/upload_to_es.sh" ]; then
+        export PLAYWRIGHT_ES_HOST="$ELASTICSEARCH_HOST"
+        export PLAYWRIGHT_ES_INDEX="playwright-results"
+        /playwright/upload_to_es.sh "$RESULTSDIR/results.json"
+        if [ $? -eq 0 ]; then
+            log_msg "✓ Results uploaded to Elasticsearch"
+        else
+            log_msg "⚠ Failed to upload results to Elasticsearch"
+        fi
+    else
+        log_msg "⚠ upload_to_es.sh not found"
+    fi
+}
+
+# Cleanup (preserve results)
+cleanup() {
+    log_msg "Test run completed"
+    log_msg "Results directory: $RESULTSDIR"
+    log_msg "Logs directory: $LOGDIR"
+}
+
+# Main execution
+main() {
+    log_msg "=================================================="
+    log_msg "Playwright Test Suite Started"
+    log_msg "Environment: $ENV_NAME"
+    log_msg "=================================================="
+    
+    # Pre-flight checks
+    preflight_checks
+    if [ $? -ne 0 ]; then
+        log_msg "✗ Pre-flight checks failed, aborting test run"
+        exit 1
+    fi
+    
+    # Run tests
+    run_tests
+    TEST_EXIT_CODE=$?
+    
+    # Parse results
+    parse_results
+    PARSE_EXIT_CODE=$?
+    
+    # Upload results
+    upload_results
+    
+    # Cleanup
+    cleanup
+    
+    log_msg "=================================================="
+    log_msg "Playwright Test Suite Completed"
+    log_msg "=================================================="
+    
+    # Return appropriate exit code
+    if [ $PARSE_EXIT_CODE -ne 0 ]; then
+        exit 1
+    else
+        exit 0
+    fi
+}
+
+# Execute main
+main

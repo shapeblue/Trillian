@@ -1,49 +1,57 @@
 ---
-# Playwright role - main tasks (Ubuntu)
+# Playwright role - main tasks (Direct execution, no Docker)
+
+- name: Wait for SSH
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  tags:
+    - playwright
 
 - name: Update apt cache
   apt:
     update_cache: yes
   when: ansible_os_family == 'Debian'
+  tags:
+    - playwright
 
-- name: Install prerequisites for Docker and Git
+- name: Install development tools and prerequisites (Debian)
   apt:
     name:
-      - apt-transport-https
+      - build-essential
       - ca-certificates
       - curl
-      - gnupg
-      - lsb-release
       - git
+      - jq
+      - npm
+      - nodejs
+      - screen
+      - tmux
+      - vim
+      - wget
     state: present
   when: ansible_os_family == 'Debian'
+  tags:
+    - playwright
 
-- name: Add Docker GPG key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  when: ansible_os_family == 'Debian'
-
-- name: Add Docker apt repository
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
-  when: ansible_os_family == 'Debian'
-
-- name: Install Docker packages
-  apt:
+- name: Install development tools and prerequisites (RedHat/CentOS)
+  dnf:
     name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
+      - gcc
+      - gcc-c++
+      - make
+      - ca-certificates
+      - curl
+      - git
+      - jq
+      - npm
+      - nodejs
+      - screen
+      - tmux
+      - vim
+      - wget
     state: present
-    update_cache: yes
-  when: ansible_os_family == 'Debian'
-
-- name: Ensure docker service is started
-  service:
-    name: docker
-    state: started
-    enabled: yes
+  when: ansible_os_family == 'RedHat'
+  tags:
+    - playwright
 
 - name: Create playwright directories
   file:
@@ -54,6 +62,18 @@
     - /playwright
     - /playwright/tests
     - /playwright/results
+    - /playwright/logs
+    - /playwright/tools
+  tags:
+    - playwright
+
+- name: Copy result parser script
+  copy:
+    src: tools/parse-results.sh
+    dest: /playwright/tools/parse-results.sh
+    mode: '0755'
+  tags:
+    - playwright
 
 - name: Clone Playwright tests repo
   git:
@@ -63,15 +83,26 @@
     update: yes
     accept_hostkey: yes
   when: playwright_tests_repo is defined
+  tags:
+    - playwright
+
+- name: Install Playwright dependencies (npm ci)
+  shell: cd /playwright/tests && npm ci
+  tags:
+    - playwright
 
 - name: Copy runtests script
   template:
     src: runtests.sh.j2
     dest: /playwright/runtests.sh
     mode: '0755'
+  tags:
+    - playwright
 
 - name: Copy upload_to_es script
   copy:
     src: upload_to_es.sh
     dest: /playwright/upload_to_es.sh
     mode: '0755'
+  tags:
+    - playwright

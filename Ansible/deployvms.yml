@@ -272,6 +272,20 @@
     - { role: slack_client, when: (num_marv_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
     - { role: marvin, when: num_marv_hosts | int != 0  and (additional_pod|bool == False) }
 
+## Configure Playwright host
+
+- hosts: playwright_host
+  gather_facts: no
+  vars:
+    num_pw_hosts: "{{ groups['playwright_host'] | length }}"
+  roles:
+
+    - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|bool == False) }
+    - { role: cloudmonkey, when: num_pw_hosts | int != 0 and (additional_pod|bool == False) }
+    - { role: hipchat_client, when: (num_pw_hosts | int != 0) and (use_hipchat) and (additional_pod|bool == False) }
+    - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
+    - { role: playwright, when: num_pw_hosts | int != 0  and (additional_pod|bool == False) }
+
 - hosts: localhost
   connection: local
   gather_facts: no
@@ -377,3 +391,16 @@
       - marvin
       - run_smoke_tests
     when: run_smoke_tests
+
+## Run Playwright Tests
+
+- hosts: playwright_host
+  gather_facts: no
+  tasks:
+
+  - name: Set Playwright tests to run
+    shell: "echo /playwright/runtests.sh | at now + 1 min"
+    tags:
+      - playwright
+      - run_playwright_tests
+    when: run_playwright_tests

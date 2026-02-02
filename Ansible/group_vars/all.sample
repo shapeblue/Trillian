@@ -792,14 +792,15 @@ def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/up
 
 # Playwright defaults (on-demand Playwright box)
 def_build_playwright: no
+def_run_playwright_tests: no
 def_playwright_user: "ubuntu"
 def_playwright_password: "<PLAYWRIGHT_PASS_HERE>"
 def_playwright_tests_repo: "git@github.com:shapeblue/cloudstack-ui-automation.git"
 def_playwright_tests_branch: "main"
 def_playwright_es_host: "elk.lab.lon"
+def_playwright_es_port: 9200
 def_playwright_es_index: "playwright-results"
-def_playwright_docker_image: "mcr.microsoft.com/playwright:v1.40.0-focal"
-# If you want to provide a private deploy key via Ansible (recommended to store in vault), set this variable to the private key contents. If empty, the role will generate a key on the Playwright host and will stop and print the public key for you to add as a repo deploy key.
+def_playwright_test_retries: 2
 def_playwright_deploy_key_private: ""
 
 # Webhooks for integration
