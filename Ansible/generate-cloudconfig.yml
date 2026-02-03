@@ -325,9 +325,33 @@
       set_fact: def_run_playwright_tests=no
       when: def_run_playwright_tests is undefined
 
+    - name: set playwright user default
+      set_fact: def_playwright_user="ubuntu"
+      when: def_playwright_user is undefined
+
+    - name: set playwright password default
+      set_fact: def_playwright_password="P@ssword123"
+      when: def_playwright_password is undefined
+
+    - name: set playwright tests repo default
+      set_fact: def_playwright_tests_repo="git@github.com:shapeblue/cloudstack-ui-automation.git"
+      when: def_playwright_tests_repo is undefined
+
+    - name: set playwright tests branch default
+      set_fact: def_playwright_tests_branch="main"
+      when: def_playwright_tests_branch is undefined
+
+    - name: set playwright es host default
+      set_fact: def_playwright_es_host="elk.lab.lon"
+      when: def_playwright_es_host is undefined
+
     - name: set playwright es port default
       set_fact: def_playwright_es_port=9200
       when: def_playwright_es_port is undefined
+
+    - name: set playwright es index default
+      set_fact: def_playwright_es_index="playwright-results"
+      when: def_playwright_es_index is undefined
 
     - name: set playwright test retries default
       set_fact: def_playwright_test_retries=2
@@ -340,6 +364,18 @@
     - name: Set build_marvin flag
       set_fact: build_marvin="{{ def_build_marvin }}"
       when: build_marvin is undefined
+
+    - name: set def_build_marvin default
+      set_fact: def_build_marvin=no
+      when: def_build_marvin is undefined
+
+    - name: Set build_playwright flag
+      set_fact: build_playwright="{{ def_build_playwright }}"
+      when: build_playwright is undefined
+
+    - name: set def_build_playwright default
+      set_fact: def_build_playwright=no
+      when: def_build_playwright is undefined
 
     - name: set use_hipchat flag
       set_fact: use_hipchat="{{ def_use_hipchat }}"
