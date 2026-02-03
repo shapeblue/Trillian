@@ -277,7 +277,7 @@
 - hosts: playwright_host
   gather_facts: no
   vars:
-    num_pw_hosts: "{{ groups['playwright_host'] | length }}"
+    num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
   roles:
 
     - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|bool == False) }
