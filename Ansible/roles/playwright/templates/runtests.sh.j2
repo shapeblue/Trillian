@@ -95,7 +95,10 @@ run_tests() {
         cd "$TESTDIR"
         export CLOUDSTACK_URL="$CLOUDSTACK_URL"
         
-        # Run Playwright tests
+        # Ensure headless mode (Playwright default, but explicit is better)
+        export PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+        
+        # Run Playwright tests in headless mode
         npx playwright test \
             --reporter=json \
             --output="$RESULTSDIR/results.json" \
