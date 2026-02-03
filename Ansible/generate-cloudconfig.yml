@@ -357,6 +357,14 @@
       set_fact: def_playwright_test_retries=2
       when: def_playwright_test_retries is undefined
 
+    - name: set ssh retries default
+      set_fact: def_ssh_retries=1000
+      when: def_ssh_retries is undefined
+
+    - name: set ssh retries
+      set_fact: ssh_retries="{{ def_ssh_retries }}"
+      when: ssh_retries is undefined
+
     - name: Generate environment tagged project name
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined
