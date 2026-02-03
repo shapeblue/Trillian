@@ -279,7 +279,7 @@
   vars:
     num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
     ssh_retries: 1000
-    env_timezone: "{{ env_timezone | default('UTC') }}"
+    env_timezone: "UTC"
   roles:
 
     - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
