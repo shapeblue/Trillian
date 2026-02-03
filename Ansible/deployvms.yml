@@ -280,11 +280,11 @@
     num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
   roles:
 
-    - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|bool == False) }
-    - { role: cloudmonkey, when: num_pw_hosts | int != 0 and (additional_pod|bool == False) }
-    - { role: hipchat_client, when: (num_pw_hosts | int != 0) and (use_hipchat) and (additional_pod|bool == False) }
-    - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
-    - { role: playwright, when: num_pw_hosts | int != 0  and (additional_pod|bool == False) }
+    - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
+    - { role: cloudmonkey, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
+    - { role: hipchat_client, when: (num_pw_hosts | int != 0) and (use_hipchat) and (additional_pod|default(false)|bool == False) }
+    - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) and (additional_pod|default(false)|bool == False) }
+    - { role: playwright, when: num_pw_hosts | int != 0  and (additional_pod|default(false)|bool == False) }
 
 - hosts: localhost
   connection: local
