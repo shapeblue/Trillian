@@ -278,6 +278,7 @@
   gather_facts: no
   vars:
     num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
+    ssh_retries: "{{ ssh_retries | default(1000) }}"
   roles:
 
     - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
