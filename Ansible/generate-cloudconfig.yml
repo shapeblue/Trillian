@@ -321,6 +321,18 @@
       set_fact: run_playwright_tests="{{ def_run_playwright_tests | default('no') }}"
       when: run_playwright_tests is undefined
 
+    - name: set playwright run tests default
+      set_fact: def_run_playwright_tests=no
+      when: def_run_playwright_tests is undefined
+
+    - name: set playwright es port default
+      set_fact: def_playwright_es_port=9200
+      when: def_playwright_es_port is undefined
+
+    - name: set playwright test retries default
+      set_fact: def_playwright_test_retries=2
+      when: def_playwright_test_retries is undefined
+
     - name: Generate environment tagged project name
       set_fact: build_project="{{ env_name_clean }}-NestedClouds"
       when: build_project is undefined
