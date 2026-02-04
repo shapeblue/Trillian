@@ -1,0 +1,12 @@
+# GitHub Deploy Key Placeholder
+# 
+# To enable git clone from private repository:
+# 1. Generate deploy key: ssh-keygen -t ed25519 -C "trillian-playwright" -f playwright_deploy_key -N ""
+# 2. Add public key to: https://github.com/shapeblue/cloudstack-ui-automation/settings/keys
+#    - Title: "Trillian Playwright VM"
+#    - Uncheck "Allow write access" (read-only)
+# 3. Copy private key here: Ansible/roles/playwright/files/github_deploy_key
+# 4. Set permissions: chmod 600 github_deploy_key
+# 5. Remove this placeholder file
+#
+# This file exists as a reminder and documentation only.
