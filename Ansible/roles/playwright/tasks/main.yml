@@ -111,39 +111,6 @@
   tags:
     - playwright
 
-- name: Create .ssh directory for root
-  file:
-    path: /root/.ssh
-    state: directory
-    mode: '0700'
-  tags:
-    - playwright
-
-- name: Deploy GitHub deploy key for test repository (from environment)
-  copy:
-    content: "{{ lookup('env', 'PLAYWRIGHT_GITHUB_KEY') }}"
-    dest: /root/.ssh/id_rsa_playwright
-    mode: '0600'
-  when: lookup('env', 'PLAYWRIGHT_GITHUB_KEY') != ''
-  register: deploy_key_result
-  tags:
-    - playwright
-
-- name: Configure SSH to use deploy key for GitHub
-  blockinfile:
-    path: /root/.ssh/config
-    create: yes
-    mode: '0600'
-    block: |
-      Host github.com
-        HostName github.com
-        IdentityFile /root/.ssh/id_rsa_playwright
-        StrictHostKeyChecking no
-        UserKnownHostsFile /dev/null
-  when: deploy_key_result is succeeded
-  tags:
-    - playwright
-
 - name: Clone Playwright tests repo
   git:
     repo: "{{ playwright_tests_repo | default(def_playwright_tests_repo) }}"
@@ -151,7 +118,7 @@
     version: "{{ playwright_tests_branch | default(def_playwright_tests_branch) }}"
     update: yes
     accept_hostkey: yes
-  when: (playwright_tests_repo is defined) and (deploy_key_result is succeeded)
+  when: playwright_tests_repo is defined
   tags:
     - playwright
 
