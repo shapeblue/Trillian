@@ -280,6 +280,8 @@
     num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
     ssh_retries: 1000
     env_timezone: "UTC"
+    use_hipchat: false
+    use_slack: false
   roles:
 
     - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
