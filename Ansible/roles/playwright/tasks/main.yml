@@ -69,16 +69,16 @@
     - playwright
 
 - name: Reboot VM after package updates (if packages changed)
-  reboot:
-    reboot_timeout: 300
+  shell: /sbin/reboot
+  async: 0
+  poll: 0
+  ignore_errors: true
   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
 
 - name: Wait for VM to come back online
-  wait_for_connection:
-    delay: 10
-    timeout: 300
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=10 timeout=300
   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
