@@ -334,7 +334,7 @@
       when: def_playwright_password is undefined
 
     - name: set playwright tests repo default
-      set_fact: def_playwright_tests_repo="https://github.com/apache/cloudstack-ui-tests.git"
+      set_fact: def_playwright_tests_repo="https://github.com/shapeblue/cloudstack-e2e-tests.git"
       when: def_playwright_tests_repo is undefined
 
     - name: set playwright tests branch default

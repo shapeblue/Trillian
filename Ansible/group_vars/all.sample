@@ -795,7 +795,7 @@ def_build_playwright: no
 def_run_playwright_tests: no
 def_playwright_user: "ubuntu"
 def_playwright_password: "<PLAYWRIGHT_PASS_HERE>"
-def_playwright_tests_repo: "https://github.com/apache/cloudstack-ui-tests.git"
+def_playwright_tests_repo: "https://github.com/shapeblue/cloudstack-e2e-tests.git"
 def_playwright_tests_branch: "main"
 def_playwright_es_host: "elk.lab.lon"
 def_playwright_es_port: 9200
