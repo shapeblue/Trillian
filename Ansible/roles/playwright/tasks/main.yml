@@ -6,6 +6,19 @@
   tags:
     - playwright
 
+- name: Detect OS family
+  raw: "test -f /etc/redhat-release && echo 'RedHat' || echo 'Debian'"
+  register: os_detection
+  changed_when: false
+  tags:
+    - playwright
+
+- name: Set OS family fact
+  set_fact:
+    ansible_os_family: "{{ os_detection.stdout | trim }}"
+  tags:
+    - playwright
+
 - name: Update apt cache
   apt:
     update_cache: yes

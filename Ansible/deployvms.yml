@@ -275,7 +275,7 @@
 ## Configure Playwright host
 
 - hosts: playwright_host
-  gather_facts: yes
+  gather_facts: no
   vars:
     num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
     ssh_retries: 1000
