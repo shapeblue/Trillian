@@ -42,6 +42,7 @@
       - wget
     state: present
   when: ansible_os_family == 'Debian'
+  register: debian_packages
   tags:
     - playwright
 
@@ -63,6 +64,22 @@
       - wget
     state: present
   when: ansible_os_family == 'RedHat'
+  register: redhat_packages
+  tags:
+    - playwright
+
+- name: Reboot VM after package updates (if packages changed)
+  reboot:
+    reboot_timeout: 300
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Wait for VM to come back online
+  wait_for_connection:
+    delay: 10
+    timeout: 300
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
 
