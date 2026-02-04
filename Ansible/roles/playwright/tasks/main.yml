@@ -69,22 +69,23 @@
     - playwright
 
 - name: Reboot after major package updates
-  shell: sleep 2 && /sbin/reboot
-  async: 1
-  poll: 0
+  reboot:
+    reboot_timeout: 300
+    connect_timeout: 10
+    msg: "Rebooting after package updates"
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   ignore_errors: true
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
 
-- name: Wait for VM to come back after reboot
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=30 timeout=300 state=started
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
-  tags:
-    - playwright
-
-- name: Wait for SSH to be fully ready
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=10 timeout=60 state=started
+- name: Wait for SSH to be fully ready after reboot
+  wait_for:
+    port: 22
+    host: "{{ ansible_ssh_host }}"
+    delay: 10
+    timeout: 60
+    state: started
+  delegate_to: localhost
   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
