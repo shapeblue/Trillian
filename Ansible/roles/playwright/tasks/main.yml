@@ -58,9 +58,9 @@
   tags:
     - playwright
 
-- name: Wait 20 seconds for package installation and SSH restart
+- name: Wait for package installation to complete and SSH to restart
   wait_for:
-    timeout: 20
+    timeout: 300
   delegate_to: localhost
   when: ansible_os_family == 'RedHat'
   tags:
@@ -71,7 +71,7 @@
     port: 22
     host: "{{ ansible_ssh_host }}"
     delay: 5
-    timeout: 120
+    timeout: 300
     state: started
   delegate_to: localhost
   when: ansible_os_family == 'RedHat'
