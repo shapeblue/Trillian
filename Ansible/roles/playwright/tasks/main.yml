@@ -68,29 +68,43 @@
   tags:
     - playwright
 
-# Commenting out reboot - testing if it's necessary for Playwright functionality
-# Major package updates may not require reboot for Node.js/Playwright to work
-# - name: Reboot after major package updates
-#   reboot:
-#     reboot_timeout: 300
-#     connect_timeout: 10
-#     msg: "Rebooting after package updates"
-#   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
-#   ignore_errors: true
-#   tags:
-#     - playwright
-# 
-# - name: Wait for SSH to be fully ready after reboot
-#   wait_for:
-#     port: 22
-#     host: "{{ ansible_ssh_host }}"
-#     delay: 10
-#     timeout: 60
-#     state: started
-#   delegate_to: localhost
-#   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
-#   tags:
-#     - playwright
+# After major package updates, SSH daemon needs restart and reconnection
+- name: Restart SSH daemon after package updates
+  shell: systemctl restart sshd
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Wait 15 seconds for SSH daemon to restart
+  wait_for:
+    timeout: 15
+  delegate_to: localhost
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Wait for SSH port to be available
+  wait_for:
+    port: 22
+    host: "{{ ansible_ssh_host }}"
+    delay: 5
+    timeout: 120
+    state: started
+  delegate_to: localhost
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Re-establish SSH connection with updated libraries
+  wait_for_connection:
+    delay: 10
+    timeout: 60
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
 
 - name: Create playwright directories
   file:
