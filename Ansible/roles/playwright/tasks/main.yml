@@ -68,8 +68,23 @@
   tags:
     - playwright
 
-- name: Wait for SSH after package updates (SSH may restart)
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=5 timeout=60
+- name: Reboot after major package updates
+  shell: sleep 2 && /sbin/reboot
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Wait for VM to come back after reboot
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=30 timeout=300 state=started
+  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  tags:
+    - playwright
+
+- name: Wait for SSH to be fully ready
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=10 timeout=60 state=started
   when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
   tags:
     - playwright
