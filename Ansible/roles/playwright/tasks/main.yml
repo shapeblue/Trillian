@@ -119,12 +119,12 @@
   tags:
     - playwright
 
-- name: Deploy GitHub deploy key for test repository
+- name: Deploy GitHub deploy key for test repository (from environment)
   copy:
-    src: github_deploy_key
+    content: "{{ lookup('env', 'PLAYWRIGHT_GITHUB_KEY') }}"
     dest: /root/.ssh/id_rsa_playwright
     mode: '0600'
-  ignore_errors: yes
+  when: lookup('env', 'PLAYWRIGHT_GITHUB_KEY') != ''
   register: deploy_key_result
   tags:
     - playwright
