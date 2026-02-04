@@ -46,47 +46,27 @@
   tags:
     - playwright
 
-- name: Install development tools and prerequisites (RedHat/CentOS)
-  dnf:
-    name:
-      - gcc
-      - gcc-c++
-      - make
-      - ca-certificates
-      - curl
-      - git
-      - jq
-      - npm
-      - nodejs
-      - screen
-      - tmux
-      - vim
-      - wget
-    state: present
-  when: ansible_os_family == 'RedHat'
-  register: redhat_packages
-  tags:
-    - playwright
-
-# After major package updates, SSH daemon needs restart and reconnection
-- name: Restart SSH daemon after package updates
-  shell: systemctl restart sshd
+- name: Install packages and restart SSH in single transaction (RedHat/CentOS)
+  shell: |
+    dnf install -y gcc gcc-c++ make ca-certificates curl git jq npm nodejs screen tmux vim wget && \
+    sleep 2 && \
+    systemctl restart sshd
   async: 0
   poll: 0
   ignore_errors: true
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  when: ansible_os_family == 'RedHat'
   tags:
     - playwright
 
-- name: Wait 15 seconds for SSH daemon to restart
+- name: Wait 20 seconds for package installation and SSH restart
   wait_for:
-    timeout: 15
+    timeout: 20
   delegate_to: localhost
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  when: ansible_os_family == 'RedHat'
   tags:
     - playwright
 
-- name: Wait for SSH port to be available
+- name: Wait for SSH port to be available after restart
   wait_for:
     port: 22
     host: "{{ ansible_ssh_host }}"
@@ -94,7 +74,7 @@
     timeout: 120
     state: started
   delegate_to: localhost
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  when: ansible_os_family == 'RedHat'
   tags:
     - playwright
 
@@ -102,7 +82,7 @@
   wait_for_connection:
     delay: 10
     timeout: 60
-  when: (redhat_packages.changed | default(false)) or (debian_packages.changed | default(false))
+  when: ansible_os_family == 'RedHat'
   tags:
     - playwright
 
