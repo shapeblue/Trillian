@@ -176,6 +176,8 @@ build_marvin: {{ build_marvin | default( def_build_marvin ) }}
 # Playwright on-demand host
 build_playwright: {{ build_playwright | default( def_build_playwright ) }}
 run_playwright_tests: {{ run_playwright_tests | default( def_run_playwright_tests ) }}
+playwright_service_offering: "{{ playwright_service_offering | default( def_playwright_service_offering ) }}"
+playwright_server_template: "{{ playwright_server_template | default( def_playwright_server_template ) }}"
 playwright_tests_repo: "{{ playwright_tests_repo | default( def_playwright_tests_repo ) }}"
 playwright_tests_branch: "{{ playwright_tests_branch | default( def_playwright_tests_branch ) }}"
 playwright_es_host: "{{ playwright_es_host | default( def_playwright_es_host ) }}"

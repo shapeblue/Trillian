@@ -793,6 +793,8 @@ def_fallback_marvin_test_repo: "http://<IP_ADDRESS_HERE>/shapeblue/cloudstack/up
 # Playwright defaults (on-demand Playwright box)
 def_build_playwright: no
 def_run_playwright_tests: no
+def_playwright_service_offering: "Marvin"
+def_playwright_server_template: "Ubuntu 22.04"
 def_playwright_user: "ubuntu"
 def_playwright_password: "<PLAYWRIGHT_PASS_HERE>"
 def_playwright_tests_repo: "https://github.com/shapeblue/cloudstack-e2e-tests.git"
