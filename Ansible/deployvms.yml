@@ -272,24 +272,6 @@
     - { role: slack_client, when: (num_marv_hosts | int != 0) and (use_slack) and (additional_pod|bool == False) }
     - { role: marvin, when: num_marv_hosts | int != 0  and (additional_pod|bool == False) }
 
-## Configure Playwright host
-
-- hosts: playwright_host
-  gather_facts: no
-  vars:
-    num_pw_hosts: "{{ groups['playwright_host'] | default([]) | length }}"
-    ssh_retries: 1000
-    env_timezone: "UTC"
-    use_hipchat: false
-    use_slack: false
-  roles:
-
-    - { role: timezone, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
-    - { role: cloudmonkey, when: num_pw_hosts | int != 0 and (additional_pod|default(false)|bool == False) }
-    - { role: hipchat_client, when: (num_pw_hosts | int != 0) and (use_hipchat) and (additional_pod|default(false)|bool == False) }
-    - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) and (additional_pod|default(false)|bool == False) }
-    - { role: playwright, when: num_pw_hosts | int != 0  and (additional_pod|default(false)|bool == False) }
-
 - hosts: localhost
   connection: local
   gather_facts: no
@@ -396,15 +378,16 @@
       - run_smoke_tests
     when: run_smoke_tests
 
-## Run Playwright Tests
+## Call Playwright playbook if Playwright VMs exist
 
-- hosts: playwright_host
+- hosts: localhost
+  connection: local
   gather_facts: no
   tasks:
-
-  - name: Set Playwright tests to run
-    shell: "echo /playwright/runtests.sh | at now + 1 min"
-    tags:
-      - playwright
-      - run_playwright_tests
-    when: run_playwright_tests
+  - name: Run Playwright setup playbook
+    shell: ansible-playbook deploy_playwright.yml -i {{ inventory_file }}
+    args:
+      chdir: "{{ playbook_dir }}"
+    when:
+      - groups['playwright_host'] is defined
+      - groups['playwright_host'] | length > 0
