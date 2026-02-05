@@ -26,6 +26,13 @@
   tags:
     - playwright
 
+- name: Add NodeSource repository for Node.js 20.x (Debian)
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  when: ansible_os_family == 'Debian'
+  tags:
+    - playwright
+
 - name: Install development tools and prerequisites (Debian)
   apt:
     name:
@@ -34,7 +41,6 @@
       - curl
       - git
       - jq
-      - npm
       - nodejs
       - screen
       - tmux
