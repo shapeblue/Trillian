@@ -137,7 +137,7 @@
       - libatspi2.0-0
       - libxshmfence1
     state: present
-  when: ansible_os_family == 'Debian' and playwright_install.failed
+  when: ansible_os_family == 'Debian' and playwright_install is failed
   tags:
     - playwright
 
