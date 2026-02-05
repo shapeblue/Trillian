@@ -85,8 +85,22 @@
   tags:
     - playwright
 
-- name: Install Playwright dependencies (npm ci)
+- name: Check if package-lock.json exists
+  stat:
+    path: /playwright/tests/package-lock.json
+  register: package_lock
+  tags:
+    - playwright
+
+- name: Install Playwright dependencies (npm install if no lock file)
+  shell: cd /playwright/tests && npm install
+  when: not package_lock.stat.exists
+  tags:
+    - playwright
+
+- name: Install Playwright dependencies (npm ci with lock file)
   shell: cd /playwright/tests && npm ci
+  when: package_lock.stat.exists
   tags:
     - playwright
 
