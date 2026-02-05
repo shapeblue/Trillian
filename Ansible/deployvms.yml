@@ -378,16 +378,8 @@
       - run_smoke_tests
     when: run_smoke_tests
 
-## Call Playwright playbook if Playwright VMs exist
-
-- hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-  - name: Run Playwright setup playbook
-    shell: ansible-playbook deploy_playwright.yml -i {{ inventory_file }}
-    args:
-      chdir: "{{ playbook_dir }}"
-    when:
-      - groups['playwright_host'] is defined
-      - groups['playwright_host'] | length > 0
+## Import Playwright playbook if Playwright VMs exist
+- import_playbook: deploy_playwright.yml
+  when: 
+    - groups['playwright_host'] is defined
+    - groups['playwright_host'] | length > 0
