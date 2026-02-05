@@ -77,9 +77,9 @@
 
 - name: Clone Playwright tests repo
   git:
-    repo: "{{ playwright_tests_repo | default(def_playwright_tests_repo) }}"
+    repo: "{{ playwright_tests_repo | default('https://github.com/shapeblue/cloudstack-e2e-tests.git') }}"
     dest: /playwright/tests
-    version: "{{ playwright_tests_branch | default(def_playwright_tests_branch) }}"
+    version: "{{ playwright_tests_branch | default('main') }}"
     update: yes
     accept_hostkey: yes
   tags:
