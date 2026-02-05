@@ -46,42 +46,9 @@
   tags:
     - playwright
 
-- name: Install packages and restart SSH in single transaction (RedHat/CentOS)
+- name: Install packages without triggering SSH issues (RedHat/CentOS)
   shell: |
-    dnf install -y gcc gcc-c++ make ca-certificates curl git jq npm nodejs screen tmux vim wget && \
-    sleep 2 && \
-    systemctl restart sshd
-  async: 0
-  poll: 0
-  ignore_errors: true
-  when: ansible_os_family == 'RedHat'
-  tags:
-    - playwright
-
-- name: Wait for package installation to complete and SSH to restart
-  wait_for:
-    timeout: 300
-  delegate_to: localhost
-  when: ansible_os_family == 'RedHat'
-  tags:
-    - playwright
-
-- name: Wait for SSH port to be available after restart
-  wait_for:
-    port: 22
-    host: "{{ ansible_ssh_host }}"
-    delay: 5
-    timeout: 300
-    state: started
-  delegate_to: localhost
-  when: ansible_os_family == 'RedHat'
-  tags:
-    - playwright
-
-- name: Re-establish SSH connection with updated libraries
-  wait_for_connection:
-    delay: 10
-    timeout: 60
+    dnf install -y gcc gcc-c++ make ca-certificates curl git jq npm nodejs screen tmux vim wget
   when: ansible_os_family == 'RedHat'
   tags:
     - playwright
