@@ -82,7 +82,6 @@
     version: "{{ playwright_tests_branch | default(def_playwright_tests_branch) }}"
     update: yes
     accept_hostkey: yes
-  when: playwright_tests_repo is defined
   tags:
     - playwright
 
