@@ -804,6 +804,13 @@ def_playwright_es_port: 9200
 def_playwright_es_index: "playwright-results"
 def_playwright_test_retries: 2
 
+# Playwright QA Portal Database (for test result storage)
+def_playwright_db_host: "10.0.113.145"
+def_playwright_db_port: 3306
+def_playwright_db_name: "cloudstack_tests"
+def_playwright_db_user: "results"
+def_playwright_db_pass: "P@ssword123"
+
 # Webhooks for integration
 def_use_webhooks: no
 def_marvin_notifi_webhook_url: "<WEBHOOK_URL_HERE>"

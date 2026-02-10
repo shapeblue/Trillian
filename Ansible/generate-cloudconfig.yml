@@ -365,6 +365,26 @@
       set_fact: def_playwright_server_template="Ubuntu 22.04"
       when: def_playwright_server_template is undefined
 
+    - name: set playwright db host default
+      set_fact: def_playwright_db_host="10.0.113.145"
+      when: def_playwright_db_host is undefined
+
+    - name: set playwright db port default
+      set_fact: def_playwright_db_port=3306
+      when: def_playwright_db_port is undefined
+
+    - name: set playwright db name default
+      set_fact: def_playwright_db_name="cloudstack_tests"
+      when: def_playwright_db_name is undefined
+
+    - name: set playwright db user default
+      set_fact: def_playwright_db_user="results"
+      when: def_playwright_db_user is undefined
+
+    - name: set playwright db pass default
+      set_fact: def_playwright_db_pass="P@ssword123"
+      when: def_playwright_db_pass is undefined
+
     - name: set ssh retries default
       set_fact: def_ssh_retries=1000
       when: def_ssh_retries is undefined

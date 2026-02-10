@@ -81,6 +81,14 @@
   tags:
     - playwright
 
+- name: Copy database upload script
+  template:
+    src: upload-to-db.sh.j2
+    dest: /playwright/tools/upload-to-db.sh
+    mode: '0755'
+  tags:
+    - playwright
+
 - name: Clone Playwright tests repo
   git:
     repo: "{{ playwright_tests_repo | default('https://github.com/shapeblue/cloudstack-e2e-tests.git') }}"

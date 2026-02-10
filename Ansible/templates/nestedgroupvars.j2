@@ -185,6 +185,11 @@ playwright_es_port: {{ playwright_es_port | default( def_playwright_es_port ) }}
 playwright_es_index: "{{ playwright_es_index | default( def_playwright_es_index ) }}"
 playwright_test_retries: {{ playwright_test_retries | default( def_playwright_test_retries ) }}
 playwright_password: "{{ playwright_password | default( def_playwright_password ) }}"
+playwright_db_host: "{{ playwright_db_host | default( def_playwright_db_host ) }}"
+playwright_db_port: {{ playwright_db_port | default( def_playwright_db_port ) }}
+playwright_db_name: "{{ playwright_db_name | default( def_playwright_db_name ) }}"
+playwright_db_user: "{{ playwright_db_user | default( def_playwright_db_user ) }}"
+playwright_db_pass: "{{ playwright_db_pass | default( def_playwright_db_pass ) }}"
 wait_for_template: {{ wait_for_template | default( "no" ) }}
 force_java: {{ force_java | default( "no" ) }}
 use_local_templates: {{ use_local_templates | default( def_use_local_templates ) }}

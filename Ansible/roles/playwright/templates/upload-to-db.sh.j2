@@ -1,0 +1,185 @@
+#!/bin/bash
+# Upload Playwright test results to QA Portal database
+# Called after Playwright tests complete on Trillian VM
+
+set -e
+
+# Database configuration
+DB_HOST="{{ playwright_db_host | default('10.0.113.145') }}"
+DB_PORT="{{ playwright_db_port | default(3306) }}"
+DB_NAME="{{ playwright_db_name | default('cloudstack_tests') }}"
+DB_USER="{{ playwright_db_user | default('results') }}"
+DB_PASS="{{ playwright_db_pass | default('P@ssword123') }}"
+
+# Test info (passed as arguments or environment variables)
+PR_NUMBER="${1:-${PR_NUMBER:-0}}"
+PR_TITLE="${2:-${PR_TITLE:-'Manual Test Run'}}"
+JENKINS_BUILD="${JENKINS_BUILD_NUMBER:-0}"
+JENKINS_JOB="${JOB_NAME:-'manual'}"
+TRILLIAN_ENV_ID="${TRILLIAN_ENV_ID:-''}"
+LOGS_URL="${LOGS_URL:-''}"
+
+# Paths
+RESULTS_FILE="/playwright/results/results.json"
+SUMMARY_FILE="/playwright/logs/playwright-summary.txt"
+TEST_RESULTS_DIR="/playwright/tests/test-results"
+PLAYWRIGHT_REPORT_DIR="/playwright/tests/playwright-report"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log() {
+    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
+
+error() {
+    echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1" >&2
+}
+
+warn() {
+    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARN:${NC} $1"
+}
+
+# Check if mysql client is installed
+if ! command -v mysql &> /dev/null; then
+    error "mysql client not found. Installing..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq mysql-client
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y -q mysql
+    else
+        error "Cannot install mysql client. Package manager not found."
+        exit 1
+    fi
+fi
+
+# Check if jq is installed (should already be installed by Playwright role)
+if ! command -v jq &> /dev/null; then
+    error "jq not found. Installing..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq jq
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y -q jq
+    else
+        error "Cannot install jq. Package manager not found."
+        exit 1
+    fi
+fi
+
+# Verify results file exists
+if [ ! -f "$RESULTS_FILE" ]; then
+    error "Results file not found: $RESULTS_FILE"
+    exit 1
+fi
+
+log "Parsing test results from $RESULTS_FILE"
+
+# Parse JSON results using jq
+TOTAL_TESTS=$(jq -r '.suites[].specs | length' "$RESULTS_FILE" | awk '{sum+=$1} END {print sum}')
+PASSED_TESTS=$(jq -r '[.suites[].specs[].tests[] | select(.status == "passed")] | length' "$RESULTS_FILE")
+FAILED_TESTS=$(jq -r '[.suites[].specs[].tests[] | select(.status == "failed")] | length' "$RESULTS_FILE")
+SKIPPED_TESTS=$(jq -r '[.suites[].specs[].tests[] | select(.status == "skipped")] | length' "$RESULTS_FILE")
+
+# Calculate duration (sum of all test durations)
+DURATION_MS=$(jq -r '[.suites[].specs[].tests[].results[].duration] | add' "$RESULTS_FILE")
+
+# Get failed test names (comma-separated)
+FAILED_TEST_NAMES=$(jq -r '[.suites[].specs[] | select(.tests[].status == "failed") | .title] | join(", ")' "$RESULTS_FILE")
+
+# Count screenshots and videos
+SCREENSHOT_COUNT=$(find "$TEST_RESULTS_DIR" -type f -name "*.png" 2>/dev/null | wc -l)
+VIDEO_COUNT=$(find "$TEST_RESULTS_DIR" -type f -name "*.webm" 2>/dev/null | wc -l)
+
+# Get test timestamps
+TEST_STARTED_AT=$(jq -r '.suites[0].specs[0].tests[0].results[0].startTime' "$RESULTS_FILE" | xargs -I {} date -d "@$(echo {} | awk '{print int($1/1000)}')" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "")
+TEST_COMPLETED_AT=$(date '+%Y-%m-%d %H:%M:%S')
+
+# Browser detection (default to chromium)
+BROWSER="chromium"
+
+log "Test Results Summary:"
+log "  Total: $TOTAL_TESTS | Passed: $PASSED_TESTS | Failed: $FAILED_TESTS | Skipped: $SKIPPED_TESTS"
+log "  Duration: ${DURATION_MS}ms | Screenshots: $SCREENSHOT_COUNT | Videos: $VIDEO_COUNT"
+[ -n "$FAILED_TEST_NAMES" ] && warn "  Failed tests: $FAILED_TEST_NAMES"
+
+# Test database connection
+log "Testing database connection to $DB_HOST:$DB_PORT..."
+if ! mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1;" &>/dev/null; then
+    error "Cannot connect to database at $DB_HOST:$DB_PORT"
+    error "Please verify database credentials and network connectivity"
+    exit 1
+fi
+log "Database connection successful"
+
+# Escape single quotes in strings for SQL
+escape_sql() {
+    echo "$1" | sed "s/'/''/g"
+}
+
+PR_TITLE_ESCAPED=$(escape_sql "$PR_TITLE")
+FAILED_TEST_NAMES_ESCAPED=$(escape_sql "$FAILED_TEST_NAMES")
+JENKINS_JOB_ESCAPED=$(escape_sql "$JENKINS_JOB")
+TRILLIAN_ENV_ID_ESCAPED=$(escape_sql "$TRILLIAN_ENV_ID")
+LOGS_URL_ESCAPED=$(escape_sql "$LOGS_URL")
+
+# Build INSERT query
+SQL="INSERT INTO pr_playwright_results (
+    pr_number,
+    pr_title,
+    test_suite,
+    total_tests,
+    passed_tests,
+    failed_tests,
+    skipped_tests,
+    duration_ms,
+    browser,
+    failed_test_names,
+    logs_url,
+    screenshot_count,
+    video_count,
+    jenkins_build_number,
+    jenkins_job_name,
+    trillian_env_id,
+    test_started_at,
+    test_completed_at
+) VALUES (
+    $PR_NUMBER,
+    '$PR_TITLE_ESCAPED',
+    'ui-tests',
+    $TOTAL_TESTS,
+    $PASSED_TESTS,
+    $FAILED_TESTS,
+    $SKIPPED_TESTS,
+    $DURATION_MS,
+    '$BROWSER',
+    $([ -n "$FAILED_TEST_NAMES_ESCAPED" ] && echo "'$FAILED_TEST_NAMES_ESCAPED'" || echo "NULL"),
+    $([ -n "$LOGS_URL_ESCAPED" ] && echo "'$LOGS_URL_ESCAPED'" || echo "NULL"),
+    $SCREENSHOT_COUNT,
+    $VIDEO_COUNT,
+    $([ "$JENKINS_BUILD" != "0" ] && echo "$JENKINS_BUILD" || echo "NULL"),
+    $([ "$JENKINS_JOB" != "manual" ] && echo "'$JENKINS_JOB_ESCAPED'" || echo "NULL"),
+    $([ -n "$TRILLIAN_ENV_ID_ESCAPED" ] && echo "'$TRILLIAN_ENV_ID_ESCAPED'" || echo "NULL"),
+    $([ -n "$TEST_STARTED_AT" ] && echo "'$TEST_STARTED_AT'" || echo "NULL"),
+    '$TEST_COMPLETED_AT'
+);"
+
+log "Uploading results to database..."
+if mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "$SQL"; then
+    log "${GREEN}✓${NC} Results successfully uploaded to database"
+    log "  PR #$PR_NUMBER | Total: $TOTAL_TESTS | Passed: $PASSED_TESTS | Failed: $FAILED_TESTS"
+    
+    # Get the inserted record ID
+    RECORD_ID=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -s -N -e "SELECT LAST_INSERT_ID();")
+    log "  Database record ID: $RECORD_ID"
+    
+    exit 0
+else
+    error "Failed to upload results to database"
+    error "SQL query: $SQL"
+    exit 1
+fi

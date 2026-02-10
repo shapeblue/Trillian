@@ -173,6 +173,32 @@ upload_results() {
     else
         log_msg "⚠ upload_to_es.sh not found"
     fi
+    
+    # Upload to QA Portal database
+    if [ -x "/playwright/tools/upload-to-db.sh" ]; then
+        log_msg "Uploading results to QA Portal database..."
+        
+        # Extract PR number and title from environment or Jenkins
+        PR_NUMBER="${ghprbPullId:-${GITHUB_PR_NUMBER:-0}}"
+        PR_TITLE="${ghprbPullTitle:-${GITHUB_PR_TITLE:-'Test Run'}}"
+        
+        # Set Jenkins build info
+        export JENKINS_BUILD_NUMBER="${BUILD_NUMBER:-0}"
+        export JOB_NAME="${JOB_NAME:-manual}"
+        export TRILLIAN_ENV_ID="{{ env_name_clean }}"
+        
+        # Set logs URL (will be set after artifacts are published)
+        export LOGS_URL="${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/Playwright_20Test_20Report/"
+        
+        /playwright/tools/upload-to-db.sh "$PR_NUMBER" "$PR_TITLE"
+        if [ $? -eq 0 ]; then
+            log_msg "✓ Results uploaded to QA Portal database"
+        else
+            log_msg "⚠ Failed to upload results to database (non-fatal)"
+        fi
+    else
+        log_msg "⚠ upload-to-db.sh not found, skipping database upload"
+    fi
 }
 
 # Cleanup (preserve results)
