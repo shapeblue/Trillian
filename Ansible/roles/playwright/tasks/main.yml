@@ -61,10 +61,11 @@
     - playwright
 
 - name: Ensure atd service is running
-  service:
-    name: atd
-    state: started
-    enabled: yes
+  shell: |
+    systemctl start atd || service atd start
+    systemctl enable atd || chkconfig atd on
+  args:
+    warn: false
   tags:
     - playwright
 
