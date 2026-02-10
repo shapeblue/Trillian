@@ -1,0 +1,60 @@
+---
+# Fetch Playwright artifacts from VM to Jenkins workspace
+# Run this BEFORE tearing down the Playwright VM
+# Artifacts will be published by Jenkins HTML Publisher Plugin
+
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    playwright_vm: "{{ groups['playwright_host'][0] }}"
+    jenkins_workspace: "{{ lookup('env', 'WORKSPACE') | default(playbook_dir + '/../', true) }}"
+    
+  tasks:
+    - name: Check if Playwright VM exists
+      set_fact:
+        has_playwright: "{{ groups['playwright_host'] is defined and (groups['playwright_host'] | length > 0) }}"
+    
+    - name: Create local artifacts directory
+      file:
+        path: "{{ jenkins_workspace }}/playwright-artifacts"
+        state: directory
+      when: has_playwright
+      
+    - name: Fetch HTML report from Playwright VM
+      synchronize:
+        mode: pull
+        src: "/playwright/tests/playwright-report/"
+        dest: "{{ jenkins_workspace }}/playwright-artifacts/playwright-report/"
+        rsync_opts:
+          - "--ignore-missing-args"
+      delegate_to: "{{ playwright_vm }}"
+      when: has_playwright
+      ignore_errors: yes
+      
+    - name: Fetch test results from Playwright VM
+      synchronize:
+        mode: pull
+        src: "/playwright/tests/test-results/"
+        dest: "{{ jenkins_workspace }}/playwright-artifacts/test-results/"
+        rsync_opts:
+          - "--ignore-missing-args"
+      delegate_to: "{{ playwright_vm }}"
+      when: has_playwright
+      ignore_errors: yes
+      
+    - name: Fetch test logs from Playwright VM
+      synchronize:
+        mode: pull
+        src: "/playwright/logs/"
+        dest: "{{ jenkins_workspace }}/playwright-artifacts/logs/"
+        rsync_opts:
+          - "--ignore-missing-args"
+      delegate_to: "{{ playwright_vm }}"
+      when: has_playwright
+      ignore_errors: yes
+      
+    - name: Display artifact location
+      debug:
+        msg: "Playwright artifacts saved to: {{ jenkins_workspace }}/playwright-artifacts/"
+      when: has_playwright

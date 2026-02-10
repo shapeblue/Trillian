@@ -1,0 +1,82 @@
+// Jenkins Pipeline Configuration for Playwright Reporting
+// Add this to your main Trillian Jenkins job
+
+// At the end of your existing pipeline, BEFORE teardown, add:
+
+stage('Fetch Playwright Artifacts') {
+    steps {
+        script {
+            // Only run if Playwright VM was created
+            if (params.build_playwright == 'yes') {
+                dir('Ansible') {
+                    sh '''
+                        ansible-playbook -i hosts_${BUILD_TAG} fetch-playwright-artifacts.yml
+                    '''
+                }
+            }
+        }
+    }
+}
+
+// After all stages (including teardown), add this in post section:
+
+post {
+    always {
+        script {
+            // Publish Playwright HTML report if it exists
+            if (fileExists('playwright-artifacts/playwright-report/index.html')) {
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'playwright-artifacts/playwright-report',
+                    reportFiles: 'index.html',
+                    reportName: 'Playwright Test Report',
+                    reportTitles: 'Playwright UI Tests'
+                ])
+                
+                echo "✅ Playwright Report: ${env.BUILD_URL}Playwright_Test_Report/"
+            }
+            
+            // Also archive raw artifacts
+            if (fileExists('playwright-artifacts')) {
+                archiveArtifacts artifacts: 'playwright-artifacts/**/*', 
+                                 allowEmptyArchive: true,
+                                 fingerprint: true
+            }
+        }
+    }
+    
+    success {
+        script {
+            if (params.build_playwright == 'yes' && fileExists('playwright-artifacts/playwright-report/index.html')) {
+                // Send Slack notification with report link (if you use Slack)
+                // slackSend(
+                //     color: 'good',
+                //     message: "✅ Playwright tests passed! Report: ${env.BUILD_URL}Playwright_Test_Report/"
+                // )
+            }
+        }
+    }
+    
+    failure {
+        script {
+            if (params.build_playwright == 'yes' && fileExists('playwright-artifacts/playwright-report/index.html')) {
+                // Send Slack notification about failure
+                // slackSend(
+                //     color: 'danger',
+                //     message: "❌ Playwright tests failed! Report: ${env.BUILD_URL}Playwright_Test_Report/"
+                // )
+            }
+        }
+    }
+}
+
+// IMPORTANT: Place "Fetch Playwright Artifacts" stage BEFORE your teardown stage!
+// Example order:
+// 1. Deploy Trillian
+// 2. Run Playwright Tests (scheduled via at command)
+// 3. Wait for tests to complete
+// 4. Fetch Playwright Artifacts ← NEW
+// 5. Teardown environment
+// 6. Post: Publish HTML Report ← NEW
