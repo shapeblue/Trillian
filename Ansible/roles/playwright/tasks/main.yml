@@ -36,6 +36,7 @@
 - name: Install development tools and prerequisites (Debian)
   apt:
     name:
+      - at
       - build-essential
       - ca-certificates
       - curl
@@ -54,8 +55,16 @@
 
 - name: Install packages without triggering SSH issues (RedHat/CentOS)
   shell: |
-    dnf install -y gcc gcc-c++ make ca-certificates curl git jq npm nodejs screen tmux vim wget
+    dnf install -y at gcc gcc-c++ make ca-certificates curl git jq npm nodejs screen tmux vim wget
   when: ansible_os_family == 'RedHat'
+  tags:
+    - playwright
+
+- name: Ensure atd service is running
+  service:
+    name: atd
+    state: started
+    enabled: yes
   tags:
     - playwright
 
