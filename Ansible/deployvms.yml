@@ -397,6 +397,8 @@
 
 - hosts: playwright_host
   gather_facts: no
+  vars:
+    run_playwright_tests: "{{ run_playwright_tests }}"
   tasks:
     - name: Schedule Playwright tests
       shell: |
