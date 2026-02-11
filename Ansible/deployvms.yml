@@ -395,13 +395,16 @@
     - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) }
     - { role: playwright, when: num_pw_hosts | int != 0 }
 
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Capture run_playwright_tests flag
+      set_fact:
+        run_pw_tests_flag: "{{ run_playwright_tests | default(false) }}"
+
 - hosts: playwright_host
   gather_facts: no
   tasks:
-    - name: Debug run_playwright_tests variable
-      debug:
-        msg: "run_playwright_tests={{ run_playwright_tests | default('UNDEFINED') }}, as bool={{ run_playwright_tests | default(false) | bool }}"
-    
     - name: Schedule Playwright tests
       shell: |
         cat > /tmp/run_playwright_tests.sh << 'EOF'
@@ -415,6 +418,6 @@
         EOF
         chmod +x /tmp/run_playwright_tests.sh
         echo "/tmp/run_playwright_tests.sh" | at now + 1 min
-      when: run_playwright_tests | default(false) | bool
+      when: hostvars['localhost']['run_pw_tests_flag'] | bool
       tags:
         - run_playwright_tests
