@@ -397,8 +397,6 @@
 
 - hosts: playwright_host
   gather_facts: no
-  vars:
-    run_playwright_tests: "{{ run_playwright_tests }}"
   tasks:
     - name: Schedule Playwright tests
       shell: |
@@ -413,8 +411,6 @@
         EOF
         chmod +x /tmp/run_playwright_tests.sh
         echo "/tmp/run_playwright_tests.sh" | at now + 1 min
-      when: 
-        - run_playwright_tests is defined
-        - run_playwright_tests | bool
+      when: run_playwright_tests | default(false) | bool
       tags:
         - run_playwright_tests
