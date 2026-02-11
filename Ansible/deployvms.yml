@@ -395,17 +395,13 @@
     - { role: slack_client, when: (num_pw_hosts | int != 0) and (use_slack) }
     - { role: playwright, when: num_pw_hosts | int != 0 }
 
-- hosts: localhost
-  connection: local
+- hosts: playwright_host
   gather_facts: no
   tasks:
     - name: Schedule Playwright tests
-      at:
-        command: "cd {{ local_dir_path }}/Ansible && ansible-playbook -i {{ inventory_file }} run-playwright-tests.yml"
-        count: 1
-        units: minutes
+      shell: echo "/playwright/runtests.sh" | at now + 1 min
       when: 
-        - groups['playwright_host'] is defined
-        - groups['playwright_host'] | length > 0
         - run_playwright_tests is defined
         - run_playwright_tests | bool
+      tags:
+        - run_playwright_tests
