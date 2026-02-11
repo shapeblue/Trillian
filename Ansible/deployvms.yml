@@ -398,6 +398,10 @@
 - hosts: playwright_host
   gather_facts: no
   tasks:
+    - name: Debug run_playwright_tests variable
+      debug:
+        msg: "run_playwright_tests={{ run_playwright_tests | default('UNDEFINED') }}, as bool={{ run_playwright_tests | default(false) | bool }}"
+    
     - name: Schedule Playwright tests
       shell: |
         cat > /tmp/run_playwright_tests.sh << 'EOF'
