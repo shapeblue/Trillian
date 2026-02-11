@@ -399,7 +399,18 @@
   gather_facts: no
   tasks:
     - name: Schedule Playwright tests
-      shell: echo "/playwright/runtests.sh" | at now + 1 min
+      shell: |
+        cat > /tmp/run_playwright_tests.sh << 'EOF'
+        #!/bin/bash
+        export CLOUDSTACK_URL="http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client"
+        export PLAYWRIGHT_ES_HOST="{{ playwright_es_host | default('elk.lab.lon') }}"
+        export PLAYWRIGHT_ES_PORT="{{ playwright_es_port | default(9200) }}"
+        export PLAYWRIGHT_TEST_RETRIES="{{ playwright_test_retries | default(2) }}"
+        export ENV_NAME="{{ env_name_clean }}"
+        /playwright/runtests.sh
+        EOF
+        chmod +x /tmp/run_playwright_tests.sh
+        echo "/tmp/run_playwright_tests.sh" | at now + 1 min
       when: 
         - run_playwright_tests is defined
         - run_playwright_tests | bool

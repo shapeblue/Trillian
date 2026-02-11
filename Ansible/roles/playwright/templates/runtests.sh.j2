@@ -15,15 +15,15 @@
 
 set +e
 
-# Configuration
+# Configuration - use environment variables with defaults
 LOGDIR="/playwright/logs"
 RESULTSDIR="/playwright/results"
 TESTDIR="/playwright/tests"
-TESTTRIES="{{ playwright_test_retries | default(2) }}"
-CLOUDSTACK_URL="{{ cloudstack_url | default('http://' + hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] + ':8080/client') }}"
-ELASTICSEARCH_HOST="{{ playwright_es_host | default(def_playwright_es_host) }}"
-ELASTICSEARCH_PORT="{{ playwright_es_port | default(9200) }}"
-ENV_NAME="{{ env_name_clean }}"
+TESTTRIES="${PLAYWRIGHT_TEST_RETRIES:-2}"
+CLOUDSTACK_URL="${CLOUDSTACK_URL:-http://localhost:8080/client}"
+ELASTICSEARCH_HOST="${PLAYWRIGHT_ES_HOST:-elk.lab.lon}"
+ELASTICSEARCH_PORT="${PLAYWRIGHT_ES_PORT:-9200}"
+ENV_NAME="${ENV_NAME:-playwright-test}"
 
 # Initialize counters
 PASSES=0
