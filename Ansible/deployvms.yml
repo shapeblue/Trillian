@@ -405,19 +405,24 @@
 - hosts: playwright_host
   gather_facts: no
   tasks:
+    - name: Create test runner script
+      copy:
+        dest: /tmp/run_playwright_tests.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          export CLOUDSTACK_URL="http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client"
+          export PLAYWRIGHT_ES_HOST="{{ playwright_es_host | default('elk.lab.lon') }}"
+          export PLAYWRIGHT_ES_PORT="{{ playwright_es_port | default(9200) }}"
+          export PLAYWRIGHT_TEST_RETRIES="{{ playwright_test_retries | default(2) }}"
+          export ENV_NAME="{{ env_name_clean }}"
+          /playwright/runtests.sh
+      when: hostvars['localhost']['run_pw_tests_flag'] | bool
+      tags:
+        - run_playwright_tests
+
     - name: Schedule Playwright tests
-      shell: |
-        cat > /tmp/run_playwright_tests.sh << 'EOF'
-        #!/bin/bash
-        export CLOUDSTACK_URL="http://{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:8080/client"
-        export PLAYWRIGHT_ES_HOST="{{ playwright_es_host | default('elk.lab.lon') }}"
-        export PLAYWRIGHT_ES_PORT="{{ playwright_es_port | default(9200) }}"
-        export PLAYWRIGHT_TEST_RETRIES="{{ playwright_test_retries | default(2) }}"
-        export ENV_NAME="{{ env_name_clean }}"
-        /playwright/runtests.sh
-        EOF
-        chmod +x /tmp/run_playwright_tests.sh
-        echo "/tmp/run_playwright_tests.sh" | at now + 1 min
+      shell: echo "/tmp/run_playwright_tests.sh" | at now + 1 min
       when: hostvars['localhost']['run_pw_tests_flag'] | bool
       tags:
         - run_playwright_tests
