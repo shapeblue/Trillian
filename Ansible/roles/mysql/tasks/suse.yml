@@ -97,14 +97,14 @@
 #   shell: rm -rf /var/lib/mysql/*
 
 - name: set root password
-  shell: mysql -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
+  shell: mysql --default-auth=mysql_native_password -h localhost -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'P@ssword123';FLUSH PRIVILEGES;"
   when: mysqlinstalled.changed
   tags:
     - mysql
     - mysqlconf
 
 - name: grant permissions
-  shell: mysql -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
+  shell: mysql --default-auth=mysql_native_password -h localhost -u root -pP@ssword123 -e "CREATE USER 'root'@'%' IDENTIFIED BY 'P@ssword123';GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;FLUSH PRIVILEGES"
   ignore_errors: yes
   when: mysqlinstalled.changed
   tags:
