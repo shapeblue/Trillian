@@ -16,7 +16,7 @@
 
 - name: Ensure python pre-req mysql repo is installed
   dnf:
-    name: https://repo.mysql.com/mysql84-community-release-el8.rpm
+    name: http://repo.mysql.com/mysql84-community-release-el8.rpm
     state: present 
 
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
