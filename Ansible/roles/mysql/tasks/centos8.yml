@@ -58,17 +58,6 @@
     - mysql
     - mysqlconf
 
-- name: Remove old MySQL packages
-  dnf:
-    name:
-      - mysql
-      - mysql-server
-      - mariadb
-    state: absent
-  tags:
-    - mysql
-    - mysqlconf
-
 - name: Install MySQL 8.4 repo
   dnf:
     name: http://repo.mysql.com/mysql84-community-release-el8.rpm
@@ -83,13 +72,25 @@
     warn: false
 
 - name: Ensure mysql server is installed
-  dnf:
-    name: mysql-community-server
-    state: present
-  register: mysqlinstalled
-  tags:
-    - mysql
-    - mysqlconf
+  block:
+    - name: Install mysql-community-server
+      dnf:
+        name: mysql-community-server
+        state: present
+      register: mysqlinstalled
+      tags:
+        - mysql
+        - mysqlconf
+
+  rescue:
+    - name: Fallback to OS mysql-server
+      dnf:
+        name: mysql-server
+        state: present
+      register: mysqlinstalled
+      tags:
+        - mysql
+        - mysqlconf
 
 - name: replace MySQL my.cnf using Template
   template:
@@ -100,12 +101,12 @@
     - mysql
     - mysqlconf
 
-# - name: Initialise MySQL
-#   shell: mysqld --initialize-insecure --user=mysql
-#   when: mysqlinstalled.changed
-#   tags:
-#     - mysql
-#     - mysqlconf
+- name: Initialise MySQL
+  shell: mysqld --initialize-insecure --user=mysql
+  when: mysqlinstalled.changed
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ridiculous fix for mysql permissions
   file:
