@@ -58,7 +58,7 @@
     - mysql
     - mysqlconf
 
-- name: Install MySQL 8.4 repo
+- name: Install MySQL 8.4 repo for el8
   dnf:
     name: http://repo.mysql.com/mysql84-community-release-el8.rpm
     state: present
@@ -68,29 +68,18 @@
 
 - name: Enable MySQL 8.4 module
   command: dnf module enable mysql:8.4 -y
-  args:
-    warn: false
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: Ensure mysql server is installed
-  block:
-    - name: Install mysql-community-server
-      dnf:
-        name: mysql-community-server
-        state: present
-      register: mysqlinstalled
-      tags:
-        - mysql
-        - mysqlconf
-
-  rescue:
-    - name: Fallback to OS mysql-server
-      dnf:
-        name: mysql-server
-        state: present
-      register: mysqlinstalled
-      tags:
-        - mysql
-        - mysqlconf
+  dnf:
+    name: mysql*-server
+    state: present
+  register: mysqlinstalled
+  tags:
+    - mysql
+    - mysqlconf
 
 - name: replace MySQL my.cnf using Template
   template:
