@@ -46,18 +46,18 @@
   mysql_replication: mode=changemaster master_host={{ hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] }} master_log_file={{ master_file }} master_log_pos={{ master_pos }} master_user=replication_user master_password={{ mysql_replication_password }} login_user=root login_password={{ mysql_root_password }}
   when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}"  == "no")
   
-- name: Start Slave
+- name: Start Replica
   mysql_replication: mode=startslave login_user=root login_password={{ mysql_root_password }}
   when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}"  == "no")
   
-- name: Show Master Status
+- name: Show Binary Log Status
   mysql_replication: mode=getmaster login_user=root login_password={{ mysql_root_password }}
   when: ("mysql_master_host" in group_names) and ("{{ cloudbd_exists }}" == "no")
   register: masterstatus
 
 - debug: msg="Master status is {{ masterstatus }}"
 
-- name: Show Slave Status
+- name: Show Replica Status
   mysql_replication: mode=getslave login_user=root login_password={{ mysql_root_password }}
   when: ("mysql_slave_hosts" in group_names) and ("{{ cloudbd_exists }}" == "no")
   register: slavestatus

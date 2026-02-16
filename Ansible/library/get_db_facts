@@ -18,12 +18,12 @@ DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | 
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASSWORD"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 
-master_status=`mysql --default-auth=mysql_native_password -h $DBHOST -u $DBUSER -p$DBPASS -e \ "show master status;"`
-master_file=`echo $master_status | awk -F ' ' '{print $5}'`
-master_pos=`echo $master_status | awk -F ' ' '{print $6}'`
-clouddb_test=`mysql --default-auth=mysql_native_password -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'cloud';"`
+master_status=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SHOW BINARY LOG STATUS;"`
+master_file=`echo $master_status | awk -F ' ' '{print $6}'`
+master_pos=`echo $master_status | awk -F ' ' '{print $7}'`
+clouddb_test=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'cloud';"`
 if [[ -n $clouddb_test ]]; then
-	registered_mgmt_servers=`mysql --default-auth=mysql_native_password -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT service_ip FROM cloud.mshost where removed is null;" | grep -vE service_ip`
+	registered_mgmt_servers=`mysql -h $DBHOST -u $DBUSER -p$DBPASS -e \ "SELECT service_ip FROM cloud.mshost where removed is null;" | grep -vE service_ip`
 else
 	registered_mgmt_servers=""
 fi
