@@ -100,7 +100,7 @@
   - texttable
   - lxml
   - pycparser
-  - mysql-connector-python==8.4.0
+  - mysql-connector-python==8.0.31
   - netaddr
   - pyvmomi
   tags:
