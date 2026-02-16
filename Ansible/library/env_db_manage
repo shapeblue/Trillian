@@ -46,10 +46,10 @@ if [[ "$MYSQL_VER_STR" == "8" ]];then
 password=${DBPASS}
 " > $TMPLOGINFILE
 
-  MYSQLCOMMAND="mysql --default-auth=mysql_native_password --defaults-extra-file=$TMPLOGINFILE -h${DBHOST} -u${DBUSER}  -s -N -e";
+  MYSQLCOMMAND="mysql --defaults-extra-file=$TMPLOGINFILE -h${DBHOST} -u${DBUSER}  -s -N -e";
 
 else
-  MYSQLCOMMAND="mysql --default-auth=mysql_native_password -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
+  MYSQLCOMMAND="mysql -h${DBHOST} -u${DBUSER} -p${DBPASS} -s -N -e";
 fi
 
 ENVTBL="environments";
