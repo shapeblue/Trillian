@@ -31,6 +31,10 @@
   shell: sed -i 's,GRUB_CMDLINE_LINUX=",GRUB_CMDLINE_LINUX="fips=1 ,g' /etc/default/grub && grub2-mkconfig -o /boot/grub2/grub.cfg
   when: ansible_distribution_major_version == "10"
 
+- name: Use device name ethX instead of ensXX in EL10
+  shell: grep 'biosdevname=0 net.ifnames=0' /etc/default/grub || sed -i 's,GRUB_CMDLINE_LINUX=",GRUB_CMDLINE_LINUX="biosdevname=0 net.ifnames=0 ,g' /etc/default/grub && grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: ansible_distribution_major_version == "10"
+
 - include: ../../../tasks/configure_sshd.yml
 
 - name: Reboot EL9 host to enable FIPS mode
