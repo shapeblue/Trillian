@@ -37,6 +37,16 @@
   when: (repo_files.matched | default(0)) > 0
   become: true
 
+- name: Replace "yum$ociregion.$ocidomain" with "yum.oracle.com"
+  replace:
+    path: "{{ item.path }}"
+    regexp: 'yum\$ociregion.\$ocidomain'
+    replace: 'yum.oracle.com'
+    backup: yes
+  with_items: "{{ repo_files.files | default([]) }}"
+  when: (repo_files.matched | default(0)) > 0
+  become: true
+
 - name: Install chrony
   dnf:
     name: chrony
