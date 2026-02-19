@@ -250,8 +250,10 @@
   shell: fips-mode-setup --enable
   tags:
     - kvm
+  when: ansible_distribution_major_version < "10"
 
 - include: ../../../tasks/configure_sshd.yml
+  when: ansible_distribution_major_version < "10"
 
 - name: Reboot EL8 host to enable FIPS mode
   shell: /sbin/reboot
