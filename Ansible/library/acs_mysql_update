@@ -8,9 +8,9 @@ DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | 
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//' | tr -d "'"`
 MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MYSQL_STATEMENT=\(\)#\1#' | tr -d ')'| sed "s/'\"'\"'/'/g"| tr -d '"' | sed "s/^'//" | sed -e 's/[[:space:]]*$//' | sed s'/.$//'`
 echo $MYSQL_STATEMENT > /tmp/mysql
-mysql --default-auth=mysql_native_password -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ "$MYSQL_STATEMENT"
+mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ "$MYSQL_STATEMENT"
 
-echo "mysql --default-auth=mysql_native_password -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ \"$MYSQL_STATEMENT\"" > /tmp/theargs
+echo "mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ \"$MYSQL_STATEMENT\"" > /tmp/theargs
 
 echo '{
 "ansible_facts": {
