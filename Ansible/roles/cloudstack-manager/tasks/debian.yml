@@ -80,7 +80,7 @@
     update_cache: yes
 
 - name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
-  shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
+  shell: 'wget http://ftp.debian.org/debian/pool/main/m/mysql-connector-python/python3-mysql.connector_9.5.0-1_all.deb -O /tmp/python3-mysql.connector_9.5.0-1_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_9.5.0-1_all.deb'
 
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
