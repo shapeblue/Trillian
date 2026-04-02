@@ -184,12 +184,3 @@
   tags:
     - marvin
     - marvin_install
-
-- name: Add marvin user to docker group
-  user:
-    name: marvin
-    groups: docker
-    append: true
-  tags:
-    - marvin
-    - marvin_install
