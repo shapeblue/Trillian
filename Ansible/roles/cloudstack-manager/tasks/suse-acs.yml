@@ -18,7 +18,13 @@
   template: src=cloudstack.repo.j2 dest=/etc/zypp/repos.d/cloudstack.repo
 
 - name: Ensure CloudStack packages are installed
-  shell: "zypper install -y {{ ('cloudstack-management>=' + env_cs_numeric_version) if cloudstack_management_package != 'cloudstack-management' else 'cloudstack-management' }} {{ ('cloudstack-common>=' + env_cs_numeric_version) if cloudstack_common_package != 'cloudstack-common' else 'cloudstack-common' }}"
+  command:
+    argv:
+      - zypper
+      - install
+      - -y
+      - "{{ cloudstack_management_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_management_package is match('.*-\\d') else '' }}"
+      - "{{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_common_package is match('.*-\\d') else '' }}"
 
 - name: Ensure MySQL Client is present
   shell: "zypper install -y mysql"
@@ -41,7 +47,12 @@
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
 - name: Ensure CloudStack Usage Service is installed
-  shell: "zypper install -y {{ ('cloudstack-usage>=' + env_cs_numeric_version) if cloudstack_usage_package != 'cloudstack-usage' else 'cloudstack-usage' }}"
+  command:
+    argv:
+      - zypper
+      - install
+      - -y
+      - "{{ cloudstack_usage_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_usage_package is match('.*-\\d') else '' }}"
 
 - include: ./setupdb.yml
 
