@@ -17,14 +17,30 @@
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/zypp/repos.d/cloudstack.repo
 
-- name: Ensure CloudStack packages are installed
+- name: Get exact CloudStack package version from repo
+  shell: "zypper -q search -s --match-exact cloudstack-common | awk -F'|' '{gsub(/ /,\"\",$4); if($4~/^{{ env_cs_numeric_version }}/) print $4}' | head -1"
+  register: cloudstack_suse_version
+  when: cloudstack_management_package != 'cloudstack-management'
+
+- name: Ensure CloudStack packages are installed (version pinned)
   command:
     argv:
       - zypper
       - install
       - -y
-      - "{{ cloudstack_management_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_management_package is match('.*-\\d') else '' }}"
-      - "{{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_common_package is match('.*-\\d') else '' }}"
+      - "{{ cloudstack_management_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
+      - "{{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
+  when: cloudstack_management_package != 'cloudstack-management'
+
+- name: Ensure CloudStack packages are installed (latest)
+  command:
+    argv:
+      - zypper
+      - install
+      - -y
+      - "{{ cloudstack_management_package }}"
+      - "{{ cloudstack_common_package }}"
+  when: cloudstack_management_package == 'cloudstack-management'
 
 - name: Ensure MySQL Client is present
   shell: "zypper install -y mysql"
@@ -46,13 +62,28 @@
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
-- name: Ensure CloudStack Usage Service is installed
+- name: Get exact CloudStack usage package version from repo
+  shell: "zypper -q search -s --match-exact cloudstack-usage | awk -F'|' '{gsub(/ /,\"\",$4); if($4~/^{{ env_cs_numeric_version }}/) print $4}' | head -1"
+  register: cloudstack_suse_usage_version
+  when: cloudstack_usage_package != 'cloudstack-usage'
+
+- name: Ensure CloudStack Usage Service is installed (version pinned)
   command:
     argv:
       - zypper
       - install
       - -y
-      - "{{ cloudstack_usage_package | regex_replace('-\\d.*$', '') }}{{ '>=' + env_cs_numeric_version if cloudstack_usage_package is match('.*-\\d') else '' }}"
+      - "{{ cloudstack_usage_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_usage_version.stdout }}"
+  when: cloudstack_usage_package != 'cloudstack-usage'
+
+- name: Ensure CloudStack Usage Service is installed (latest)
+  command:
+    argv:
+      - zypper
+      - install
+      - -y
+      - "{{ cloudstack_usage_package }}"
+  when: cloudstack_usage_package == 'cloudstack-usage'
 
 - include: ./setupdb.yml
 
