@@ -1,0 +1,79 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: pdns-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pdns
+      MYSQL_USER: pdns
+      MYSQL_PASSWORD: pdnspassword
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - pdns-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "pdns", "-ppdnspassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pdns:
+    image: pschiffe/pdns-mysql:latest
+    container_name: pdns
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "5353:53/udp"
+      - "5353:53/tcp"
+      - "8081:8081"
+    environment:
+      PDNS_gmysql_host: mysql
+      PDNS_gmysql_port: 3306
+      PDNS_gmysql_dbname: pdns
+      PDNS_gmysql_user: pdns
+      PDNS_gmysql_password: pdnspassword
+      PDNS_api: "yes"
+      PDNS_api_key: supersecretapikey
+      PDNS_webserver: "yes"
+      PDNS_webserver_address: "0.0.0.0"
+      PDNS_webserver_port: 8081
+      PDNS_webserver_allow_from: "0.0.0.0/0"
+      PDNS_primary: "yes"
+      PDNS_default_ttl: 3600
+    networks:
+      - pdns-net
+
+  pdns-admin:
+    image: ngoduykhanh/powerdns-admin:latest
+    container_name: pdns-admin
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      pdns:
+        condition: service_started
+    ports:
+      - "9191:80"
+    environment:
+      SECRET_KEY: "ReplaceWithARandomString"
+      PDNS_API_URL: "http://pdns:8081/api/v1"
+      PDNS_API_KEY: "supersecretapikey"
+      PDNS_VERSION: "4.8"
+      GUNICORN_TIMEOUT: "120"
+      GUNICORN_WORKERS: "2"
+    volumes:
+      - pdns_admin_data:/app/data
+    networks:
+      - pdns-net
+
+volumes:
+  mysql_data:
+  pdns_admin_data:
+
+networks:
+  pdns-net:

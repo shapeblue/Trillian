@@ -100,6 +100,22 @@
     - marvin
     - marvin_cfg
 
+- name: Create PDNS directory inside Marvin
+  file:
+    path: /marvin/pdns
+    state: directory
+    mode: '0755'
+  tags:
+    - marvin
+
+- name: Copy PowerDNS compose file to VM
+  copy:
+    src: powerdns-docker-compose.yml
+    dest: /marvin/pdns/docker-compose.yml
+    mode: '0644'
+  tags:
+    - marvin
+
 - name: Retrieve cloud SSH keys from mgmt server
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
   tags:
