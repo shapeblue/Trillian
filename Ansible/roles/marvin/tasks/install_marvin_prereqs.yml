@@ -124,6 +124,16 @@
     state: started
     enabled: true
 
+- name: Ensure nftables dependencies are correct
+  dnf:
+    name:
+      - nftables
+      - libnftnl
+    state: latest
+  tags:
+    - marvin
+    - marvin_install
+
 - name: Install Docker dependency packages
   dnf:
     name:
