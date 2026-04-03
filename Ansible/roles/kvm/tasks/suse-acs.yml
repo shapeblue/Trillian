@@ -30,23 +30,11 @@
   when: cloudstack_agent_package != 'cloudstack-agent'
 
 - name: Ensure CloudStack packages are installed (version pinned)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_agent_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
-      - "{{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
+  shell: "zypper install -y {{ cloudstack_agent_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }} {{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
   when: cloudstack_agent_package != 'cloudstack-agent'
 
 - name: Ensure CloudStack packages are installed (latest)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_agent_package }}"
-      - "{{ cloudstack_common_package }}"
+  shell: "zypper install -y {{ cloudstack_agent_package }} {{ cloudstack_common_package }}"
   when: cloudstack_agent_package == 'cloudstack-agent'
   tags:
     - kvm
