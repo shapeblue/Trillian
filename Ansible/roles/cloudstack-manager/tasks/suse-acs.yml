@@ -20,6 +20,8 @@
 - name: Get exact CloudStack package version from repo
   shell: "zypper -q search -s --match-exact cloudstack-common | awk -F'|' '{gsub(/ /,\"\",$4); if($4~/^{{ env_cs_numeric_version }}/) print $4}' | head -1"
   register: cloudstack_suse_version
+  changed_when: false
+  failed_when: cloudstack_suse_version.rc != 0 or cloudstack_suse_version.stdout | trim == ''
   when: cloudstack_management_package != 'cloudstack-management'
 
 - name: Ensure CloudStack packages are installed (version pinned)
@@ -53,6 +55,8 @@
 - name: Get exact CloudStack usage package version from repo
   shell: "zypper -q search -s --match-exact cloudstack-usage | awk -F'|' '{gsub(/ /,\"\",$4); if($4~/^{{ env_cs_numeric_version }}/) print $4}' | head -1"
   register: cloudstack_suse_usage_version
+  changed_when: false
+  failed_when: cloudstack_suse_usage_version.rc != 0 or cloudstack_suse_usage_version.stdout | trim == ''
   when: cloudstack_usage_package != 'cloudstack-usage'
 
 - name: Ensure CloudStack Usage Service is installed (version pinned)
