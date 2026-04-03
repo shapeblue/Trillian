@@ -23,23 +23,11 @@
   when: cloudstack_management_package != 'cloudstack-management'
 
 - name: Ensure CloudStack packages are installed (version pinned)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_management_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
-      - "{{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
+  shell: "zypper install -y {{ cloudstack_management_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }} {{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
   when: cloudstack_management_package != 'cloudstack-management'
 
 - name: Ensure CloudStack packages are installed (latest)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_management_package }}"
-      - "{{ cloudstack_common_package }}"
+  shell: "zypper install -y {{ cloudstack_management_package }} {{ cloudstack_common_package }}"
   when: cloudstack_management_package == 'cloudstack-management'
 
 - name: Ensure MySQL Client is present
@@ -68,21 +56,11 @@
   when: cloudstack_usage_package != 'cloudstack-usage'
 
 - name: Ensure CloudStack Usage Service is installed (version pinned)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_usage_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_usage_version.stdout }}"
+  shell: "zypper install -y {{ cloudstack_usage_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_usage_version.stdout }}"
   when: cloudstack_usage_package != 'cloudstack-usage'
 
 - name: Ensure CloudStack Usage Service is installed (latest)
-  command:
-    argv:
-      - zypper
-      - install
-      - -y
-      - "{{ cloudstack_usage_package }}"
+  shell: "zypper install -y {{ cloudstack_usage_package }}"
   when: cloudstack_usage_package == 'cloudstack-usage'
 
 - include: ./setupdb.yml
