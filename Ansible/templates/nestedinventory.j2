@@ -40,7 +40,7 @@ mysql_slave_hosts
 primary_cs_manager
 secondary_cs_manager
 
-{% if mgmt_os | lower == "u18" %}
+{% if mgmt_os | lower == "u18" or mgmt_os | lower == "s15" %}
 [mysql_hosts:vars]
 ansible_python_interpreter=/usr/bin/python3
 
@@ -122,7 +122,7 @@ ansible_python_interpreter=/usr/bin/python3
 {% endfor %}
 {% endif %}
 {% endif %}
-{% if kvm_os | lower == "u18" %}
+{% if kvm_os | lower == "u18" or kvm_os | lower == "s15" %}
 [kvm_hosts:vars]
 ansible_python_interpreter=/usr/bin/python3
 {% endif %}
