@@ -271,8 +271,14 @@
     update_cache: yes
 
 - name: get CloudStack package version (for example, 4.20.2.0-shapeblue0)
-  shell: "apt list -a cloudstack-common |awk '{print $2}' |grep '^{{ env_cs_security_version }}' |head -n1"
+  shell: |
+    set -o pipefail
+    apt list -a cloudstack-common | awk '{print $2}' | grep '^{{ env_cs_security_version }}' | head -n1
+  args:
+    executable: /bin/bash
   register: cloudstack_package_version
+  changed_when: false
+  failed_when: cloudstack_package_version.stdout | length == 0
 
 - name: Installs cloudstack-agent
   apt:
