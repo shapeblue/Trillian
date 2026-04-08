@@ -82,13 +82,24 @@
 - name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
   shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
 
+- name: get CloudStack package version (for example, 4.20.2.0-shapeblue0)
+  shell: |
+    set -o pipefail
+    apt list -a cloudstack-common | awk '{print $2}' | grep '^{{ env_cs_security_version }}' | sort -Vr | head -n1
+  args:
+    executable: /bin/bash
+  register: cloudstack_package_version
+  changed_when: false
+  failed_when: cloudstack_package_version.stdout | trim | length == 0
+
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
-    pkg: "{{ item }}"
+    pkg: "{{ item }}={{ cloudstack_package_version.stdout }}"
     state: present
     allow_unauthenticated: yes
   with_items:
     - cloudstack-management
+    - cloudstack-common
 
 # no need to remove - same as for CentOS
 #- name: remove CloudStack repository into sources list.
@@ -116,7 +127,7 @@
 
 - name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
   apt:
-    pkg: "{{ item }}"
+    pkg: "{{ item }}={{ cloudstack_package_version.stdout }}"
     state: present
     allow_unauthenticated: yes
   with_items:
