@@ -24,8 +24,26 @@
     - kvm
     - kvm-agent
 
-- name: Ensure CloudStack packages are installed
-  shell: "zypper install -y {{ cloudstack_agent_package }}* {{ cloudstack_common_package }}*"
+- name: Get exact CloudStack package version from repo
+  shell: "zypper -q search -s --match-exact cloudstack-common | awk -F'|' '{gsub(/ /,\"\",$4); if($4~/^{{ env_cs_numeric_version }}/) print $4}' | head -1"
+  register: cloudstack_suse_version
+  changed_when: false
+  failed_when: cloudstack_suse_version.rc != 0 or cloudstack_suse_version.stdout | trim == ''
+  when: cloudstack_agent_package != 'cloudstack-agent'
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure CloudStack packages are installed (version pinned)
+  shell: "zypper install -y {{ cloudstack_agent_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }} {{ cloudstack_common_package | regex_replace('-\\d.*$', '') }}={{ cloudstack_suse_version.stdout }}"
+  when: cloudstack_agent_package != 'cloudstack-agent'
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Ensure CloudStack packages are installed (latest)
+  shell: "zypper install -y {{ cloudstack_agent_package }} {{ cloudstack_common_package }}"
+  when: cloudstack_agent_package == 'cloudstack-agent'
   tags:
     - kvm
     - kvm-agent
