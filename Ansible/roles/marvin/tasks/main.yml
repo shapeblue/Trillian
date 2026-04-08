@@ -116,6 +116,11 @@
   tags:
     - marvin
 
+- name: Pre-pull Docker images for PowerDNS
+  shell: docker compose pull
+  args:
+    chdir: /marvin/pdns
+
 - name: Retrieve cloud SSH keys from mgmt server
   shell: "sshpass -p '{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_pass'] }}' scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}:/usr/share/cloudstack-common/scripts/vm/systemvm/id_rsa.cloud ~/.ssh/id_rsa.cloud"
   tags:
