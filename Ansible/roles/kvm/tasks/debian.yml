@@ -70,6 +70,20 @@
     - ovmf
     - swtpm
 
+- name: Install utilities and tools for Linux network namespace
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - iproute2
+    - iptables
+    - arping
+    - dnsmasq
+    - haproxy
+    - apache2
+    - util-linux
+
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
 

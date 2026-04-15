@@ -86,6 +86,19 @@
   tags:
     - kvm
 
+- name: Install utilities and tools for Linux network namespace
+  dnf: name={{ item }} state=present enablerepo=base
+  with_items:
+    - iproute
+    - iptables
+    - iputils
+    - dnsmasq
+    - haproxy
+    - httpd
+    - util-linux
+  tags:
+    - kvm
+
 - name: install python-argparse
   pip:
     name: argparse
