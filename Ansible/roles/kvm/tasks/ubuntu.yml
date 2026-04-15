@@ -69,6 +69,20 @@
     - qemu-kvm
     - parted
 
+- name: Install utilities and tools for Linux network namespace
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - iproute2
+    - iptables
+    - arping
+    - dnsmasq
+    - haproxy
+    - apache2
+    - util-linux
+
 - name: Install packages for UEFI
   apt:
     pkg: "{{ item }}"
