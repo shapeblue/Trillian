@@ -50,6 +50,7 @@
   dnf: name={{ item }} state=installed
   with_items:
   - at
+  - bind-utils
   - bzip2-devel
   - git
   - jq
