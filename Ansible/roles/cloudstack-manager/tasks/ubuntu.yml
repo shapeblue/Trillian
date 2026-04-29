@@ -39,20 +39,27 @@
     state: present
   when: ansible_distribution_major_version|int < 20
 
-- name: add CloudStack ubuntu repo keys
-  apt_key:
+- name: ensure keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: download CloudStack repository signing key
+  get_url:
     url: "{{ baseurl_cloudstack }}Release.gpg"
-    state: present
-  ignore_errors: yes
+    dest: /etc/apt/keyrings/cloudstack.gpg
+    mode: '0644'
 
-
-- name: add CloudStack ubuntu repo keys
-  apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: "{{ item }}"
-  with_items:
-    - 86F44E2A
-    - BDF0E176584DF93F
+- name: add CloudStack repo signing keys from keyserver (modern replacement)
+  shell: |
+    gpg --keyserver keyserver.ubuntu.com \
+        --recv-keys 86F44E2A BDF0E176584DF93F
+    gpg --export 86F44E2A BDF0E176584DF93F \
+    | gpg --dearmor \
+    | tee /etc/apt/keyrings/cloudstack-extra.gpg > /dev/null
+  args:
+    creates: /etc/apt/keyrings/cloudstack-extra.gpg    
   ignore_errors: yes
 
 - name: Add CloudStack repository into sources list.
@@ -64,17 +71,19 @@
   when: ansible_distribution_major_version|int < 20
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack-extra.gpg] {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
   when: (ansible_distribution_major_version|int >= 20) and ("download.cloudstack.org" not in baseurl_cloudstack or "/testing/" in baseurl_cloudstack)
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack.asc] {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
   when: ansible_distribution_major_version|int >= 20 and "download.cloudstack.org" in baseurl_cloudstack and "/testing/" not in baseurl_cloudstack
 
-- apt_key:
+- name: download CloudStack signing key
+  get_url:
     url: "https://download.cloudstack.org/release.asc"
-    state: present
-    validate_certs: no
+    dest: /etc/apt/keyrings/cloudstack.asc
+    mode: '0644'
+    validate_certs: true
   when: '"download.cloudstack.org" in baseurl_cloudstack'
 
 - name: update apt cache
@@ -119,7 +128,7 @@
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
   apt:
@@ -150,7 +159,7 @@
 
 - name: Open 8096 when Marvin is required (Ubuntu)
   shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
-  when: num_marv_hosts > 0
+  when: (num_marv_hosts | int) > 0
 
 - name: Ensure ipmitool is installed
   apt: name=ipmitool state=present update_cache=true

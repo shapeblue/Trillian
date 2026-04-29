@@ -37,4 +37,4 @@
     - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
   when: kvm_network_mode == "ovs"
 
-- include: ./centos_qemuimg.yml
+- include_tasks: ./centos_qemuimg.yml

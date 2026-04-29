@@ -38,8 +38,8 @@
   when:  xs_apply_license and ( xs_ver == "xs73" or xs_ver == "xs74" )
 
 
-- include: ./xsbasic.yml
+- include_tasks: ./xsbasic.yml
   when: env_zonetype | lower == "basic"
 
-- include: ./xsadvanced.yml
+- include_tasks: ./xsadvanced.yml
   when: env_zonetype | lower == "advanced"
