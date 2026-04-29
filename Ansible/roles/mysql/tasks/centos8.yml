@@ -101,7 +101,7 @@
     - mysqlconf
 
 
-#- include: ./secure_mysql.yml
+#- include_tasks: ./secure_mysql.yml
 
 # temporary fix until new version of ansible used
 

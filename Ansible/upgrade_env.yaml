@@ -136,7 +136,7 @@
         - systemvms
 
     - name: Upgrade CloudStack Mgmt Server
-      include: roles/cloudstack-manager/tasks/upgrade_mgmt.yaml
+      include_tasks: roles/cloudstack-manager/tasks/upgrade_mgmt.yaml
 
 
 - hosts: kvm_hosts
@@ -147,7 +147,7 @@
       when: upgrade_baseurl_kvm is undefined
 
     - name: Upgrade KVM hosts
-      include: roles/kvm/tasks/upgrade_kvm.yaml
+      include_tasks: roles/kvm/tasks/upgrade_kvm.yaml
       when: groups['kvm_hosts']|length > 0
 
 
@@ -156,7 +156,9 @@
   gather_facts: no
   tasks:
     - name: update project - tag Upgrading_System_VMs
-      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      include_tasks: tasks/updateproject.yml
+      vars:
+        project_tag: Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: cloudstack_manager_hosts
@@ -186,12 +188,14 @@
   gather_facts: no
   tasks:
     - name: update project - tag Waiting_for_Upgraded_System_VMs
-      include: tasks/updateproject.yml project_tag=Waiting_for_System_VMs
+      include_tasks: tasks/updateproject.yml
+      vars:
+        project_tag: Waiting_for_System_VMs
       when: wait_till_setup
 
 - hosts: primary_cs_manager
   tasks:
-    - include: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
+    - include_tasks: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
       when: wait_till_setup
 
 - hosts: localhost
@@ -199,6 +203,8 @@
   gather_facts: no
   tasks:
     - name: update project - tag Upgraded_System_VMs_up
-      include: tasks/updateproject.yml project_tag=System_VMs_up
+      include_tasks: tasks/updateproject.yml
+      vars:
+        project_tag: System_VMs_up
       when: wait_till_setup
 

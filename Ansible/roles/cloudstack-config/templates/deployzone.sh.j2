@@ -64,7 +64,7 @@ then
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
   {% if not env_zone_secgroups | bool %}
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
-  {% if env_numversion | version_compare('4.2','>') %}
+  {% if env_numversion  is version('4.2','>') %}
   {% if esxi_use_dvswitch %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
@@ -77,7 +77,7 @@ then
   WriteOutput "Skipping public network - advanced zone with security groups.";
   {% endif %}
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
-  {% if env_numversion | version_compare('4.2','>') %}
+  {% if env_numversion  is version('4.2','>') %}
   {% if esxi_use_dvswitch %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
@@ -95,14 +95,14 @@ else
   PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Adding Traffic Type - Guest( Basic Network)";
-  {% if env_numversion | version_compare('4.2','>') %}
+  {% if env_numversion  is version('4.2','>') %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},11,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
 fi
 WriteOutput "Adding Traffic Type - Management";
-{% if env_numversion | version_compare('4.2','>') %}
+{% if env_numversion  is version('4.2','>') %}
 {% if esxi_use_mgmt_dvswitch %}
 cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Management' xennetworklabel='{{ xs_mgmt_network_label }}' vmwarenetworklabel='{{ esxi_mgmt_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_mgmt_network_label }}'  | tee -i -a ${DEPLOYLOG};
 {% else %}
@@ -185,14 +185,14 @@ fi
 NEXTCLUSTER=1
 if [ "{{ vmware_ver | lower }}" != "na" ];
 then
-  {% if env_numversion | version_compare('4.2','>') %}
+  {% if env_numversion  is version('4.2','>') %}
   WriteOutput "Adding VMware datacenter."
   cloudmonkey add vmwaredc name="{{ vmware_datacenter_name }}" password="{{ vmware_vcsa_pass }}" username="{{ vmware_vcsa_user }}" vcenter="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" zoneid=${ZoneID} | tee -i -a ${DEPLOYLOG};
   {% endif %}
   if [ "{{ env_zone_addhosts }}" == "true" ];
   then
     WriteOutput "Adding VMware cluster."
-    {% if env_numversion | version_compare('4.2','>') %}
+    {% if env_numversion  is version('4.2','>') %}
     cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' podid=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" vsmipaddress="{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}" password='{{ vmware_vcsa_pass }}' username='{{ vmware_vcsa_user }}' vsmpassword='{{ vmware_vcsa_pass }}' vsmusername='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};
     {% else %}
     cloudmonkey add cluster zoneid=${ZoneID} hypervisor='VMware' clustertype='ExternalManaged' podid=${PodID} url="http://{% if groups['vc_hosts'] | length | int > 0 %}{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ vmware_datacenter_name }}/{{ env_zone_clustername }}" clustername="{{ env_zone_clustername }}" password='{{ vmware_vcsa_pass }}' username='{{ vmware_vcsa_user }}' | tee -i -a ${DEPLOYLOG};

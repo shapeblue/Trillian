@@ -3,7 +3,7 @@
 - name: "set Timezone to {{ env_timezone }}"
   command: "timedatectl set-timezone {{ env_timezone }}"
 
-- include: ../../../tasks/set_centos_repos.yml
+- include_tasks: ../../../tasks/set_centos_repos.yml
 
 - name: Install chrony
   yum:

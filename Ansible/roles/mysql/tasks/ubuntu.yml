@@ -112,7 +112,7 @@
     - mysql
     - mysqlconf
 
-- include: ./secure_mysql.yml
+- include_tasks: ./secure_mysql.yml
   when: ansible_distribution_major_version|int <= 18
   tags:
     - mysql

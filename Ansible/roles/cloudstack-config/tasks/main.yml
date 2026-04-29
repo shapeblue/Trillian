@@ -1,11 +1,11 @@
 ---
 
 - name: SSL configuration on management (4.11 only)
-  include: ./ssljetty.yml
-  when: ( ssl_mgmt|bool == true ) and (env_numversion | version_compare('4.11','>='))
+  include_tasks: ./ssljetty.yml
+  when: ( ssl_mgmt|bool == true ) and (env_numversion  is version('4.11','>='))
 
 - name: Seed secondary storage
-  include: ./seedstorage.yml
+  include_tasks: ./seedstorage.yml
   when: additional_pod|bool == false
 
 - name: Request and return environment details
