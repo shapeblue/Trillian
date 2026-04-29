@@ -46,17 +46,17 @@
     name: cockpit
     state: stopped
 
-- include: ./kvm_networking_bridge8.yml
+- include_tasks: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
-- include: ./kvm_networking_ovs.yml
+- include_tasks: ./kvm_networking_ovs.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
 
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
 
-- include: ./kvm_networking_phys_host.yml
+- include_tasks: ./kvm_networking_phys_host.yml
   when: use_phys_hosts
 
 - name: set dnf repo to local
@@ -115,7 +115,7 @@
     enabled=no
   when: ( ansible_distribution_major_version|int >= 7 ) and (use_firewalld|bool == False)
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm
@@ -126,16 +126,16 @@
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
-- include: ../../../tasks/set_java.yml
+- include_tasks: ../../../tasks/set_java.yml
   when: force_java
 
 - name: Upgrade gcrypt library on CentOS 8 KVM hosts
   shell: "dnf install -y libgcrypt"
 
-- include: ./centos-acs.yml
+- include_tasks: ./centos-acs.yml
   when: env_cs_distribution == "cs"
 
-- include: ./centos-ccp.yml
+- include_tasks: ./centos-ccp.yml
   when: env_cs_distribution == "ccp"
 
 - name: Update libvirtd.conf - listen_tls
@@ -231,7 +231,7 @@
 - name: Change password for KVM host (usually root password)
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
-- include: ./centos_elrepokernel.yml
+- include_tasks: ./centos_elrepokernel.yml
   when: kvm_install_elrepo_kernel
   tags:
     - kvm

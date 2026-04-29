@@ -67,7 +67,7 @@
   shell: "zypper install -y {{ cloudstack_usage_package }}"
   when: cloudstack_usage_package == 'cloudstack-usage'
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: Start cloudstack-usage service
   service: name=cloudstack-usage state=started enabled=yes

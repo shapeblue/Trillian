@@ -82,7 +82,7 @@
     update_cache: yes
   ignore_errors: true
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm
@@ -133,11 +133,11 @@
       - nplan
       - netplan
     ignore_errors: true
-    when: ansible_distribution_version|version_compare('18.04','<=')
+    when: ansible_distribution_version is version('18.04','<=')
 
   - name: Delete netplan startup file
     shell: rm -f /etc/netplan/*
-    when: ansible_distribution_version|version_compare('18.04','<=')
+    when: ansible_distribution_version is version('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present

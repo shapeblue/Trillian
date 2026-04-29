@@ -39,9 +39,9 @@
 - name: sync time with mgmt server
   shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`
 
-- include: ./install_marvin_prereqs.yml
+- include_tasks: ./install_marvin_prereqs.yml
 
-- include: ./setup_iscsi_target.yml
+- include_tasks: ./setup_iscsi_target.yml
 
 - name: Set repo to install PR tests from
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
@@ -61,7 +61,7 @@
 
 - name: If cloudstack-marvin package does not exist, add fallback repo
   template: src=marvin.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
-  when: ("{{ mypackage_available }}" == "false") or (force_marvin_fallback)
+  when: (mypackage_available == "false") or (force_marvin_fallback)
 
 - name: Install Marvin package
   dnf: name=cloudstack-marvin state=present
@@ -224,5 +224,5 @@
     - marvin
     - marvin_cfg
 
-- include: ./fix_tests.yml
+- include_tasks: ./fix_tests.yml
   when: fixtests

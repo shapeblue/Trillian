@@ -16,7 +16,7 @@
     - name: Ensure cmk is pointing to the right env
       shell: cmk set profile cloudstack
 
-    - include: ./tasks/removeproject.yml
+    - include_tasks: ./tasks/removeproject.yml
 
 - hosts: primary_storage_hosts
   gather_facts: no

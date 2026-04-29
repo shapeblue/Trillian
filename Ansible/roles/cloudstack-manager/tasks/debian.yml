@@ -123,7 +123,7 @@
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)
   apt:
@@ -153,7 +153,7 @@
 
 - name: Open 8096 when Marvin is required (Ubuntu)
   shell: "iptables -A INPUT -p tcp --dport ssh -j ACCEPT && iptables-save"
-  when: num_marv_hosts > 0
+  when: (num_marv_hosts | int) > 0
 
 - name: Ensure ipmitool is installed
   apt: name=ipmitool state=present update_cache=true

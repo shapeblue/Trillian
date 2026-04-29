@@ -37,7 +37,7 @@
 - name: Ensure CloudStack Usage Service is installed
   dnf: name="{{ cloudstack_usage_package }}*" state=present
 
-- include: ./setupdb.yml
+- include_tasks: ./setupdb.yml
 
 - name: Start cloudstack-usage service
   shell: systemctl enable cloudstack-usage && systemctl start cloudstack-usage
