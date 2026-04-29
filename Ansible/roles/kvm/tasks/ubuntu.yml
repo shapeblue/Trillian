@@ -31,15 +31,36 @@
     dest: "/etc/apt/{{item}}"
   with_items:
     - "sources.list"
-  when: ansible_distribution_version|version_compare('18.04','==')
+  when: ansible_distribution_version is version('18.04','==')
 
-- apt_key:
+- name: ensure apt keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: download OS repo key
+  get_url:
     url: "{{ os_repo }}/release.asc"
-    state: present
+    dest: /etc/apt/keyrings/os_repo.asc
+    mode: '0644'
 
-- apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: 86F44E2A
+- name: download CloudStack KVM repo key
+  get_url:
+    url: "{{ baseurl_kvm }}Release.gpg"
+    dest: /etc/apt/keyrings/cloudstack-kvm.gpg
+    mode: '0644'
+
+- name: fetch extra CloudStack keys from keyserver (modern safe fallback)
+  shell: |
+    gpg --keyserver keyserver.ubuntu.com \
+        --recv-keys 86F44E2A BDF0E176584DF93F
+    gpg --export 86F44E2A BDF0E176584DF93F \
+    | gpg --dearmor \
+    | tee /etc/apt/keyrings/cloudstack-extra.gpg > /dev/null
+  args:
+    creates: /etc/apt/keyrings/cloudstack-extra.gpg
+  ignore_errors: true
 
 - name: Add openjdk-ppa repository into sources list.
   apt_repository:
@@ -66,7 +87,7 @@
     - openssh-client
     - telnet
     - tcpdump
-    - qemu-kvm
+    - qemu-system-x86
     - parted
 
 - name: Install utilities and tools for Linux network namespace
@@ -108,7 +129,7 @@
     - openntpd
     - traceroute
     - iptables-persistent
-  when: ansible_distribution_version|version_compare('18.04','<')
+  when: ansible_distribution_version is version('18.04','<')
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
@@ -121,7 +142,7 @@
     state: latest
     update_cache: yes
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm
@@ -136,26 +157,26 @@
     - "KexAlgorithms=+diffie-hellman-group1-sha1"
   tags:
     - kvm
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version('20.04','<=')
 
 - name: Restart sshd
   systemd:
     name: sshd
     state: restarted
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version('20.04','<=')
   tags:
     - kvm
 
 - name: Wait for SSH
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
-  when: ansible_distribution_version|version_compare('20.04','<=')
+  when: ansible_distribution_version is version('20.04','<=')
   tags:
     - kvm
   delegate_to: localhost
 
 - name: Added network instances file to precise/trusty/xenial
   template: src=interfaces.j2 dest="/etc/network/interfaces"
-  when: ansible_distribution_version|version_compare('16.04','<=') and kvm_network_mode == "bridge"
+  when: ansible_distribution_version is version('16.04','<=') and kvm_network_mode == "bridge"
 
 ## start block
 
@@ -173,7 +194,7 @@
   - name: apply netplan
     command: netplan apply
 
-  when: ansible_distribution_version|version_compare('18.04','>=') and kvm_network_mode == "bridge"
+  when: ansible_distribution_version is version('18.04','>=') and kvm_network_mode == "bridge"
 
 ## end block
 
@@ -203,11 +224,11 @@
       - nplan
       - netplan
     ignore_errors: true
-    when: ansible_distribution_version|version_compare('18.04','<=')
+    when: ansible_distribution_version is version('18.04','<=')
 
   - name: Delete netplan startup file
     shell: rm -f /etc/netplan/*
-    when: ansible_distribution_version|version_compare('18.04','<=')
+    when: ansible_distribution_version is version('18.04','<=')
 
   - name: Install OVS
     apt: pkg={{ item }} state=present
@@ -249,41 +270,28 @@
     - "5900:6100"
     - "49152:49216"
 
-- name: add CloudStack ubuntu repo keys
-  apt_key:
-    url: "{{ baseurl_kvm }}Release.gpg"
-    state: present
-  ignore_errors: yes
-
-- name: add CloudStack ubuntu repo keys
-  apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: "{{ item }}"
-  with_items:
-    - 86F44E2A
-    - BDF0E176584DF93F
-  ignore_errors: yes
-
 - name: Add CloudStack repository into sources list.
   apt_repository:
     repo: 'deb "{{ baseurl_kvm }}" /'
     state: present
     validate_certs: no
   ignore_errors: yes
-  when: ansible_distribution_version|version_compare('20.04','<')
+  when: ansible_distribution_version is version('20.04','<')
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack-extra.gpg] {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
   when: (ansible_distribution_major_version|int >= 20) and ("download.cloudstack.org" not in baseurl_cloudstack or "/testing/" in baseurl_cloudstack)
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack.asc] {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
   when: ansible_distribution_major_version|int >= 20 and "download.cloudstack.org" in baseurl_cloudstack and "/testing/" not in baseurl_cloudstack
 
-- apt_key:
+- name: download CloudStack signing key
+  get_url:
     url: "https://download.cloudstack.org/release.asc"
-    state: present
-    validate_certs: no
+    dest: /etc/apt/keyrings/cloudstack.asc
+    mode: '0644'
+    validate_certs: true
   when: '"download.cloudstack.org" in baseurl_cloudstack'
 
 - name: Run the equivalent of "apt-get update" as a separate step
@@ -359,21 +367,21 @@
     dest: "/etc/default/libvirt-bin"
     regexp: 'libvirtd_opts="-d"'
     line: 'libvirtd_opts="-d -l"'
-  when: ansible_distribution_version|version_compare('14.04','==')
+  when: ansible_distribution_version is version('14.04','==')
 
 - name: Update /etc/default/libvirtd in bionic
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '.*libvirtd_opts=*'
     line: 'libvirtd_opts="-l"'
-  when: ansible_distribution_version|version_compare('16.04','>=') and ansible_distribution_version|version_compare('22.04','<')
+  when: ansible_distribution_version is version('16.04','>=') and ansible_distribution_version is version('22.04','<')
 
 - name: Update /etc/default/libvirtd in Ubuntu 22.04
   lineinfile:
     dest: "/etc/default/libvirtd"
     regexp: '^LIBVIRTD_ARGS=*'
     line: 'LIBVIRTD_ARGS="-l"'
-  when: ansible_distribution_version|version_compare('22.04','>=')
+  when: ansible_distribution_version is version('22.04','>=')
 
 #- name: Updated /etc/init/libvirt-bin.conf
 #  lineinfile: dest=/etc/init/libvirt-bin.conf regexp='env libvirtd_opts="-d"' line='env libvirtd_opts="-d -l"'
@@ -400,7 +408,7 @@
   with_items:
     - "/var/lib/dhcp/dhclient.leases"
     - "/run/systemd/netif/leases"
-  when: ansible_distribution_version|version_compare('18.04','>=')
+  when: ansible_distribution_version is version('18.04','>=')
 
 # Note - Ubuntu18 startup of OVS bridges is not robust and does
 # sometime lead to race conditions where bridges don't come online
@@ -439,7 +447,7 @@
   when: (not use_phys_hosts)
 
 # Kernel 5.8+, because the stock kernel + EPYC CPU = can't start any VM on the host
-- include: ./ubuntu_custom_kernel.yml
-  when: ansible_distribution_version|version_compare('20.04','==')
+- include_tasks: ./ubuntu_custom_kernel.yml
+  when: ansible_distribution_version is version('20.04','==')
   tags:
     - kvm

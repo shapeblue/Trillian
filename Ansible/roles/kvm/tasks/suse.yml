@@ -43,10 +43,10 @@
     - kvm
   ignore_errors: yes
 
-- include: ./kvm_networking_bridge8.yml
+- include_tasks: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
-- include: ./kvm_networking_ovs_suse.yml
+- include_tasks: ./kvm_networking_ovs_suse.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "ovs")
 
 - name: wait for ssh
@@ -86,7 +86,7 @@
   shell: echo 1 > /sys/module/kvm/parameters/ignore_msrs
   when: amd_virt.rc == 1
 
-- include: ./add_local_storage.yml
+- include_tasks: ./add_local_storage.yml
   when: use_local_storage
   tags:
     - kvm
@@ -97,10 +97,10 @@
 - debug: msg="Set Java on VM"
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
-- include: ../../../tasks/set_java.yml
+- include_tasks: ../../../tasks/set_java.yml
   when: force_java
 
-- include: ./suse-acs.yml
+- include_tasks: ./suse-acs.yml
   when: env_cs_distribution == "cs"
 
 # Don't really need suse support for ccp
