@@ -45,6 +45,8 @@ services:
       PDNS_webserver_allow_from: "0.0.0.0/0"
       PDNS_primary: "yes"
       PDNS_default_ttl: 3600
+      PDNS_default_soa_content: "ns1.cloud.internal admin.cloud.internal 1 3600 900 1209600 300"
+      PDNS_default_soa_edit: "INCEPTION-INCREMENT"
     networks:
       - pdns-net
 
