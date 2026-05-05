@@ -184,3 +184,6 @@
 
 - name: Fix unknown setting requiretty
   shell: sed -i "/requiretty/d"  /etc/sudoers.d/cloudstack
+
+- name: Fix "Insufficient free disk space"
+  shell: sed -i "s,tmpfolder=/tmp,tmpfolder=/var/tmp,g" /usr/share/cloudstack-common/scripts/storage/secondary/setup-sysvm-tmplt
