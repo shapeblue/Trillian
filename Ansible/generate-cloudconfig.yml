@@ -343,6 +343,9 @@
     - set_fact:
         templating_test_string: "templating_succeeded"
 
+    - set_fact:
+        inventory_dir: "{{ playbook_dir }}"
+
     - name: Create inventory file
       template: src=templates/nestedinventory.j2 dest="{{ inventory_dir }}/hosts_{{ env_name_clean }}"
 
