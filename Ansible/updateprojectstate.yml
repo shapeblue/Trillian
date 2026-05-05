@@ -7,4 +7,4 @@
     - name: update Tag project
       include_tasks: tasks/updateproject.yml
       vars:
-        project_tag: {{ tag }}
+        project_tag: "{{ tag }}"
