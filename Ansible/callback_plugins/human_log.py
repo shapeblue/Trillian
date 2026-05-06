@@ -45,6 +45,10 @@ class CallbackModule(CallbackBase):
         if type(output) == dict:
             return json.dumps(output, indent=2)
 
+        # If output is an empty list
+        if type(output) == list and len(output) == 0:
+            return ""
+
         # If output is a list of dicts
         if type(output) == list and type(output[0]) == dict:
             # This gets a little complicated because it potentially means
