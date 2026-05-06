@@ -66,6 +66,7 @@
     - "8250"
     - "8443"
     - "9090"
+  when: use_firewalld|bool == True
 
 - name: Stop firewalld EL9
   shell: systemctl stop firewalld && systemctl disable firewalld
@@ -90,7 +91,7 @@
 
 - name: lower rsa requiremnet for Xen ver < 8
   shell: sed -i 's/jdk.certpath.disabledAlgorithms=MD2, MD5, DSA, RSA keySize < 2048/jdk.certpath.disabledAlgorithms=MD2, MD5, DSA, RSA keySize < 1024/g' /etc/crypto-policies/back-ends/java.config
-  when: num_xen_hosts > 0 and xen_ver < 8
+  when: (num_xen_hosts|int) > 0 and (xen_ver|int) < 8
 
 - name: update lvm2 as fix for bugzilla.redhat.com/show_bug.cgi?id=1294128
   dnf: name=lvm2 state=latest
