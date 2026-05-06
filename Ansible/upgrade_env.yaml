@@ -154,6 +154,7 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  environment: "{{ cloudstack_env }}"
   tasks:
     - name: update project - tag Upgrading_System_VMs
       include_tasks: tasks/updateproject.yml
@@ -186,6 +187,7 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  environment: "{{ cloudstack_env }}"
   tasks:
     - name: update project - tag Waiting_for_Upgraded_System_VMs
       include_tasks: tasks/updateproject.yml
@@ -201,6 +203,7 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  environment: "{{ cloudstack_env }}"
   tasks:
     - name: update project - tag Upgraded_System_VMs_up
       include_tasks: tasks/updateproject.yml
