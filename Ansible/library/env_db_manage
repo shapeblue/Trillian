@@ -11,7 +11,8 @@
 #
 
 ARGS="(`cat $1`)"
-#echo $ARGS > /tmp/db_log.log
+ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
+
 TMPLOGINFILE="/tmp/mysqlaccess-$RANDOM"
 
 DBHOST=""
