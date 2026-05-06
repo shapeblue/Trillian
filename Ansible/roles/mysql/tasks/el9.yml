@@ -80,6 +80,7 @@
 
 - name: Initialise MySQL
   shell: mysqld --initialize-insecure --user=mysql
+  ignore_errors: yes
   when: mysqlinstalled.changed
   tags:
     - mysql
