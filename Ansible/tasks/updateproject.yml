@@ -16,8 +16,7 @@
 
 # Create project if not present, update tags if present
 - name: Update project
-  local_action:
-    module: cs_project
+  ngine_io.cloudstack.project:
     name: "{{ build_project }}"
     display_text: "{{ env_comment }}"
     state: present
@@ -32,4 +31,3 @@
       - { key: updated, value: "{{lookup('pipe','date +%d/%m/%y_%H:%M')}}" }
       - { key: sensitive_data, value: "{{lookup('pipe', 'echo ${SENSITIVE_DATA:-false}')}}" }
       - { key: long_running, value: "{{lookup('pipe', 'echo ${LONG_RUNNING:-false}')}}" }
-  ignore_errors: true
