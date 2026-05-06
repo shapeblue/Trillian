@@ -8,6 +8,7 @@
 
 
 ARGS="(`cat $1`)"
+ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
 
 ALGORITHM=`echo $ARGS | tr " " "\n"| awk -F= '$1=="algorithm"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 CLUSTERID=`echo $ARGS | tr " " "\n"| awk -F= '$1=="clusterid"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`

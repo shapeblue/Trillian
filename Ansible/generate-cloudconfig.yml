@@ -289,7 +289,13 @@
       when: use_external_hv_hosts is not defined
 
     - name: Check Environment DB
-      env_db_manage: DBHOST={{ def_env_db_ip }} DBUSER={{ def_env_db_user }} DBPASS={{ def_env_db_password }} DBNAME={{ def_env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=check
+      env_db_manage:
+        DBHOST: "{{ def_env_db_ip }}"
+        DBUSER: "{{ def_env_db_user }}"
+        DBPASS: "{{ def_env_db_password }}"
+        DBNAME: "{{ def_env_db_name }}"
+        ENV_NAME: "{{ env_name_clean }}"
+        ENV_ACTION: check
       register: dbcheck
 
     - name: Fail if environment name exists in database
