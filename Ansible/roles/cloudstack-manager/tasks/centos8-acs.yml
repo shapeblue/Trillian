@@ -18,6 +18,7 @@
   dnf:
     name: http://repo.mysql.com/mysql80-community-release-el8.rpm
     state: present 
+    disable_gpg_check: true
 
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
