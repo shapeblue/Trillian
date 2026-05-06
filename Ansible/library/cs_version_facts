@@ -1,6 +1,8 @@
 #!/bin/bash
 
 ARGS="(`cat $1`)"
+ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
+
 INPUTSTRING=`echo $ARGS | tr " " "\n"| awk -F= '$1=="versionstring"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 ISUPGRADE=`echo $ARGS | tr " " "\n"| awk -F= '$1=="isupgrade"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 

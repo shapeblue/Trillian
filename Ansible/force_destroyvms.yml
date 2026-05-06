@@ -103,7 +103,13 @@
       when: env_db_name is undefined
 
     - name: Release environment details
-      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ACTION=forced_rel
+      env_db_manage:
+        DBHOST: "{{ env_db_ip }}"
+        DBUSER: "{{ env_db_user }}"
+        DBPASS: "{{ env_db_password }}"
+        DBNAME: "{{ env_db_name }}"
+        ENV_NAME: "{{ env_name_clean }}"
+        ENV_ACTION: forced_rel
       when: destroy_forced
 
     - name: set clean environment name

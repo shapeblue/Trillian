@@ -34,7 +34,17 @@
       set_fact: env_builddate="{{lookup('pipe','date +%d/%m/%y_%H:%M')}}"
 
     - name: Request and return environment details
-      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_COMMENT='{{ env_comment | regex_replace(' ', '_') }}' ENV_ACTION=req
+      env_db_manage:
+        DBHOST: "{{ env_db_ip }}"
+        DBUSER: "{{ env_db_user }}"
+        DBPASS: "{{ env_db_password }}"
+        DBNAME: "{{ env_db_name }}"
+        ENV_UUID: "{{ env_uuid }}"
+        ENV_NAME: "{{ env_name_clean }}"
+        ENV_ZONETYPE: "{{ env_zonetype }}"
+        ENV_SECGROUPS: "{{ env_zone_secgroups }}"
+        ENV_COMMENT: "{{ env_comment | regex_replace(' ', '_') }}"
+        ENV_ACTION: req
 
     - name: Check environment variables returned ok
       fail: msg="No environments configurations available - {{ env_return }} {{ env_retmsg }}."
@@ -332,6 +342,9 @@
 - hosts: primary_cs_manager
   gather_facts: no
   tasks:
+    - name: START wait-for-environment
+      debug:
+        msg: "starting wait-for-environment"    
     - include_tasks: ./roles/cloudstack-manager/tasks/wait-for-environment.yml
       when: wait_till_setup and (additional_pod|bool == False) and (create_zone|bool == True)
 

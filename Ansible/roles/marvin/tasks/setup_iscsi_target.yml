@@ -41,7 +41,8 @@
     mode: 0755
 
 - name: Create iSCSI backstore file if it does not exist
-  command: "dd if=/dev/zero of=/var/iscsi_disks/disk01.img bs=1M count=1024"
+  shell: >
+    dd if=/dev/zero of=/var/iscsi_disks/disk01.img bs=1M count=1024
   tags:
     - marvin
     - marvin_iscsi
