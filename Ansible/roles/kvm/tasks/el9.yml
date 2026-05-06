@@ -80,6 +80,13 @@
   tags:
     - kvm
 
+- name: Ensure openssh is upgraded
+  dnf:
+    name: openssh
+    state: latest
+  tags:
+    - kvm
+
 - name: Install basic utilities and tools - all versions
   dnf: name={{ item }} state=present enablerepo=base
   with_items:
