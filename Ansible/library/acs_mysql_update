@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ARGS="(`cat $1`)"
+ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
 
 echo $ARGS > /tmp/args
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
