@@ -83,6 +83,11 @@
     - haproxy
     - apache2
     - util-linux
+  ignore_errors: yes
+
+- name: Stop dnsmasq and haproxy and apache2 services
+  shell: systemctl stop dnsmasq haproxy apache2 && systemctl disable dnsmasq haproxy apache2
+  ignore_errors: yes
 
 - set_fact: java_ver="{{ kvm_java_ver }}"
 - set_fact: java_path="{{ kvm_java_path }}"
