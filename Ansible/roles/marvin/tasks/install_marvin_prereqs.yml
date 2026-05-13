@@ -102,7 +102,7 @@
   - pycparser
   - mysql-connector-python==8.0.30
   - netaddr
-  - pyvmomi
+  - pyvmomi==9.0.0.0
   tags:
     - marvin
     - marvin_install
