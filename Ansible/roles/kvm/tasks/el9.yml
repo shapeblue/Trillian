@@ -246,14 +246,27 @@
 - name: install gnutls-devel
   dnf: name=gnutls-devel state=present
 
+- name: Check if FIPS is enabled
+  shell: cat /proc/sys/crypto/fips_enabled || true
+  register: fips_enabled
+
 - name: Enable FIPS mode
   shell: fips-mode-setup --enable
   tags:
     - kvm
-  when: ansible_distribution_major_version < "10"
+  when: fips_enabled.stdout != "1"
+
+- name: Install packages for FIPS
+  dnf:
+    name: crypto-policies
+    state: present
+
+- name: Use grubby instead of editing grub.cfg as BLS Is Overriding GRUB
+  shell: grubby --update-kernel=ALL --args="net.ifnames=0 biosdevname=0"
+  when: ansible_distribution_major_version|int == 10
 
 - include: ../../../tasks/configure_sshd.yml
-  when: ansible_distribution_major_version < "10"
+  when: ansible_distribution_major_version|int < 10
 
 - name: Reboot EL8 host to enable FIPS mode
   shell: /sbin/reboot
