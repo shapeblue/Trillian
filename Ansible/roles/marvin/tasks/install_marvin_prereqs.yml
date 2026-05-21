@@ -92,7 +92,7 @@
   - pip
   - six
   - pyOpenSSL
-  - paramiko
+  - paramiko==4.0.0
   - wheel==0.45.1
   - kubernetes
   - pyasn1
