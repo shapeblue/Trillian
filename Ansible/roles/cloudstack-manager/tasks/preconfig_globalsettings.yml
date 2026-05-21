@@ -96,6 +96,11 @@
 
 - name: add admin keys for cloudmonkey
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`user` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `id`='2';"
+  when: env_numversion | version_compare('4.23','<')
+
+- name: add admin keys for cloudmonkey in api_keypair table
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`api_keypair` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `user_id`='2';"
+  when: env_numversion | version_compare('4.23','>=')
 
 - name: enable RSA 1024 bit key for xenserver
   shell: sed -i 's,RSA keySize < 2048,RSA keySize < 1024,g' /etc/crypto-policies/back-ends/java.config
