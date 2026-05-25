@@ -99,7 +99,7 @@
   when: env_numversion | version_compare('4.23','<')
 
 - name: add admin keys for cloudmonkey in api_keypair table
-  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE `cloud`.`api_keypair` SET `api_key`='{{ cm_apikey }}', `secret_key`='{{ cm_secretkey_enc }}' WHERE `user_id`='2';"
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="INSERT INTO `cloud`.`api_keypair` (uuid, name, domain_id, account_id, user_id, api_key, secret_key, created) SELECT UUID(), 'admin-api-key', acc.domain_id, acc.id, usr.id, '{{ cm_apikey }}', '{{ cm_secretkey_enc }}', NOW() FROM `cloud`.`user` usr JOIN `cloud`.`account` acc ON usr.account_id = acc.id WHERE usr.id = 2;"
   when: env_numversion | version_compare('4.23','>=')
 
 - name: enable RSA 1024 bit key for xenserver
