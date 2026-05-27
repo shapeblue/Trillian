@@ -46,19 +46,7 @@
     - mysqlconf
   ignore_errors: yes
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-  tags:
-    - mysql
-    - mysqlconf
-  ignore_errors: yes
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
-  tags:
-    - kvm
-  ignore_errors: yes
+- include: ../../../tasks/configure_apparmor.yml
 
 - name: Check if mysql server is installed
   shell: rpm -q mysql-server
