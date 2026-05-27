@@ -123,6 +123,8 @@
 - name: Ensure vhd-util is present
   get_url: url="{{ vhdutil_url }}" dest=/usr/share/cloudstack-common/scripts/vm/hypervisor/xenserver/vhd-util mode=0755
 
+- include: ../../../tasks/configure_apparmor.yml
+
 - include: ./setupdb.yml
 
 - name: Ensure CloudStack packages are installed (now that mgmt server "db.properties" and "key" files are present)

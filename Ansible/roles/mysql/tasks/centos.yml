@@ -30,12 +30,7 @@
   yum: name=MySQL-python state=present
   tags: services
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+- include: ../../../tasks/configure_selinux.yml
 
 - name: Ensure mysql server is installed (centos/rhel6)
   yum: name=mysql-server state=present

@@ -16,16 +16,7 @@
   tags:
     - kvm
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-  tags:
-    - kvm
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
-  tags:
-    - kvm
+- include: ../../../tasks/configure_selinux.yml
 
 - name: Clear all dnf cache
   command: dnf clean all
