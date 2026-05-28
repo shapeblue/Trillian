@@ -259,6 +259,17 @@
 - include: ../../../tasks/configure_sshd.yml
   when: ansible_distribution_major_version|int < 10
 
+- name: Fix read-only filesystem with OL10 FIPS
+  shell: |
+    mv /var/lib/selinux /var/lib/selinux.BROKEN
+    dnf install setools-console -y
+    dnf reinstall selinux-policy selinux-policy-targeted container-selinux libselinux policycoreutils -y
+    seinfo -tcontainer_var_lib_t
+  ignore_errors: true
+  when:
+    - ansible_distribution_major_version | int == 10
+    - fips_enabled.stdout == "1"
+
 - name: Reboot EL8 host to enable FIPS mode
   shell: /sbin/reboot
   async: 0 

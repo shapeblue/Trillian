@@ -173,4 +173,3 @@
 
 - name: install gnutls-devel
   dnf: name=gnutls-devel state=present
-
