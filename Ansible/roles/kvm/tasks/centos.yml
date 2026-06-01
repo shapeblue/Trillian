@@ -15,7 +15,16 @@
   tags:
     - kvm
 
-- include: ../../../tasks/configure_selinux.yml
+- name: Set selinux to permissive
+  command: setenforce permissive
+  changed_when: false
+  tags:
+    - kvm
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=permissive
+  tags:
+    - kvm
 
 - name: Install bridge utilities
   yum: name={{ item }} state=present enablerepo=base
