@@ -124,6 +124,8 @@
     - kvm
     - kvm-agent
 
+- include: ../../../tasks/configure_libvirt_security.yml
+
 - name: Mask libvirtd sockets
   shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 

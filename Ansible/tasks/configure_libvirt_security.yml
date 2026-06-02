@@ -1,0 +1,10 @@
+---
+- name: Configure libvirt security driver to apparmor
+  shell: sed -i "s,^security_driver=.*,security_driver=\"apparmor\",g" /etc/libvirt/qemu.conf
+  when: ansible_distribution in ["SUSE", "Ubuntu", "Debian"]
+  ignore_errors: true
+
+- name: Configure libvirt security driver to selinux
+  shell: sed -i "s,^security_driver=.*,security_driver=\"selinux\",g" /etc/libvirt/qemu.conf
+  when: ansible_distribution in ["CentOS", "Red Hat Enterprise Linux"]
+  ignore_errors: true
