@@ -1,9 +1,18 @@
 ---
-- name: Configure libvirt security driver to none
+- name: Configure libvirt security driver to apparmor
   lineinfile:
     dest: /etc/libvirt/qemu.conf
     regexp: '^\s*security_driver\s*='
-    line: 'security_driver = "none"'
+    line: 'security_driver = "apparmor"'
     state: present
-  when: ansible_distribution in ["SUSE", "Ubuntu", "Debian", "CentOS", "Red Hat Enterprise Linux"]
+  when: ansible_distribution in ["SUSE", "Ubuntu", "Debian"]
+  ignore_errors: true
+
+- name: Configure libvirt security driver to selinux
+  lineinfile:
+    dest: /etc/libvirt/qemu.conf
+    regexp: '^\s*security_driver\s*='
+    line: 'security_driver = "selinux"'
+    state: present
+  when: ansible_distribution in ["CentOS", "Red Hat Enterprise Linux"]
   ignore_errors: true
