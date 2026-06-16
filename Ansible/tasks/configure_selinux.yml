@@ -1,0 +1,18 @@
+---
+
+- name: Get current SELinux mode
+  shell: getenforce || true
+  register: selinux_mode
+
+- name: Set selinux to enforcing
+  command: setenforce enforcing
+  changed_when: false
+  when: selinux_mode.stdout != "Enforcing"
+
+- name: Ensure selinux is set permanently
+  selinux: policy=targeted state=enforcing
+  when: selinux_mode.stdout != "Enforcing"
+
+- name: Check SELinux status
+  shell: sestatus
+  ignore_errors: true
