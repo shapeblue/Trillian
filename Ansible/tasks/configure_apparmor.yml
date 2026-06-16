@@ -1,0 +1,14 @@
+---
+- name: Install apparmor-utils
+  apt:
+    pkg: apparmor-utils
+    state: latest
+    update_cache: yes
+  ignore_errors: true
+
+- name: Enable Apparmor enforce mode
+  shell: aa-enforce /etc/apparmor.d/*
+
+- name: Check Apparmor status 
+  shell: aa-status
+  ignore_errors: true
