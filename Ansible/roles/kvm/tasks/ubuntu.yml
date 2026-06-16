@@ -361,6 +361,9 @@
 - name: update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
 
+- name: update security_driver to none in /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='#security_driver' line='security_driver = "none"'
+
 - include: ../../../tasks/configure_apparmor.yml
 
 - name: Delete DHCP leases file - bionic onwards
