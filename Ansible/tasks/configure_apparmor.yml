@@ -7,9 +7,8 @@
   when: ansible_distribution in ['Ubuntu', 'Debian']
 
 - name: Install apparmor-utils (SUSE)
-  package:
-    name: apparmor-utils
-    state: present
+  shell: |
+     rpm -q apparmor-utils || zypper --non-interactive install apparmor-utils
   when: ansible_distribution == 'SUSE'
 
 - name: Enable Apparmor enforce mode
