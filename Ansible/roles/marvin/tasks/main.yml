@@ -69,6 +69,14 @@
     - marvin
     - marvin_cfg
 
+- name: Install mysql-connector-python 8.0.30 for Debian/SUSE
+  pip:
+    name: mysql-connector-python==8.0.30
+  when: mgmtsrv_template | lower is search("debian|suse")
+  tags:
+    - marvin
+    - marvin_cfg
+
 - name: retrieve environment data
   env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
   tags:
