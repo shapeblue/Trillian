@@ -75,7 +75,8 @@
     - marvin
     - marvin_cfg
 
-- name: Install mysql-connector-python 8.0.30 for Debian/SUSE
+- name: Install mysql-connector-python 8.0.30 for Debian/SUSE/Ubuntu
+- ```
   pip:
     name: mysql-connector-python==8.0.30
   when: mgmtsrv_template | lower is search("debian|suse")
