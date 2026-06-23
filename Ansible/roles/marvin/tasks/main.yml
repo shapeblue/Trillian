@@ -79,7 +79,7 @@
 - ```
   pip:
     name: mysql-connector-python==8.0.30
-  when: mgmtsrv_template | lower is search("debian|suse")
+  when: mgmtsrv_template | lower is search("debian|suse|ubuntu")
   tags:
     - marvin
     - marvin_cfg
