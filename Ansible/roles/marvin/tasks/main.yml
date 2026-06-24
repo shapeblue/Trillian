@@ -76,7 +76,6 @@
     - marvin_cfg
 
 - name: Install mysql-connector-python 8.0.30
-- ```
   pip:
     name: mysql-connector-python==8.0.30
   tags:
