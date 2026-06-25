@@ -181,6 +181,3 @@
     src: ipmitool-C3
     dest: /usr/bin/ipmitool
     mode: 0755
-
-- name: Fix unknown setting requiretty
-  shell: sed -i "/requiretty/d"  /etc/sudoers.d/cloudstack
