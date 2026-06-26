@@ -21,6 +21,7 @@ fi
 OS_VER_MAJOR=`echo $OS_VER | awk -F '.' '{print $1}'`
 
 ETH0_MAC="`cat /sys/class/net/eth0/address`"
+ETH1_MAC="`cat /sys/class/net/eth1/address`"
 
 cat << EOF
 {
@@ -29,6 +30,7 @@ cat << EOF
   "ansible_distribution_version": "${OS_VER}",
   "ansible_distribution_major_version": "${OS_VER_MAJOR}",
   "ansible_eth0": { "macaddress": "${ETH0_MAC}"},
+  "ansible_eth1": { "macaddress": "${ETH1_MAC}"},
   "env_return": "success",
   "env_retmsg": "Data successfully returned."
  }
