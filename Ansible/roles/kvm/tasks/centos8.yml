@@ -96,12 +96,13 @@
     - haproxy
     - httpd
     - util-linux
+    - radvd
   tags:
     - kvm
   ignore_errors: yes
 
-- name: Stop dnsmasq and haproxy and httpd services
-  shell: systemctl stop dnsmasq haproxy httpd && systemctl disable dnsmasq haproxy httpd
+- name: Stop dnsmasq and haproxy and httpd and radvd services
+  shell: systemctl stop dnsmasq haproxy httpd radvd && systemctl disable dnsmasq haproxy httpd radvd
   ignore_errors: yes
 
 - name: install python-argparse

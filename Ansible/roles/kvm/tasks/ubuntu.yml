@@ -82,10 +82,11 @@
     - haproxy
     - apache2
     - util-linux
+    - radvd
   ignore_errors: yes
 
-- name: Stop dnsmasq and haproxy and apache2 services
-  shell: systemctl stop dnsmasq haproxy apache2 && systemctl disable dnsmasq haproxy apache2
+- name: Stop dnsmasq and haproxy and apache2 and radvd services
+  shell: systemctl stop dnsmasq haproxy apache2 radvd && systemctl disable dnsmasq haproxy apache2 radvd
   ignore_errors: yes
 
 - name: Install packages for UEFI
