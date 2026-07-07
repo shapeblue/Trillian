@@ -50,6 +50,7 @@
   dnf: name={{ item }} state=installed
   with_items:
   - at
+  - bind-utils
   - bzip2-devel
   - git
   - jq
@@ -123,3 +124,64 @@
     name: atd
     state: started
     enabled: true
+
+- name: Ensure nftables dependencies are correct
+  dnf:
+    name:
+      - nftables
+      - libnftnl
+    state: latest
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install Docker dependency packages
+  dnf:
+    name:
+      - dnf-plugins-core
+      - device-mapper-persistent-data
+      - lvm2
+    state: present
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Configure Docker CE repository
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: "0644"
+    validate_certs: no
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Install Docker Engine and related components
+  dnf:
+    name:
+      - containerd.io
+      - docker-ce
+      - docker-ce-cli
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+  tags:
+    - marvin
+    - marvin_install
+
+- name: Wait for Docker socket
+  wait_for:
+    path: /var/run/docker.sock
+    timeout: 30
+  tags:
+    - marvin
+    - marvin_install
