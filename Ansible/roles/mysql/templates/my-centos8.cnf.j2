@@ -23,7 +23,7 @@ max_connections={{ mysql_max_connections }}
 skip_name_resolve
 
 {% if ansible_distribution_major_version|int < 10 %}
-default_authentication_plugin=mysql_native_password
+authentication_policy=caching_sha2_password
 {% endif %}
 
 innodb_buffer_pool_size={{ mysql_innodb_buffer_pool_size }}

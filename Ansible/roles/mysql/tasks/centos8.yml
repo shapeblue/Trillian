@@ -52,9 +52,29 @@
     - mysql
     - mysqlconf
 
+- name: Disable OS MySQL module
+  command: dnf module disable mysql -y
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Install MySQL 8.4 repo for el8
+  dnf:
+    name: http://repo.mysql.com/mysql84-community-release-el8.rpm
+    state: present
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Enable MySQL 8.4 module
+  command: dnf module enable mysql:8.4 -y
+  tags:
+    - mysql
+    - mysqlconf
+
 - name: Ensure mysql server is installed
   dnf:
-    name: mysql-server
+    name: mysql*-server
     state: present
   register: mysqlinstalled
   tags:
