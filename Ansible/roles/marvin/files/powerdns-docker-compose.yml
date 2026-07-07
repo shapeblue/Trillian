@@ -21,7 +21,7 @@ services:
       retries: 10
 
   pdns:
-    image: pschiffe/pdns-mysql:latest
+    image: pschiffe/pdns-mysql:4.8
     container_name: pdns
     restart: unless-stopped
     depends_on:
@@ -51,7 +51,7 @@ services:
       - pdns-net
 
   pdns-admin:
-    image: ngoduykhanh/powerdns-admin:latest
+    image: ngoduykhanh/powerdns-admin:v0.3.0
     container_name: pdns-admin
     restart: unless-stopped
     depends_on:
