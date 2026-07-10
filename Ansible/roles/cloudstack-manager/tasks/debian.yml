@@ -79,9 +79,6 @@
   apt:
     update_cache: yes
 
-- name: Install python3-mysql.connector DEB package for cloudstack-management as the real package name is mysql-connector-python-py3
-  shell: 'wget http://launchpadlibrarian.net/717081070/python3-mysql.connector_8.0.15-4_all.deb -O /tmp/python3-mysql.connector_8.0.15-4_all.deb && DEBIAN_FRONTEND=noninteractive apt install -y /tmp/python3-mysql.connector_8.0.15-4_all.deb'
-
 - name: get CloudStack package version (for example, 4.20.2.0-shapeblue0)
   shell: |
     set -o pipefail
