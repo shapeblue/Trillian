@@ -12,12 +12,7 @@
 - name: Clear all yum cache
   command: yum clean all
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+- include: ../../../tasks/configure_selinux.yml
 
 - name: Ensure CA Certs are latest
   yum: name=ca-certificates state=latest enablerepo=base

@@ -19,12 +19,7 @@
   file: path=/etc/hostname state=absent
   when: ansible_distribution_major_version == "7"
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+- include: ../../../tasks/configure_selinux.yml
 
 - name: get name of eth0 connection
   shell: nmcli device show eth0 | grep 'GENERAL.CONNECTION' | awk -F ':' '{print $2}' | sed 's/^ *//'

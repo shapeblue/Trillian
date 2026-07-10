@@ -1,0 +1,21 @@
+---
+- name: Install apparmor-utils (Debian/Ubuntu)
+  apt:
+    pkg: apparmor-utils
+    state: present
+    update_cache: yes
+  when: ansible_distribution in ['Ubuntu', 'Debian']
+
+- name: Install apparmor-utils (SUSE)
+  shell: |
+     rpm -q apparmor-utils || zypper --non-interactive install apparmor-utils
+  when: ansible_distribution == 'SUSE'
+
+- name: Enable Apparmor enforce mode
+  shell: aa-enforce /etc/apparmor.d/*
+  changed_when: false
+
+- name: Check Apparmor status
+  command: aa-status
+  failed_when: false
+  changed_when: false
