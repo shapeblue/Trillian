@@ -151,7 +151,7 @@
     - name: update project - tag Configuring_Hypervisors
       include_tasks: tasks/updateproject.yml
       vars:
-        project_tag: onfiguring_Hypervisors
+        project_tag: Configuring_Hypervisors
 
 ## Configure Hypervisor hosts
 
