@@ -35,7 +35,7 @@
         msg: "Upgrade System VMs to {{ upgrade_version }}"
 
     - local_action:
-        module: cs_template
+        module: ngine_io.cloudstack.template
         name: "{{ def_system_templates[upgrade_version].vmware_systemvm_name }}"
         url: "{{ def_system_templates[upgrade_version].vmware_url }}"
         hypervisor: VMware
@@ -51,7 +51,7 @@
         - systemvms
    
     - local_action:
-        module: cs_template
+        module: ngine_io.cloudstack.template
         name: "{{ def_system_templates[upgrade_version].xs_systemvm_name }}"
         url: "{{ def_system_templates[upgrade_version].xs_url }}"
         hypervisor: XenServer
@@ -69,7 +69,7 @@
 
 
     - local_action:
-        module: cs_template
+        module: ngine_io.cloudstack.template
         name: "{{ def_system_templates[upgrade_version].kvm_systemvm_name }}"
         url: "{{ def_system_templates[upgrade_version].kvm_url }}"
         hypervisor: KVM

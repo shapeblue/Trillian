@@ -28,7 +28,7 @@
 
 - name: Force Stop hosts in project {{ env_name_clean }}
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     project: "{{ build_project }}"
     state: "{{ vm_state | default( 'stopped' ) }}"
@@ -45,7 +45,7 @@
 
 - name: Destroy hosts in project {{ env_name_clean }}
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     project: "{{ build_project }}"
     state: "{{ vm_state | default( 'absent' ) }}"
@@ -66,7 +66,7 @@
 
 # - name: Delete SSH key
 #   local_action:
-#     module: cs_sshkeypair
+#     module: ngine_io.cloudstack.sshkeypair
 #     name: "{{ env_name_clean }}"
 #     project: "{{ build_project }}"
 #     state: absent
@@ -83,7 +83,7 @@
 ##
 #- name: Delete project
 #  local_action:
-#    module: cs_project
+#    module: ngine_io.cloudstack.project
 #    name: "{{ build_project }}"
 #    state: absent
 #    api_timeout: 120
