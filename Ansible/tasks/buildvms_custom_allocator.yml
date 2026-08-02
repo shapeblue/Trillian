@@ -44,7 +44,7 @@
 
 # - name: "Fix: Create affinity group for VMware"
 #   local_action:
-#     module: cs_affinitygroup
+#     module: ngine_io.cloudstack.affinitygroup
 #     api_timeout: 120
 #     name: "{{ env_name_clean }}-ag"
 #     project: "{{ build_project }}"
@@ -52,7 +52,7 @@
 
 - name: Remove previous SSH key from Project if it exists
   local_action:
-    module: cs_sshkeypair
+    module: ngine_io.cloudstack.sshkeypair
     api_timeout: 120
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
@@ -83,7 +83,7 @@
 
 - name: Add new public SSH Key to the project
   local_action:
-    module: cs_sshkeypair
+    module: ngine_io.cloudstack.sshkeypair
     name: "{{ env_name_clean }}"
     project: "{{ build_project }}"
     state: present
@@ -122,7 +122,7 @@
 #
 - name: build KVM hosts
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ kvm_service_offering }}"
     template: "{{ kvm_template }}"
@@ -181,7 +181,7 @@
 
 - name: Add data disk for local storage
   local_action:
-    module: cs_volume
+    module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     name: "{{ item.name }}-volume"
@@ -211,7 +211,7 @@
 #
 - name: build XenServer hosts (do not start)
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ xs_service_offering }}"
     template: "{{ xs_template }}"
@@ -269,7 +269,7 @@
 
 - name: Add data disk for local storage
   local_action:
-    module: cs_volume
+    module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     name: "{{ item.name }}-volume"
@@ -298,7 +298,7 @@
 #
 - name: build ESXi hosts
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ esxi_service_offering }}"
     template: "{{ esxi_template }}"
@@ -357,7 +357,7 @@
 
 - name: Add data disk for local storage
   local_action:
-    module: cs_volume
+    module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     name: "{{ item.name }}-volume"
@@ -386,7 +386,7 @@
 #
 - name: build VC hosts
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ vc_nested_service_offering if esxi_nested_vcenter else vc_service_offering }}"
     template: "{{ vc_template }}"
@@ -413,7 +413,7 @@
 
 - name: build dummy VM to obtain its IP and MAC - to be set for vcenter
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ esxi_vc_dummy_container }}"
     service_offering: "VMware-dummy-VM"
     template: "macchinina"
@@ -563,7 +563,7 @@
 
 - name: Build first management hosts
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ mgmtsrv_service_offering }}"
     template: "{{ mgmtsrv_template }}"
@@ -630,7 +630,7 @@
 #
 - name: Build additional management hosts
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ mgmtsrv_service_offering }}"
     template: "{{ mgmtsrv_template }}"
@@ -698,7 +698,7 @@
 #
 - name: Build first DB server
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ dbsrv_service_offering }}"
     template: "{{ dbsrv_template }}"
@@ -749,7 +749,7 @@
 #
 - name: Build additional DB servers
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ dbsrv_service_offering }}"
     template: "{{ dbsrv_template }}"
@@ -801,7 +801,7 @@
 #
 - name: Build Marvin server
   local_action:
-    module: cs_instance
+    module: ngine_io.cloudstack.instance
     name: "{{ item }}"
     service_offering: "{{ marvin_service_offering }}"
     template: "{{ marvin_server_template }}"
