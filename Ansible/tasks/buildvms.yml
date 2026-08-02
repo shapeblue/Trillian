@@ -37,7 +37,7 @@
 
 # - name: Remove previous SSH key from Project if it exists
 #   local_action:
-#     module: ngine_io.cloudstack.sshkeypair
+#     module: ngine_io.cloudstack.ssh_key
 #     api_timeout: 120
 #     name: "{{ env_name_clean }}"
 #     project: "{{ build_project }}"
@@ -73,7 +73,7 @@
 
 # - name: Add new public SSH Key to the project
 #   local_action:
-#     module: ngine_io.cloudstack.sshkeypair
+#     module: ngine_io.cloudstack.ssh_key
 #     name: "{{ env_name_clean }}"
 #     project: "{{ build_project }}"
 #     state: present
