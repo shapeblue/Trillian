@@ -47,9 +47,6 @@
         hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}"
         cluster_name="{{ env_zone_clustername }}"
-        enable_ha=False
-        enable_drs=False
-        enable_vsan=False
         validate_certs=False
   delegate_to: localhost
   ignore_errors: true
@@ -64,8 +61,6 @@
         hostname="{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}" username="{{ vmware_vcsa_user }}" password="{{ vmware_vcsa_pass }}"
         datacenter_name="{{ vmware_datacenter_name }}"
         cluster_name="{{ env_zone_clustername }}"
-        enable_ha=False
-        enable_drs=False
         validate_certs=False
   delegate_to: localhost
   ignore_errors: true
