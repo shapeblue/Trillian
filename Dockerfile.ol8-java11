@@ -1,0 +1,41 @@
+FROM oraclelinux:8
+
+RUN dnf -y update && \
+    dnf -y install \
+        java-11-openjdk.x86_64 \
+        openssh-server openssh-clients \
+        python39 python39-pip \
+        mysql \
+        git \
+        jq \
+        sshpass \
+        zip \
+        wget && \
+    dnf clean all
+
+RUN alternatives --set python3 /usr/bin/python3.9 && \
+    pip3 install --upgrade pip setuptools wheel && \
+    pip3 install --upgrade ansible && \
+    pip3 install --upgrade paramiko wheel setuptools sshpubkeys cs pyvmomi==9.0.0.0 pyvim && \
+    python3 -c "import paramiko; print('paramiko OK')" && \
+    python3 -c "import pyVim; print('pyVim OK')" && \
+    python3 -c "import pyVmomi; print('pyVmomi OK')" && \
+    ansible-galaxy collection install ngine_io.cloudstack --force && \
+    pip3 list
+
+RUN mkdir -p /jenkins && \
+    wget https://github.com/apache/cloudstack-cloudmonkey/releases/download/6.5.0/cmk.linux.x86-64 -O /usr/bin/cmk && \
+    chmod +x /usr/bin/cmk && mkdir ~/.cmk && \
+    ln -s /usr/bin/cmk /usr/bin/cloudmonkey
+
+RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
+    ssh-keygen -A && \
+    mkdir -p /root/.ssh && chmod 700 /root/.ssh && \
+    echo "root:P@ssword123" | chpasswd
+
+RUN curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"] 
