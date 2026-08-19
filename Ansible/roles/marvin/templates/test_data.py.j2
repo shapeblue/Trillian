@@ -1112,12 +1112,12 @@ test_data = {
 
     "test_templates_cloud_init": {
         "kvm": {
-            "name": "ubuntu 22.04 kvm",
-            "displaytext": "ubuntu 22.04 kvm",
-            "format": "raw",
+            "name": "ubuntu 24.04 kvm",
+            "displaytext": "ubuntu 24.04 kvm",
+            "format": "qcow2",
             "hypervisor": "kvm",
-            "ostype": "Other Linux (64-bit)",
-            "url": "https://cloud-images.ubuntu.com/releases/jammy/release/ubuntu-22.04-server-cloudimg-amd64.img",
+            "ostype": "Ubuntu 24.04 LTS",
+            "url": "http://{{ stagingserverip }}/templates/ubuntu24-cloud-image-root-password-with-tools.qcow2",
             "requireshvm": "True",
             "ispublic": "True",
             "isextractable": "False"
