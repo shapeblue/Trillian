@@ -38,41 +38,54 @@
     insertafter=EOF
     line="{{ ansible_ssh_host }}   {{ inventory_hostname }}"
 
-- name: add CloudStack ubuntu repo keys
-  apt_key:
+- name: ensure keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: download CloudStack repository signing key
+  get_url:
     url: "{{ baseurl_cloudstack }}Release.gpg"
-    state: present
+    dest: /etc/apt/keyrings/cloudstack.gpg
+    mode: '0644'
+
+- name: add CloudStack repo signing keys from keyserver (modern replacement)
+  shell: |
+    gpg --keyserver keyserver.ubuntu.com \
+        --recv-keys 86F44E2A BDF0E176584DF93F
+    gpg --export 86F44E2A BDF0E176584DF93F \
+    | gpg --dearmor \
+    | tee /etc/apt/keyrings/cloudstack-extra.gpg > /dev/null
+  args:
+    creates: /etc/apt/keyrings/cloudstack-extra.gpg
   ignore_errors: yes
 
-- name: add CloudStack debian repo keys
-  apt_key:
-    keyserver: keyring.debian.org
-    id: "{{ item }}"
-  with_items:
-    - 0x2404C9546E145360
-  ignore_errors: yes
-
-- name: add CloudStack ubuntu repo keys
-  apt_key:
-    keyserver: keyserver.ubuntu.com
-    id: "{{ item }}"
-  with_items:
-    - 86F44E2A
-    - BDF0E176584DF93F
-  ignore_errors: yes
+- name: fetch extra CloudStack keys from debian keyserver (modern safe fallback)
+  shell: |
+    gpg --keyserver keyring.debian.org \
+        --recv-keys 0x2404C9546E145360
+    gpg --export 0x2404C9546E145360 \
+    | gpg --dearmor \
+    | tee /etc/apt/keyrings/cloudstack-debian.gpg > /dev/null
+  args:
+    creates: /etc/apt/keyrings/cloudstack-debian.gpg
+  ignore_errors: true
 
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} /" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack-extra.gpg] {{ baseurl_kvm }} /" > /etc/apt/sources.list.d/cloudstack.list
   when: (ansible_distribution_major_version|int >= 12) and ("download.cloudstack.org" not in baseurl_cloudstack or "/testing/" in baseurl_cloudstack)
-    
+
 - name: Add CloudStack repository into sources list.
-  shell: echo "deb {{ baseurl_cloudstack }} jammy {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
+  shell: echo "deb [signed-by=/etc/apt/keyrings/cloudstack.asc] {{ baseurl_cloudstack }} noble {{ env_cs_minor_version }}" > /etc/apt/sources.list.d/cloudstack.list
   when: ansible_distribution_major_version|int >= 12 and "download.cloudstack.org" in baseurl_cloudstack and "/testing/" not in baseurl_cloudstack
 
-- apt_key:
+- name: download CloudStack signing key
+  get_url:
     url: "https://download.cloudstack.org/release.asc"
-    state: present
-    validate_certs: no
+    dest: /etc/apt/keyrings/cloudstack.asc
+    mode: '0644'
+    validate_certs: true
   when: '"download.cloudstack.org" in baseurl_cloudstack'
 
 - name: Run the equivalent of "apt-get update" as a separate step
