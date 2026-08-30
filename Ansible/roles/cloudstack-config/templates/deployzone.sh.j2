@@ -86,6 +86,7 @@ then
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
+  GuestPhysNetID=${PhysNetGuestID};
 else
   WriteOutput "Creating basic zone - {{ env_name_clean }}";
   ZoneID=`cloudmonkey create zone networktype=Basic securitygroupenabled=${SECURITYGROUPENABLED} name={{ env_name_clean }} dns1={{ env_zone_dns1 }} internaldns1={{ env_zone_intdns1 }} internaldns2={{ env_zone_intdns2 }} localstorageenabled={{ use_local_storage }} | jq -c -r '.zone.id'`;
@@ -100,6 +101,7 @@ else
   {% else %}
   cloudmonkey add traffictype physicalnetworkid=${PhysNetMgmtID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
+  GuestPhysNetID=${PhysNetMgmtID};
 fi
 WriteOutput "Adding Traffic Type - Management";
 {% if env_numversion  is version('4.2','>') %}
@@ -117,6 +119,15 @@ do
   WriteOutput "Enabling Physical Network ${i}";
   cloudmonkey update physicalnetwork state='Enabled' id=${i}  | tee -i -a ${DEPLOYLOG};
 done
+
+{% if kvm_network_mode == "ovs" %}
+{# KVM hosts join OVN automatically whenever kvm_network_mode is "ovs" -
+   the Guest traffic type was added above with the usual cloudbr1 label,
+   now flip its KVM label over to OVN's own integration bridge (br-int). #}
+WriteOutput "Updating KVM Guest traffic label to br-int (OVN)";
+GuestTrafficTypeID=`cloudmonkey list traffictypes physicalnetworkid=${GuestPhysNetID} | jq -r '.traffictype[] | select(.traffictype=="Guest") | .id'`;
+cloudmonkey update traffictype id=${GuestTrafficTypeID} kvmnetworklabel='br-int' | tee -i -a ${DEPLOYLOG};
+{% endif %}
 
 if [ "{{ env_zonetype | lower }}" == "advanced" ];
 then
