@@ -198,13 +198,17 @@
 
 ## end block
 
-- name: OVS on Ubuntu 18 onwards
+## OVS mode also joins the host up to OVN automatically - there is no
+## separate "ovn" kvm_network_mode, OVN is just how the guest network on
+## an OVS host is wired once Ansible has finished with it (Steps B/C).
+- name: OVS (+ OVN) on Ubuntu 18 onwards
   block:
 
-  - name: Install OVS
+  - name: Install OVS and OVN host packages
     apt: pkg={{ item }} state=present
     with_items:
       - openvswitch-switch
+      - ovn-host
       - ifupdown
 
   - name: Start OVS
@@ -213,7 +217,7 @@
       state: started
       enabled: yes
 
-  - name: write netplan
+  - name: write netplan (cloudbr0/cloudbr1 + eth1.2000 for OVN's Geneve encap)
     shell: rm -rf  /etc/netplan/*
 
   - name: write netplan
@@ -231,7 +235,56 @@
   - name: apply netplan
     command: netplan apply
 
+  - name: pause for eth1.2000 to come up before reading its address
+    wait_for:
+      timeout: 5
+    delegate_to: localhost
+
+  - name: work out the OVN controller IP (mgmt2/secondary_cs_manager), unless overridden
+    set_fact:
+      ovn_controller_ip: "{{ hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}"
+    when: not ovn_controller_ip
+
+  - name: read the eth1.2000 IP (used as the OVN Geneve encapsulation IP)
+    shell: "ip -4 addr show eth1.2000 | awk '/inet/ {print $2}' | cut -d/ -f1"
+    register: ovn_encap_ip
+    changed_when: false
+
+  - name: Set OVS system-id
+    shell: "ovs-vsctl set open_vswitch . external_ids:system-id={{ inventory_hostname }}"
+    changed_when: true
+
+  - name: Point OVS at the OVN Southbound DB
+    shell: >
+      ovs-vsctl set open_vswitch . external_ids:ovn-remote="tcp:{{ ovn_controller_ip }}:{{ ovn_sb_port }}"
+    changed_when: true
+
+  - name: Configure Geneve encapsulation on eth1.2000
+    shell: >
+      ovs-vsctl set open_vswitch . external_ids:ovn-encap-type="{{ ovn_encap_type }}"
+      external_ids:ovn-encap-ip="{{ ovn_encap_ip.stdout }}"
+    changed_when: true
+
+  - name: Map the provider network to cloudbr1
+    shell: 'ovs-vsctl set open_vswitch . external_ids:ovn-bridge-mappings="{{ ovn_bridge_mappings }}"'
+    changed_when: true
+
+  - name: Start OVN controller agent
+    systemd:
+      name: ovn-controller
+      state: started
+      enabled: yes
+
+  - name: UFW - allow Geneve tunnel traffic from other chassis
+    ufw:
+      rule: allow
+      proto: udp
+      port: "6081"
+    ignore_errors: yes
+
   when: kvm_network_mode == "ovs"
+
+## end block
 
 - name: UFW firerules
   shell: "ufw allow proto tcp from any to any port {{ item }}"
@@ -306,6 +359,15 @@
   with_items:
     - "network.bridge.type=openvswitch"
     - "libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.OvsVifDriver"
+  when: kvm_network_mode == "ovs"
+
+# OVN owns the guest network via its own integration bridge (br-int),
+# created automatically by ovn-controller - it is NOT one of our netplan
+# bridges, so this only makes sense once the OVS(+OVN) block above has run.
+- name: Configure agent.properties for OVN guest network device
+  lineinfile:
+    path: /etc/cloudstack/agent/agent.properties
+    line: "guest.network.device=br-int"
   when: kvm_network_mode == "ovs"
 
 - name: Blacklist bridge module post agent install

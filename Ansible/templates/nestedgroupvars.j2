@@ -292,6 +292,16 @@ kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_ne
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
 kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
+
+ovn_controller_ip: "{{ ovn_controller_ip | default( def_ovn_controller_ip ) }}"
+ovn_nb_port: "{{ ovn_nb_port | default( def_ovn_nb_port ) }}"
+ovn_sb_port: "{{ ovn_sb_port | default( def_ovn_sb_port ) }}"
+ovn_encap_type: "{{ ovn_encap_type | default( def_ovn_encap_type ) }}"
+ovn_encap_interface: "{{ ovn_encap_interface | default( def_ovn_encap_interface ) }}"
+ovn_bridge_mappings: "{{ ovn_bridge_mappings | default( def_ovn_bridge_mappings ) }}"
+ovn_provider_network: "{{ ovn_provider_network | default( def_ovn_provider_network ) }}"
+ovn_provider_physnet: "{{ ovn_provider_physnet | default( def_ovn_provider_physnet ) }}"
+
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
 

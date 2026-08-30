@@ -1,0 +1,105 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# OVN central controller.
+#
+# Runs on mgmt2 (the secondary_cs_manager host) so the OVN control plane
+# is kept off the primary CloudStack management server. Ubuntu only for
+# now - this mirrors the "support ubuntu hosts" scope of the OVN work.
+
+- name: gather OS facts
+  os_facts:
+
+- name: fail early on non-Ubuntu OVN controllers
+  fail:
+    msg: "ovn-controller role currently only supports Ubuntu (found {{ ansible_distribution }})"
+  when: ansible_distribution != 'Ubuntu'
+
+- name: work out this controller's own IP (cloudbr0 on mgmt2), unless overridden
+  set_fact:
+    ovn_controller_ip: "{{ ansible_ssh_host }}"
+  when: not ovn_controller_ip
+
+## STEP A - Controller setup
+
+- name: Install OVN central components
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - ovn-central
+    - ovn-common
+
+- name: Start and enable OVN central services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - ovn-northd
+    - ovn-ovsdb-server-sb
+    - ovn-ovsdb-server-nb
+
+- name: Bind OVN Northbound DB to the controller IP
+  shell: "ovn-nbctl set-connection ptcp:{{ ovn_nb_port }}:{{ ovn_controller_ip }}"
+  changed_when: true
+
+- name: Bind OVN Southbound DB to the controller IP
+  shell: "ovn-sbctl set-connection ptcp:{{ ovn_sb_port }}:{{ ovn_controller_ip }}"
+  changed_when: true
+
+- name: Open OVN DB ports for the KVM hosts
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ item }}"
+  with_items:
+    - "{{ ovn_nb_port }}"
+    - "{{ ovn_sb_port }}"
+  ignore_errors: yes
+
+## STEP E - Create OVN provider network
+
+- name: Create the OVN provider logical switch ({{ ovn_provider_network }})
+  shell: "ovn-nbctl --may-exist ls-add {{ ovn_provider_network }}"
+  changed_when: true
+
+- name: Create the localnet port for the provider network
+  shell: "ovn-nbctl --may-exist lsp-add {{ ovn_provider_network }} {{ ovn_provider_network }}-external"
+  changed_when: true
+
+- name: Set the localnet port type
+  shell: "ovn-nbctl lsp-set-type {{ ovn_provider_network }}-external localnet"
+  changed_when: true
+
+- name: Set the localnet port addresses
+  shell: "ovn-nbctl lsp-set-addresses {{ ovn_provider_network }}-external unknown"
+  changed_when: true
+
+- name: Bind the localnet port to physnet1
+  shell: "ovn-nbctl lsp-set-options {{ ovn_provider_network }}-external network_name={{ ovn_provider_physnet }}"
+  changed_when: true
+
+## STEP F1 - sanity check
+
+- name: Show OVN chassis (should list one entry per KVM host once STEP C has run)
+  shell: ovn-sbctl show
+  register: ovn_sbctl_show
+  changed_when: false
+
+- debug:
+    var: ovn_sbctl_show.stdout_lines
