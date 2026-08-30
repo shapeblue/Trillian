@@ -137,3 +137,28 @@ share (`<env>-kvm-priN`) via NFS on every KVM host at the same local path,
 CloudStack as `SharedMountPoint://localhost/<that path>` primary storage
 (`deployzone.sh.j2`/`addpod.sh.j2`, and `primaryStorages` in the Marvin
 config). `destroyvms.yml` unmounts them before the NFS shares are removed.
+
+### OVN guest networking (Ubuntu KVM hosts only)
+
+`kvm_network_mode=ovs` now brings up OVN automatically alongside plain OVS -
+there is no separate `ovn` mode to opt into. `deployvms.yml`:
+
++ `mgmt2` (`secondary_cs_manager`) runs the OVN central control plane
+  (`ovn-central`: northd + the NB/SB databases) via the `ovn-controller` role,
+  bound to its `cloudbr0` IP.
++ Every Ubuntu `kvm_hosts` node installs `ovn-host`, joins the OVN Southbound
+  DB, and encapsulates guest traffic over Geneve using the `eth1.2000` VLAN
+  interface (the same one used for `cloudbr1` in OVS mode) rather than
+  `eth0`/`eth1` directly.
++ The `physnet1` provider network is mapped to `cloudbr1` on every host, and a
+  `public` logical switch with a `localnet` port is created on the controller.
++ `guest.network.device` in `agent.properties` is set to `br-int` (the
+  integration bridge OVN creates for itself) instead of `cloudbr1`.
++ On the CloudStack management server(s), `python3-ovsdbapp` and `jq` are
+  installed for the OVN network extension; you still need to change the KVM
+  traffic label of the Guest network from `cloudbr1` to `br-int` and register
+  the extension yourself (see the CloudStack documentation for
+  `network.bridge.type=openvswitch` extensions).
+
+This only supports Ubuntu KVM hosts today - other distros still use
+`kvm_network_mode=bridge`/`ovs`.
