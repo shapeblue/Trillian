@@ -91,3 +91,28 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`
 * `env_name=cs49-vmw55-pga env_version=cs49 mgmt_os=6 hvtype=v vmware_ver=55u3 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
 * `env_name=cs49-kvm6-pga env_version=cs49 mgmt_os=6 env_accounts=all hvtype=k kvm_os=6 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
+
+### OVN guest networking (Ubuntu KVM hosts only)
+
+`kvm_network_mode=ovs` now brings up OVN automatically alongside plain OVS -
+there is no separate `ovn` mode to opt into. `deployvms.yml`:
+
++ `mgmt2` (`secondary_cs_manager`) runs the OVN central control plane
+  (`ovn-central`: northd + the NB/SB databases) via the `ovn-controller` role,
+  bound to its `cloudbr0` IP.
++ Every Ubuntu `kvm_hosts` node installs `ovn-host`, joins the OVN Southbound
+  DB, and encapsulates guest traffic over Geneve using the `eth1.2000` VLAN
+  interface (the same one used for `cloudbr1` in OVS mode) rather than
+  `eth0`/`eth1` directly.
++ The `physnet1` provider network is mapped to `cloudbr1` on every host, and a
+  `public` logical switch with a `localnet` port is created on the controller.
++ `guest.network.device` in `agent.properties` is set to `br-int` (the
+  integration bridge OVN creates for itself) instead of `cloudbr1`.
++ On the CloudStack management server(s), `python3-ovsdbapp` and `jq` are
+  installed for the OVN network extension; you still need to change the KVM
+  traffic label of the Guest network from `cloudbr1` to `br-int` and register
+  the extension yourself (see the CloudStack documentation for
+  `network.bridge.type=openvswitch` extensions).
+
+This only supports Ubuntu KVM hosts today - other distros still use
+`kvm_network_mode=bridge`/`ovs`.
