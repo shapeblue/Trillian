@@ -163,6 +163,17 @@
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
 
+## KVM hosts join OVN automatically whenever kvm_network_mode is "ovs" - see
+## the kvm role. mgmt2 is used as the OVN central controller, so bring it up
+## before the KVM hosts try to register with it.
+
+- hosts: secondary_cs_manager
+  gather_facts: no
+  vars:
+    num_kvm_hosts: "{{ groups['kvm_hosts'] | length }}"
+  roles:
+    - { role: ovn-controller, when: (num_kvm_hosts | int != 0) and (kvm_network_mode == "ovs") }
+
 - hosts: kvm_hosts
   gather_facts: no
   vars:
