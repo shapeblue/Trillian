@@ -655,6 +655,19 @@ def_kvm_mgmt_network_label: "cloudbr0"
 def_kvm_guest_network_label: "cloudbr1"
 def_kvm_public_network_label: "cloudbr1"
 def_kvm_network_mode: "bridge"
+
+# OVN support: whenever kvm_network_mode is "ovs", KVM hosts also join OVN
+# automatically (mgmt2/secondary_cs_manager acts as the OVN central
+# controller) - there is no separate "ovn" mode to opt into.
+def_ovn_controller_ip: ""
+def_ovn_nb_port: 6641
+def_ovn_sb_port: 6642
+def_ovn_encap_type: "geneve"
+def_ovn_encap_interface: "eth1.2000"
+def_ovn_bridge_mappings: "physnet1:cloudbr1"
+def_ovn_provider_network: "public"
+def_ovn_provider_physnet: "physnet1"
+
 def_kvm_centos_ovsrpm: "<OVS_RPM_PATH>"
 # def_kvm_centos_ovsrpm: "<OVS_RPM_PATH>"
 def_kvm_localstorage_mount: "/localstorage"
