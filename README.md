@@ -108,10 +108,12 @@ there is no separate `ovn` mode to opt into. `deployvms.yml`:
   `public` logical switch with a `localnet` port is created on the controller.
 + `guest.network.device` in `agent.properties` is set to `br-int` (the
   integration bridge OVN creates for itself) instead of `cloudbr1`.
++ `cloudstack-config`'s zone creation adds the Guest traffic type the usual
+  way (`cloudbr1`), then updates it afterwards to `br-int` once the physical
+  networks are enabled (Public/Management keep using `cloudbr1`/`cloudbr0`).
 + On the CloudStack management server(s), `python3-ovsdbapp` and `jq` are
-  installed for the OVN network extension; you still need to change the KVM
-  traffic label of the Guest network from `cloudbr1` to `br-int` and register
-  the extension yourself (see the CloudStack documentation for
+  installed for the OVN network extension; you still need to register the
+  extension yourself (see the CloudStack documentation for
   `network.bridge.type=openvswitch` extensions).
 
 This only supports Ubuntu KVM hosts today - other distros still use
