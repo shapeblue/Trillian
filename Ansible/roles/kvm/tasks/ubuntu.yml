@@ -211,6 +211,20 @@
       - ovn-host
       - ifupdown
 
+  # openvswitch-switch's own startup script runs "ovs-ctl start --system-id=random"
+  # on every (re)start (systemd start, host reboot, ...). It's NOT idempotent
+  # against a live "ovs-vsctl set ... system-id" - it always re-derives
+  # external_ids:system-id from this file, generating and persisting a random
+  # UUID here the first time it's missing. Write the hostname into it *before*
+  # OVS is ever started, so it never has a chance to invent a UUID, and the
+  # hostname survives every later restart/reboot (e.g. the netplan-bug reboot
+  # further down this playbook).
+  - name: Pin OVS system-id to the hostname (survives service restarts/reboots)
+    copy:
+      dest: /etc/openvswitch/system-id.conf
+      content: "{{ inventory_hostname }}\n"
+      mode: '0644'
+
   - name: Start OVS
     systemd:
       name: openvswitch-switch
@@ -250,6 +264,10 @@
     register: ovn_encap_ip
     changed_when: false
 
+  # Belt and suspenders: /etc/openvswitch/system-id.conf (written above)
+  # covers every start from now on, but on a re-run against an
+  # already-provisioned host OVS may already be running with a stale
+  # system-id from before that file existed - fix up the live value too.
   - name: Set OVS system-id
     shell: "ovs-vsctl set open_vswitch . external_ids:system-id={{ inventory_hostname }}"
     changed_when: true
