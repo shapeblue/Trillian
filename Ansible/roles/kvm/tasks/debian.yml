@@ -92,6 +92,7 @@
     - iptables
     - ovmf
     - swtpm
+  ignore_errors: yes
 
 - name: Install utilities and tools for Linux network namespace
   apt:
