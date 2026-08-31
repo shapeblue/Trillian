@@ -1,0 +1,42 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+####################################################################
+# Shared task: look up a template's size and, if it is smaller than
+# 10GB, set a fact so the caller can pass root_disk_size: 10 to the
+# ngine_io.cloudstack.instance module (otherwise a deployed VM inherits
+# the template's own, possibly tiny, root disk size).
+#
+# Expects (from the including task, via `vars:`):
+#   rds_template - the template name to look up
+#   rds_fact     - the name of the fact to set (undefined/omit when
+#                  the template is already >= 10GB)
+####################################################################
+
+- name: "Look up size of template {{ rds_template }}"
+  shell: |
+    set -o pipefail
+    cmk listTemplates templatefilter=all projectid=-1 name="{{ rds_template }}" | \
+      jq -r ".template[0].size"
+  args:
+    executable: /bin/bash
+  register: rds_template_size_result
+  changed_when: false
+
+- name: "Set {{ rds_fact }} when {{ rds_template }} is smaller than 10GB"
+  set_fact:
+    "{{ rds_fact }}": 10
+  when: (rds_template_size_result.stdout | trim | int) < (10 * 1024 * 1024 * 1024)
