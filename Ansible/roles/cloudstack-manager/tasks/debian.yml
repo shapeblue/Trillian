@@ -102,6 +102,18 @@
   changed_when: false
   failed_when: cloudstack_package_version.stdout | trim | length == 0
 
+- name: (Debian 13) Download python3-mysql.connector .deb from Ubuntu 26.04/universe (no trixie build exists upstream)
+  get_url:
+    url: http://mirrors.kernel.org/ubuntu/pool/universe/m/mysql-connector-python/python3-mysql.connector_9.5.0-1_all.deb
+    dest: /tmp/python3-mysql.connector_9.5.0-1_all.deb
+    mode: '0644'
+  when: ansible_distribution == "Debian" and ansible_distribution_major_version|int >= 13
+
+- name: (Debian 13) Install python3-mysql.connector (pulls in python3-protobuf via apt, both plain arch:all deps present in trixie)
+  apt:
+    deb: /tmp/python3-mysql.connector_9.5.0-1_all.deb
+  when: ansible_distribution == "Debian" and ansible_distribution_major_version|int >= 13
+
 - name: Ensure CloudStack management-server only is installed (we install usage server later)
   apt:
     pkg: "{{ item }}={{ cloudstack_package_version.stdout }}"
