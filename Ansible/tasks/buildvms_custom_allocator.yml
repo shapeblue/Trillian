@@ -29,6 +29,48 @@
 - name: determine number of db hosts
   set_fact: num_db_hosts="{{ groups['mysql_hosts'] | length }}"
 
+####################################################################
+# Ensure a minimum 10GB root disk for every VM type, in case its
+# template is smaller than that (see tasks/get_template_root_disk_size.yml)
+#
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ mgmtsrv_template }}"
+    rds_fact: mgmtsrv_root_disk_size
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ dbsrv_template }}"
+    rds_fact: dbsrv_root_disk_size
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ kvm_template }}"
+    rds_fact: kvm_root_disk_size
+  when: use_external_hv_hosts|bool == false
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ xs_template }}"
+    rds_fact: xs_root_disk_size
+  when: use_external_hv_hosts|bool == false
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ esxi_template }}"
+    rds_fact: esxi_root_disk_size
+  when: use_external_hv_hosts|bool == false
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ vc_template }}"
+    rds_fact: vc_root_disk_size
+
+- include_tasks: ./tasks/get_template_root_disk_size.yml
+  vars:
+    rds_template: "{{ marvin_server_template }}"
+    rds_fact: marvin_root_disk_size
+
 - name: get specified cluster id from name (if set)
   shell: cmk listClusters | jq -r --arg JQVAR "{{ env_specific_hv_cluster }}" '.cluster[]| select(.name| endswith($JQVAR))| .id'
   register: found_cluster_id
@@ -131,6 +173,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ kvm_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -219,6 +262,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ xs_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -306,6 +350,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ esxi_root_disk_size | default(omit) }}"
     # affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
@@ -394,6 +439,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ vc_root_disk_size | default(omit) }}"
     # affinity_groups: ["{{ env_name_clean }}-ag"]
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
@@ -572,6 +618,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ mgmtsrv_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -639,6 +686,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ mgmtsrv_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -707,6 +755,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ dbsrv_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -758,6 +807,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ dbsrv_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
@@ -810,6 +860,7 @@
     # ssh_key: "{{env_name_clean}}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ marvin_root_disk_size | default(omit) }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }
