@@ -115,6 +115,10 @@ there is no separate `ovn` mode to opt into. `deployvms.yml`:
   installed for the OVN network extension; you still need to register the
   extension yourself (see the CloudStack documentation for
   `network.bridge.type=openvswitch` extensions).
++ Marvin's `advanced-cfg.j2` adds a `details` block to the zone (NB/SB
+  connection URLs pointed at the OVN controller, `ovn_physnet`, and a
+  `gateway_chassis` priority list built from `kvm_hosts`) so the extension
+  has everything it needs without further manual editing.
 
 This only supports Ubuntu KVM hosts today - other distros still use
 `kvm_network_mode=bridge`/`ovs`.

@@ -124,6 +124,15 @@
                     }{% if not loop.last %},{% endif %}
 {% endfor %}
 		]
+{% if kvm_network_mode == "ovs" %}
+		,
+		"details": {
+			"ovn_nb_connection": "tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_nb_port }}",
+			"ovn_sb_connection": "tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_sb_port }}",
+			"ovn_physnet": "{{ ovn_provider_physnet }}",
+			"gateway_chassis": "{% for host in groups['kvm_hosts'] %}{{ host }}:{{ 100 - loop.index0 }}:system{% if not loop.last %},{% endif %}{% endfor %}"
+		}
+{% endif %}
 	}],
 	"dbSvr": {
 {% if num_db_hosts == "0" %}	"dbSvr": "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}",{% endif %}
