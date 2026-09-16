@@ -262,7 +262,7 @@ cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${Clust
 
 WriteOutput "Adding Secondary Storage Pool"
 {% for pool in env_secpools %}
-{% if env_numversion | float > 4.2 %}
+{% if env_numversion | version_compare('4.2','<=') %}
 cloudmonkey add imagestore name='{{ pool }}' provider='NFS' zoneid=${ZoneID} url="NFS://{% if groups['secondary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_secpath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% else %}
 cloudmonkey add secondarystorage zoneid=${ZoneID} url="NFS://{% if groups['secondary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['secondary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_secpath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
