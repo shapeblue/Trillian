@@ -6,7 +6,7 @@ echo $ARGS > /tmp/args
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//' | tr -d "'"`
-MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MYSQL_STATEMENT=\(\)#\1#' | tr -d ')'| sed "s/'\"'\"'/'/g"| tr -d '"' | sed "s/^'//" | sed -e 's/[[:space:]]*$//' | sed s'/.$//'`
+MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MYSQL_STATEMENT=\(\)#\1#' | sed 's/)$//' | sed "s/'\"'\"'/'/g"| tr -d '"' | sed "s/^'//" | sed -e 's/[[:space:]]*$//' | sed s'/.$//'`
 echo $MYSQL_STATEMENT > /tmp/mysql
 mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ "$MYSQL_STATEMENT"
 
