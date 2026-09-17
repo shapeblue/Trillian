@@ -30,14 +30,7 @@
   tags:
     - kvm
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-  tags:
-    - kvm
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
+- include: ../../../tasks/configure_selinux.yml
   tags:
     - kvm
 
