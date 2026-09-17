@@ -127,6 +127,28 @@ done
 WriteOutput "Updating KVM Guest traffic label to br-int (OVN)";
 GuestTrafficTypeID=`cloudmonkey list traffictypes physicalnetworkid=${GuestPhysNetID} | jq -r '.traffictype[] | select(.traffictype=="Guest") | .id'`;
 cloudmonkey update traffictype id=${GuestTrafficTypeID} kvmnetworklabel='br-int' | tee -i -a ${DEPLOYLOG};
+
+{# Register the OVN NetworkOrchestrator extension - the script itself was
+   already dropped on every management server by the cloudstack-manager
+   role (/usr/share/cloudstack-management/extensions/ovn-extension/). #}
+WriteOutput "Registering OVN network extension";
+OVN_EXT_DIR="/usr/share/cloudstack-management/extensions/ovn-extension";
+OvnExtID=`cloudmonkey list extensions name=ovn-extension filter=id | jq -r '.extension[0].id // empty'`;
+if [ -z "${OvnExtID}" ]; then
+  OvnServices=`"${OVN_EXT_DIR}/ovn-extension.py" capabilities | jq -r '."network.services"'`;
+  OvnCaps=`"${OVN_EXT_DIR}/ovn-extension.py" capabilities | jq -c '."network.service.capabilities"'`;
+  cloudmonkey create extension name=ovn-extension type=NetworkOrchestrator path='ovn-extension/ovn-extension.py' "details[0].network.services=${OvnServices}" "details[1].network.service.capabilities=${OvnCaps}" "details[2].network.isolation.method=NetworkExtension" "details[3].network.allocate.extension.ip=false" | tee -i -a ${DEPLOYLOG};
+  OvnExtID=`cloudmonkey list extensions name=ovn-extension filter=id | jq -r '.extension[0].id'`;
+else
+  WriteOutput "OVN extension already registered with ID ${OvnExtID}";
+fi
+
+WriteOutput "Attaching OVN extension to physical network ${GuestPhysNetID}";
+cloudmonkey register extension extensionid=${OvnExtID} resourcetype=PhysicalNetwork resourceid=${GuestPhysNetID} "details[0].ovn_nb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_nb_port }}" "details[1].ovn_sb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_sb_port }}" "details[2].ovn_physnet={{ ovn_provider_physnet }}" "details[3].gateway_chassis={% for host in groups['kvm_hosts'] %}{{ host }}:{{ 100 - loop.index0 * 10 }}:system{% if not loop.last %},{% endif %}{% endfor %}" | tee -i -a ${DEPLOYLOG};
+
+WriteOutput "Enabling OVN network service provider";
+OvnNspID=`cloudmonkey list networkserviceproviders physicalnetworkid=${GuestPhysNetID} name=ovn-extension filter=id | jq -r '.networkserviceprovider[0].id'`;
+cloudmonkey update networkserviceprovider id=${OvnNspID} state='Enabled' | tee -i -a ${DEPLOYLOG};
 {% endif %}
 
 if [ "{{ env_zonetype | lower }}" == "advanced" ];
