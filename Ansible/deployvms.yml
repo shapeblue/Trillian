@@ -79,6 +79,9 @@
       with_items:
         - "{{ allaccts_retval.stdout.split(',') }}"
 
+    - name: Run pre-deploy validations
+      include: ./tasks/validations/main.yml
+
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
       when: use_custom_allocator and (use_external_hv_hosts|bool == false)

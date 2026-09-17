@@ -1,0 +1,53 @@
+---
+
+#Copyright 2026 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Fail fast, before any VM is built, if the CloudStack repo(s) this deploy
+# needs are missing or unreachable. Only checks a repo when this deploy will
+# actually install from it:
+#  - baseurl_cloudstack is only needed when the mgmt server package will be
+#    installed (skipped for additional_zone/additional_pod runs, which reuse
+#    an existing mgmt server, and for "ccp" tarball-based installs)
+#  - baseurl_kvm is only needed when there are KVM hosts in this deploy
+
+- name: Determine whether this deploy installs the CloudStack mgmt package
+  set_fact:
+    install_cloudstack_mgmt: "{{ (additional_zone|bool == False) and (additional_pod|bool == False) and (env_cs_distribution|default('acs') != 'ccp') }}"
+
+- name: Determine whether this deploy installs the CloudStack KVM agent package
+  set_fact:
+    install_cloudstack_kvm: "{{ (groups['kvm_hosts']|default([])|length|int != 0) and (env_cs_distribution|default('acs') != 'ccp') }}"
+
+- name: Collect the CloudStack repo URLs this deploy needs
+  set_fact:
+    cloudstack_repo_urls: "{{ ([baseurl_cloudstack] if (install_cloudstack_mgmt|bool and baseurl_cloudstack is defined) else [])
+                              | union([baseurl_kvm] if (install_cloudstack_kvm|bool and baseurl_kvm is defined) else []) }}"
+
+- name: Check that required CloudStack repos are reachable
+  local_action:
+    module: uri
+    url: "{{ item }}"
+    method: GET
+    status_code: [200, 301, 302, 403]
+    timeout: 15
+  register: cloudstack_repo_checks
+  failed_when: false
+  with_items: "{{ cloudstack_repo_urls }}"
+
+- name: Fail before deploying anything if a CloudStack repo is unreachable or invalid
+  fail:
+    msg: "CloudStack repo '{{ item.item }}' is not reachable (status: {{ item.status|default('n/a') }}{{ ', error: ' + item.msg if item.msg is defined else '' }}). Fix baseurl_cloudstack/baseurl_kvm before deploying any VMs."
+  loop: "{{ cloudstack_repo_checks.results|default([]) }}"
+  when: item.status is not defined or item.status not in [200, 301, 302, 403]
