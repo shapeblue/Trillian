@@ -127,6 +127,51 @@ done
 WriteOutput "Updating KVM Guest traffic label to br-int (OVN)";
 GuestTrafficTypeID=`cloudmonkey list traffictypes physicalnetworkid=${GuestPhysNetID} | jq -r '.traffictype[] | select(.traffictype=="Guest") | .id'`;
 cloudmonkey update traffictype id=${GuestTrafficTypeID} kvmnetworklabel='br-int' | tee -i -a ${DEPLOYLOG};
+
+{# Register the OVN NetworkOrchestrator extension - the script itself was
+   already dropped on every management server by the cloudstack-manager
+   role (/usr/share/cloudstack-management/extensions/ovn-extension/). #}
+WriteOutput "Registering OVN network extension";
+OVN_EXT_DIR="/usr/share/cloudstack-management/extensions/ovn-extension";
+OvnExtID=`cloudmonkey list extensions name=ovn-extension filter=id | jq -r '.extension[0].id // empty'`;
+if [ -z "${OvnExtID}" ]; then
+  OvnServices=`"${OVN_EXT_DIR}/ovn-extension.py" capabilities | jq -r '."network.services"'`;
+  OvnCaps=`"${OVN_EXT_DIR}/ovn-extension.py" capabilities | jq -c '."network.service.capabilities"'`;
+  cloudmonkey create extension name=ovn-extension type=NetworkOrchestrator path='ovn-extension/ovn-extension.py' "details[0].network.services=${OvnServices}" "details[1].network.service.capabilities=${OvnCaps}" "details[2].network.isolation.method=NetworkExtension" "details[3].network.allocate.extension.ip=false" | tee -i -a ${DEPLOYLOG};
+  OvnExtID=`cloudmonkey list extensions name=ovn-extension filter=id | jq -r '.extension[0].id'`;
+else
+  WriteOutput "OVN extension already registered with ID ${OvnExtID}";
+fi
+
+WriteOutput "Attaching OVN extension to physical network ${GuestPhysNetID}";
+cloudmonkey register extension extensionid=${OvnExtID} resourcetype=PhysicalNetwork resourceid=${GuestPhysNetID} "details[0].ovn_nb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_nb_port }}" "details[1].ovn_sb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_sb_port }}" "details[2].ovn_physnet={{ ovn_provider_physnet }}" "details[3].gateway_chassis={% for host in groups['kvm_hosts'] %}{{ host }}:{{ 100 - loop.index0 * 10 }}:system{% if not loop.last %},{% endif %}{% endfor %}" | tee -i -a ${DEPLOYLOG};
+
+WriteOutput "Enabling OVN network service provider";
+OvnNspID=`cloudmonkey list networkserviceproviders physicalnetworkid=${GuestPhysNetID} name=ovn-extension filter=id | jq -r '.networkserviceprovider[0].id'`;
+cloudmonkey update networkserviceprovider id=${OvnNspID} state='Enabled' | tee -i -a ${DEPLOYLOG};
+
+{# Offerings backed by the OVN extension - Isolated, Shared, VPC, and VPC
+   Tier - so the zone is usable end to end without any manual UI/API step.
+   Offerings are created Disabled by default, so enable each one after. #}
+WriteOutput "Creating OVN Isolated network offering";
+cloudmonkey create networkoffering name="OVN Isolated" displaytext="OVN isolated network" guestiptype=Isolated traffictype=GUEST supportedservices=Dhcp,Dns,UserData,SourceNat,StaticNat,PortForwarding,Firewall,Lb,CustomAction "serviceProviderList[0].service=Dhcp" "serviceProviderList[0].provider=ovn-extension" "serviceProviderList[1].service=Dns" "serviceProviderList[1].provider=ovn-extension" "serviceProviderList[2].service=UserData" "serviceProviderList[2].provider=ConfigDrive" "serviceProviderList[3].service=SourceNat" "serviceProviderList[3].provider=ovn-extension" "serviceProviderList[4].service=StaticNat" "serviceProviderList[4].provider=ovn-extension" "serviceProviderList[5].service=PortForwarding" "serviceProviderList[5].provider=ovn-extension" "serviceProviderList[6].service=Firewall" "serviceProviderList[6].provider=ovn-extension" "serviceProviderList[7].service=Lb" "serviceProviderList[7].provider=ovn-extension" "serviceProviderList[8].service=CustomAction" "serviceProviderList[8].provider=ovn-extension" "serviceCapabilityList[0].service=SourceNat" "serviceCapabilityList[0].capabilitytype=SupportedSourceNatTypes" "serviceCapabilityList[0].capabilityvalue=peraccount" | tee -i -a ${DEPLOYLOG};
+OvnIsolatedOffId=`cloudmonkey list networkofferings name="OVN Isolated" filter=id | jq -r '.networkoffering[0].id'`;
+cloudmonkey update networkoffering id=${OvnIsolatedOffId} state=Enabled | tee -i -a ${DEPLOYLOG};
+
+WriteOutput "Creating OVN Shared network offering";
+cloudmonkey create networkoffering name="OVN Shared" displaytext="OVN shared network" guestiptype=Shared traffictype=GUEST specifyvlan=true specifyipranges=true supportedservices=Dhcp,Dns,UserData,CustomAction "serviceProviderList[0].service=Dhcp" "serviceProviderList[0].provider=ovn-extension" "serviceProviderList[1].service=Dns" "serviceProviderList[1].provider=ovn-extension" "serviceProviderList[2].service=UserData" "serviceProviderList[2].provider=ConfigDrive" "serviceProviderList[3].service=CustomAction" "serviceProviderList[3].provider=ovn-extension" | tee -i -a ${DEPLOYLOG};
+OvnSharedOffId=`cloudmonkey list networkofferings name="OVN Shared" filter=id | jq -r '.networkoffering[0].id'`;
+cloudmonkey update networkoffering id=${OvnSharedOffId} state=Enabled | tee -i -a ${DEPLOYLOG};
+
+WriteOutput "Creating OVN VPC offering";
+cloudmonkey create vpcoffering name="OVN VPC" displaytext="OVN VPC" supportedservices=Dhcp,Dns,UserData,SourceNat,StaticNat,PortForwarding,Lb,NetworkACL,CustomAction "serviceProviderList[0].service=Dhcp" "serviceProviderList[0].provider=ovn-extension" "serviceProviderList[1].service=Dns" "serviceProviderList[1].provider=ovn-extension" "serviceProviderList[2].service=UserData" "serviceProviderList[2].provider=ConfigDrive" "serviceProviderList[3].service=SourceNat" "serviceProviderList[3].provider=ovn-extension" "serviceProviderList[4].service=StaticNat" "serviceProviderList[4].provider=ovn-extension" "serviceProviderList[5].service=PortForwarding" "serviceProviderList[5].provider=ovn-extension" "serviceProviderList[6].service=Lb" "serviceProviderList[6].provider=ovn-extension" "serviceProviderList[7].service=NetworkACL" "serviceProviderList[7].provider=ovn-extension" "serviceProviderList[8].service=CustomAction" "serviceProviderList[8].provider=ovn-extension" | tee -i -a ${DEPLOYLOG};
+OvnVpcOffId=`cloudmonkey list vpcofferings name="OVN VPC" filter=id | jq -r '.vpcoffering[0].id'`;
+cloudmonkey update vpcoffering id=${OvnVpcOffId} state=Enabled | tee -i -a ${DEPLOYLOG};
+
+WriteOutput "Creating OVN VPC Tier network offering";
+cloudmonkey create networkoffering name="OVN VPC Tier" displaytext="OVN VPC tier network" guestiptype=Isolated traffictype=GUEST forvpc=true supportedservices=Dhcp,Dns,UserData,SourceNat,StaticNat,PortForwarding,NetworkACL,Lb,CustomAction "serviceProviderList[0].service=Dhcp" "serviceProviderList[0].provider=ovn-extension" "serviceProviderList[1].service=Dns" "serviceProviderList[1].provider=ovn-extension" "serviceProviderList[2].service=UserData" "serviceProviderList[2].provider=ConfigDrive" "serviceProviderList[3].service=SourceNat" "serviceProviderList[3].provider=ovn-extension" "serviceProviderList[4].service=StaticNat" "serviceProviderList[4].provider=ovn-extension" "serviceProviderList[5].service=PortForwarding" "serviceProviderList[5].provider=ovn-extension" "serviceProviderList[6].service=NetworkACL" "serviceProviderList[6].provider=ovn-extension" "serviceProviderList[7].service=Lb" "serviceProviderList[7].provider=ovn-extension" "serviceProviderList[8].service=CustomAction" "serviceProviderList[8].provider=ovn-extension" "serviceCapabilityList[0].service=SourceNat" "serviceCapabilityList[0].capabilitytype=SupportedSourceNatTypes" "serviceCapabilityList[0].capabilityvalue=peraccount" | tee -i -a ${DEPLOYLOG};
+OvnVpcTierOffId=`cloudmonkey list networkofferings name="OVN VPC Tier" filter=id | jq -r '.networkoffering[0].id'`;
+cloudmonkey update networkoffering id=${OvnVpcTierOffId} state=Enabled | tee -i -a ${DEPLOYLOG};
 {% endif %}
 
 if [ "{{ env_zonetype | lower }}" == "advanced" ];

@@ -119,6 +119,9 @@ there is no separate `ovn` mode to opt into. `deployvms.yml`:
   connection URLs pointed at the OVN controller, `ovn_physnet`, and a
   `gateway_chassis` priority list built from `kvm_hosts`) so the extension
   has everything it needs without further manual editing.
++ `deployzone.sh.j2` also creates and enables four OVN-backed offerings so
+  the zone is immediately usable: network offerings `OVN Isolated`, `OVN
+  Shared`, `OVN VPC Tier` (`forvpc=true`), and VPC offering `OVN VPC`.
 
 This only supports Ubuntu KVM hosts today - other distros still use
 `kvm_network_mode=bridge`/`ovs`.
