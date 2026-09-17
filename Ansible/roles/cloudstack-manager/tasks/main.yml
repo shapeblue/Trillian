@@ -76,6 +76,39 @@
     dest: /usr/bin/
     mode: 0755
 
+# KVM hosts join OVN automatically whenever kvm_network_mode is "ovs" - drop
+# the OVN NetworkOrchestrator extension on every management server so it's
+# ready to be registered (cloudstack-config's deployzone.sh does the
+# registerExtension/attach-to-physical-network part on primary_cs_manager).
+- name: Ensure OVN extension directory exists
+  file:
+    path: /usr/share/cloudstack-management/extensions/ovn-extension
+    state: directory
+    owner: cloud
+    group: cloud
+    mode: '0755'
+  when: kvm_network_mode == "ovs"
+
+- name: Copy OVN network extension script
+  copy:
+    src: ovn-extension.py
+    dest: /usr/share/cloudstack-management/extensions/ovn-extension/ovn-extension.py
+    owner: cloud
+    group: cloud
+    mode: '0755'
+  when: kvm_network_mode == "ovs"
+
+- name: Ensure OVN extension log file exists
+  file:
+    path: /var/log/cloudstack/management/ovs-extension.log
+    state: touch
+    owner: cloud
+    group: cloud
+    mode: '0644'
+    access_time: preserve
+    modification_time: preserve
+  when: kvm_network_mode == "ovs"
+
 - name: Download and extract Primate archive
   unarchive:
     src: "{{ env_primate_archive_url }}"
