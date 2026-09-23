@@ -21,6 +21,22 @@
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
       when:  ("{{ all-file_version|int }}" < 5 )
+    - name: Validate KVM VXLAN/EVPN settings
+      fail:
+        msg: >-
+          kvm_vxlan_evpn requires a KVM-only build (hvtype=k), an advanced zone without security groups,
+          kvm_network_mode=bridge, nested (not physical/external) KVM hosts, CloudStack 4.19 or later,
+          and kvm_underlay_mtu >= 1550.
+      when:
+        - kvm_vxlan_evpn | default(false) | bool
+        - ( env_hv | default('') | lower != 'kvm' ) or
+          ( env_zonetype | lower != 'advanced' ) or
+          ( env_zone_secgroups | bool ) or
+          ( kvm_network_mode != 'bridge' ) or
+          ( use_phys_hosts | default(false) | bool ) or
+          ( use_external_hv_hosts | default(false) | bool ) or
+          ( env_numversion | version_compare('4.19', '<') ) or
+          ( kvm_underlay_mtu | int < 1550 )
 
 - hosts: localhost
   connection: local

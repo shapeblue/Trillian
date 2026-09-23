@@ -4,6 +4,42 @@
 		"guestcidraddress": "{{ env_zone_guestcidr }}",
 		"dns1": "{{ env_zone_dns1 }}",
 		"physical_networks": [{
+{% if kvm_vxlan_evpn | default(false) | bool %}
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Guest-VXLAN",
+			"traffictypes": [{
+				"type": "Guest",
+				"kvm": "{{ kvm_vxlan_guest_label }}"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VXLAN"
+		},{
+			"broadcastdomainrange": "Zone",
+			"name": "Trillian-Public",
+			"traffictypes": [{
+				"type": "Public"
+			}],
+			"providers": [{
+				"broadcastdomainrange": "ZONE",
+				"name": "VirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "VpcVirtualRouter"
+			}, {
+				"broadcastdomainrange": "ZONE",
+				"name": "InternalLbVm"
+			}],
+			"isolationmethods": "VLAN"
+{% else %}
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Guest-Public",
 			"traffictypes": [{
@@ -33,6 +69,7 @@
 				"name": "InternalLbVm"
 			}],
 			"isolationmethods": "VLAN"
+{% endif %}
 		},{
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Mgmt",
