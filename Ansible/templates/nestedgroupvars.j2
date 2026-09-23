@@ -296,7 +296,7 @@ kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 
 # KVM VXLAN (BGP-EVPN) guest isolation - phase 1 (guest over VXLAN, public stays VLAN)
 # All defaults keep existing behaviour: nothing changes unless kvm_vxlan_evpn is set to yes.
-kvm_vxlan_evpn: {{ kvm_vxlan_evpn | default( "no" ) }}
+kvm_vxlan_evpn: {{ kvm_vxlan_evpn | default( "yes" ) }}
 kvm_underlay_mtu: {{ kvm_underlay_mtu | default( 9000 ) }}
 kvm_vxlan_guest_label: "{{ kvm_vxlan_guest_label | default( kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) ) }}"
 vxlan_vni_base: {{ vxlan_vni_base | default( 100000 ) }}
