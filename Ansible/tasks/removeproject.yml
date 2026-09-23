@@ -40,6 +40,7 @@
     - "{{ groups['mysql_hosts'] }}"
     - "{{ groups['cloudstack_manager_hosts'] }}"
     - "{{ groups['marvin_host'] }}"
+    - "{{ groups['evpn_gateway_hosts'] | default([]) }}"
   ignore_errors: yes
   when: not destroy_forced
 
@@ -57,6 +58,7 @@
     - "{{ groups['mysql_hosts'] }}"
     - "{{ groups['cloudstack_manager_hosts'] }}"
     - "{{ groups['marvin_host'] }}"
+    - "{{ groups['evpn_gateway_hosts'] | default([]) }}"
   register: remove_retval
   ignore_errors: yes
   when: not destroy_forced
