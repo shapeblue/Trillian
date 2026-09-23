@@ -13,6 +13,23 @@ VXIF="vxlan${VNI}"
 BR="br-pub"
 DSTPORT="4789"
 
+# BGP (tcp/179) and VXLAN (udp/4789) only from this environment's KVM hosts
+# (iptables path; with firewalld the same is done by permanent rich rules).
+PEERS="{{ evpn_fw_peers | join(' ') }}"
+peer_filter() {
+    systemctl is-active --quiet firewalld && return 0
+    command -v iptables >/dev/null 2>&1 || return 0
+    iptables -N TRILLIAN-EVPN 2>/dev/null
+    iptables -F TRILLIAN-EVPN
+    for p in ${PEERS}; do
+        iptables -A TRILLIAN-EVPN -s ${p}/32 -j ACCEPT
+    done
+    iptables -A TRILLIAN-EVPN -j DROP
+    iptables -C INPUT -p udp --dport ${DSTPORT} -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p udp --dport ${DSTPORT} -j TRILLIAN-EVPN
+    iptables -C INPUT -p tcp --dport 179 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p tcp --dport 179 -j TRILLIAN-EVPN
+    return 0
+}
+
 bridge_filter_off() {
     # Docker loads br_netfilter and (re)enables bridge-nf-call-*; bridged public frames must
     # not traverse iptables (Docker's FORWARD policy is DROP).
@@ -39,6 +56,7 @@ case "$1" in
     ip link set ${VLANIF} up
     ip link set ${BR} up
     set +e
+    peer_filter
     bridge_filter_off
     ;;
   stop)

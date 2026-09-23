@@ -61,7 +61,11 @@ On every KVM host (`roles/kvm/tasks/kvm_vxlan_evpn.yml`):
    address from `lo`, so the VTEP is the management IP and traffic still leaves via the bridge.
 3. FRR is installed with `bgpd` enabled and an iBGP full mesh (`l2vpn evpn`, `advertise-all-vni`)
    to all other KVM hosts of the environment.
-4. tcp/179 and udp/4789 are opened (firewalld or iptables, following `use_firewalld`).
+4. tcp/179 and udp/4789 are accepted **only from the environment's own peers** (other KVM hosts
+   and the EVPN gateway): firewalld rich rules, or an iptables chain `TRILLIAN-EVPN` that drops
+   everyone else. The kernel's VXLAN device decapsulates any packet for a known VNI regardless of
+   its source, so this prevents leftovers of other environments (or other VMs on the management
+   network) from injecting frames.
 5. `/usr/share/modifyvxlan.sh` is created. The agent's script lookup finds this path before the
    packaged multicast `modifyvxlan.sh` (CloudStack 4.19+):
    * packaged `modifyvxlan-evpn.sh` exists (4.21+): symlink to it
@@ -144,6 +148,10 @@ docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remo
 ## Known limitations
 
 * EL9+ KVM hosts only (Ubuntu/netplan and OVS paths are not implemented).
+* The EVPN peer lists (FRR neighbours and the tcp/179 + udp/4789 firewall rules) are fixed at
+  build time from the inventory. **Additional pods are rejected** at the start of the build, and
+  hosts added by hand need FRR and firewall peers updated on every host and the gateway.
+  An additional zone is a separate build and gets its own EVPN domain (own mesh and gateway).
 * Marvin `test_data.py.j2` contains fixed VLAN IDs (e.g. 10, 301, 4000) and `specifyVlan`
   offerings. On a VXLAN guest network these are used as VNIs; select tests accordingly.
 * Phase 2 builds one gateway per environment (no redundancy); `use_custom_allocator` is not supported.

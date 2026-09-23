@@ -98,16 +98,29 @@
   changed_when: false
   failed_when: false
 
-- name: EVPN GW - open BGP and VXLAN ports (firewalld)
-  shell: "firewall-cmd --permanent --add-port=179/tcp --add-port=4789/udp && firewall-cmd --reload"
+# BGP/VXLAN accepted only from this environment's KVM hosts. With firewalld: permanent rich
+# rules. Without firewalld: the TRILLIAN-EVPN iptables chain, (re)applied by the bridge
+# script at every boot (see trillian-evpn-gw-net.sh).
+- name: EVPN GW - peer addresses allowed to reach BGP/VXLAN
+  set_fact:
+    evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
+
+- name: EVPN GW - remove any open-to-all BGP/VXLAN ports (firewalld)
+  shell: "firewall-cmd --permanent --remove-port=179/tcp --remove-port=4789/udp || true"
   when: evpn_gw_firewalld.stdout == "active"
 
-- name: EVPN GW - open BGP and VXLAN ports (iptables)
-  shell: "iptables -C INPUT -p {{ item.proto }} -m {{ item.proto }} --dport {{ item.port }} -j ACCEPT 2>/dev/null || iptables -I INPUT -p {{ item.proto }} -m {{ item.proto }} --dport {{ item.port }} -j ACCEPT"
-  with_items:
-    - { proto: tcp, port: 179 }
-    - { proto: udp, port: 4789 }
-  when: evpn_gw_firewalld.stdout != "active"
+- name: EVPN GW - allow BGP/VXLAN only from environment peers (firewalld)
+  shell: >-
+    firewall-cmd --permanent
+    --add-rich-rule='rule family="ipv4" source address="{{ item[0] }}/32" port port="{{ item[1].port }}" protocol="{{ item[1].proto }}" accept'
+  with_nested:
+    - "{{ evpn_fw_peers }}"
+    - [ { proto: tcp, port: 179 }, { proto: udp, port: 4789 } ]
+  when: evpn_gw_firewalld.stdout == "active"
+
+- name: EVPN GW - reload firewalld
+  shell: "firewall-cmd --reload"
+  when: evpn_gw_firewalld.stdout == "active"
 
 # ---------------------------------------------------------------------------
 # Docker and Containerlab
