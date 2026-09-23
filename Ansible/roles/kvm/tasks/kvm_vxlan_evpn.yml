@@ -24,15 +24,28 @@
 #
 # Included from el9.yml only when kvm_vxlan_evpn is true.
 
-- name: EVPN - refresh network facts after bridge configuration
-  setup:
-    gather_subset:
-      - network
+# Note: no 'setup'/fact gathering here. Trillian's Ansible version cannot gather facts on
+# EL9 (Python 3.9: platform.dist() was removed), so values are read with plain commands.
 
-- name: EVPN - determine VTEP address from the underlay bridge
+- name: EVPN - read VTEP address from the underlay bridge
+  shell: "ip -4 -o addr show scope global dev {{ kvm_vxlan_guest_label }} | awk 'NR==1 {print $4}' | cut -d/ -f1"
+  register: evpn_vtep_ip_out
+  changed_when: false
+
+- name: EVPN - read underlay MTU
+  command: "cat /sys/class/net/{{ kvm_vxlan_guest_label }}/mtu"
+  register: evpn_mtu_out
+  changed_when: false
+
+- name: EVPN - set VTEP facts
   set_fact:
-    evpn_vtep_ip: "{{ ansible_facts[kvm_vxlan_guest_label | replace('-', '_')]['ipv4']['address'] }}"
-    evpn_underlay_mtu_actual: "{{ ansible_facts[kvm_vxlan_guest_label | replace('-', '_')]['mtu'] }}"
+    evpn_vtep_ip: "{{ evpn_vtep_ip_out.stdout | trim }}"
+    evpn_underlay_mtu_actual: "{{ evpn_mtu_out.stdout | trim }}"
+
+- name: EVPN - check a VTEP address was found
+  fail:
+    msg: "No global IPv4 address found on {{ kvm_vxlan_guest_label }}; cannot determine the VTEP address."
+  when: evpn_vtep_ip | length == 0
 
 - name: EVPN - check the underlay MTU was applied
   fail:
@@ -98,12 +111,17 @@
 # ---------------------------------------------------------------------------
 
 - name: EVPN - add FRR repository mirror
-  yum_repository:
-    name: trillian-frr
-    description: FRR (Trillian EVPN)
-    baseurl: "{{ evpn_frr_repo_baseurl }}"
-    gpgcheck: no
-    enabled: yes
+  copy:
+    dest: /etc/yum.repos.d/trillian-frr.repo
+    content: |
+      [trillian-frr]
+      name=FRR (Trillian EVPN)
+      baseurl={{ evpn_frr_repo_baseurl }}
+      enabled=1
+      gpgcheck=0
+    owner: root
+    group: root
+    mode: 0644
   when: evpn_frr_repo_baseurl | length > 0
 
 - name: EVPN - install FRR
@@ -217,16 +235,13 @@
 # ---------------------------------------------------------------------------
 
 - name: EVPN - wait for BGP sessions to all peers
-  command: vtysh -c "show bgp neighbors json"
-  register: evpn_bgp_neighbors
+  shell: >-
+    vtysh -c 'show bgp neighbors json' 2>/dev/null |
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(sum(1 for v in d.values() if isinstance(v, dict) and v.get('bgpState') == 'Established'))"
+  register: evpn_bgp_established
   changed_when: false
   failed_when: false
-  until: >-
-    evpn_bgp_neighbors.stdout is defined and evpn_bgp_neighbors.stdout.startswith('{') and
-    ( evpn_bgp_neighbors.stdout | from_json | dict2items
-      | selectattr('value.bgpState', 'defined')
-      | selectattr('value.bgpState', 'equalto', 'Established') | list | length )
-    >= ( groups['kvm_hosts'] | length - 1 )
+  until: evpn_bgp_established.stdout | default('0') | trim | int >= ( groups['kvm_hosts'] | length - 1 )
   retries: 30
   delay: 10
   when: groups['kvm_hosts'] | length > 1
