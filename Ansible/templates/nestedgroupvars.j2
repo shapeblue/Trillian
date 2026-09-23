@@ -306,7 +306,7 @@ evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
 
 # KVM VXLAN/EVPN phase 2: public traffic over VXLAN, translated to the public VLAN by a
 # per-environment Containerlab/FRR gateway VM. Requires kvm_vxlan_evpn.
-evpn_public_vxlan: {{ evpn_public_vxlan | default( "no" ) }}
+evpn_public_vxlan: {{ evpn_public_vxlan | default( "yes" ) }}
 # empty = derived at deploy time as vxlan_vni_base + env_pubvlan
 evpn_public_vni: "{{ evpn_public_vni | default( "" ) }}"
 evpn_gw_template: "{{ evpn_gw_template | default( "" ) }}"

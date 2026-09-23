@@ -129,7 +129,7 @@ ansible_python_interpreter=/usr/bin/python3
 {% endif %}
 
 [evpn_gateway_hosts]
-{% if kvm_os | lower != "na" and not use_external_hv_hosts and (kvm_vxlan_evpn | default("no") | bool) and (evpn_public_vxlan | default("no") | bool) %}
+{% if kvm_os | lower != "na" and not use_external_hv_hosts and (kvm_vxlan_evpn | default("no") | bool) and (evpn_public_vxlan | default("yes") | bool) %}
 {{ env_name_clean }}-evpngw ansible_ssh_host={{ env_name_clean }}-evpngw-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-evpngw-instance_name
 {% endif %}
 
