@@ -27,11 +27,30 @@
     msg: "The EVPN gateway needs an EL9+ template; {{ inventory_hostname }} runs {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
   when: not ( ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and ansible_distribution_major_version | int >= 9 )
 
+# The environment lease (env_pubvlan, ...) is requested on localhost during deployvms and only
+# appended to group_vars/<env> mid-run; Trillian's Ansible does not expose it to this host that
+# way. Take it from localhost's facts, where the lease was returned. (ansible.cfg has
+# error_on_undefined_vars = False, so a missing value would otherwise silently leave
+# templates unrendered.)
+- name: EVPN GW - take the public VLAN lease from localhost if not set for this host
+  set_fact:
+    env_pubvlan: "{{ hostvars['localhost']['env_pubvlan'] }}"
+  when: env_pubvlan is not defined
+
 - name: EVPN GW - set interface names and public VNI
   set_fact:
     evpn_gw_underlay_if: "{{ evpn_gw_underlay_if | default('eth0') }}"
     evpn_gw_trunk_if: "{{ evpn_gw_trunk_if | default('eth1') }}"
     evpn_gw_vni: "{{ evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) }}"
+
+- name: EVPN GW - check public VLAN and VNI are valid numbers
+  fail:
+    msg: >-
+      Could not determine the public VLAN/VNI for the gateway (env_pubvlan='{{ env_pubvlan | default('') }}',
+      evpn_gw_vni='{{ evpn_gw_vni | default('') }}'). Check the environment lease.
+  when: >-
+    ( env_pubvlan | default('0') | string | int < 1 ) or ( env_pubvlan | default('0') | string | int > 4094 ) or
+    ( evpn_gw_vni | default('0') | string | int < 1 ) or ( evpn_gw_vni | default('0') | string | int > 16777215 )
 
 - name: EVPN GW - read VTEP address from {{ evpn_gw_underlay_if }}
   shell: "ip -4 -o addr show scope global dev {{ evpn_gw_underlay_if }} | awk 'NR==1 {print $4}' | cut -d/ -f1"
@@ -237,6 +256,10 @@
     mode: 0644
   register: evpn_gw_net_unit
 
+- name: EVPN GW - verify no unrendered template placeholders in gateway files
+  shell: "! grep -l '[{][{]' /usr/local/sbin/trillian-evpn-gw-net.sh /etc/systemd/system/trillian-evpn-gw-net.service /etc/trillian-evpn/frr/frr.conf"
+  changed_when: false
+
 - name: EVPN GW - (re)start bridge unit
   systemd:
     name: trillian-evpn-gw-net.service
@@ -272,6 +295,10 @@
     group: root
     mode: 0644
   register: evpn_gw_clab_unit
+
+- name: EVPN GW - verify no unrendered template placeholders in Containerlab files
+  shell: "! grep -l '[{][{]' /etc/trillian-evpn/clab/evpn-gw.clab.yml /etc/systemd/system/trillian-evpn-gw-clab.service"
+  changed_when: false
 
 - name: EVPN GW - (re)deploy Containerlab node
   systemd:
