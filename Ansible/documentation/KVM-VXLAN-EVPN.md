@@ -1,102 +1,180 @@
-# KVM VXLAN guest isolation with BGP-EVPN (phase 1)
+# KVM: VXLAN / BGP-EVPN for guest and public traffic
 
-This option builds a nested CloudStack environment whose **guest** networks use VXLAN
-isolation with a BGP-EVPN control plane (FRR) on the nested KVM hosts. **Public**,
-management and storage traffic are unchanged (public stays on the leased VLAN).
+Trillian can build nested CloudStack environments whose KVM **guest** traffic, and optionally
+**public** traffic, uses VXLAN isolation with a BGP-EVPN control plane (FRR) instead of VLANs.
+Public traffic reaches the lab's public VLAN through a small per-environment gateway VM that
+runs FRR as a Containerlab node and bridges the public VNI onto the public VLAN.
 
-Everything is behind `kvm_vxlan_evpn` (default `no`). With the flag unset or `no`, all
+Everything is controlled by two flags, both `no` by default. With the flags unset or `no`, all
 templates render exactly as before.
+
+| `kvm_vxlan_evpn` | `evpn_public_vxlan` | Guest traffic | Public traffic | Gateway VM |
+|---|---|---|---|---|
+| `yes` | `yes` | VXLAN / EVPN | VXLAN -> gateway -> public VLAN | yes |
+| `yes` | `no` | VXLAN / EVPN | VLAN | no |
+| `no` | (ignored) | VLAN | VLAN | no |
+
+A public-only mode (guest on VLAN, public on VXLAN) is not implemented.
 
 ## Requirements
 
-* `hvtype=k` with a supported `kvm_os` (see "KVM host OS support" below), `kvm_network_mode=bridge` (default)
-* `env_zonetype=advanced`, `env_zone_secgroups=no`
-* nested KVM hosts (not `use_phys_hosts` / `use_external_hv_hosts`)
-* CloudStack 4.19 or later
-* the parent network carrying the KVM hosts' management NIC must pass frames of
-  `kvm_underlay_mtu` (default 9000; minimum 1550) and allow tcp/179 and udp/4789
-  between the environment's VMs
-* the `frr` package must be installable on the KVM hosts (distro repo or `evpn_frr_repo_baseurl`)
+* KVM build (`hvtype=k`) with a supported KVM host OS (see below), advanced zone without
+  security groups, `kvm_network_mode=bridge`, nested KVM hosts (not physical/external),
+  not an additional pod, CloudStack 4.19 or later
+* the parent network carrying the hosts' management NIC must pass frames of
+  `kvm_underlay_mtu` (default 9000, minimum 1550)
+* FRR must be installable on the KVM hosts (distribution package, or a repository via
+  `evpn_frr_repo_baseurl` / `evpn_frr_apt_repo`)
+* public VXLAN: an EL9 template for the gateway, and Docker CE, Containerlab and the FRR
+  image reachable from it (internet or mirrors)
 
-The build fails early (in `deployvms.yml`) if these are not met.
+Unsupported combinations stop the build at the start with an explanation
+(`deployvms.yml`, and a per-host OS check in the KVM role).
 
 ## KVM host OS support
 
-| KVM OS | State |
-|---|---|
-| KVM OS | Id | State | FRR source | Firewall |
-|---|---|---|---|---|
-| EL8, EL9, EL10 | `el8`, `el9`, `el10` | verified in lab builds | AppStream (or `evpn_frr_repo_baseurl`) | firewalld or iptables |
-| Ubuntu 24.04 | `ubuntu24.04` | verified in lab builds | Ubuntu `frr` package (or `evpn_frr_apt_repo`) | ufw if active, else iptables + netfilter-persistent |
-| Ubuntu 22.04 | `ubuntu22.04` | implemented, not yet verified | Ubuntu `frr` package (or `evpn_frr_apt_repo`) | ufw if active, else iptables + netfilter-persistent |
-| openSUSE Leap 15.x | `opensuse-leap15` | verified in lab builds (Leap 15.6) | Leap OSS `frr` package (or `evpn_frr_repo_baseurl` via zypper) | firewalld or iptables |
-| EL7, Ubuntu 20.04, Debian, others | – | not supported | – | – |
+| KVM OS | Id | State | FRR source | Underlay MTU | Firewall |
+|---|---|---|---|---|---|
+| EL8, EL9, EL10 | `el8`, `el9`, `el10` | verified | AppStream, or `evpn_frr_repo_baseurl` | nmcli bridge setup | firewalld or iptables |
+| Ubuntu 24.04 | `ubuntu24.04` | verified | Ubuntu `frr`, or `evpn_frr_apt_repo` | `netplan.j2` | ufw if active, else iptables + netfilter-persistent |
+| Ubuntu 22.04 | `ubuntu22.04` | implemented, not verified | Ubuntu `frr`, or `evpn_frr_apt_repo` | `netplan.j2` | as Ubuntu 24.04 |
+| openSUSE Leap 15.x | `opensuse-leap15` | verified (15.6) | Leap OSS `frr`, or `evpn_frr_repo_baseurl` | nmcli bridge setup | firewalld or iptables |
+| EL7, Ubuntu 20.04, Debian, others | - | not supported | - | - | - |
 
-Implemented but unverified OSes build only with `evpn_allow_untested_os=yes`. Ubuntu gets the
-underlay MTU through `netplan.j2`; EL and SUSE through the nmcli bridge setup.
+Implemented but unverified OSes build only with `evpn_allow_untested_os=yes`. The lists are
+`evpn_os_implemented` and `evpn_os_verified` in `roles/kvm/tasks/main.yml`; an OS moves to
+"verified" in its own commit after a passing lab build.
 
-OS-specific parts are in `roles/kvm/tasks/kvm_vxlan_evpn_install_<family>.yml` (FRR) and
-`kvm_vxlan_evpn_firewall_<family>.yml` (peer-only rules); everything else is shared in
-`kvm_vxlan_evpn.yml`. The allow-lists (`evpn_os_implemented`, `evpn_os_verified`) are in
-`roles/kvm/tasks/main.yml`; an OS moves to "verified" in its own commit after a passing build.
+The **gateway VM is always EL9**, whatever the KVM host OS.
+
+## Using it
+
+Jenkins (Reference_Trillian): the usual KVM settings (`PRIMARY_HYPERVISOR=k`, a supported
+`KVM_OS`, `HYPERVISOR_COUNT` >= 2, `ZONE_TYPE=Advanced`, `KVM_NETWORK_BACKEND=bridge`) plus the
+flags in `ANY_OTHER_OPTS`, space-separated, e.g.:
+
+```
+kvm_vxlan_evpn=yes evpn_public_vxlan=yes
+```
+
+Command line: pass the same values in the `generate-cloudconfig.yml` extra vars. `deployvms.yml`
+needs nothing extra; the values are stored in `group_vars/<env_name>`.
 
 ## Variables
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `kvm_vxlan_evpn` | `no` | enable the feature |
-| `kvm_underlay_mtu` | `9000` | MTU on `eth0` and the management bridge (VXLAN underlay) |
-| `kvm_vxlan_guest_label` | `kvm_mgmt_network_label` | KVM traffic label of the VXLAN guest physical network |
-| `vxlan_vni_base` | `100000` | guest VNI range = base + leased guest VLAN range (e.g. 501-520 -> 100501-100520) |
-| `evpn_bgp_asn` | `65000` | private ASN of the per-environment iBGP full mesh |
-| `evpn_frr_repo_baseurl` | empty | optional FRR repo mirror (FRR >= 10 recommended by the CloudStack docs) |
+| `kvm_vxlan_evpn` | `no` | guest traffic over VXLAN/EVPN (FRR on the KVM hosts) |
+| `evpn_public_vxlan` | `no` | public traffic over VXLAN too; builds the gateway VM (requires `kvm_vxlan_evpn`) |
+| `kvm_underlay_mtu` | `9000` | MTU of the underlay (KVM `eth0`/`cloudbr0`, gateway `eth0`); minimum 1550 |
+| `kvm_vxlan_guest_label` | `kvm_mgmt_network_label` | KVM traffic label of the VXLAN physical networks (the underlay bridge) |
+| `vxlan_vni_base` | `100000` | guest VNIs = base + leased guest VLAN range (e.g. 501-520 -> 100501-100520) |
+| `evpn_public_vni` | derived | public VNI; default `vxlan_vni_base + env_pubvlan`; must not overlap the guest range |
+| `evpn_bgp_asn` | `65000` | private ASN of the per-environment iBGP mesh |
+| `evpn_frr_repo_baseurl` | empty | dnf/zypper repository for FRR (directory containing `repodata/`; literal path) |
+| `evpn_frr_apt_repo` | empty | Ubuntu: complete apt sources line for an FRR repository |
 | `evpn_force_vendored_script` | `no` | always use Trillian's copy of the EVPN script |
 | `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (currently Ubuntu 22.04) |
-| `evpn_frr_apt_repo` | empty | Ubuntu: complete apt sources line for an FRR repository (default: distribution package) |
+| `evpn_gw_template` | auto | gateway template (see "Gateway VM") |
+| `evpn_gw_os` | empty | `linux_os` key of the EL9 OS to take the gateway template from (e.g. `r9`) |
+| `evpn_gw_service_offering` | KVM offering | gateway service offering |
+| `evpn_gw_trunk_if` | `eth1` | gateway NIC on the trunk network (public VLAN side) |
+| `evpn_gw_frr_image` | `quay.io/frrouting/frr:10.2.1` | FRR container image |
+| `evpn_gw_docker_repo_baseurl` | Docker CE CentOS 9 stable | Docker CE repository for the gateway |
+| `evpn_gw_containerlab_repo_baseurl` | `https://yum.fury.io/netdevops/` | Containerlab repository for the gateway |
 
-VNIs are derived from the environment's existing guest VLAN lease, so they are unique per
-active environment without any Trillian database change.
-
-## Jenkins / command line
-
-Add to the usual `generate-cloudconfig.yml` extra vars, for example:
-
-```
-hvtype=k kvm_os=<el9 value> env_zonetype=advanced env_zone_secgroups=no kvm_vxlan_evpn=yes
-```
-
-and optionally `kvm_underlay_mtu=9000 vxlan_vni_base=100000 evpn_bgp_asn=65000`.
-`deployvms.yml` needs no extra arguments; the values are stored in `group_vars/<env_name>`.
+VNIs are derived from the environment's existing leases, so no Trillian database change is needed.
 
 ## What gets built
 
-On every KVM host (`roles/kvm/tasks/kvm_vxlan_evpn.yml`):
+### Zone (`roles/cloudstack-config/templates/deployzone.sh.j2`)
 
-1. `eth0` and the management bridge are created with `kvm_underlay_mtu` (EL8/EL9 nmcli path).
-2. The host's management IP is added as a `/32` on `lo` by `trillian-evpn-vtep.service`
-   (ordered before `frr` and `cloudstack-agent`). The CloudStack EVPN script takes the VTEP
-   address from `lo`, so the VTEP is the management IP and traffic still leaves via the bridge.
-3. FRR is installed with `bgpd` enabled and an iBGP full mesh (`l2vpn evpn`, `advertise-all-vni`)
-   to all other KVM hosts of the environment.
-4. tcp/179 and udp/4789 are accepted **only from the environment's own peers** (other KVM hosts
-   and the EVPN gateway): firewalld rich rules, or an iptables chain `TRILLIAN-EVPN` that drops
-   everyone else. The kernel's VXLAN device decapsulates any packet for a known VNI regardless of
-   its source, so this prevents leftovers of other environments (or other VMs on the management
-   network) from injecting frames.
-5. `/usr/share/modifyvxlan.sh` is created. The agent's script lookup finds this path before the
-   packaged multicast `modifyvxlan.sh` (CloudStack 4.19+):
-   * packaged `modifyvxlan-evpn.sh` exists (4.21+): symlink to it
-   * otherwise (4.19, 4.20): Trillian's vendored copy `roles/kvm/files/modifyvxlan-evpn.sh`
-   The path is not owned by any package, so agent upgrades do not overwrite it.
-6. The play waits until BGP sessions to all peers are Established and fails otherwise.
+| Physical network | Isolation | Traffic | KVM label | Range |
+|---|---|---|---|---|
+| Physical Network Mgmt | VLAN | Management | `cloudbr0` | - |
+| Physical Network Public | VLAN, or VXLAN with `evpn_public_vxlan` | Public | `cloudbr1`, or `kvm_vxlan_guest_label` | public IP range with `vlan=<env_pubvlan>`, or `vlan=vxlan://<public VNI>` |
+| Physical Network Guest VXLAN | VXLAN | Guest | `kvm_vxlan_guest_label` | derived guest VNI range |
 
-In the zone (`deployzone.sh.j2`), three physical networks are created instead of two:
+Public IPs, gateway and netmask always come from the normal Trillian public lease. CloudStack
+passes a range tag containing `://` unchanged into the NIC broadcast URI, so VR, SSVM and CPVM
+public NICs get `vxlan://<public VNI>`. The Marvin configs describe the same layout.
 
-* `Physical Network Mgmt` - VLAN, Management traffic (unchanged)
-* `Physical Network Public` - VLAN, Public traffic on `kvm_public_network_label`, leased public VLAN
-* `Physical Network Guest VXLAN` - VXLAN, Guest traffic on `kvm_vxlan_guest_label`, derived VNI range
+### KVM hosts (`roles/kvm/tasks/kvm_vxlan_evpn.yml` + per-OS files)
 
-The Marvin configs describe the same layout.
+1. `eth0` and `cloudbr0` get `kvm_underlay_mtu` (nmcli on EL/SUSE, `netplan.j2` on Ubuntu).
+2. The management IP is added as a `/32` on `lo` (`trillian-evpn-vtep.service`, before `frr`
+   and `cloudstack-agent`): the EVPN script takes the VTEP from `lo`, so the VTEP is the
+   management IP and traffic still leaves via the bridge.
+3. FRR (`kvm_vxlan_evpn_install_<family>.yml`) with `bgpd`: iBGP full mesh (`l2vpn evpn`,
+   `advertise-all-vni`) to the other KVM hosts and the gateway, generated from the inventory.
+4. tcp/179 and udp/4789 accepted **only from the environment's own peers**
+   (`kvm_vxlan_evpn_firewall_<family>.yml`): firewalld rich rules, ufw rules, or the iptables
+   chain `TRILLIAN-EVPN`. The kernel VXLAN device decapsulates packets for a known VNI from
+   any source, so this stops leftovers of other environments or other VMs on the management
+   network from injecting frames.
+5. `/usr/share/modifyvxlan.sh` points to the EVPN script (found by the agent before the packaged
+   multicast script): a symlink to the packaged `modifyvxlan-evpn.sh` on 4.21+, otherwise the
+   vendored copy. The path is not owned by any package, so agent upgrades keep it.
+6. The play waits until all BGP sessions are Established.
+
+OS-specific parts: `kvm_vxlan_evpn_install_{el,ubuntu,suse}.yml`,
+`kvm_vxlan_evpn_firewall_{el,ubuntu}.yml` (SUSE uses the EL firewall tasks).
+
+### Gateway VM (`roles/evpn-gateway`, public VXLAN only)
+
+`<env>-evpngw` is built in the same parent project (standard and custom-allocator builds), with
+NICs on `management_network` and `guest_public_network`, and is configured **before** the KVM
+hosts and the zone. It is destroyed with the environment.
+
+Template: `evpn_gw_template`, else `linux_os[evpn_gw_os]`, else the KVM template if the KVM OS
+is EL9, else the first `linux_os` entry with `os_type: el9`. The build stops if none is found,
+and prints the chosen template.
+
+| Piece | What it does |
+|---|---|
+| `trillian-evpn-gw-net.service` | VTEP `/32` on `lo`; `br-pub` = `vxlan<VNI>` (local VTEP, port 4789, nolearning) + `eth1.<env_pubvlan>`; bridged frames bypass iptables; peer-only firewall (iptables path) |
+| Containerlab node `clab-evpngw-frr` | FRR in host network mode: iBGP `l2vpn evpn` to every KVM host, `advertise-all-vni` |
+| `trillian-evpn-gw-clab.service` | (re)deploys the Containerlab topology at boot |
+
+The gateway has no public IP and does no routing or NAT; it only bridges the public VNI and the
+public VLAN. The environment lease is read from `localhost`, and the build checks that no gateway
+file contains unrendered placeholders.
+
+## Traffic flow
+
+Guest: VM -> `brvx-<VNI>` -> `vxlan<VNI>` (FDB entry from EVPN type-2) -> encapsulated to the
+destination host's VTEP over the management network -> decapsulated -> destination VM or VR.
+Broadcasts are copied to every VTEP in the VNI (EVPN type-3, head-end replication).
+
+Public: VR public NIC -> `brvx-<public VNI>` -> VXLAN to the gateway -> `br-pub` ->
+`eth1.<env_pubvlan>` (tagged) -> parent trunk -> the public gateway router. Replies and inbound
+traffic (port forwarding, static NAT) take the same path back.
+
+Isolation: each environment has its own BGP mesh and gateway, VXLAN devices never learn from
+traffic, and the peer-only firewall rejects other sources. The public VLAN stays shared between
+environments, as with plain VLAN builds.
+
+## Verifying a build
+
+KVM host:
+
+```
+ip -4 addr show dev lo                    # management IP as /32, scope global
+vtysh -c 'show bgp l2vpn evpn summary'    # all peers (hosts + gateway) up
+vtysh -c 'show evpn vni'                  # guest VNIs (+ public VNI)
+ip -d link show vxlan<VNI>                # local <mgmt IP> dstport 4789 nolearning
+```
+
+Gateway:
+
+```
+bridge link show master br-pub            # vxlan<public VNI> + eth1.<env_pubvlan>
+docker exec clab-evpngw-frr vtysh -c 'show bgp l2vpn evpn summary'
+docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <public VNI>'
+```
+
+CloudStack: the guest (and public) physical network shows isolation VXLAN, new guest networks
+get a `vxlan://<VNI>` broadcast URI, system VMs run, and VMs behind a VR reach the internet.
 
 ## Vendored script
 
@@ -105,73 +183,14 @@ The Marvin configs describe the same layout.
 2026-09-23, sha256 `f9da25ca049f49050cca34c46d3ab523b0527f0c633cc405f3dbe5be6cbf446f`
 (Apache License 2.0). Refresh it when upstream changes.
 
-## Verifying a build
-
-On a KVM host after an instance on an isolated network has started:
-
-```
-ip -4 addr show dev lo                 # management IP as /32, scope global
-ip -d link show | grep -A2 vxlan       # vxlan<VNI> ... local <mgmt-ip> dstport 4789 nolearning
-vtysh -c 'show bgp l2vpn evpn summary' # all peers up
-vtysh -c 'show evpn vni'               # VNIs with remote VTEPs
-```
-
-In CloudStack, the guest physical network shows isolation method VXLAN and new guest
-networks get a `vxlan://<VNI>` broadcast URI.
-
-## Phase 2: public traffic over VXLAN (`evpn_public_vxlan`)
-
-With `evpn_public_vxlan=yes` (requires `kvm_vxlan_evpn`), Public traffic also uses VXLAN:
-
-* `Physical Network Public` is created with isolation method **VXLAN** and KVM label
-  `kvm_vxlan_guest_label`; it has no VNI range of its own.
-* The public IP range is created with `vlan=vxlan://<public VNI>` (gateway, netmask and IPs are the
-  normal Trillian public lease). CloudStack passes a range tag containing `://` through unchanged as
-  the NIC broadcast URI, so VR/SSVM/CPVM public NICs land on `brvx-<public VNI>` on the KVM hosts.
-* Public VNI = `evpn_public_vni`, or `vxlan_vni_base + env_pubvlan` (build fails if that falls inside
-  the guest VNI range).
-
-A gateway VM `<env>-evpngw` is built in the same parent project, always from an **EL9** template
-whatever the KVM host OS (`evpn_gw_template`, else `linux_os[evpn_gw_os]`, else the KVM template if the
-KVM OS is EL9, else the first `linux_os` entry with `os_type: el9`; the build stops if none is found)
-and the KVM offering unless overridden, with NICs on `management_network` and `guest_public_network`, and is configured
-**before** the KVM hosts and the zone (`roles/evpn-gateway`):
-
-| Piece | What it does |
-|---|---|
-| `trillian-evpn-gw-net.service` | management IP as /32 on `lo` (VTEP); `br-pub` = `vxlan<VNI>` (local VTEP, port 4789, nolearning) + `eth1.<env_pubvlan>`; bridged frames bypass iptables |
-| Containerlab node `clab-evpngw-frr` | FRR in host network mode, iBGP `l2vpn evpn` to every KVM host, `advertise-all-vni` |
-| `trillian-evpn-gw-clab.service` | (re)deploys the Containerlab topology at boot |
-
-The KVM hosts peer with the gateway too, and their BGP check waits for it. NetworkManager is told to
-leave the gateway's trunk NIC, VLAN, bridge and VXLAN devices alone. The gateway is destroyed with
-the environment.
-
-Frame path: VR public NIC -> `brvx-<VNI>` (KVM host) -> VXLAN/EVPN -> gateway `vxlan<VNI>` ->
-`br-pub` -> `eth1.<vlan>` (tagged) -> parent trunk -> the public gateway router.
-
-Gateway prerequisites: Docker CE and Containerlab packages (`evpn_gw_docker_repo_baseurl`,
-`evpn_gw_containerlab_repo_baseurl`) and the FRR image (`evpn_gw_frr_image`) must be reachable from
-the gateway VM; set these to lab mirrors if there is no internet access. The gateway's trunk NIC
-must be allowed to send frames from other MACs (the same parent port-group settings the nested
-KVM hosts already rely on).
-
-Verify on the gateway:
-
-```
-bridge link show master br-pub                       # vxlan<VNI> and eth1.<vlan>
-docker exec clab-evpngw-frr vtysh -c 'show bgp l2vpn evpn summary'
-docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remote) + router MAC (local)
-```
-
 ## Known limitations
 
-* KVM host OS: EL8/9/10, Ubuntu 24.04 and openSUSE Leap 15 verified; Ubuntu 22.04 implemented but not yet verified; OVS not implemented.
-* The EVPN peer lists (FRR neighbours and the tcp/179 + udp/4789 firewall rules) are fixed at
-  build time from the inventory. **Additional pods are rejected** at the start of the build, and
-  hosts added by hand need FRR and firewall peers updated on every host and the gateway.
-  An additional zone is a separate build and gets its own EVPN domain (own mesh and gateway).
-* Marvin `test_data.py.j2` contains fixed VLAN IDs (e.g. 10, 301, 4000) and `specifyVlan`
-  offerings. On a VXLAN guest network these are used as VNIs; select tests accordingly.
-* Phase 2 builds one gateway per environment (no redundancy). With `use_custom_allocator` the
-  gateway is started in the same cluster (or parent host) the allocator picked for the KVM hosts.
+* One gateway per environment, no redundancy.
+* Peer lists (FRR neighbours and firewall rules) are fixed at build time: additional pods are
+  rejected, and hosts added by hand need FRR and firewall peers updated on every host and the
+  gateway. An additional zone is a separate build with its own EVPN domain.
+* The gateway advertises every MAC it learns on the shared public VLAN into the environment's
+  EVPN (harmless at lab scale).
+* Marvin `test_data.py.j2` contains fixed VLAN IDs and `specifyVlan` offerings; on a VXLAN guest
+  network these become VNIs. Select tests accordingly.
+* Open vSwitch, public-only mode and IPv6 underlay are not implemented.
