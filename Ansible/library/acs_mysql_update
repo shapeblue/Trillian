@@ -1,20 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-ARGS="(`cat $1`)"
-ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
+import json
+import shlex
+import subprocess
+import sys
 
-echo $ARGS > /tmp/args
-DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
-DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASS"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//' | tr -d "'"`
-MYSQL_STATEMENT=`echo $ARGS | sed 's#.*MYSQL_STATEMENT=\(\)#\1#' | sed 's/)$//' | sed "s/'\"'\"'/'/g"| tr -d '"' | sed "s/^'//" | sed -e 's/[[:space:]]*$//' | sed s'/.$//'`
-echo $MYSQL_STATEMENT > /tmp/mysql
-mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ "$MYSQL_STATEMENT"
 
-echo "mysql -h ${DBHOST} -u ${DBUSER} -p${DBPASS} -e \ \"$MYSQL_STATEMENT\"" > /tmp/theargs
+def main():
+    args_file = sys.argv[1]
+    with open(args_file) as f:
+        line = f.read()
 
-echo '{
-"ansible_facts": {
-  "reponse": "Attempted"
- }
-}'
+    values = {}
+    for token in shlex.split(line):
+        if "=" in token:
+            key, _, value = token.partition("=")
+            values[key] = value
+
+    db_host = values.get("DBHOST", "")
+    db_user = values.get("DBUSER", "")
+    db_pass = values.get("DBPASS", "")
+    mysql_statement = values.get("MYSQL_STATEMENT", "")
+
+    with open("/tmp/args", "w") as f:
+        f.write(line)
+    with open("/tmp/mysql", "w") as f:
+        f.write(mysql_statement)
+
+    cmd = ["mysql", "-h", db_host, "-u", db_user, "-p" + db_pass, "-e", mysql_statement]
+    with open("/tmp/theargs", "w") as f:
+        f.write(" ".join(shlex.quote(c) for c in cmd))
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(json.dumps({
+            "failed": True,
+            "msg": "mysql command failed (rc=%d): %s" % (result.returncode, (result.stderr or result.stdout).strip()),
+        }))
+        sys.exit(1)
+
+    print(json.dumps({"ansible_facts": {"reponse": "Attempted"}}))
+
+
+if __name__ == "__main__":
+    main()
