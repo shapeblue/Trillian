@@ -46,6 +46,17 @@
       when:
         - evpn_public_vxlan | default(false) | bool
         - not (kvm_vxlan_evpn | default(false) | bool)
+    - name: Validate the EVPN public gateway is in the inventory
+      fail:
+        msg: >-
+          evpn_public_vxlan is enabled but the inventory (hosts_{{ env_name_clean }}) contains no
+          evpn_gateway_hosts entry, so no gateway VM would be built and public traffic would have no
+          path to the public VLAN. The generate step evaluated kvm_vxlan_evpn/evpn_public_vxlan
+          differently from the group vars; regenerate the environment.
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - kvm_vxlan_evpn | default(false) | bool
+        - groups['evpn_gateway_hosts'] | default([]) | length == 0
 
 - hosts: localhost
   connection: local
