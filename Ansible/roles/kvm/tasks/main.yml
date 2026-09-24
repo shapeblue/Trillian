@@ -55,10 +55,21 @@
 #   evpn_os_implemented : OS task files include the EVPN tasks and the OS-specific parts exist
 #   evpn_os_verified    : additionally passed a full lab build (guest + public VXLAN)
 # An implemented but not yet verified OS can be test-built with evpn_allow_untested_os=yes.
+- name: Read /etc/os-release for kvm_vxlan_evpn (non-EL; os_facts has no version on SUSE)
+  shell: ". /etc/os-release && echo \"${ID}|${VERSION_ID}\""
+  register: evpn_os_release
+  changed_when: false
+  when:
+    - kvm_vxlan_evpn | default(false) | bool
+    - ansible_distribution not in ['CentOS', 'Red Hat Enterprise Linux']
+  tags:
+    - kvm
+
+# ids: el<major>, ubuntu<version> (e.g. ubuntu22.04), opensuse-leap<major> (e.g. opensuse-leap15)
 - name: Determine KVM host OS id for kvm_vxlan_evpn
   set_fact:
-    evpn_os_id: "{{ ('el' ~ ansible_distribution_major_version) if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else ((ansible_distribution | lower) ~ ansible_distribution_version) }}"
-    evpn_os_implemented: ['el8', 'el9', 'el10']
+    evpn_os_id: "{{ ('el' ~ ansible_distribution_major_version) if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else (evpn_os_release.stdout.split('|')[0] ~ (evpn_os_release.stdout.split('|')[1].split('.')[0] if evpn_os_release.stdout.split('|')[0].startswith('opensuse') else evpn_os_release.stdout.split('|')[1])) }}"
+    evpn_os_implemented: ['el8', 'el9', 'el10', 'ubuntu22.04', 'ubuntu24.04', 'opensuse-leap15']
     evpn_os_verified: ['el9']
   when: kvm_vxlan_evpn | default(false) | bool
   tags:

@@ -443,3 +443,9 @@
   when: ansible_distribution_version|version_compare('20.04','==')
   tags:
     - kvm
+
+- include: ./kvm_vxlan_evpn.yml
+  when: kvm_vxlan_evpn | default(false) | bool
+  tags:
+    - kvm
+    - kvm-evpn
