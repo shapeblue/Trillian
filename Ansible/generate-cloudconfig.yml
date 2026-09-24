@@ -96,8 +96,9 @@
 #   wait_till_setup: only return once system VMs are running. (default is no)
 #   create_zone: default is yes.  set to no to not deploy zone
 #   kvm_vxlan_evpn: yes to use VXLAN (BGP-EVPN, FRR) guest isolation on KVM (default no). Requires
-#                   hvtype=k with an EL9+ kvm_os, advanced zone, no security groups, kvm_network_mode=bridge
-#                   and CloudStack 4.19 or later. Public traffic stays on VLAN.
+#                   hvtype=k with a supported kvm_os (verified: EL9; implemented: EL8, EL10), advanced zone,
+#                   no security groups, kvm_network_mode=bridge and CloudStack 4.19 or later.
+#   evpn_allow_untested_os: yes to allow an implemented but not yet lab-verified KVM OS (default no)
 #   kvm_underlay_mtu: MTU set on the KVM management NIC/bridge that carries VXLAN (default 9000, minimum 1550)
 #   kvm_vxlan_guest_label: KVM traffic label (bridge) used as VXLAN underlay (default: kvm_mgmt_network_label)
 #   vxlan_vni_base: guest VNI range = vxlan_vni_base + leased guest VLAN range (default 100000)

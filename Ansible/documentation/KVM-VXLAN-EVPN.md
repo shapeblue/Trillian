@@ -14,7 +14,7 @@ templates render exactly as before.
 
 ## Requirements
 
-* `hvtype=k` with an EL9 (or later EL) `kvm_os`, `kvm_network_mode=bridge` (default)
+* `hvtype=k` with a supported `kvm_os` (see "KVM host OS support" below), `kvm_network_mode=bridge` (default)
 * `env_zonetype=advanced`, `env_zone_secgroups=no`
 * nested KVM hosts (not `use_phys_hosts` / `use_external_hv_hosts`)
 * CloudStack 4.19 or later
@@ -24,6 +24,20 @@ templates render exactly as before.
 * the `frr` package must be installable on the KVM hosts (distro repo or `evpn_frr_repo_baseurl`)
 
 The build fails early (in `deployvms.yml`) if these are not met.
+
+## KVM host OS support
+
+| KVM OS | State |
+|---|---|
+| EL9 | verified in lab builds |
+| EL8, EL10 | implemented (same EL tasks), not yet verified: build with `evpn_allow_untested_os=yes` |
+| Ubuntu 22.04 / 24.04, openSUSE Leap 15.x | planned |
+| EL7, others | not supported |
+
+OS-specific parts are in `roles/kvm/tasks/kvm_vxlan_evpn_install_<family>.yml` (FRR) and
+`kvm_vxlan_evpn_firewall_<family>.yml` (peer-only rules); everything else is shared in
+`kvm_vxlan_evpn.yml`. The allow-lists (`evpn_os_implemented`, `evpn_os_verified`) are in
+`roles/kvm/tasks/main.yml`; an OS moves to "verified" in its own commit after a passing build.
 
 ## Variables
 
@@ -36,6 +50,7 @@ The build fails early (in `deployvms.yml`) if these are not met.
 | `evpn_bgp_asn` | `65000` | private ASN of the per-environment iBGP full mesh |
 | `evpn_frr_repo_baseurl` | empty | optional FRR repo mirror (FRR >= 10 recommended by the CloudStack docs) |
 | `evpn_force_vendored_script` | `no` | always use Trillian's copy of the EVPN script |
+| `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (e.g. EL8, EL10) |
 
 VNIs are derived from the environment's existing guest VLAN lease, so they are unique per
 active environment without any Trillian database change.
@@ -147,7 +162,7 @@ docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remo
 
 ## Known limitations
 
-* EL9+ KVM hosts only (Ubuntu/netplan and OVS paths are not implemented).
+* KVM host OS: EL9 verified; EL8/EL10 implemented but unverified; Ubuntu and openSUSE planned; OVS not implemented.
 * The EVPN peer lists (FRR neighbours and the tcp/179 + udp/4789 firewall rules) are fixed at
   build time from the inventory. **Additional pods are rejected** at the start of the build, and
   hosts added by hand need FRR and firewall peers updated on every host and the gateway.

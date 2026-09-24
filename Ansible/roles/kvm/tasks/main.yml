@@ -51,15 +51,30 @@
       ansible_distribution: "SUSE"
   when: ansible_distribution == 'Ubuntu' and result is succeeded
 
-- name: Check KVM host OS supports kvm_vxlan_evpn (EL9 or later only)
+# KVM host OS support for kvm_vxlan_evpn:
+#   evpn_os_implemented : OS task files include the EVPN tasks and the OS-specific parts exist
+#   evpn_os_verified    : additionally passed a full lab build (guest + public VXLAN)
+# An implemented but not yet verified OS can be test-built with evpn_allow_untested_os=yes.
+- name: Determine KVM host OS id for kvm_vxlan_evpn
+  set_fact:
+    evpn_os_id: "{{ ('el' ~ ansible_distribution_major_version) if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else ((ansible_distribution | lower) ~ ansible_distribution_version) }}"
+    evpn_os_implemented: ['el8', 'el9', 'el10']
+    evpn_os_verified: ['el9']
+  when: kvm_vxlan_evpn | default(false) | bool
+  tags:
+    - kvm
+
+- name: Check KVM host OS supports kvm_vxlan_evpn
   fail:
     msg: >-
       kvm_vxlan_evpn is enabled but {{ inventory_hostname }} runs {{ ansible_distribution }}
-      {{ ansible_distribution_major_version }}. VXLAN/EVPN is only implemented for EL9+ KVM hosts.
-      Choose an EL9 KVM_OS or pass kvm_vxlan_evpn=no.
+      {{ ansible_distribution_version }} ({{ evpn_os_id }}). Verified: {{ evpn_os_verified | join(', ') }}.
+      Implemented but not yet verified: {{ evpn_os_implemented | difference(evpn_os_verified) | join(', ') }}
+      (test with evpn_allow_untested_os=yes). Otherwise choose a supported KVM_OS or pass kvm_vxlan_evpn=no.
   when:
     - kvm_vxlan_evpn | default(false) | bool
-    - not ( ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and ansible_distribution_major_version | int >= 9 )
+    - evpn_os_id not in evpn_os_verified
+    - not ( (evpn_allow_untested_os | default(false) | bool) and (evpn_os_id in evpn_os_implemented) )
   tags:
     - kvm
 
