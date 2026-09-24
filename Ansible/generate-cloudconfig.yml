@@ -96,8 +96,8 @@
 #   wait_till_setup: only return once system VMs are running. (default is no)
 #   create_zone: default is yes.  set to no to not deploy zone
 #   kvm_vxlan_evpn: yes to use VXLAN (BGP-EVPN, FRR) guest isolation on KVM (default no). Requires
-#                   hvtype=k with a supported kvm_os (verified: EL9; implemented: EL8, EL10, Ubuntu 22.04/24.04,
-#                   openSUSE Leap 15), advanced zone,
+#                   hvtype=k with a supported kvm_os (verified: EL8/9/10, Ubuntu 24.04, openSUSE Leap 15;
+#                   implemented but unverified: Ubuntu 22.04), advanced zone,
 #                   no security groups, kvm_network_mode=bridge and CloudStack 4.19 or later.
 #   evpn_allow_untested_os: yes to allow an implemented but not yet lab-verified KVM OS (default no)
 #   evpn_frr_apt_repo: Ubuntu only, complete apt sources line for an FRR repository (default: distro package)

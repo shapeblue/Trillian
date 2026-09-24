@@ -31,10 +31,10 @@ The build fails early (in `deployvms.yml`) if these are not met.
 |---|---|
 | KVM OS | Id | State | FRR source | Firewall |
 |---|---|---|---|---|
-| EL9 | `el9` | verified in lab builds | AppStream (or `evpn_frr_repo_baseurl`) | firewalld or iptables |
-| EL8, EL10 | `el8`, `el10` | implemented, not yet verified | AppStream (or `evpn_frr_repo_baseurl`) | firewalld or iptables |
-| Ubuntu 22.04, 24.04 | `ubuntu22.04`, `ubuntu24.04` | implemented, not yet verified | Ubuntu `frr` package (or `evpn_frr_apt_repo`) | ufw if active, else iptables + netfilter-persistent |
-| openSUSE Leap 15.x | `opensuse-leap15` | implemented, not yet verified | Leap OSS `frr` package (or `evpn_frr_repo_baseurl` via zypper) | firewalld or iptables |
+| EL8, EL9, EL10 | `el8`, `el9`, `el10` | verified in lab builds | AppStream (or `evpn_frr_repo_baseurl`) | firewalld or iptables |
+| Ubuntu 24.04 | `ubuntu24.04` | verified in lab builds | Ubuntu `frr` package (or `evpn_frr_apt_repo`) | ufw if active, else iptables + netfilter-persistent |
+| Ubuntu 22.04 | `ubuntu22.04` | implemented, not yet verified | Ubuntu `frr` package (or `evpn_frr_apt_repo`) | ufw if active, else iptables + netfilter-persistent |
+| openSUSE Leap 15.x | `opensuse-leap15` | verified in lab builds (Leap 15.6) | Leap OSS `frr` package (or `evpn_frr_repo_baseurl` via zypper) | firewalld or iptables |
 | EL7, Ubuntu 20.04, Debian, others | – | not supported | – | – |
 
 Implemented but unverified OSes build only with `evpn_allow_untested_os=yes`. Ubuntu gets the
@@ -56,7 +56,7 @@ OS-specific parts are in `roles/kvm/tasks/kvm_vxlan_evpn_install_<family>.yml` (
 | `evpn_bgp_asn` | `65000` | private ASN of the per-environment iBGP full mesh |
 | `evpn_frr_repo_baseurl` | empty | optional FRR repo mirror (FRR >= 10 recommended by the CloudStack docs) |
 | `evpn_force_vendored_script` | `no` | always use Trillian's copy of the EVPN script |
-| `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (EL8, EL10, Ubuntu 22.04/24.04, openSUSE Leap 15) |
+| `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (currently Ubuntu 22.04) |
 | `evpn_frr_apt_repo` | empty | Ubuntu: complete apt sources line for an FRR repository (default: distribution package) |
 
 VNIs are derived from the environment's existing guest VLAN lease, so they are unique per
@@ -171,7 +171,7 @@ docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remo
 
 ## Known limitations
 
-* KVM host OS: EL9 verified; EL8, EL10, Ubuntu 22.04/24.04 and openSUSE Leap 15 implemented but not yet verified; OVS not implemented.
+* KVM host OS: EL8/9/10, Ubuntu 24.04 and openSUSE Leap 15 verified; Ubuntu 22.04 implemented but not yet verified; OVS not implemented.
 * The EVPN peer lists (FRR neighbours and the tcp/179 + udp/4789 firewall rules) are fixed at
   build time from the inventory. **Additional pods are rejected** at the start of the build, and
   hosts added by hand need FRR and firewall peers updated on every host and the gateway.
