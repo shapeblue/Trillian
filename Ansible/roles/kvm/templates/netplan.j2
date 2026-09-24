@@ -2,7 +2,7 @@ network:
     ethernets:
         eth0:
             dhcp4: no
-{% if kvm_vxlan_evpn | default(false) | bool %}
+{% if kvm_evpn_enabled | default(false) | bool %}
             mtu: {{ kvm_underlay_mtu }}
 {% endif %}
         eth1:
@@ -10,7 +10,7 @@ network:
     bridges:
         cloudbr0:
             dhcp4: yes
-{% if kvm_vxlan_evpn | default(false) | bool %}
+{% if kvm_evpn_enabled | default(false) | bool %}
             mtu: {{ kvm_underlay_mtu }}
 {% endif %}
             interfaces:

@@ -295,7 +295,8 @@ kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public
 kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 
 # KVM VXLAN (BGP-EVPN) guest isolation - phase 1 (guest over VXLAN, public stays VLAN)
-# All defaults keep existing behaviour: nothing changes unless kvm_vxlan_evpn is set to yes.
+# All defaults keep existing behaviour: nothing changes unless kvm_vxlan_evpn and/or
+# evpn_public_vxlan are set to yes. kvm_vxlan_evpn = guest traffic over VXLAN.
 kvm_vxlan_evpn: {{ kvm_vxlan_evpn | default( "yes" ) }}
 kvm_underlay_mtu: {{ kvm_underlay_mtu | default( 9000 ) }}
 kvm_vxlan_guest_label: "{{ kvm_vxlan_guest_label | default( kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) ) }}"
@@ -308,9 +309,13 @@ evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
 # yes = allow an implemented but not yet lab-verified KVM OS (see roles/kvm/tasks/main.yml)
 evpn_allow_untested_os: {{ evpn_allow_untested_os | default( "no" ) }}
 
-# KVM VXLAN/EVPN phase 2: public traffic over VXLAN, translated to the public VLAN by a
-# per-environment Containerlab/FRR gateway VM. Requires kvm_vxlan_evpn.
+# evpn_public_vxlan = public traffic over VXLAN, translated to the public VLAN by a
+# per-environment Containerlab/FRR gateway VM. Independent of kvm_vxlan_evpn.
 evpn_public_vxlan: {{ evpn_public_vxlan | default( "yes" ) }}
+# Derived (do not set): EVPN on the KVM hosts (FRR, VTEP, underlay MTU, peer-only firewall)
+# whenever guest and/or public traffic uses VXLAN. Written as an expression so that it is
+# always evaluated from the two flags above at deploy time.
+kvm_evpn_enabled: "{% raw %}{{ (kvm_vxlan_evpn | bool) or (evpn_public_vxlan | bool) }}{% endraw %}"
 # empty = derived at deploy time as vxlan_vni_base + env_pubvlan
 evpn_public_vni: "{{ evpn_public_vni | default( "" ) }}"
 # Gateway template: always EL9, independent of the KVM host OS (the evpn-gateway role is EL9-only).

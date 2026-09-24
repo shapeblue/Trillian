@@ -24,13 +24,13 @@
     - name: Validate KVM VXLAN/EVPN settings
       fail:
         msg: >-
-          kvm_vxlan_evpn requires a KVM-only build (hvtype=k) with a supported KVM host OS (checked per host
+          VXLAN/EVPN (kvm_vxlan_evpn and/or evpn_public_vxlan) requires a KVM-only build (hvtype=k) with a supported KVM host OS (checked per host
           in the KVM role), an advanced zone without security groups,
           kvm_network_mode=bridge, nested (not physical/external) KVM hosts, CloudStack 4.19 or later,
           and kvm_underlay_mtu >= 1550. Additional pods are not supported: the EVPN peer lists (FRR and
           firewall) are fixed per build, so a new pod's hosts could not peer with the existing ones.
       when:
-        - kvm_vxlan_evpn | default(false) | bool
+        - kvm_evpn_enabled | default(false) | bool
         - ( env_hv | default('') | lower != 'kvm' ) or
           ( env_zonetype | lower != 'advanced' ) or
           ( env_zone_secgroups | bool ) or
@@ -40,13 +40,6 @@
           ( additional_pod | default(false) | bool ) or
           ( env_numversion | version_compare('4.19', '<') ) or
           ( kvm_underlay_mtu | int < 1550 )
-    - name: Validate EVPN public VXLAN settings
-      fail:
-        msg: >-
-          evpn_public_vxlan requires kvm_vxlan_evpn.
-      when:
-        - evpn_public_vxlan | default(false) | bool
-        - not (kvm_vxlan_evpn | default(false) | bool)
     - name: Validate an EL9 template is available for the EVPN public gateway
       fail:
         msg: >-
@@ -55,24 +48,21 @@
           evpn_gw_template=<template name> or evpn_gw_os=<linux_os key of an EL9 OS>.
       when:
         - evpn_public_vxlan | default(false) | bool
-        - kvm_vxlan_evpn | default(false) | bool
         - evpn_gw_template | default('') | length == 0
     - name: Show the EVPN public gateway template
       debug:
         msg: "EVPN gateway VM template: {{ evpn_gw_template }}"
       when:
         - evpn_public_vxlan | default(false) | bool
-        - kvm_vxlan_evpn | default(false) | bool
     - name: Validate the EVPN public gateway is in the inventory
       fail:
         msg: >-
           evpn_public_vxlan is enabled but the inventory (hosts_{{ env_name_clean }}) contains no
           evpn_gateway_hosts entry, so no gateway VM would be built and public traffic would have no
-          path to the public VLAN. The generate step evaluated kvm_vxlan_evpn/evpn_public_vxlan
-          differently from the group vars; regenerate the environment.
+          path to the public VLAN. The generate step evaluated evpn_public_vxlan differently from
+          the group vars; regenerate the environment.
       when:
         - evpn_public_vxlan | default(false) | bool
-        - kvm_vxlan_evpn | default(false) | bool
         - groups['evpn_gateway_hosts'] | default([]) | length == 0
 
 - hosts: localhost
@@ -126,6 +116,7 @@
         evpn_public_vni_eff: "{{ evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) }}"
       when:
         - evpn_public_vxlan | default(false) | bool
+        - kvm_vxlan_evpn | default(false) | bool
         - evpn_public_vni_eff | int >= vxlan_vni_base | int + env_podvlans.split('-')[0] | int
         - evpn_public_vni_eff | int <= vxlan_vni_base | int + env_podvlans.split('-')[-1] | int
 

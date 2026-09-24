@@ -95,20 +95,22 @@
 #   build_marvin: whether or not to build a marvin vm for testing purposes (default is no)
 #   wait_till_setup: only return once system VMs are running. (default is no)
 #   create_zone: default is yes.  set to no to not deploy zone
-#   kvm_vxlan_evpn: yes to use VXLAN (BGP-EVPN, FRR) guest isolation on KVM (default no). Requires
-#                   hvtype=k with a supported kvm_os (verified: EL8/9/10, Ubuntu 24.04, openSUSE Leap 15;
-#                   implemented but unverified: Ubuntu 22.04), advanced zone,
-#                   no security groups, kvm_network_mode=bridge and CloudStack 4.19 or later.
+#   kvm_vxlan_evpn: yes = Guest traffic over VXLAN (BGP-EVPN, FRR) on KVM (default no)
+#   evpn_public_vxlan: yes = Public traffic over VXLAN (default no); builds a per-environment
+#                      Containerlab/FRR gateway VM that bridges the public VNI to env_pubvlan.
+#                      The two flags are independent (guest only, public only, or both).
+#                      Either one requires hvtype=k with a supported kvm_os (verified: EL8/9/10,
+#                      Ubuntu 24.04, openSUSE Leap 15; implemented but unverified: Ubuntu 22.04),
+#                      advanced zone, no security groups, kvm_network_mode=bridge, CloudStack 4.19+.
 #   evpn_allow_untested_os: yes to allow an implemented but not yet lab-verified KVM OS (default no)
 #   evpn_frr_apt_repo: Ubuntu only, complete apt sources line for an FRR repository (default: distro package)
 #   kvm_underlay_mtu: MTU set on the KVM management NIC/bridge that carries VXLAN (default 9000, minimum 1550)
 #   kvm_vxlan_guest_label: KVM traffic label (bridge) used as VXLAN underlay (default: kvm_mgmt_network_label)
-#   vxlan_vni_base: guest VNI range = vxlan_vni_base + leased guest VLAN range (default 100000)
+#   vxlan_vni_base: guest VNI range = vxlan_vni_base + leased guest VLAN range; default public VNI =
+#                   vxlan_vni_base + env_pubvlan (default 100000)
 #   evpn_bgp_asn: private ASN for the per-environment iBGP full mesh (default 65000)
 #   evpn_frr_repo_baseurl: optional yum/dnf baseurl of an FRR repository mirror (FRR >= 10 recommended)
 #   evpn_force_vendored_script: yes to always use Trillian's copy of modifyvxlan-evpn.sh (default no)
-#   evpn_public_vxlan: yes to also carry Public traffic over VXLAN (requires kvm_vxlan_evpn). Builds a
-#                      per-environment Containerlab/FRR gateway VM that bridges the public VNI to env_pubvlan
 #   evpn_public_vni: public VNI (default: vxlan_vni_base + env_pubvlan)
 #   evpn_gw_template: gateway VM template (default: an EL9 template, see nestedgroupvars.j2; the gateway is
 #                     always EL9, whatever the KVM host OS)
