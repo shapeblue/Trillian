@@ -110,7 +110,10 @@
 #   evpn_public_vxlan: yes to also carry Public traffic over VXLAN (requires kvm_vxlan_evpn). Builds a
 #                      per-environment Containerlab/FRR gateway VM that bridges the public VNI to env_pubvlan
 #   evpn_public_vni: public VNI (default: vxlan_vni_base + env_pubvlan)
-#   evpn_gw_template / evpn_gw_service_offering: gateway VM template/offering (default: the KVM ones)
+#   evpn_gw_template: gateway VM template (default: an EL9 template, see nestedgroupvars.j2; the gateway is
+#                     always EL9, whatever the KVM host OS)
+#   evpn_gw_os: linux_os key of the EL9 OS to use for the gateway, as an alternative to evpn_gw_template
+#   evpn_gw_service_offering: gateway VM offering (default: the KVM one)
 #   evpn_gw_frr_image: FRR container image (default quay.io/frrouting/frr:10.2.1)
 #   evpn_gw_docker_repo_baseurl / evpn_gw_containerlab_repo_baseurl: package repos (mirror them if no internet)
 #

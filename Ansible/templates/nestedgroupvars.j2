@@ -313,7 +313,22 @@ evpn_allow_untested_os: {{ evpn_allow_untested_os | default( "no" ) }}
 evpn_public_vxlan: {{ evpn_public_vxlan | default( "yes" ) }}
 # empty = derived at deploy time as vxlan_vni_base + env_pubvlan
 evpn_public_vni: "{{ evpn_public_vni | default( "" ) }}"
-evpn_gw_template: "{{ evpn_gw_template | default( "" ) }}"
+# Gateway template: always EL9, independent of the KVM host OS (the evpn-gateway role is EL9-only).
+#   1. evpn_gw_template   2. linux_os[evpn_gw_os].template
+#   3. the KVM template if the KVM OS is EL9   4. the first linux_os entry with os_type el9
+{% set evpn_gw_tpl = evpn_gw_template | default('') %}
+{% if evpn_gw_tpl == '' and (evpn_gw_os | default('')) != '' and evpn_gw_os in linux_os %}
+{%   set evpn_gw_tpl = linux_os[evpn_gw_os].template %}
+{% endif %}
+{% if evpn_gw_tpl == '' and kvm_os in linux_os and (linux_os[kvm_os].os_type | default('')) == 'el9' %}
+{%   set evpn_gw_tpl = linux_os[kvm_os].template %}
+{% endif %}
+{% set evpn_gw_el9_keys = [] %}
+{% for k in linux_os | sort %}{% if (linux_os[k].os_type | default('')) == 'el9' %}{% if evpn_gw_el9_keys.append(k) %}{% endif %}{% endif %}{% endfor %}
+{% if evpn_gw_tpl == '' and evpn_gw_el9_keys | length > 0 %}
+{%   set evpn_gw_tpl = linux_os[evpn_gw_el9_keys[0]].template %}
+{% endif %}
+evpn_gw_template: "{{ evpn_gw_tpl }}"
 evpn_gw_service_offering: "{{ evpn_gw_service_offering | default( "" ) }}"
 evpn_gw_trunk_if: "{{ evpn_gw_trunk_if | default( "eth1" ) }}"
 evpn_gw_frr_image: "{{ evpn_gw_frr_image | default( "quay.io/frrouting/frr:10.2.1" ) }}"

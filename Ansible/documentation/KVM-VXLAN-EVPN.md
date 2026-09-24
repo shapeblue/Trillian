@@ -136,8 +136,10 @@ With `evpn_public_vxlan=yes` (requires `kvm_vxlan_evpn`), Public traffic also us
 * Public VNI = `evpn_public_vni`, or `vxlan_vni_base + env_pubvlan` (build fails if that falls inside
   the guest VNI range).
 
-A gateway VM `<env>-evpngw` is built in the same parent project (KVM template/offering unless
-overridden) with NICs on `management_network` and `guest_public_network`, and is configured
+A gateway VM `<env>-evpngw` is built in the same parent project, always from an **EL9** template
+whatever the KVM host OS (`evpn_gw_template`, else `linux_os[evpn_gw_os]`, else the KVM template if the
+KVM OS is EL9, else the first `linux_os` entry with `os_type: el9`; the build stops if none is found)
+and the KVM offering unless overridden, with NICs on `management_network` and `guest_public_network`, and is configured
 **before** the KVM hosts and the zone (`roles/evpn-gateway`):
 
 | Piece | What it does |
