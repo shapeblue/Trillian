@@ -7,11 +7,6 @@ management and storage traffic are unchanged (public stays on the leased VLAN).
 Everything is behind `kvm_vxlan_evpn` (default `no`). With the flag unset or `no`, all
 templates render exactly as before.
 
-> **Branch default:** on the `kvm-vxlan-evpn-phase1` branch the default is `yes`, so every
-> build from this branch is a VXLAN/EVPN build. Pass `kvm_vxlan_evpn=no` (Jenkins:
-> `ANY_OTHER_OPTS`) for a normal build. Drop this commit before merging to master.
-> `evpn_public_vxlan` also defaults to `yes` on this branch; pass `evpn_public_vxlan=no` for phase 1 only.
-
 ## Requirements
 
 * `hvtype=k` with a supported `kvm_os` (see "KVM host OS support" below), `kvm_network_mode=bridge` (default)
