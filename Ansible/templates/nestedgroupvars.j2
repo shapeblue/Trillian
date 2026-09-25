@@ -303,6 +303,18 @@ vxlan_vni_base: {{ vxlan_vni_base | default( 100000 ) }}
 evpn_bgp_asn: {{ evpn_bgp_asn | default( 65000 ) }}
 evpn_frr_repo_baseurl: "{{ evpn_frr_repo_baseurl | default( "" ) }}"
 evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
+
+# KVM VXLAN/EVPN phase 2: public traffic over VXLAN, translated to the public VLAN by a
+# per-environment Containerlab/FRR gateway VM. Requires kvm_vxlan_evpn.
+evpn_public_vxlan: {{ evpn_public_vxlan | default( "no" ) }}
+# empty = derived at deploy time as vxlan_vni_base + env_pubvlan
+evpn_public_vni: "{{ evpn_public_vni | default( "" ) }}"
+evpn_gw_template: "{{ evpn_gw_template | default( "" ) }}"
+evpn_gw_service_offering: "{{ evpn_gw_service_offering | default( "" ) }}"
+evpn_gw_trunk_if: "{{ evpn_gw_trunk_if | default( "eth1" ) }}"
+evpn_gw_frr_image: "{{ evpn_gw_frr_image | default( "quay.io/frrouting/frr:10.2.1" ) }}"
+evpn_gw_docker_repo_baseurl: "{{ evpn_gw_docker_repo_baseurl | default( "https://download.docker.com/linux/centos/9/x86_64/stable" ) }}"
+evpn_gw_containerlab_repo_baseurl: "{{ evpn_gw_containerlab_repo_baseurl | default( "https://yum.fury.io/netdevops/" ) }}"
 kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"

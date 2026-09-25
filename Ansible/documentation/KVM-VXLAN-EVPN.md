@@ -93,9 +93,52 @@ vtysh -c 'show evpn vni'               # VNIs with remote VTEPs
 In CloudStack, the guest physical network shows isolation method VXLAN and new guest
 networks get a `vxlan://<VNI>` broadcast URI.
 
+## Phase 2: public traffic over VXLAN (`evpn_public_vxlan`)
+
+With `evpn_public_vxlan=yes` (requires `kvm_vxlan_evpn`), Public traffic also uses VXLAN:
+
+* `Physical Network Public` is created with isolation method **VXLAN** and KVM label
+  `kvm_vxlan_guest_label`; it has no VNI range of its own.
+* The public IP range is created with `vlan=vxlan://<public VNI>` (gateway, netmask and IPs are the
+  normal Trillian public lease). CloudStack passes a range tag containing `://` through unchanged as
+  the NIC broadcast URI, so VR/SSVM/CPVM public NICs land on `brvx-<public VNI>` on the KVM hosts.
+* Public VNI = `evpn_public_vni`, or `vxlan_vni_base + env_pubvlan` (build fails if that falls inside
+  the guest VNI range).
+
+A gateway VM `<env>-evpngw` is built in the same parent project (KVM template/offering unless
+overridden) with NICs on `management_network` and `guest_public_network`, and is configured
+**before** the KVM hosts and the zone (`roles/evpn-gateway`):
+
+| Piece | What it does |
+|---|---|
+| `trillian-evpn-gw-net.service` | management IP as /32 on `lo` (VTEP); `br-pub` = `vxlan<VNI>` (local VTEP, port 4789, nolearning) + `eth1.<env_pubvlan>`; bridged frames bypass iptables |
+| Containerlab node `clab-evpngw-frr` | FRR in host network mode, iBGP `l2vpn evpn` to every KVM host, `advertise-all-vni` |
+| `trillian-evpn-gw-clab.service` | (re)deploys the Containerlab topology at boot |
+
+The KVM hosts peer with the gateway too, and their BGP check waits for it. NetworkManager is told to
+leave the gateway's trunk NIC, VLAN, bridge and VXLAN devices alone. The gateway is destroyed with
+the environment.
+
+Frame path: VR public NIC -> `brvx-<VNI>` (KVM host) -> VXLAN/EVPN -> gateway `vxlan<VNI>` ->
+`br-pub` -> `eth1.<vlan>` (tagged) -> parent trunk -> the public gateway router.
+
+Gateway prerequisites: Docker CE and Containerlab packages (`evpn_gw_docker_repo_baseurl`,
+`evpn_gw_containerlab_repo_baseurl`) and the FRR image (`evpn_gw_frr_image`) must be reachable from
+the gateway VM; set these to lab mirrors if there is no internet access. The gateway's trunk NIC
+must be allowed to send frames from other MACs (the same parent port-group settings the nested
+KVM hosts already rely on).
+
+Verify on the gateway:
+
+```
+bridge link show master br-pub                       # vxlan<VNI> and eth1.<vlan>
+docker exec clab-evpngw-frr vtysh -c 'show bgp l2vpn evpn summary'
+docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remote) + router MAC (local)
+```
+
 ## Known limitations
 
 * EL9+ KVM hosts only (Ubuntu/netplan and OVS paths are not implemented).
 * Marvin `test_data.py.j2` contains fixed VLAN IDs (e.g. 10, 301, 4000) and `specifyVlan`
   offerings. On a VXLAN guest network these are used as VNIs; select tests accordingly.
-* Public over VXLAN and the Containerlab gateway are phase 2 and not part of this change.
+* Phase 2 builds one gateway per environment (no redundancy); `use_custom_allocator` is not supported.

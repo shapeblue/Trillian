@@ -37,6 +37,13 @@
           ( use_external_hv_hosts | default(false) | bool ) or
           ( env_numversion | version_compare('4.19', '<') ) or
           ( kvm_underlay_mtu | int < 1550 )
+    - name: Validate EVPN public VXLAN settings
+      fail:
+        msg: >-
+          evpn_public_vxlan requires kvm_vxlan_evpn and the standard VM build (use_custom_allocator=no).
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - ( not (kvm_vxlan_evpn | default(false) | bool) ) or ( use_custom_allocator | default(false) | bool )
 
 - hosts: localhost
   connection: local
@@ -79,6 +86,19 @@
         - "env_guestnetvlan: \"{{ env_guestnetvlan }}\""
 
 # Create build project if it doesn't exist.
+    - name: Check public VNI does not overlap the guest VNI range
+      fail:
+        msg: >-
+          Public VNI {{ evpn_public_vni_eff }} lies inside the guest VNI range
+          {{ vxlan_vni_base | int + env_podvlans.split('-')[0] | int }}-{{ vxlan_vni_base | int + env_podvlans.split('-')[-1] | int }}.
+          Set evpn_public_vni explicitly.
+      vars:
+        evpn_public_vni_eff: "{{ evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) }}"
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - evpn_public_vni_eff | int >= vxlan_vni_base | int + env_podvlans.split('-')[0] | int
+        - evpn_public_vni_eff | int <= vxlan_vni_base | int + env_podvlans.split('-')[-1] | int
+
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
 
@@ -157,6 +177,16 @@
     basic_vlan: "{{ env_guestnetvlan }}"
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
+
+# EVPN public gateway: configured before the KVM hosts so that their BGP check can include it,
+# and long before the zone is created (system VMs need public connectivity through it).
+- hosts: evpn_gateway_hosts
+  gather_facts: no
+  vars:
+    num_evpngw_hosts: "{{ groups['evpn_gateway_hosts'] | default([]) | length }}"
+  roles:
+    - { role: timezone, when: num_evpngw_hosts | int != 0 }
+    - { role: evpn-gateway, when: num_evpngw_hosts | int != 0 }
 
 - hosts: kvm_hosts
   gather_facts: no

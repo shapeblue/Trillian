@@ -88,7 +88,7 @@
 - name: EVPN - verify traffic to the other VTEPs leaves via {{ kvm_vxlan_guest_label }} (not lo)
   shell: "ip route get {{ hostvars[item]['ansible_ssh_host'] }} | grep -qw 'dev {{ kvm_vxlan_guest_label }}'"
   changed_when: false
-  with_items: "{{ groups['kvm_hosts'] | difference([inventory_hostname]) }}"
+  with_items: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) }}"
 
 # ---------------------------------------------------------------------------
 # Lock directory used by the EVPN script (/var/run/cloud/vxlan.lock)
@@ -230,7 +230,7 @@
     - evpn_script_link.changed or evpn_script_copy.changed
 
 # ---------------------------------------------------------------------------
-# Verify BGP sessions to all other KVM hosts of this environment
+# Verify BGP sessions to all other KVM hosts (and the EVPN gateway, if any) of this environment
 # (linear strategy: FRR has been started on every host before this runs)
 # ---------------------------------------------------------------------------
 
@@ -241,7 +241,7 @@
   register: evpn_bgp_established
   changed_when: false
   failed_when: false
-  until: evpn_bgp_established.stdout | default('0') | trim | int >= ( groups['kvm_hosts'] | length - 1 )
+  until: evpn_bgp_established.stdout | default('0') | trim | int >= ( groups['kvm_hosts'] | length - 1 + (groups['evpn_gateway_hosts'] | default([]) | length) )
   retries: 30
   delay: 10
-  when: groups['kvm_hosts'] | length > 1
+  when: ( groups['kvm_hosts'] | length - 1 + (groups['evpn_gateway_hosts'] | default([]) | length) ) > 0

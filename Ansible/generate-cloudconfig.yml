@@ -104,6 +104,12 @@
 #   evpn_bgp_asn: private ASN for the per-environment iBGP full mesh (default 65000)
 #   evpn_frr_repo_baseurl: optional yum/dnf baseurl of an FRR repository mirror (FRR >= 10 recommended)
 #   evpn_force_vendored_script: yes to always use Trillian's copy of modifyvxlan-evpn.sh (default no)
+#   evpn_public_vxlan: yes to also carry Public traffic over VXLAN (requires kvm_vxlan_evpn). Builds a
+#                      per-environment Containerlab/FRR gateway VM that bridges the public VNI to env_pubvlan
+#   evpn_public_vni: public VNI (default: vxlan_vni_base + env_pubvlan)
+#   evpn_gw_template / evpn_gw_service_offering: gateway VM template/offering (default: the KVM ones)
+#   evpn_gw_frr_image: FRR container image (default quay.io/frrouting/frr:10.2.1)
+#   evpn_gw_docker_repo_baseurl / evpn_gw_containerlab_repo_baseurl: package repos (mirror them if no internet)
 #
 ##
 
