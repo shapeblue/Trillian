@@ -303,6 +303,8 @@ vxlan_vni_base: {{ vxlan_vni_base | default( 100000 ) }}
 evpn_bgp_asn: {{ evpn_bgp_asn | default( 65000 ) }}
 evpn_frr_repo_baseurl: "{{ evpn_frr_repo_baseurl | default( "" ) }}"
 evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
+# yes = allow an implemented but not yet lab-verified KVM OS (see roles/kvm/tasks/main.yml)
+evpn_allow_untested_os: {{ evpn_allow_untested_os | default( "no" ) }}
 
 # KVM VXLAN/EVPN phase 2: public traffic over VXLAN, translated to the public VLAN by a
 # per-environment Containerlab/FRR gateway VM. Requires kvm_vxlan_evpn.

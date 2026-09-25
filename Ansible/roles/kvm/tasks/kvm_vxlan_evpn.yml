@@ -22,10 +22,15 @@
 #    script lookup finds before the packaged multicast script (CloudStack 4.19+). The packaged
 #    modifyvxlan-evpn.sh is used when present (4.21+), otherwise Trillian's vendored copy.
 #
-# Included from el9.yml only when kvm_vxlan_evpn is true.
+# Included from the OS task files (el9.yml, centos8.yml) when kvm_vxlan_evpn is true.
+# OS-specific parts live in kvm_vxlan_evpn_install_<family>.yml and kvm_vxlan_evpn_firewall_<family>.yml.
 
 # Note: no 'setup'/fact gathering here. Trillian's Ansible version cannot gather facts on
 # EL9 (Python 3.9: platform.dist() was removed), so values are read with plain commands.
+
+- name: EVPN - OS family for the OS-specific parts (FRR install, firewall)
+  set_fact:
+    evpn_os_family: "{{ 'el' if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else (ansible_distribution | lower) }}"
 
 - name: EVPN - read VTEP address from the underlay bridge
   shell: "ip -4 -o addr show scope global dev {{ kvm_vxlan_guest_label }} | awk 'NR==1 {print $4}' | cut -d/ -f1"
@@ -110,24 +115,8 @@
 # FRR
 # ---------------------------------------------------------------------------
 
-- name: EVPN - add FRR repository mirror
-  copy:
-    dest: /etc/yum.repos.d/trillian-frr.repo
-    content: |
-      [trillian-frr]
-      name=FRR (Trillian EVPN)
-      baseurl={{ evpn_frr_repo_baseurl }}
-      enabled=1
-      gpgcheck=0
-    owner: root
-    group: root
-    mode: 0644
-  when: evpn_frr_repo_baseurl | length > 0
-
-- name: EVPN - install FRR
-  dnf:
-    name: frr
-    state: present
+- include: ./kvm_vxlan_evpn_install_el.yml
+  when: evpn_os_family == 'el'
 
 - name: EVPN - enable bgpd
   lineinfile:
@@ -168,38 +157,8 @@
   set_fact:
     evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
 
-- name: EVPN - remove any open-to-all BGP/VXLAN ports (firewalld)
-  shell: "firewall-cmd --permanent --zone=public --remove-port=179/tcp --remove-port=4789/udp || true"
-  when: use_firewalld | bool
-
-- name: EVPN - allow BGP/VXLAN only from environment peers (firewalld)
-  shell: >-
-    firewall-cmd --permanent --zone=public
-    --add-rich-rule='rule family="ipv4" source address="{{ item[0] }}/32" port port="{{ item[1].port }}" protocol="{{ item[1].proto }}" accept'
-  with_nested:
-    - "{{ evpn_fw_peers }}"
-    - [ { proto: tcp, port: 179 }, { proto: udp, port: 4789 } ]
-  when: use_firewalld | bool
-
-- name: EVPN - reload firewalld
-  shell: "firewall-cmd --reload"
-  when: use_firewalld | bool
-
-- name: EVPN - allow BGP/VXLAN only from environment peers (iptables chain TRILLIAN-EVPN)
-  shell: |
-    iptables -N TRILLIAN-EVPN 2>/dev/null || true
-    iptables -F TRILLIAN-EVPN
-    {% for peer in evpn_fw_peers %}
-    iptables -A TRILLIAN-EVPN -s {{ peer }}/32 -j ACCEPT
-    {% endfor %}
-    iptables -A TRILLIAN-EVPN -j DROP
-    iptables -C INPUT -p udp --dport 4789 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p udp --dport 4789 -j TRILLIAN-EVPN
-    iptables -C INPUT -p tcp --dport 179 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p tcp --dport 179 -j TRILLIAN-EVPN
-  when: not (use_firewalld | bool)
-
-- name: EVPN - save iptables rules
-  shell: "iptables-save > /etc/sysconfig/iptables"
-  when: not (use_firewalld | bool)
+- include: ./kvm_vxlan_evpn_firewall_el.yml
+  when: evpn_os_family == 'el'
 
 # ---------------------------------------------------------------------------
 # CloudStack agent: EVPN VXLAN script via /usr/share/modifyvxlan.sh override
