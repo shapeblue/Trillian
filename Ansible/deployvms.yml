@@ -42,10 +42,10 @@
     - name: Validate EVPN public VXLAN settings
       fail:
         msg: >-
-          evpn_public_vxlan requires kvm_vxlan_evpn and the standard VM build (use_custom_allocator=no).
+          evpn_public_vxlan requires kvm_vxlan_evpn.
       when:
         - evpn_public_vxlan | default(false) | bool
-        - ( not (kvm_vxlan_evpn | default(false) | bool) ) or ( use_custom_allocator | default(false) | bool )
+        - not (kvm_vxlan_evpn | default(false) | bool)
 
 - hosts: localhost
   connection: local

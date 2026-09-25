@@ -149,4 +149,5 @@ docker exec clab-evpngw-frr vtysh -c 'show evpn mac vni <VNI>'   # VR MACs (remo
   An additional zone is a separate build and gets its own EVPN domain (own mesh and gateway).
 * Marvin `test_data.py.j2` contains fixed VLAN IDs (e.g. 10, 301, 4000) and `specifyVlan`
   offerings. On a VXLAN guest network these are used as VNIs; select tests accordingly.
-* Phase 2 builds one gateway per environment (no redundancy); `use_custom_allocator` is not supported.
+* Phase 2 builds one gateway per environment (no redundancy). With `use_custom_allocator` the
+  gateway is started in the same cluster (or parent host) the allocator picked for the KVM hosts.
