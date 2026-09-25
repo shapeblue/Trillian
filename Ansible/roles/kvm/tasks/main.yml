@@ -70,7 +70,7 @@
   set_fact:
     evpn_os_id: "{{ ('el' ~ ansible_distribution_major_version) if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else (evpn_os_release.stdout.split('|')[0] ~ (evpn_os_release.stdout.split('|')[1].split('.')[0] if evpn_os_release.stdout.split('|')[0].startswith('opensuse') else evpn_os_release.stdout.split('|')[1])) }}"
     evpn_os_implemented: ['el8', 'el9', 'el10', 'ubuntu22.04', 'ubuntu24.04', 'opensuse-leap15']
-    evpn_os_verified: ['el9']
+    evpn_os_verified: ['el8', 'el9', 'el10', 'ubuntu24.04', 'opensuse-leap15']
   when: kvm_vxlan_evpn | default(false) | bool
   tags:
     - kvm
