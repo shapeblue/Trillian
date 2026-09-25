@@ -64,8 +64,7 @@ gateway template, gateway in the inventory, public VNI overlap) and per host in 
 | KVM OS | Id | State | FRR source | Underlay MTU set by | Firewall |
 |---|---|---|---|---|---|
 | EL8, EL9, EL10 (Rocky, Alma, Oracle Linux) | `el8`, `el9`, `el10` | verified | AppStream, or `evpn_frr_repo_baseurl` | nmcli bridge setup (`kvm_networking_bridge8.yml`) | firewalld or iptables |
-| Ubuntu 24.04 | `ubuntu24.04` | verified | Ubuntu `frr`, or `evpn_frr_apt_repo` | `netplan.j2` | ufw if active, else iptables + netfilter-persistent |
-| Ubuntu 22.04 | `ubuntu22.04` | implemented, not verified | Ubuntu `frr`, or `evpn_frr_apt_repo` | `netplan.j2` | as Ubuntu 24.04 |
+| Ubuntu 22.04, 24.04 | `ubuntu22.04`, `ubuntu24.04` | verified | Ubuntu `frr`, or `evpn_frr_apt_repo` | `netplan.j2` | ufw if active, else iptables + netfilter-persistent |
 | openSUSE Leap 15.x | `opensuse-leap15` | verified (15.6) | Leap OSS `frr`, or `evpn_frr_repo_baseurl` | nmcli bridge setup | firewalld or iptables |
 | EL7, Ubuntu 20.04, Debian, others | - | not supported | - | - | - |
 
@@ -138,7 +137,7 @@ All optional; pass them like the flags.
 | `evpn_frr_repo_baseurl` | empty | dnf/zypper repository for FRR (directory containing `repodata/`; literal path, no `$releasever`) |
 | `evpn_frr_apt_repo` | empty | Ubuntu: complete apt sources line, e.g. `deb [trusted=yes] http://<mirror>/frr noble frr-stable` |
 | `evpn_force_vendored_script` | `no` | always use Trillian's copy of the EVPN script |
-| `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (currently Ubuntu 22.04) |
+| `evpn_allow_untested_os` | `no` | allow an implemented but not yet verified KVM OS (currently none; for future OS additions) |
 | `evpn_gw_template` | auto | gateway template (see 7.3) |
 | `evpn_gw_os` | empty | `linux_os` key of the EL9 OS to take the gateway template from (e.g. `r9`) |
 | `evpn_gw_service_offering` | KVM offering | gateway service offering |
@@ -281,6 +280,17 @@ Port forwarding and static NAT use the same path in reverse.
 * Each EVPN domain touches the public VLAN at exactly one point (its gateway), so there is no L2
   loop. The public VLAN itself stays shared between environments, as with VLAN builds.
 
+**Additional zones** (`additional_zone` / Jenkins `IS_ADDITIONAL_ZONE` + `REGION_MGMT_IP`): an
+additional zone is a separate Trillian build with its own environment, leases, KVM hosts and -
+with public VXLAN - its own gateway. It therefore forms its own EVPN domain (own mesh, own peer-only
+firewall), exactly like a separate environment, and uses the zone's own leased guest VLANs (and so
+its own guest VNIs) and public range. It uses the existing management server, which only talks to
+the new hosts over the management network as usual. Zones never share guest or public L2
+networks in CloudStack, so no EVPN peering between zones is needed. Mixed regions (one zone VLAN,
+another VXLAN) work the same way, since physical networks are per zone. Not yet lab-verified.
+**Additional pods** are rejected: a pod joins an existing zone's VXLAN networks, but its hosts
+could not join that zone's fixed peer lists.
+
 ---
 
 ## 11. Verification
@@ -339,7 +349,8 @@ cloud's VRs, the router) and advertises them into the environment's EVPN; that i
   create an L2 loop).
 * Peer lists (FRR neighbours and firewall rules) are fixed at build time: additional pods are
   rejected; hosts added by hand need FRR and firewall peers updated on every host and the
-  gateway. An additional zone is a separate build with its own EVPN domain.
+  gateway. An additional zone is a separate build with its own EVPN domain (see section 10);
+  this is expected to work but is not yet lab-verified.
 * No broadcast rate limit on the gateway's VLAN side.
 * Marvin `test_data.py.j2` contains fixed VLAN IDs and `specifyVlan` offerings; on a VXLAN guest
   network these become VNIs. Select tests accordingly.
