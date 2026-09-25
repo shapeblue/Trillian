@@ -1,0 +1,76 @@
+#!/bin/bash
+# Managed by Trillian (evpn-gateway)
+# Public VNI {{ evpn_gw_vni }} <-> VLAN {{ env_pubvlan }} translation bridge for {{ env_name_clean }}.
+#   lo     : VTEP address {{ evpn_vtep_ip }}/32 (same as the management IP)
+#   br-pub : vxlan{{ evpn_gw_vni }} (overlay side) + {{ evpn_gw_trunk_if }}.{{ env_pubvlan }} (VLAN side)
+# Usage: $0 start | stop | sysctl
+VTEP="{{ evpn_vtep_ip }}"
+VNI="{{ evpn_gw_vni }}"
+VLAN="{{ env_pubvlan }}"
+TRUNK="{{ evpn_gw_trunk_if }}"
+VLANIF="${TRUNK}.${VLAN}"
+VXIF="vxlan${VNI}"
+BR="br-pub"
+DSTPORT="4789"
+
+# BGP (tcp/179) and VXLAN (udp/4789) only from this environment's KVM hosts
+# (iptables path; with firewalld the same is done by permanent rich rules).
+PEERS="{{ evpn_fw_peers | join(' ') }}"
+peer_filter() {
+    systemctl is-active --quiet firewalld && return 0
+    command -v iptables >/dev/null 2>&1 || return 0
+    iptables -N TRILLIAN-EVPN 2>/dev/null
+    iptables -F TRILLIAN-EVPN
+    for p in ${PEERS}; do
+        iptables -A TRILLIAN-EVPN -s ${p}/32 -j ACCEPT
+    done
+    iptables -A TRILLIAN-EVPN -j DROP
+    iptables -C INPUT -p udp --dport ${DSTPORT} -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p udp --dport ${DSTPORT} -j TRILLIAN-EVPN
+    iptables -C INPUT -p tcp --dport 179 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p tcp --dport 179 -j TRILLIAN-EVPN
+    return 0
+}
+
+bridge_filter_off() {
+    # Docker loads br_netfilter and (re)enables bridge-nf-call-*; bridged public frames must
+    # not traverse iptables (Docker's FORWARD policy is DROP).
+    for k in iptables ip6tables arptables; do
+        [ -e /proc/sys/net/bridge/bridge-nf-call-${k} ] && echo 0 > /proc/sys/net/bridge/bridge-nf-call-${k}
+    done
+    if command -v iptables >/dev/null 2>&1; then
+        iptables -C FORWARD -i ${BR} -o ${BR} -j ACCEPT 2>/dev/null || iptables -I FORWARD -i ${BR} -o ${BR} -j ACCEPT
+    fi
+    return 0
+}
+
+case "$1" in
+  start)
+    set -e
+    ip addr replace ${VTEP}/32 dev lo
+    ip link set ${TRUNK} up
+    ip link show ${VLANIF} >/dev/null 2>&1 || ip link add link ${TRUNK} name ${VLANIF} type vlan id ${VLAN}
+    ip link show ${BR} >/dev/null 2>&1 || ip link add ${BR} type bridge stp_state 0
+    ip link show ${VXIF} >/dev/null 2>&1 || ip link add ${VXIF} type vxlan id ${VNI} local ${VTEP} dstport ${DSTPORT} nolearning
+    ip link set ${VXIF} master ${BR}
+    ip link set ${VLANIF} master ${BR}
+    ip link set ${VXIF} up
+    ip link set ${VLANIF} up
+    ip link set ${BR} up
+    set +e
+    peer_filter
+    bridge_filter_off
+    ;;
+  stop)
+    ip link del ${VXIF} 2>/dev/null
+    ip link del ${VLANIF} 2>/dev/null
+    ip link del ${BR} 2>/dev/null
+    ip addr del ${VTEP}/32 dev lo 2>/dev/null
+    exit 0
+    ;;
+  sysctl)
+    bridge_filter_off
+    ;;
+  *)
+    echo "usage: $0 start|stop|sysctl"; exit 1
+    ;;
+esac
+exit 0

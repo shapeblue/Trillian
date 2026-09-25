@@ -21,6 +21,49 @@
     - name: Check groupvars/all file version
       fail: msg="groupvars/all file version is too low.  Please update to latest"
       when:  ("{{ all-file_version|int }}" < 5 )
+    - name: Validate KVM VXLAN/EVPN settings
+      fail:
+        msg: >-
+          VXLAN/EVPN (kvm_vxlan_evpn and/or evpn_public_vxlan) requires a KVM-only build (hvtype=k) with a supported KVM host OS (checked per host
+          in the KVM role), an advanced zone without security groups,
+          kvm_network_mode=bridge, nested (not physical/external) KVM hosts, CloudStack 4.19 or later,
+          and kvm_underlay_mtu >= 1550. Additional pods are not supported: the EVPN peer lists (FRR and
+          firewall) are fixed per build, so a new pod's hosts could not peer with the existing ones.
+      when:
+        - kvm_evpn_enabled | default(false) | bool
+        - ( env_hv | default('') | lower != 'kvm' ) or
+          ( env_zonetype | lower != 'advanced' ) or
+          ( env_zone_secgroups | bool ) or
+          ( kvm_network_mode != 'bridge' ) or
+          ( use_phys_hosts | default(false) | bool ) or
+          ( use_external_hv_hosts | default(false) | bool ) or
+          ( additional_pod | default(false) | bool ) or
+          ( env_numversion | version_compare('4.19', '<') ) or
+          ( kvm_underlay_mtu | int < 1550 )
+    - name: Validate an EL9 template is available for the EVPN public gateway
+      fail:
+        msg: >-
+          evpn_public_vxlan needs an EL9 template for the gateway VM, but none could be determined
+          (KVM OS '{{ kvm_os }}' is not EL9 and no linux_os entry has os_type el9). Set
+          evpn_gw_template=<template name> or evpn_gw_os=<linux_os key of an EL9 OS>.
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - evpn_gw_template | default('') | length == 0
+    - name: Show the EVPN public gateway template
+      debug:
+        msg: "EVPN gateway VM template: {{ evpn_gw_template }}"
+      when:
+        - evpn_public_vxlan | default(false) | bool
+    - name: Validate the EVPN public gateway is in the inventory
+      fail:
+        msg: >-
+          evpn_public_vxlan is enabled but the inventory (hosts_{{ env_name_clean }}) contains no
+          evpn_gateway_hosts entry, so no gateway VM would be built and public traffic would have no
+          path to the public VLAN. The generate step evaluated evpn_public_vxlan differently from
+          the group vars; regenerate the environment.
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - groups['evpn_gateway_hosts'] | default([]) | length == 0
 
 - hosts: localhost
   connection: local
@@ -63,6 +106,20 @@
         - "env_guestnetvlan: \"{{ env_guestnetvlan }}\""
 
 # Create build project if it doesn't exist.
+    - name: Check public VNI does not overlap the guest VNI range
+      fail:
+        msg: >-
+          Public VNI {{ evpn_public_vni_eff }} lies inside the guest VNI range
+          {{ vxlan_vni_base | int + env_podvlans.split('-')[0] | int }}-{{ vxlan_vni_base | int + env_podvlans.split('-')[-1] | int }}.
+          Set evpn_public_vni explicitly.
+      vars:
+        evpn_public_vni_eff: "{{ evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) }}"
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - kvm_vxlan_evpn | default(false) | bool
+        - evpn_public_vni_eff | int >= vxlan_vni_base | int + env_podvlans.split('-')[0] | int
+        - evpn_public_vni_eff | int <= vxlan_vni_base | int + env_podvlans.split('-')[-1] | int
+
     - name: Create project
       include: tasks/updateproject.yml project_tag=Deploying_VMs
 
@@ -141,6 +198,16 @@
     basic_vlan: "{{ env_guestnetvlan }}"
   roles:
     - { role: xenserver, when: num_xen_hosts | int != 0 }
+
+# EVPN public gateway: configured before the KVM hosts so that their BGP check can include it,
+# and long before the zone is created (system VMs need public connectivity through it).
+- hosts: evpn_gateway_hosts
+  gather_facts: no
+  vars:
+    num_evpngw_hosts: "{{ groups['evpn_gateway_hosts'] | default([]) | length }}"
+  roles:
+    - { role: timezone, when: num_evpngw_hosts | int != 0 }
+    - { role: evpn-gateway, when: num_evpngw_hosts | int != 0 }
 
 - hosts: kvm_hosts
   gather_facts: no

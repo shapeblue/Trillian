@@ -1,0 +1,33 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# EVPN on Ubuntu (22.04, 24.04): install FRR. Included from kvm_vxlan_evpn.yml.
+# Default: the distribution's frr package. evpn_frr_apt_repo = a complete sources.list line
+# (e.g. "deb [trusted=yes] http://<mirror>/frr jammy frr-stable") to use another repository.
+
+- name: EVPN - add FRR apt repository
+  copy:
+    dest: /etc/apt/sources.list.d/trillian-frr.list
+    content: "{{ evpn_frr_apt_repo }}\n"
+    owner: root
+    group: root
+    mode: 0644
+  when: evpn_frr_apt_repo | default('') | length > 0
+
+- name: EVPN - install FRR
+  shell: "dpkg -s frr >/dev/null 2>&1 || (apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y frr)"
+  register: evpn_frr_apt
+  until: evpn_frr_apt.rc == 0
+  retries: 3
+  delay: 10

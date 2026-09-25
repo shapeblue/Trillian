@@ -1,0 +1,17 @@
+# Managed by Trillian (evpn-gateway)
+[Unit]
+Description=Trillian EVPN gateway: Containerlab FRR node
+Requires=docker.service trillian-evpn-gw-net.service
+After=docker.service trillian-evpn-gw-net.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=600
+WorkingDirectory=/etc/trillian-evpn/clab
+ExecStart=/usr/bin/containerlab deploy -t /etc/trillian-evpn/clab/evpn-gw.clab.yml --reconfigure
+ExecStartPost=/usr/local/sbin/trillian-evpn-gw-net.sh sysctl
+ExecStop=/usr/bin/containerlab destroy -t /etc/trillian-evpn/clab/evpn-gw.clab.yml
+
+[Install]
+WantedBy=multi-user.target

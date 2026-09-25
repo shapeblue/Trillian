@@ -1,0 +1,341 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# EVPN public gateway (evpn_public_vxlan).
+#
+# One VM per environment, two NICs:
+#   {{ evpn_gw_underlay_if }} : management network - VTEP + BGP (same underlay as the KVM hosts)
+#   {{ evpn_gw_trunk_if }}    : parent trunk network - {{ evpn_gw_trunk_if }}.<env_pubvlan> towards the public gateway
+# The public VNI is bridged to the public VLAN on br-pub. FRR runs as a Containerlab node in
+# host network mode and joins the environment's iBGP l2vpn-evpn mesh.
+#
+# Written for Trillian's Ansible: no fact gathering (os_facts comes from the timezone role).
+
+- name: EVPN GW - check OS (EL9 or later)
+  fail:
+    msg: "The EVPN gateway needs an EL9+ template; {{ inventory_hostname }} runs {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+  when: not ( ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and ansible_distribution_major_version | int >= 9 )
+
+# The environment lease (env_pubvlan, ...) is requested on localhost during deployvms and only
+# appended to group_vars/<env> mid-run; Trillian's Ansible does not expose it to this host that
+# way. Take it from localhost's facts, where the lease was returned. (ansible.cfg has
+# error_on_undefined_vars = False, so a missing value would otherwise silently leave
+# templates unrendered.)
+- name: EVPN GW - take the public VLAN lease from localhost if not set for this host
+  set_fact:
+    env_pubvlan: "{{ hostvars['localhost']['env_pubvlan'] }}"
+  when: env_pubvlan is not defined
+
+- name: EVPN GW - set interface names and public VNI
+  set_fact:
+    evpn_gw_underlay_if: "{{ evpn_gw_underlay_if | default('eth0') }}"
+    evpn_gw_trunk_if: "{{ evpn_gw_trunk_if | default('eth1') }}"
+    evpn_gw_vni: "{{ evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) }}"
+
+- name: EVPN GW - check public VLAN and VNI are valid numbers
+  fail:
+    msg: >-
+      Could not determine the public VLAN/VNI for the gateway (env_pubvlan='{{ env_pubvlan | default('') }}',
+      evpn_gw_vni='{{ evpn_gw_vni | default('') }}'). Check the environment lease.
+  when: >-
+    ( env_pubvlan | default('0') | string | int < 1 ) or ( env_pubvlan | default('0') | string | int > 4094 ) or
+    ( evpn_gw_vni | default('0') | string | int < 1 ) or ( evpn_gw_vni | default('0') | string | int > 16777215 )
+
+- name: EVPN GW - read VTEP address from {{ evpn_gw_underlay_if }}
+  shell: "ip -4 -o addr show scope global dev {{ evpn_gw_underlay_if }} | awk 'NR==1 {print $4}' | cut -d/ -f1"
+  register: evpn_gw_ip_out
+  changed_when: false
+
+- name: EVPN GW - set VTEP fact
+  set_fact:
+    evpn_vtep_ip: "{{ evpn_gw_ip_out.stdout | trim }}"
+
+- name: EVPN GW - check a VTEP address was found
+  fail:
+    msg: "No global IPv4 address on {{ evpn_gw_underlay_if }}; cannot determine the gateway VTEP address."
+  when: evpn_vtep_ip | length == 0
+
+# ---------------------------------------------------------------------------
+# Base OS
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - set SELinux permissive now
+  command: setenforce 0
+  failed_when: false
+  changed_when: false
+
+- name: EVPN GW - set SELinux permissive persistently
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=permissive'
+
+- name: EVPN GW - find NetworkManager connection of {{ evpn_gw_underlay_if }}
+  command: "nmcli -g GENERAL.CONNECTION device show {{ evpn_gw_underlay_if }}"
+  register: evpn_gw_underlay_conn
+  changed_when: false
+  failed_when: false
+
+- name: EVPN GW - persist underlay MTU {{ kvm_underlay_mtu }}
+  command: "nmcli con mod '{{ evpn_gw_underlay_conn.stdout | trim }}' 802-3-ethernet.mtu {{ kvm_underlay_mtu }}"
+  when: evpn_gw_underlay_conn.stdout | trim | length > 0
+
+- name: EVPN GW - apply underlay MTU now (no reconnect)
+  command: "ip link set dev {{ evpn_gw_underlay_if }} mtu {{ kvm_underlay_mtu }}"
+
+- name: EVPN GW - keep NetworkManager away from the public side (trunk, VLAN, bridge, VXLAN)
+  copy:
+    dest: /etc/NetworkManager/conf.d/99-trillian-evpn-gw.conf
+    content: |
+      # Managed by Trillian (evpn-gateway)
+      [keyfile]
+      unmanaged-devices=interface-name:{{ evpn_gw_trunk_if }};interface-name:{{ evpn_gw_trunk_if }}.*;interface-name:br-pub;interface-name:vxlan*
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_gw_nm_conf
+
+- name: EVPN GW - reload NetworkManager configuration
+  shell: "nmcli general reload conf || systemctl reload NetworkManager"
+  when: evpn_gw_nm_conf.changed
+
+# Firewall before Docker, so that no firewalld reload happens after Docker has added its rules.
+- name: EVPN GW - check firewalld
+  command: systemctl is-active firewalld
+  register: evpn_gw_firewalld
+  changed_when: false
+  failed_when: false
+
+# BGP/VXLAN accepted only from this environment's KVM hosts. With firewalld: permanent rich
+# rules. Without firewalld: the TRILLIAN-EVPN iptables chain, (re)applied by the bridge
+# script at every boot (see trillian-evpn-gw-net.sh).
+- name: EVPN GW - peer addresses allowed to reach BGP/VXLAN
+  set_fact:
+    evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
+
+- name: EVPN GW - remove any open-to-all BGP/VXLAN ports (firewalld)
+  shell: "firewall-cmd --permanent --remove-port=179/tcp --remove-port=4789/udp || true"
+  when: evpn_gw_firewalld.stdout == "active"
+
+- name: EVPN GW - allow BGP/VXLAN only from environment peers (firewalld)
+  shell: >-
+    firewall-cmd --permanent
+    --add-rich-rule='rule family="ipv4" source address="{{ item[0] }}/32" port port="{{ item[1].port }}" protocol="{{ item[1].proto }}" accept'
+  with_nested:
+    - "{{ evpn_fw_peers }}"
+    - [ { proto: tcp, port: 179 }, { proto: udp, port: 4789 } ]
+  when: evpn_gw_firewalld.stdout == "active"
+
+- name: EVPN GW - reload firewalld
+  shell: "firewall-cmd --reload"
+  when: evpn_gw_firewalld.stdout == "active"
+
+# ---------------------------------------------------------------------------
+# Docker and Containerlab
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - Docker CE repository
+  copy:
+    dest: /etc/yum.repos.d/trillian-docker-ce.repo
+    content: |
+      [trillian-docker-ce]
+      name=Docker CE (Trillian EVPN gateway)
+      baseurl={{ evpn_gw_docker_repo_baseurl }}
+      enabled=1
+      gpgcheck=0
+    owner: root
+    group: root
+    mode: 0644
+
+- name: EVPN GW - Containerlab repository
+  copy:
+    dest: /etc/yum.repos.d/trillian-containerlab.repo
+    content: |
+      [trillian-containerlab]
+      name=Containerlab (Trillian EVPN gateway)
+      baseurl={{ evpn_gw_containerlab_repo_baseurl }}
+      enabled=1
+      gpgcheck=0
+    owner: root
+    group: root
+    mode: 0644
+
+- name: EVPN GW - install Docker CE
+  shell: "rpm -q docker-ce >/dev/null 2>&1 || dnf -y install --allowerasing docker-ce docker-ce-cli containerd.io"
+  register: evpn_gw_docker_install
+  until: evpn_gw_docker_install.rc == 0
+  retries: 3
+  delay: 10
+
+- name: EVPN GW - enable and start Docker
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: EVPN GW - install Containerlab
+  shell: "rpm -q containerlab >/dev/null 2>&1 || dnf -y install containerlab"
+  register: evpn_gw_clab_install
+  until: evpn_gw_clab_install.rc == 0
+  retries: 3
+  delay: 10
+
+- name: EVPN GW - pull FRR image {{ evpn_gw_frr_image }}
+  shell: "docker image inspect {{ evpn_gw_frr_image }} >/dev/null 2>&1 || docker pull {{ evpn_gw_frr_image }}"
+  register: evpn_gw_pull
+  until: evpn_gw_pull.rc == 0
+  retries: 3
+  delay: 15
+
+# ---------------------------------------------------------------------------
+# FRR configuration (bind-mounted into the Containerlab node)
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /etc/trillian-evpn/frr
+    - /etc/trillian-evpn/clab
+
+- name: EVPN GW - FRR daemons and vtysh config
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/trillian-evpn/frr/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - daemons
+    - vtysh.conf
+  register: evpn_gw_frr_files
+
+- name: EVPN GW - FRR configuration (iBGP l2vpn evpn to all KVM hosts)
+  template:
+    src: frr.conf.j2
+    dest: /etc/trillian-evpn/frr/frr.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_gw_frr_conf
+
+# ---------------------------------------------------------------------------
+# VNI <-> VLAN bridge
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - bridge setup script
+  template:
+    src: trillian-evpn-gw-net.sh.j2
+    dest: /usr/local/sbin/trillian-evpn-gw-net.sh
+    owner: root
+    group: root
+    mode: 0755
+  register: evpn_gw_net_script
+
+- name: EVPN GW - bridge systemd unit
+  template:
+    src: trillian-evpn-gw-net.service.j2
+    dest: /etc/systemd/system/trillian-evpn-gw-net.service
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_gw_net_unit
+
+- name: EVPN GW - verify no unrendered template placeholders in gateway files
+  shell: "! grep -l '[{][{]' /usr/local/sbin/trillian-evpn-gw-net.sh /etc/systemd/system/trillian-evpn-gw-net.service /etc/trillian-evpn/frr/frr.conf"
+  changed_when: false
+
+- name: EVPN GW - (re)start bridge unit
+  systemd:
+    name: trillian-evpn-gw-net.service
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+  when: evpn_gw_net_script.changed or evpn_gw_net_unit.changed
+
+- name: EVPN GW - ensure bridge unit is running
+  systemd:
+    name: trillian-evpn-gw-net.service
+    enabled: yes
+    state: started
+
+# ---------------------------------------------------------------------------
+# Containerlab FRR node
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - Containerlab topology
+  template:
+    src: evpn-gw.clab.yml.j2
+    dest: /etc/trillian-evpn/clab/evpn-gw.clab.yml
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_gw_topo
+
+- name: EVPN GW - Containerlab systemd unit
+  template:
+    src: trillian-evpn-gw-clab.service.j2
+    dest: /etc/systemd/system/trillian-evpn-gw-clab.service
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_gw_clab_unit
+
+- name: EVPN GW - verify no unrendered template placeholders in Containerlab files
+  shell: "! grep -l '[{][{]' /etc/trillian-evpn/clab/evpn-gw.clab.yml /etc/systemd/system/trillian-evpn-gw-clab.service"
+  changed_when: false
+
+- name: EVPN GW - (re)deploy Containerlab node
+  systemd:
+    name: trillian-evpn-gw-clab.service
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+  when: evpn_gw_topo.changed or evpn_gw_clab_unit.changed or evpn_gw_frr_conf.changed or evpn_gw_frr_files.changed
+
+- name: EVPN GW - ensure Containerlab node is running
+  systemd:
+    name: trillian-evpn-gw-clab.service
+    enabled: yes
+    state: started
+
+# ---------------------------------------------------------------------------
+# Verification (BGP sessions are checked from the KVM hosts, which are configured next)
+# ---------------------------------------------------------------------------
+
+- name: EVPN GW - verify bridge members
+  shell: "bridge link show master br-pub | grep -qw 'vxlan{{ evpn_gw_vni }}' && bridge link show master br-pub | grep -qw '{{ evpn_gw_trunk_if }}.{{ env_pubvlan }}'"
+  changed_when: false
+
+- name: EVPN GW - verify VXLAN device uses the VTEP address
+  shell: "ip -d link show vxlan{{ evpn_gw_vni }} | grep -q 'local {{ evpn_vtep_ip }}'"
+  changed_when: false
+
+- name: EVPN GW - verify bridged frames bypass iptables
+  shell: "test ! -e /proc/sys/net/bridge/bridge-nf-call-iptables || test $(cat /proc/sys/net/bridge/bridge-nf-call-iptables) = 0"
+  changed_when: false
+
+- name: EVPN GW - wait for FRR to know the public VNI
+  command: "docker exec clab-evpngw-frr vtysh -c 'show evpn vni {{ evpn_gw_vni }}'"
+  register: evpn_gw_vni_check
+  changed_when: false
+  failed_when: false
+  until: >-
+    evpn_gw_vni_check.rc == 0 and ('VNI: ' ~ evpn_gw_vni) in evpn_gw_vni_check.stdout
+  retries: 18
+  delay: 10
