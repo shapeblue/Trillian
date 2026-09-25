@@ -47,6 +47,22 @@
       when:
         - evpn_public_vxlan | default(false) | bool
         - not (kvm_vxlan_evpn | default(false) | bool)
+    - name: Validate an EL9 template is available for the EVPN public gateway
+      fail:
+        msg: >-
+          evpn_public_vxlan needs an EL9 template for the gateway VM, but none could be determined
+          (KVM OS '{{ kvm_os }}' is not EL9 and no linux_os entry has os_type el9). Set
+          evpn_gw_template=<template name> or evpn_gw_os=<linux_os key of an EL9 OS>.
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - kvm_vxlan_evpn | default(false) | bool
+        - evpn_gw_template | default('') | length == 0
+    - name: Show the EVPN public gateway template
+      debug:
+        msg: "EVPN gateway VM template: {{ evpn_gw_template }}"
+      when:
+        - evpn_public_vxlan | default(false) | bool
+        - kvm_vxlan_evpn | default(false) | bool
     - name: Validate the EVPN public gateway is in the inventory
       fail:
         msg: >-
