@@ -12,7 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-# EVPN public gateway (kvm_vxlan_evpn + evpn_public_vxlan).
+# EVPN public gateway (evpn_public_vxlan).
 #
 # One VM per environment, two NICs:
 #   {{ evpn_gw_underlay_if }} : management network - VTEP + BGP (same underlay as the KVM hosts)

@@ -32,10 +32,10 @@
   become: true
 
 - name: Create {{ kvm_mgmt_network_label }} bridge interface
-  command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes{{ (' 802-3-ethernet.mtu ' ~ kvm_underlay_mtu) if (kvm_vxlan_evpn | default(false) | bool) else '' }}
+  command: nmcli con add ifname {{ kvm_mgmt_network_label }} type bridge con-name {{ kvm_mgmt_network_label }} autoconnect yes{{ (' 802-3-ethernet.mtu ' ~ kvm_underlay_mtu) if (kvm_evpn_enabled | default(false) | bool) else '' }}
 
 - name: Add interfaces to bridge
-  command: nmcli con add type bridge-slave ifname eth0 master {{ kvm_mgmt_network_label }} autoconnect yes con-name br-eth0{{ (' 802-3-ethernet.mtu ' ~ kvm_underlay_mtu) if (kvm_vxlan_evpn | default(false) | bool) else '' }}
+  command: nmcli con add type bridge-slave ifname eth0 master {{ kvm_mgmt_network_label }} autoconnect yes con-name br-eth0{{ (' 802-3-ethernet.mtu ' ~ kvm_underlay_mtu) if (kvm_evpn_enabled | default(false) | bool) else '' }}
 
 - name: bring up bridge
   command: nmcli connection up {{ kvm_mgmt_network_label }}

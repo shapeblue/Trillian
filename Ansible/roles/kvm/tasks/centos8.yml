@@ -251,7 +251,7 @@
   shell: "echo {{ kvm_password }} | passwd {{ kvm_username }} --stdin"
 
 - include: ./kvm_vxlan_evpn.yml
-  when: kvm_vxlan_evpn | default(false) | bool
+  when: kvm_evpn_enabled | default(false) | bool
   tags:
     - kvm
     - kvm-evpn

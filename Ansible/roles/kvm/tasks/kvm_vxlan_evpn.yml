@@ -22,7 +22,8 @@
 #    script lookup finds before the packaged multicast script (CloudStack 4.19+). The packaged
 #    modifyvxlan-evpn.sh is used when present (4.21+), otherwise Trillian's vendored copy.
 #
-# Included from the OS task files (el9.yml, centos8.yml) when kvm_vxlan_evpn is true.
+# Included from the OS task files (el9.yml, centos8.yml, ubuntu.yml, suse.yml) when
+# kvm_evpn_enabled is true, i.e. guest and/or public traffic uses VXLAN.
 # OS-specific parts live in kvm_vxlan_evpn_install_<family>.yml and kvm_vxlan_evpn_firewall_<family>.yml.
 
 # Note: no 'setup'/fact gathering here. Trillian's Ansible version cannot gather facts on

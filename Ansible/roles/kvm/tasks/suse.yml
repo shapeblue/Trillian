@@ -202,7 +202,7 @@
   when: authkeys_present.stat.exists == True
 
 - include: ./kvm_vxlan_evpn.yml
-  when: kvm_vxlan_evpn | default(false) | bool
+  when: kvm_evpn_enabled | default(false) | bool
   tags:
     - kvm
     - kvm-evpn

@@ -206,7 +206,7 @@
   when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == true
 
 ####################################################################
-# EVPN public gateway (kvm_vxlan_evpn + evpn_public_vxlan)
+# EVPN public gateway (evpn_public_vxlan)
 # Built like the KVM hosts: created stopped, then started in the same cluster (or on the
 # same parent host when hypervisors_on_same_host) chosen by the custom allocator.
 #

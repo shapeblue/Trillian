@@ -4,12 +4,12 @@
 		"guestcidraddress": "{{ env_zone_guestcidr }}",
 		"dns1": "{{ env_zone_dns1 }}",
 		"physical_networks": [{
-{% if kvm_vxlan_evpn | default(false) | bool %}
+{% if (kvm_vxlan_evpn | default(false) | bool) or (evpn_public_vxlan | default(false) | bool) %}
 			"broadcastdomainrange": "Zone",
-			"name": "Trillian-Guest-VXLAN",
+			"name": "{{ 'Trillian-Guest-VXLAN' if (kvm_vxlan_evpn | default(false) | bool) else 'Trillian-Guest' }}",
 			"traffictypes": [{
 				"type": "Guest",
-				"kvm": "{{ kvm_vxlan_guest_label }}"
+				"kvm": "{{ kvm_vxlan_guest_label if (kvm_vxlan_evpn | default(false) | bool) else kvm_guest_network_label }}"
 			}],
 			"providers": [{
 				"broadcastdomainrange": "ZONE",
@@ -21,7 +21,7 @@
 				"broadcastdomainrange": "ZONE",
 				"name": "InternalLbVm"
 			}],
-			"isolationmethods": "VXLAN"
+			"isolationmethods": "{{ 'VXLAN' if (kvm_vxlan_evpn | default(false) | bool) else 'VLAN' }}"
 		},{
 			"broadcastdomainrange": "Zone",
 			"name": "Trillian-Public",

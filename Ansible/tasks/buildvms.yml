@@ -385,7 +385,7 @@
   when: use_external_hv_hosts|bool == false
 
 ####################################################################
-# EVPN public gateway (kvm_vxlan_evpn + evpn_public_vxlan)
+# EVPN public gateway (evpn_public_vxlan)
 #
 - name: build EVPN public gateway VM
   local_action:
