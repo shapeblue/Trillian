@@ -100,7 +100,7 @@
 #                      Containerlab/FRR gateway VM that bridges the public VNI to env_pubvlan.
 #                      The two flags are independent (guest only, public only, or both).
 #                      Either one requires hvtype=k with a supported kvm_os (verified: EL8/9/10,
-#                      Ubuntu 24.04, openSUSE Leap 15; implemented but unverified: Ubuntu 22.04),
+#                      Ubuntu 22.04/24.04, openSUSE Leap 15),
 #                      advanced zone, no security groups, kvm_network_mode=bridge, CloudStack 4.19+.
 #   evpn_allow_untested_os: yes to allow an implemented but not yet lab-verified KVM OS (default no)
 #   evpn_frr_apt_repo: Ubuntu only, complete apt sources line for an FRR repository (default: distro package)
