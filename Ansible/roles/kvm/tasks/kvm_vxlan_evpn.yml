@@ -63,6 +63,15 @@
 # VTEP /32 on loopback (same IP as the management bridge)
 # ---------------------------------------------------------------------------
 
+- name: EVPN - locate the ip binary (path differs between distributions)
+  shell: "for p in /usr/sbin/ip /sbin/ip /usr/bin/ip /bin/ip; do [ -x $p ] && echo $p && break; done"
+  register: evpn_ip_bin_out
+  changed_when: false
+
+- name: EVPN - set ip binary path
+  set_fact:
+    evpn_ip_bin: "{{ evpn_ip_bin_out.stdout | trim if (evpn_ip_bin_out.stdout | trim | length > 0) else '/usr/sbin/ip' }}"
+
 - name: EVPN - install systemd unit that puts the VTEP address on lo
   template:
     src: trillian-evpn-vtep.service.j2
@@ -118,6 +127,12 @@
 - include: ./kvm_vxlan_evpn_install_el.yml
   when: evpn_os_family == 'el'
 
+- include: ./kvm_vxlan_evpn_install_ubuntu.yml
+  when: evpn_os_family == 'ubuntu'
+
+- include: ./kvm_vxlan_evpn_install_suse.yml
+  when: evpn_os_family == 'suse'
+
 - name: EVPN - enable bgpd
   lineinfile:
     path: /etc/frr/daemons
@@ -157,8 +172,12 @@
   set_fact:
     evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
 
+# firewalld / iptables (+ /etc/sysconfig/iptables): EL and SUSE; ufw or iptables: Ubuntu
 - include: ./kvm_vxlan_evpn_firewall_el.yml
-  when: evpn_os_family == 'el'
+  when: evpn_os_family in ['el', 'suse']
+
+- include: ./kvm_vxlan_evpn_firewall_ubuntu.yml
+  when: evpn_os_family == 'ubuntu'
 
 # ---------------------------------------------------------------------------
 # CloudStack agent: EVPN VXLAN script via /usr/share/modifyvxlan.sh override

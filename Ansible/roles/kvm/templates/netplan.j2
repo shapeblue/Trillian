@@ -2,11 +2,17 @@ network:
     ethernets:
         eth0:
             dhcp4: no
+{% if kvm_vxlan_evpn | default(false) | bool %}
+            mtu: {{ kvm_underlay_mtu }}
+{% endif %}
         eth1:
             dhcp4: no
     bridges:
         cloudbr0:
             dhcp4: yes
+{% if kvm_vxlan_evpn | default(false) | bool %}
+            mtu: {{ kvm_underlay_mtu }}
+{% endif %}
             interfaces:
                 - eth0
             macaddress: {{ ansible_eth0.macaddress }}

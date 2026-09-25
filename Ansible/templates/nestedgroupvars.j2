@@ -302,6 +302,8 @@ kvm_vxlan_guest_label: "{{ kvm_vxlan_guest_label | default( kvm_mgmt_network_lab
 vxlan_vni_base: {{ vxlan_vni_base | default( 100000 ) }}
 evpn_bgp_asn: {{ evpn_bgp_asn | default( 65000 ) }}
 evpn_frr_repo_baseurl: "{{ evpn_frr_repo_baseurl | default( "" ) }}"
+# Ubuntu only: complete apt sources line for an FRR repository (default: distribution package)
+evpn_frr_apt_repo: "{{ evpn_frr_apt_repo | default( "" ) }}"
 evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
 # yes = allow an implemented but not yet lab-verified KVM OS (see roles/kvm/tasks/main.yml)
 evpn_allow_untested_os: {{ evpn_allow_untested_os | default( "no" ) }}
