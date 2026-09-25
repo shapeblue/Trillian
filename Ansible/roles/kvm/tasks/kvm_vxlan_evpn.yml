@@ -159,25 +159,42 @@
     state: started
 
 # ---------------------------------------------------------------------------
-# Firewall: BGP (tcp/179) and VXLAN (udp/4789, the EVPN script's DSTPORT)
+# Firewall: BGP (tcp/179) and VXLAN (udp/4789, the EVPN script's DSTPORT) are accepted
+# ONLY from this environment's own peers (other KVM hosts + EVPN gateway). The kernel's
+# VXLAN device would otherwise decapsulate packets for a known VNI from any source.
 # ---------------------------------------------------------------------------
 
-- name: EVPN - open BGP and VXLAN ports (firewalld)
-  shell: "firewall-cmd --zone=public --add-port={{ item }} --permanent"
-  with_items:
-    - "179/tcp"
-    - "4789/udp"
+- name: EVPN - peer addresses allowed to reach BGP/VXLAN
+  set_fact:
+    evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
+
+- name: EVPN - remove any open-to-all BGP/VXLAN ports (firewalld)
+  shell: "firewall-cmd --permanent --zone=public --remove-port=179/tcp --remove-port=4789/udp || true"
+  when: use_firewalld | bool
+
+- name: EVPN - allow BGP/VXLAN only from environment peers (firewalld)
+  shell: >-
+    firewall-cmd --permanent --zone=public
+    --add-rich-rule='rule family="ipv4" source address="{{ item[0] }}/32" port port="{{ item[1].port }}" protocol="{{ item[1].proto }}" accept'
+  with_nested:
+    - "{{ evpn_fw_peers }}"
+    - [ { proto: tcp, port: 179 }, { proto: udp, port: 4789 } ]
   when: use_firewalld | bool
 
 - name: EVPN - reload firewalld
   shell: "firewall-cmd --reload"
   when: use_firewalld | bool
 
-- name: EVPN - open BGP and VXLAN ports (iptables)
-  shell: "iptables -C INPUT -p {{ item.proto }} -m {{ item.proto }} --dport {{ item.port }} -j ACCEPT 2>/dev/null || iptables -I INPUT -p {{ item.proto }} -m {{ item.proto }} --dport {{ item.port }} -j ACCEPT"
-  with_items:
-    - { proto: tcp, port: 179 }
-    - { proto: udp, port: 4789 }
+- name: EVPN - allow BGP/VXLAN only from environment peers (iptables chain TRILLIAN-EVPN)
+  shell: |
+    iptables -N TRILLIAN-EVPN 2>/dev/null || true
+    iptables -F TRILLIAN-EVPN
+    {% for peer in evpn_fw_peers %}
+    iptables -A TRILLIAN-EVPN -s {{ peer }}/32 -j ACCEPT
+    {% endfor %}
+    iptables -A TRILLIAN-EVPN -j DROP
+    iptables -C INPUT -p udp --dport 4789 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p udp --dport 4789 -j TRILLIAN-EVPN
+    iptables -C INPUT -p tcp --dport 179 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p tcp --dport 179 -j TRILLIAN-EVPN
   when: not (use_firewalld | bool)
 
 - name: EVPN - save iptables rules
