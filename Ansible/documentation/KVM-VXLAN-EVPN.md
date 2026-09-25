@@ -21,7 +21,7 @@ Two independent flags select what runs over VXLAN. Both default to `no`; with bo
 | `no` | `no` | VLAN | VLAN | no | no | standard Trillian |
 | `yes` | `no` | VXLAN / EVPN | VLAN | yes | no | verified |
 | `yes` | `yes` | VXLAN / EVPN | VXLAN -> gateway -> public VLAN | yes | yes | verified |
-| `no` | `yes` | VLAN | VXLAN -> gateway -> public VLAN | yes | yes | implemented, not yet lab-verified |
+| `no` | `yes` | VLAN | VXLAN -> gateway -> public VLAN | yes | yes | verified |
 
 "EVPN on KVM hosts" (FRR, VTEP, underlay MTU, peer-only firewall) is derived automatically:
 `kvm_evpn_enabled` is written to the environment's group vars as the expression
@@ -335,7 +335,6 @@ cloud's VRs, the router) and advertises them into the environment's EVPN; that i
 
 ## 13. Known limitations
 
-* Public-only mode is implemented but not yet verified in a lab build.
 * One gateway per environment, no redundancy (a second gateway in the same environment would
   create an L2 loop).
 * Peer lists (FRR neighbours and firewall rules) are fixed at build time: additional pods are
