@@ -293,6 +293,16 @@ kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_netwo
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
 kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
+
+# KVM VXLAN (BGP-EVPN) guest isolation - phase 1 (guest over VXLAN, public stays VLAN)
+# All defaults keep existing behaviour: nothing changes unless kvm_vxlan_evpn is set to yes.
+kvm_vxlan_evpn: {{ kvm_vxlan_evpn | default( "no" ) }}
+kvm_underlay_mtu: {{ kvm_underlay_mtu | default( 9000 ) }}
+kvm_vxlan_guest_label: "{{ kvm_vxlan_guest_label | default( kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) ) }}"
+vxlan_vni_base: {{ vxlan_vni_base | default( 100000 ) }}
+evpn_bgp_asn: {{ evpn_bgp_asn | default( 65000 ) }}
+evpn_frr_repo_baseurl: "{{ evpn_frr_repo_baseurl | default( "" ) }}"
+evpn_force_vendored_script: {{ evpn_force_vendored_script | default( "no" ) }}
 kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
 kvm_username: "{{ kvm_username | default( def_kvm_username ) }}"
 kvm_password: "{{ kvm_password | default( def_kvm_password ) }}"
