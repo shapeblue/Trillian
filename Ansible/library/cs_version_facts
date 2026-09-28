@@ -57,6 +57,9 @@ else
     NUMERIC_VERSION=`echo $L_ONE.$L_TWO.$L_THREE`
     DOT_THREE="."
     DOT_FOUR=""
+    if [ "$L_ONE" != "4" ]; then
+      REPO_VERSION="${L_ONE}"
+    fi
   fi
 
   if [[ "$VERSIONDEPTH" == "3" ]]; then
