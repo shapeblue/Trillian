@@ -42,6 +42,12 @@ else
   VERSIONDEPTH=$((`echo "${VERSIONNUM}" | awk -F "." '{print NF-1}'`))
   L_ONE=`echo $VERSIONNUM | awk -F "." '{print $1}'`
   L_TWO=`echo $VERSIONNUM | awk -F "." '{print $2}'`
+  REPO_VERSION="${L_ONE}.${L_TWO}"
+  # 24.x+ package folders are named by major version only
+  if [ -z "$L_TWO" ]; then
+    REPO_VERSION="${L_ONE}"
+    L_TWO="0"
+  fi
   NUMERIC_VERSION=`echo $L_ONE.$L_TWO`
   DOT_THREE=""
   L_THREE=""
@@ -74,7 +80,7 @@ cat << EOF
   "${PREFIX_STR}_cs_subminor_version": "${L_ONE}.${L_TWO}${DOT_THREE}${L_THREE}",
   "${PREFIX_STR}_cs_security_version": "${L_ONE}.${L_TWO}${DOT_THREE}${L_THREE}${DOT_FOUR}${L_FOUR}",
   "${PREFIX_STR}_version": "${DISTRIBUTION}${L_ONE}${L_TWO}${L_THREE}${L_FOUR}",
-  "${PREFIX_STR}_repo_version_var": "${L_ONE}.${L_TWO}",
+  "${PREFIX_STR}_repo_version_var": "${REPO_VERSION}",
   "${PREFIX_STR}_cs_minor_version_string": "${DISTRIBUTION}${L_ONE}${L_TWO}",
   "env_return": "success",
   "env_retmsg": "Data successfully returned."
