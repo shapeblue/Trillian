@@ -307,19 +307,10 @@
 - name: update /etc/libvirt/qemu.conf
   lineinfile: dest=/etc/libvirt/qemu.conf regexp='#vnc_listen = "0.0.0.0"' line='vnc_listen = "0.0.0.0"'
 
-- name: Symlink to disable
-  file: src=/etc/apparmor.d/usr.sbin.libvirtd dest=/etc/apparmor.d/disable/usr.sbin.libvirtd state=link
+- name: update security_driver to none in /etc/libvirt/qemu.conf
+  lineinfile: dest=/etc/libvirt/qemu.conf regexp='#security_driver' line='security_driver = "none"'
 
-- name: Symlink to disable
-  file: src=/etc/apparmor.d/usr.lib.libvirt.virt-aa-helper dest=/etc/apparmor.d/disable/usr.lib.libvirt.virt-aa-helper state=link
-
-- name: Apparmor parser libvirt
-  shell: apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
-  ignore_errors: yes
-
-- name: Apparmor parser libvirt helper
-  shell: apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
-  ignore_errors: yes
+- include: ../../../tasks/configure_apparmor.yml
 
 - name: Delete DHCP leases file - bionic onwards
   file: path={{ item }} state=absent
