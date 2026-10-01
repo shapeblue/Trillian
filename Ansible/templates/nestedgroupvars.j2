@@ -117,7 +117,7 @@ env_iscsi_target: "{{ env_iscsi_target | default( def_env_iscsi_target ) }}"
 env_secpath: "{{ env_secpath | default( def_env_secpath ) }}"
 pri_password: "{{ pri_password | default( def_pri_password ) }}"
 pri_password_iscsi: "{{ pri_password_iscsi | default( def_pri_password_iscsi ) }}"
-pri_password_ceph: "{{ pri_password_ceph | default( def_pri_password_ceph | default('') ) }}"
+pri_password_ceph: "{{ pri_password_ceph | default( pri_password | default( def_pri_password ) ) }}"
 sec_password: "{{ sec_password | default( def_sec_password ) }}"
 env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
 env_ceph_poolcount: {{ env_ceph_poolcount | default( def_env_ceph_poolcount | default(2) ) }}

@@ -145,7 +145,7 @@ secondary_storage_hosts
 [primary_storage_hosts_ceph]
 {% for cephhost in [ env_prihost_ceph1 | default( def_env_prihost_ceph1 | default('') ), env_prihost_ceph2 | default( def_env_prihost_ceph2 | default('') ), env_prihost_ceph3 | default( def_env_prihost_ceph3 | default('') ) ] %}
 {% if cephhost | length > 0 %}
-{{ cephhost }} ansible_ssh_host={{ cephhost }} ansible_ssh_pass={{ pri_password_ceph | default( def_pri_password_ceph | default('') ) }}
+{{ cephhost }} ansible_ssh_host={{ cephhost }} ansible_ssh_pass={{ pri_password_ceph | default( def_pri_password ) }}
 {% endif %}
 {% endfor %}
 
