@@ -91,3 +91,32 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`
 * `env_name=cs49-vmw55-pga env_version=cs49 mgmt_os=6 hvtype=v vmware_ver=55u3 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
 * `env_name=cs49-kvm6-pga env_version=cs49 mgmt_os=6 env_accounts=all hvtype=k kvm_os=6 hv=2 pri=2 env_accounts=all build_marvin=true wait_till_setup=yes baseurl_cloudstack=http://10.2.0.4/shapeblue/cloudstack/testing/`
+
+### Ceph (RBD) primary storage
+
+`env_priprot=ceph` is a third primary storage option alongside `nfs` and
+`iscsi` (KVM only). Unlike NFS/iSCSI, the Ceph cluster itself (mons/OSDs) is
+**not** built by this repo - it is provisioned out-of-band by a chained
+Jenkins job (`ceph-deployer`, e.g. `DATA_DISK_SIZE=100 CEPH_VERSION=squid
+NODES_COUNT=3`) before `deployvms.yml` runs, and torn down by that same
+Jenkins pipeline (after `destroyvms.yml` completes, when cleanup is
+requested). Both the triggering and the teardown of that job are Jenkins-side
+concerns and are not part of this repo.
+
+What Ansible does with `env_priprot=ceph`:
++ `env_prihost_ceph1`/`env_prihost_ceph2`/`env_prihost_ceph3`: IPs of the 3
+  Ceph nodes, normally read by the calling Jenkins job from `$CEPH_1`/
+  `$CEPH_2`/`$CEPH_3` and passed through as `--extra-vars`.
++ `env_ceph_username` (default `admin`), `pri_password_ceph`: cephx admin
+  user / SSH password for the Ceph nodes.
++ `env_ceph_poolcount` (default `2`) / `env_ceph_poolsize` (default `30G`):
+  two RBD pools of 30GB each are created out of the assumed 100GB cluster,
+  each with its own cephx client credential (`cloudstack-cephstorage` role).
++ Once the pools are ready, they are registered with CloudStack (via
+  `cloudmonkey create storagepool ... url="rbd://..."`, see
+  `cloudstack-config/templates/deployzone.sh.j2`/`addpod.sh.j2`).
++ NFS mount points are still created on the NFS server as usual (in case
+  other parts of the environment expect them) but are **not** registered
+  with CloudStack when `env_priprot=ceph`.
++ The generated Marvin config (`advanced-cfg.j2`) uses the Ceph RBD pools -
+  not the NFS mount points - as `primaryStorages`.

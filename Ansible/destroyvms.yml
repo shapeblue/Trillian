@@ -21,12 +21,20 @@
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( env_priprot | lower == "nfs" ) and not destroy_forced }
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( (env_priprot | lower == "nfs") or (env_priprot | lower == "ceph") ) and not destroy_forced }
 
 - hosts: primary_storage_hosts_iscsi
   gather_facts: no
   roles:
     - { role: cloudstack-iscsiluns, storage_action: 'removeprimary', when: ( env_priprot | lower == "iscsi" ) and not destroy_forced }
+
+# Ceph pool teardown here is best-effort; the ceph-deployer environment
+# itself (mons/osds) is destroyed by a separate Jenkins job that runs after
+# this CloudStack teardown completes, when cleanup is requested.
+- hosts: primary_storage_hosts_ceph
+  gather_facts: no
+  roles:
+    - { role: cloudstack-cephstorage, storage_action: 'removeprimary', when: ( env_priprot | lower == "ceph" ) and not destroy_forced }
 
 - hosts: secondary_storage_hosts
   gather_facts: no

@@ -1,0 +1,21 @@
+---
+# Best-effort pool cleanup. The Ceph cluster itself is torn down separately
+# by the "ceph-deployer" Jenkins job after this playbook (destroyvms.yml)
+# has finished, so failures here (e.g. mon_allow_pool_delete not set) are
+# not fatal.
+
+- name: Report action
+  debug: msg="Storage action {{ storage_action }}, removing Ceph RBD pools {{ env_cephpools }} via {{ inventory_hostname }}."
+  run_once: true
+
+- name: Remove cephx client credentials
+  shell: "ceph auth del client.{{ item }}"
+  with_items: "{{ env_cephpools }}"
+  run_once: true
+  ignore_errors: true
+
+- name: Remove RBD pools
+  shell: "ceph osd pool delete {{ item }} {{ item }} --yes-i-really-really-mean-it"
+  with_items: "{{ env_cephpools }}"
+  run_once: true
+  ignore_errors: true
