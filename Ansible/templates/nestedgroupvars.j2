@@ -119,10 +119,9 @@ pri_password_iscsi: "{{ pri_password_iscsi | default( def_pri_password_iscsi ) }
 pri_password_ceph: "{{ pri_password_ceph | default( pri_password | default( def_pri_password ) ) }}"
 sec_password: "{{ sec_password | default( def_sec_password ) }}"
 env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
-env_ceph_poolcount: {{ env_ceph_poolcount | default( def_env_ceph_poolcount | default(2) ) }}
 {% if ( env_priprot | default( def_env_priprot ) | lower ) == "ceph" %}
 env_cephpools:
-{% for n in range(1, ( env_ceph_poolcount | default( def_env_ceph_poolcount | default(2) ) ) | int + 1) %}
+{% for n in range(1, pri | int + 1) %}
   - {{ env_name_clean }}-ceph-pri{{ n }}
 {% endfor %}
 {% endif %}

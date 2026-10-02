@@ -109,10 +109,12 @@ What Ansible does with `env_priprot=ceph`:
   `$CEPH_2`/`$CEPH_3` and passed through as `--extra-vars`.
 + `pri_password_ceph` (defaults to the same `pri_password` used for the other
   primary storage hosts): SSH password for the Ceph nodes.
-+ `env_ceph_poolcount` (default `2`) / `env_ceph_poolsize` (default `30G`):
-  two RBD pools of 30GB each are created out of the assumed 100GB cluster,
-  each with its own cephx client credential scoped to that pool only
-  (`client.<poolname>`, created by the `cloudstack-cephstorage` role).
++ `pri` (the same "number of primary storage pools" extra-var used for
+  NFS/iSCSI) controls how many RBD pools are created; `env_ceph_poolsize`
+  (default `30G`) controls each one's size. With `pri=2` against the assumed
+  100GB cluster you get two 30GB pools, each with its own cephx client
+  credential scoped to that pool only (`client.<poolname>`, created by the
+  `cloudstack-cephstorage` role).
 + Once the pools are ready, they are registered with CloudStack (via
   `cloudmonkey create storagepool ... url="rbd://<poolname>:<secret>@..."` -
   the URL's username is the pool name, matching the cephx identity that was
