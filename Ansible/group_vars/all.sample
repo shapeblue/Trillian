@@ -129,7 +129,6 @@ def_env_iscsi_target: "<IQN_HERE>"
 def_env_prihost_ceph1: "<IP_ADDRESS_HERE>"
 def_env_prihost_ceph2: "<IP_ADDRESS_HERE>"
 def_env_prihost_ceph3: "<IP_ADDRESS_HERE>"
-def_env_ceph_username: "admin"
 # Ceph cluster is assumed to be 100GB total; two RBD pools are carved out of it.
 def_env_ceph_poolcount: 2
 def_env_ceph_poolsize: "30G"

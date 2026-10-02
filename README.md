@@ -107,13 +107,16 @@ What Ansible does with `env_priprot=ceph`:
 + `env_prihost_ceph1`/`env_prihost_ceph2`/`env_prihost_ceph3`: IPs of the 3
   Ceph nodes, normally read by the calling Jenkins job from `$CEPH_1`/
   `$CEPH_2`/`$CEPH_3` and passed through as `--extra-vars`.
-+ `env_ceph_username` (default `admin`), `pri_password_ceph`: cephx admin
-  user / SSH password for the Ceph nodes.
++ `pri_password_ceph` (defaults to the same `pri_password` used for the other
+  primary storage hosts): SSH password for the Ceph nodes.
 + `env_ceph_poolcount` (default `2`) / `env_ceph_poolsize` (default `30G`):
   two RBD pools of 30GB each are created out of the assumed 100GB cluster,
-  each with its own cephx client credential (`cloudstack-cephstorage` role).
+  each with its own cephx client credential scoped to that pool only
+  (`client.<poolname>`, created by the `cloudstack-cephstorage` role).
 + Once the pools are ready, they are registered with CloudStack (via
-  `cloudmonkey create storagepool ... url="rbd://..."`, see
+  `cloudmonkey create storagepool ... url="rbd://<poolname>:<secret>@..."` -
+  the URL's username is the pool name, matching the cephx identity that was
+  actually created for it, not a shared admin user - see
   `cloudstack-config/templates/deployzone.sh.j2`/`addpod.sh.j2`).
 + NFS mount points are still created on the NFS server as usual (in case
   other parts of the environment expect them) but are **not** registered
