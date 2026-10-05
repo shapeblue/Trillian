@@ -369,3 +369,11 @@
 - name: wait for ssh
   local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
   when: (not use_phys_hosts)
+
+- name: Install ceph-common (needed for Ceph RBD volume encryption support)
+  apt:
+    name: ceph-common
+    state: present
+  when: env_priprot | lower == "ceph"
+  tags:
+    - kvm

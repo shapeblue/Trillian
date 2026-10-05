@@ -273,3 +273,10 @@
   when: kvm_install_elrepo_kernel
   tags:
     - kvm
+
+- name: Install ceph-common (needed for Ceph RBD volume encryption support)
+  dnf: name=ceph-common state=present enablerepo=base
+  when: env_priprot | lower == "ceph"
+  tags:
+    - kvm
+    - kvm-agent

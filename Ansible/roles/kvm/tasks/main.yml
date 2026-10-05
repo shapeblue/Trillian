@@ -97,14 +97,6 @@
   tags:
     - kvm
 
-- name: Install ceph-common (needed for Ceph RBD volume encryption support)
-  package:
-    name: ceph-common
-    state: present
-  when: env_priprot | lower == "ceph"
-  tags:
-    - kvm
-
 - name: Update agent with local storage path
   lineinfile: dest=/etc/cloudstack/agent/agent.properties line="local.storage.path={{ kvm_localstorage_mount }}" state=present
   when: use_local_storage

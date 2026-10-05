@@ -451,3 +451,11 @@
   when: ansible_distribution_version is version('20.04','==')
   tags:
     - kvm
+
+- name: Install ceph-common (needed for Ceph RBD volume encryption support)
+  apt:
+    name: ceph-common
+    state: present
+  when: env_priprot | lower == "ceph"
+  tags:
+    - kvm
