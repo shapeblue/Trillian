@@ -108,7 +108,7 @@
 {% set cephmonhost = hostvars[groups['primary_storage_hosts_ceph'][0]]['ansible_ssh_host'] if groups['primary_storage_hosts_ceph'] | length | int > 0 else "UNDEFINED" %}
 {% set cephcreds = hostvars[groups['primary_storage_hosts_ceph'][0]]['env_cephpool_credentials'] | default({}) %}
 {% for cephpool in env_cephpools %}			{
-						"url": "rbd://{{ cephpool }}:{{ cephcreds[cephpool] | default('UNDEFINED') | urlencode }}@{{ cephmonhost }}:6789/{{ cephpool }}",
+						"url": "rbd://{{ cephpool }}:{{ cephcreds[cephpool] | default('UNDEFINED') }}@{{ cephmonhost }}:6789/{{ cephpool }}",
 						"name": "{{ cephpool }}"}{% if not loop.last %},{% endif %}
 {% endfor %}
 {% else %}
