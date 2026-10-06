@@ -1,0 +1,15 @@
+# Managed by Trillian (evpn-gateway)
+[Unit]
+Description=Trillian EVPN gateway: VTEP on lo and VNI {{ evpn_gw_vni }} <-> VLAN {{ env_pubvlan }} bridge
+Wants=network-online.target
+After=network-online.target docker.service
+Before=trillian-evpn-gw-clab.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/trillian-evpn-gw-net.sh start
+ExecStop=/usr/local/sbin/trillian-evpn-gw-net.sh stop
+
+[Install]
+WantedBy=multi-user.target

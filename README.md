@@ -84,6 +84,7 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `env_zone_systemplate`: URL to system template, overrides version variable
 + `build_marvin`: whether or not to build a marvin vm for testing purposes (default is false)
 + `wait_till_setup`: only return once system VMs are running. (default is no)
++ `kvm_vxlan_evpn`: use VXLAN guest isolation with BGP-EVPN (FRR) on EL9+ KVM hosts, CloudStack 4.19+ (default is no). See [Ansible/documentation/KVM-VXLAN-EVPN.md](Ansible/documentation/KVM-VXLAN-EVPN.md)
 
 
 #### Some example --extra-args:

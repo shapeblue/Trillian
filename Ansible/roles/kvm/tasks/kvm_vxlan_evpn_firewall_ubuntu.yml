@@ -1,0 +1,48 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# EVPN on Ubuntu: tcp/179 + udp/4789 only from the environment's peers.
+# Trillian adds ufw rules on Ubuntu but does not enable ufw, so it is usually inactive:
+#   ufw active   -> per-peer ufw allow rules (everything else hits ufw's default deny)
+#   ufw inactive -> the TRILLIAN-EVPN iptables chain (as on EL), saved with netfilter-persistent
+# Included from kvm_vxlan_evpn.yml.
+
+- name: EVPN - check whether ufw is active
+  shell: "ufw status 2>/dev/null | grep -q '^Status: active'"
+  register: evpn_ufw_active
+  changed_when: false
+  failed_when: false
+
+- name: EVPN - allow BGP/VXLAN only from environment peers (ufw)
+  command: "ufw allow proto {{ item[1].proto }} from {{ item[0] }} to any port {{ item[1].port }}"
+  with_nested:
+    - "{{ evpn_fw_peers }}"
+    - [ { proto: tcp, port: 179 }, { proto: udp, port: 4789 } ]
+  when: evpn_ufw_active.rc == 0
+
+- name: EVPN - allow BGP/VXLAN only from environment peers (iptables chain TRILLIAN-EVPN)
+  shell: |
+    iptables -N TRILLIAN-EVPN 2>/dev/null || true
+    iptables -F TRILLIAN-EVPN
+    {% for peer in evpn_fw_peers %}
+    iptables -A TRILLIAN-EVPN -s {{ peer }}/32 -j ACCEPT
+    {% endfor %}
+    iptables -A TRILLIAN-EVPN -j DROP
+    iptables -C INPUT -p udp --dport 4789 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p udp --dport 4789 -j TRILLIAN-EVPN
+    iptables -C INPUT -p tcp --dport 179 -j TRILLIAN-EVPN 2>/dev/null || iptables -I INPUT -p tcp --dport 179 -j TRILLIAN-EVPN
+  when: evpn_ufw_active.rc != 0
+
+- name: EVPN - persist iptables rules
+  shell: "netfilter-persistent save 2>/dev/null || (mkdir -p /etc/iptables && iptables-save > /etc/iptables/rules.v4)"
+  when: evpn_ufw_active.rc != 0

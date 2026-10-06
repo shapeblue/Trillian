@@ -1,0 +1,14 @@
+# Managed by Trillian (evpn-gateway)
+# One FRR node in the VM's own network namespace (network-mode: host): it uses the VM's
+# VTEP address and drives the host's vxlan{{ evpn_gw_vni }} / br-pub via EVPN.
+name: evpngw
+topology:
+  nodes:
+    frr:
+      kind: linux
+      image: {{ evpn_gw_frr_image }}
+      network-mode: host
+      binds:
+        - /etc/trillian-evpn/frr/daemons:/etc/frr/daemons
+        - /etc/trillian-evpn/frr/frr.conf:/etc/frr/frr.conf
+        - /etc/trillian-evpn/frr/vtysh.conf:/etc/frr/vtysh.conf

@@ -23,6 +23,7 @@ mysql_hosts
 vc_hosts
 storage_hosts
 marvin_host
+evpn_gateway_hosts
 
 [local]
 localhost ansible_connection=local
@@ -125,6 +126,11 @@ ansible_python_interpreter=/usr/bin/python3
 {% if kvm_os | lower == "u18" or kvm_os | lower == "s15" %}
 [kvm_hosts:vars]
 ansible_python_interpreter=/usr/bin/python3
+{% endif %}
+
+[evpn_gateway_hosts]
+{% if kvm_os | lower != "na" and not use_external_hv_hosts and (evpn_public_vxlan | default("no") | bool) %}
+{{ env_name_clean }}-evpngw ansible_ssh_host={{ env_name_clean }}-evpngw-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-evpngw-instance_name
 {% endif %}
 
 [marvin_host]

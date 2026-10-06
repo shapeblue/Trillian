@@ -51,6 +51,44 @@
       ansible_distribution: "SUSE"
   when: ansible_distribution == 'Ubuntu' and result is succeeded
 
+# KVM host OS support for VXLAN/EVPN (kvm_vxlan_evpn and/or evpn_public_vxlan):
+#   evpn_os_implemented : OS task files include the EVPN tasks and the OS-specific parts exist
+#   evpn_os_verified    : additionally passed a full lab build (guest + public VXLAN)
+# An implemented but not yet verified OS can be test-built with evpn_allow_untested_os=yes.
+- name: Read /etc/os-release for VXLAN/EVPN (non-EL; os_facts has no version on SUSE)
+  shell: ". /etc/os-release && echo \"${ID}|${VERSION_ID}\""
+  register: evpn_os_release
+  changed_when: false
+  when:
+    - kvm_evpn_enabled | default(false) | bool
+    - ansible_distribution not in ['CentOS', 'Red Hat Enterprise Linux']
+  tags:
+    - kvm
+
+# ids: el<major>, ubuntu<version> (e.g. ubuntu22.04), opensuse-leap<major> (e.g. opensuse-leap15)
+- name: Determine KVM host OS id for VXLAN/EVPN
+  set_fact:
+    evpn_os_id: "{{ ('el' ~ ansible_distribution_major_version) if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else (evpn_os_release.stdout.split('|')[0] ~ (evpn_os_release.stdout.split('|')[1].split('.')[0] if evpn_os_release.stdout.split('|')[0].startswith('opensuse') else evpn_os_release.stdout.split('|')[1])) }}"
+    evpn_os_implemented: ['el8', 'el9', 'el10', 'ubuntu22.04', 'ubuntu24.04', 'opensuse-leap15']
+    evpn_os_verified: ['el8', 'el9', 'el10', 'ubuntu22.04', 'ubuntu24.04', 'opensuse-leap15']
+  when: kvm_evpn_enabled | default(false) | bool
+  tags:
+    - kvm
+
+- name: Check KVM host OS supports VXLAN/EVPN
+  fail:
+    msg: >-
+      VXLAN/EVPN is enabled but {{ inventory_hostname }} runs {{ ansible_distribution }}
+      {{ ansible_distribution_version }} ({{ evpn_os_id }}). Verified: {{ evpn_os_verified | join(', ') }}.
+      Implemented but not yet verified: {{ evpn_os_implemented | difference(evpn_os_verified) | join(', ') }}
+      (test with evpn_allow_untested_os=yes). Otherwise choose a supported KVM_OS or use VLAN for guest and public.
+  when:
+    - kvm_evpn_enabled | default(false) | bool
+    - evpn_os_id not in evpn_os_verified
+    - not ( (evpn_allow_untested_os | default(false) | bool) and (evpn_os_id in evpn_os_implemented) )
+  tags:
+    - kvm
+
 #- name: retrieve environment data
 #  env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_NAME={{ env_name_clean }} ENV_ZONETYPE={{ env_zonetype }} ENV_SECGROUPS={{ env_zone_secgroups }} ENV_ACTION=retrieve
 #  tags:
