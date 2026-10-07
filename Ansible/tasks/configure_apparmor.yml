@@ -12,7 +12,7 @@
   when: ansible_distribution == 'SUSE'
 
 - name: Enable Apparmor enforce mode
-  shell: aa-enforce /etc/apparmor.d/*
+  shell: aa-enforce /usr/sbin/libvirtd && aa-enforce /usr/lib/libvirt/virt-aa-helper
   changed_when: false
 
 - name: Check Apparmor status

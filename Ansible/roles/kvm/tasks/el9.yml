@@ -30,10 +30,6 @@
   tags:
     - kvm
 
-- include: ../../../tasks/configure_selinux.yml
-  tags:
-    - kvm
-
 - name: Clear all dnf cache
   command: dnf clean all
   tags:
@@ -237,6 +233,10 @@
   tags:
     - kvm
     - kvm-agent
+
+- include: ../../../tasks/configure_selinux.yml
+  tags:
+    - kvm
 
 - name: KVM libvirtd restarted
   shell: systemctl restart libvirtd
