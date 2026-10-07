@@ -1,0 +1,62 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Included from deployproxmox.yml in a play with serial: 1 (Proxmox joins one node at a time).
+# The first node creates the cluster; the others join it over SSH (pvecm add --use_ssh).
+
+- name: PVE cluster - first node and its address
+  set_fact:
+    pve_first: "{{ groups['proxmox_hosts'][0] }}"
+    pve_first_ip: "{{ hostvars[groups['proxmox_hosts'][0]]['ansible_ssh_host'] }}"
+
+- name: PVE cluster - already a cluster member?
+  shell: "test -f /etc/pve/corosync.conf"
+  register: pve_member
+  changed_when: false
+  failed_when: false
+
+- name: PVE cluster - create cluster {{ pve_cluster_name }} on the first node
+  shell: "pvecm create {{ pve_cluster_name }}"
+  when: inventory_hostname == pve_first and pve_member.rc != 0
+
+- name: PVE cluster - root SSH key on the joining node
+  shell: "test -f /root/.ssh/id_rsa || ssh-keygen -q -t rsa -b 4096 -N '' -f /root/.ssh/id_rsa"
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - read the joining node's public key
+  shell: "cat /root/.ssh/id_rsa.pub"
+  register: pve_pubkey
+  changed_when: false
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - authorize the joining node on the first node
+  shell: "grep -qF '{{ pve_pubkey.stdout }}' /root/.ssh/authorized_keys 2>/dev/null || echo '{{ pve_pubkey.stdout }}' >> /root/.ssh/authorized_keys"
+  delegate_to: "{{ pve_first }}"
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - trust the first node's host key
+  shell: "ssh-keygen -F {{ pve_first_ip }} >/dev/null || ssh-keyscan -H {{ pve_first_ip }} >> /root/.ssh/known_hosts"
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - join {{ pve_cluster_name }} via {{ pve_first_ip }}
+  shell: "pvecm add {{ pve_first_ip }} --use_ssh 1"
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - wait until this node is in a quorate cluster
+  shell: "pvecm status 2>/dev/null | grep -Eq 'Quorate:[[:space:]]+Yes'"
+  register: pve_quorate
+  until: pve_quorate.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false

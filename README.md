@@ -85,6 +85,8 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `build_marvin`: whether or not to build a marvin vm for testing purposes (default is false)
 + `wait_till_setup`: only return once system VMs are running. (default is no)
 
+**Standalone Proxmox VE cluster** (no CloudStack environment): `ansible-playbook deployproxmox.yml -i localhost --extra-vars "env_name=<name>"`, see [Ansible/documentation/PROXMOX-STANDALONE.md](Ansible/documentation/PROXMOX-STANDALONE.md)
+
 
 #### Some example --extra-args:
 

@@ -1,0 +1,33 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Included from deployproxmox.yml after all nodes joined the cluster.
+
+- name: PVE - add storage local-lvm (cluster-wide config, once)
+  shell: "pvesm status --storage local-lvm >/dev/null 2>&1 || pvesm add lvmthin local-lvm --vgname pve --thinpool data --content images,rootdir"
+  run_once: true
+
+- name: PVE - wait until all {{ groups['proxmox_hosts'] | length }} nodes are online and the cluster is quorate
+  shell: >-
+    pvesh get /cluster/status --output-format json |
+    python3 -c "import json,sys; d=json.load(sys.stdin); c=[x for x in d if x.get('type')=='cluster']; n=[x for x in d if x.get('type')=='node' and x.get('online')==1]; print(len(n) if c and c[0].get('quorate')==1 else 0)"
+  register: pve_online
+  until: pve_online.stdout | trim | int == groups['proxmox_hosts'] | length
+  retries: 30
+  delay: 10
+  changed_when: false
+
+- name: PVE - verify local-lvm is active on this node
+  shell: "pvesm status --storage local-lvm | awk 'NR==2 {print $3}' | grep -qx active"
+  changed_when: false

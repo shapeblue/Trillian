@@ -1,0 +1,278 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Proxmox VE node on Trillian's Debian template (Debian 12 -> PVE 8, Debian 13 -> PVE 9).
+# Written for Trillian's Ansible: no fact gathering (os_facts comes from the timezone role),
+# values read with plain commands. Every step is idempotent, so the playbook can be re-run.
+
+- name: PVE - check OS (Debian 12 or 13)
+  fail:
+    msg: "Proxmox VE needs Debian 12 or 13; {{ inventory_hostname }} runs {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+  when: ansible_distribution != 'Debian' or ansible_distribution_major_version | int not in [12, 13]
+
+- name: PVE - Debian codename
+  shell: ". /etc/os-release && echo $VERSION_CODENAME"
+  register: pve_codename_out
+  changed_when: false
+
+- name: PVE - check both NICs exist ({{ pve_mgmt_if }} management, {{ pve_trunk_if }} trunk)
+  shell: "ip link show {{ pve_mgmt_if }} >/dev/null && ip link show {{ pve_trunk_if }} >/dev/null"
+  changed_when: false
+
+- name: PVE - read management IP/prefix (from vmbr0 on re-runs, else from {{ pve_mgmt_if }})
+  shell: "for d in vmbr0 {{ pve_mgmt_if }}; do ip -4 -o addr show dev $d scope global 2>/dev/null | awk 'NR==1 {print $4}'; done | head -1"
+  register: pve_ip_out
+  changed_when: false
+
+- name: PVE - read default gateway
+  shell: "ip -4 route show default | awk 'NR==1 {print $3}'"
+  register: pve_gw_out
+  changed_when: false
+
+- name: PVE - read DNS servers
+  shell: "( resolvectl dns 2>/dev/null | awk -F': ' 'NF>1 {print $2}' | tr ' ' '\\n'; awk '/^nameserver/ {print $2}' /etc/resolv.conf ) | grep -v '^127\\.' | grep -v '^$' | awk '!seen[$0]++' | head -3"
+  register: pve_dns_out
+  changed_when: false
+
+- name: PVE - set network facts
+  set_fact:
+    pve_codename: "{{ pve_codename_out.stdout | trim }}"
+    pve_ip_cidr: "{{ pve_ip_out.stdout | trim }}"
+    pve_ip: "{{ pve_ip_out.stdout | trim | regex_replace('/.*$', '') }}"
+    pve_gateway: "{{ pve_gw_out.stdout | trim }}"
+    pve_dns: "{{ pve_dns_out.stdout_lines }}"
+    pve_short: "{{ inventory_hostname | lower }}"
+    pve_fqdn: "{{ inventory_hostname | lower }}.{{ pve_domain }}"
+
+- name: PVE - check network values were found
+  fail:
+    msg: "Could not read IP ({{ pve_ip_cidr }}), gateway ({{ pve_gateway }}) or DNS ({{ pve_dns | join(',') }}) on {{ inventory_hostname }}."
+  when: pve_ip_cidr | length == 0 or pve_gateway | length == 0 or pve_dns | length == 0
+
+# ---------------------------------------------------------------------------
+# Hostname: Proxmox requires the node name to resolve to its real IP, not loopback
+# ---------------------------------------------------------------------------
+
+- name: PVE - stop cloud-init from managing hostname, /etc/hosts and networking
+  copy:
+    dest: /etc/cloud/cloud.cfg.d/99-trillian-proxmox.cfg
+    content: |
+      # Managed by Trillian (proxmox role)
+      preserve_hostname: true
+      manage_etc_hosts: false
+      network: {config: disabled}
+  ignore_errors: yes
+
+- name: PVE - set hostname
+  shell: "hostnamectl set-hostname {{ pve_short }} && echo {{ pve_short }} > /etc/hostname"
+
+- name: PVE - remove other /etc/hosts entries for this node name
+  shell: "sed -i -E '/[[:space:]]{{ pve_short }}([[:space:]]|$)/d' /etc/hosts"
+
+- name: PVE - /etc/hosts entry with the management IP
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ pve_ip }} {{ pve_fqdn }} {{ pve_short }}"
+
+- name: PVE - ensure localhost entry
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: "127.0.0.1 localhost"
+
+- name: PVE - set root password (web UI login root@pam)
+  shell: "echo 'root:{{ ansible_ssh_pass }}' | chpasswd"
+  no_log: true
+
+# ---------------------------------------------------------------------------
+# Proxmox VE repository (pve-no-subscription)
+# ---------------------------------------------------------------------------
+
+- name: PVE - prerequisites
+  shell: "DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates gnupg lvm2"
+
+- name: PVE - repository key and source (Debian 12 / PVE 8)
+  shell: |
+    curl -fsSL {{ pve_key_url_bookworm }} -o /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
+    echo "deb [arch=amd64] {{ pve_repo_url }} bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
+  when: pve_codename == 'bookworm'
+
+- name: PVE - repository key and source (Debian 13 / PVE 9)
+  shell: |
+    curl -fsSL {{ pve_key_url_trixie }} -o /usr/share/keyrings/proxmox-archive-keyring.gpg
+    printf 'Types: deb\nURIs: {{ pve_repo_url }}\nSuites: trixie\nComponents: pve-no-subscription\nSigned-By: /usr/share/keyrings/proxmox-archive-keyring.gpg\n' > /etc/apt/sources.list.d/pve-install-repo.sources
+  when: pve_codename == 'trixie'
+
+- name: PVE - preseed postfix (local only)
+  shell: |
+    echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
+    echo "postfix postfix/mailname string {{ pve_fqdn }}" | debconf-set-selections
+
+- name: PVE - full upgrade
+  shell: "DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold full-upgrade"
+  register: pve_upgrade
+  until: pve_upgrade.rc == 0
+  retries: 3
+  delay: 10
+
+# ---------------------------------------------------------------------------
+# Proxmox kernel (reboot into it), then the Proxmox VE packages
+# ---------------------------------------------------------------------------
+
+- name: PVE - is the Proxmox kernel running?
+  shell: "uname -r | grep -q pve"
+  register: pve_kernel_running
+  changed_when: false
+  failed_when: false
+
+- name: PVE - install the Proxmox kernel
+  shell: "DEBIAN_FRONTEND=noninteractive apt-get install -y proxmox-default-kernel"
+  when: pve_kernel_running.rc != 0
+
+- name: PVE - reboot into the Proxmox kernel
+  command: shutdown -r now "Trillian - Proxmox kernel"
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: pve_kernel_running.rc != 0
+
+- name: PVE - wait for the node after reboot
+  wait_for_connection:
+    delay: 60
+    sleep: 5
+    timeout: 900
+  when: pve_kernel_running.rc != 0
+
+- name: PVE - check the Proxmox kernel is now running
+  shell: "uname -r | grep pve"
+  changed_when: false
+
+- name: PVE - install Proxmox VE
+  shell: "dpkg -s proxmox-ve >/dev/null 2>&1 || DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold proxmox-ve postfix open-iscsi"
+  register: pve_install
+  until: pve_install.rc == 0
+  retries: 3
+  delay: 10
+
+- name: PVE - remove the Debian kernel and os-prober (as in the Proxmox install guide)
+  shell: |
+    dpkg -l 'linux-image-*' | awk '/^ii/ {print $2}' | grep -v pve | xargs -r env DEBIAN_FRONTEND=noninteractive apt-get remove -y
+    DEBIAN_FRONTEND=noninteractive apt-get remove -y os-prober || true
+    update-grub
+
+- name: PVE - remove subscription-only repositories (pve-enterprise, ceph enterprise)
+  shell: |
+    rm -f /etc/apt/sources.list.d/pve-enterprise.list /etc/apt/sources.list.d/pve-enterprise.sources
+    rm -f /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources
+    DEBIAN_FRONTEND=noninteractive apt-get update
+
+# ---------------------------------------------------------------------------
+# Networking: vmbr0 (management, static = the DHCP-assigned address) + vmbr1 (VLAN-aware trunk)
+# ---------------------------------------------------------------------------
+
+- name: PVE - static DNS configuration
+  shell: |
+    if [ -L /etc/resolv.conf ]; then rm -f /etc/resolv.conf; fi
+    {
+      echo "# Managed by Trillian (proxmox role)"
+      echo "search {{ pve_domain }}"
+    {% for ns in pve_dns %}
+      echo "nameserver {{ ns }}"
+    {% endfor %}
+    } > /etc/resolv.conf
+    systemctl disable --now systemd-resolved 2>/dev/null || true
+
+- name: PVE - /etc/network/interfaces (vmbr0 + vmbr1)
+  template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: 0644
+  register: pve_interfaces
+
+- name: PVE - hand networking over to ifupdown2 (remove netplan/networkd configuration)
+  shell: |
+    rm -f /etc/netplan/*.yaml /etc/network/interfaces.d/50-cloud-init* 2>/dev/null
+    systemctl disable systemd-networkd.service systemd-networkd.socket 2>/dev/null || true
+    systemctl enable networking 2>/dev/null || true
+  when: pve_interfaces.changed
+
+- name: PVE - reboot to apply the bridge configuration
+  command: shutdown -r now "Trillian - Proxmox networking"
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: pve_interfaces.changed
+
+- name: PVE - wait for the node after reboot
+  wait_for_connection:
+    delay: 60
+    sleep: 5
+    timeout: 900
+  when: pve_interfaces.changed
+
+- name: PVE - verify vmbr0 carries the management IP
+  shell: "ip -4 -o addr show dev vmbr0 | grep -q '{{ pve_ip_cidr }}'"
+  changed_when: false
+
+- name: PVE - verify vmbr1 is VLAN-aware
+  shell: "test $(cat /sys/class/net/vmbr1/bridge/vlan_filtering) = 1"
+  changed_when: false
+
+# ---------------------------------------------------------------------------
+# Local VM-disk storage on the data disk (VG pve / thin pool data -> storage local-lvm)
+# ---------------------------------------------------------------------------
+
+- name: PVE - find the unused data disk
+  shell: |
+    if [ -n "{{ pve_data_disk }}" ]; then echo "{{ pve_data_disk }}"; exit 0; fi
+    # real disks only (not zram/loop/cd-rom); no partitions, no filesystem/LVM signature,
+    # not mounted, not used as swap, not already an LVM physical volume
+    for d in $(lsblk -dnpo NAME,TYPE | awk '$2=="disk" && $1 ~ /^\/dev\/(sd|vd|xvd|nvme)/ {print $1}'); do
+      [ "$(lsblk -nro NAME $d | wc -l)" = "1" ] || continue
+      [ -z "$(lsblk -nro FSTYPE,MOUNTPOINT $d | tr -d ' ')" ] || continue
+      grep -q "^$d " /proc/swaps && continue
+      pvs "$d" >/dev/null 2>&1 && continue
+      echo $d; exit 0
+    done
+  register: pve_disk_out
+  changed_when: false
+
+- name: PVE - is the pve volume group already there?
+  shell: "vgs pve"
+  register: pve_vg
+  changed_when: false
+  failed_when: false
+
+- name: PVE - check a data disk was found
+  fail:
+    msg: "No unused data disk found on {{ inventory_hostname }} for local-lvm (set pve_data_disk)."
+  when: pve_vg.rc != 0 and pve_disk_out.stdout | trim | length == 0
+
+- name: PVE - create VG pve and thin pool data on {{ pve_disk_out.stdout | trim }}
+  shell: |
+    pvcreate -y {{ pve_disk_out.stdout | trim }}
+    vgcreate pve {{ pve_disk_out.stdout | trim }}
+    lvcreate -y -l 95%FREE --thinpool data pve
+  when: pve_vg.rc != 0
+
+- name: PVE - Proxmox VE version
+  shell: "pveversion"
+  register: pve_version
+  changed_when: false
+
+- name: PVE - node ready
+  debug:
+    msg: "{{ pve_fqdn }} ({{ pve_ip }}): {{ pve_version.stdout }}"

@@ -1,0 +1,52 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Removes a standalone Proxmox VE cluster built by deployproxmox.yml:
+#   ansible-playbook destroyproxmox.yml -i hosts_<env_name_clean>
+# Expunges the nodes, then deletes the parent-cloud project with cleanup (data volumes included).
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Ensure cmk is pointing to the right env
+      shell: cmk set profile cloudstack
+
+    - name: Check this is a Proxmox inventory
+      fail:
+        msg: "No proxmox_hosts in this inventory; use the hosts_<env> file written by deployproxmox.yml."
+      when: groups['proxmox_hosts'] is undefined or groups['proxmox_hosts'] | length == 0
+
+    - name: Expunge Proxmox nodes
+      local_action:
+        module: cs_instance
+        name: "{{ item }}"
+        project: "{{ build_project }}"
+        zone: "{{ build_zone }}"
+        state: expunged
+        api_timeout: 120
+      with_items: "{{ groups['proxmox_hosts'] }}"
+      ignore_errors: yes
+
+    - name: Get project id
+      shell: "cmk listProjects | jq -c '.project[] | select(.name == \"{{ build_project }}\")' | jq -r '.id'"
+      register: projectid
+
+    - name: Delete project (with cleanup, removes the data volumes too)
+      shell: "cmk deleteproject id={{ projectid.stdout }} cleanup=true"
+      when: projectid.stdout | length > 0
+
+    - name: Done
+      debug:
+        msg: "Proxmox cluster {{ env_name_clean }} removed (project {{ build_project }})."

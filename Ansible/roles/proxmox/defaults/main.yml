@@ -1,0 +1,27 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# Proxmox VE package sources (pve-no-subscription), per Debian codename.
+# Override with mirrors if the nodes have no internet access.
+pve_repo_url: "http://download.proxmox.com/debian/pve"
+pve_key_url_bookworm: "https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg"
+pve_key_url_trixie: "https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg"
+
+# Interfaces: same layout as Trillian's KVM hosts
+pve_mgmt_if: "eth0"      # management_network -> vmbr0 (IP, cluster traffic, web UI)
+pve_trunk_if: "eth1"     # guest_public_network trunk -> vmbr1 (VLAN-aware, no IP)
+
+# Local VM-disk storage on the data disk: VG "pve", thin pool "data", storage "local-lvm"
+# (the same names a Proxmox ISO installation uses). Empty = detect the unused disk.
+pve_data_disk: ""

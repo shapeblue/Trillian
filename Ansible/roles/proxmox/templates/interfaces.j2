@@ -1,0 +1,28 @@
+# Managed by Trillian (proxmox role)
+auto lo
+iface lo inet loopback
+
+iface {{ pve_mgmt_if }} inet manual
+
+# Management network (same NIC as a Trillian KVM host's cloudbr0)
+auto vmbr0
+iface vmbr0 inet static
+    address {{ pve_ip_cidr }}
+    gateway {{ pve_gateway }}
+    bridge-ports {{ pve_mgmt_if }}
+    bridge-stp off
+    bridge-fd 0
+
+iface {{ pve_trunk_if }} inet manual
+
+# Trunk network (same NIC as a Trillian KVM host's cloudbr1), VLAN-aware, no IP.
+# Use as network_bridge when adding the node to CloudStack later.
+auto vmbr1
+iface vmbr1 inet manual
+    bridge-ports {{ pve_trunk_if }}
+    bridge-stp off
+    bridge-fd 0
+    bridge-vlan-aware yes
+    bridge-vids 2-4094
+
+source /etc/network/interfaces.d/*
