@@ -30,19 +30,6 @@
   shell: "zypper install -y net-tools-deprecated"
   ignore_errors: yes # This package is deprecated. ignoring errors for older distros
 
-- name: Set selinux to permissive
-  command: setenforce permissive
-  changed_when: false
-  tags:
-    - kvm
-  ignore_errors: yes
-
-- name: Ensure selinux is set permanently
-  selinux: policy=targeted state=permissive
-  tags:
-    - kvm
-  ignore_errors: yes
-
 - include: ./kvm_networking_bridge8.yml
   when: (not use_phys_hosts) and (kvm_network_mode == "bridge")
 
@@ -134,6 +121,12 @@
   tags:
     - kvm
     - kvm-agent
+
+- include: ../../../tasks/configure_libvirt_security.yml
+
+- include: ../../../tasks/configure_apparmor.yml
+  tags:
+    - kvm
 
 - name: Mask libvirtd sockets
   shell: systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
