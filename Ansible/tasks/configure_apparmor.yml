@@ -13,6 +13,7 @@
 
 - name: Enable Apparmor enforce mode
   shell: aa-enforce /usr/sbin/libvirtd && aa-enforce /usr/lib/libvirt/virt-aa-helper
+  ignore_errors: yes
   changed_when: false
 
 - name: Check Apparmor status

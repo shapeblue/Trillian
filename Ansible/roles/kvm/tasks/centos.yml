@@ -15,6 +15,8 @@
   tags:
     - kvm
 
+- include: ../../../tasks/configure_libvirt_security.yml
+
 - include: ../../../tasks/configure_selinux.yml
   tags:
     - kvm
