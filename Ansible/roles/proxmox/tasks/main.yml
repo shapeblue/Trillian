@@ -119,6 +119,25 @@
     echo "postfix postfix/main_mailer_type select Local only" | debconf-set-selections
     echo "postfix postfix/mailname string {{ pve_fqdn }}" | debconf-set-selections
 
+# GRUB: the template remembers a fixed install device (e.g. /dev/sda). With the extra data disk,
+# the device names depend on the attach order and differ per VM, so /dev/sda can be the empty
+# data disk; grub-install then fails ("unable to identify a filesystem"). Point GRUB at the disk
+# that actually holds / before anything upgrades or reinstalls grub-pc.
+- name: PVE - find the boot disk (the disk holding /)
+  shell: |
+    root_src=$(findmnt -no SOURCE /)
+    disk=$(lsblk -srno NAME,TYPE "$root_src" | awk '$2=="disk" {print $1}' | head -1)
+    [ -n "$disk" ] && echo "/dev/$disk"
+  register: pve_boot_disk
+  changed_when: false
+
+- name: PVE - set the GRUB install device to {{ pve_boot_disk.stdout | trim }}
+  shell: "echo 'grub-pc grub-pc/install_devices multiselect {{ pve_boot_disk.stdout | trim }}' | debconf-set-selections"
+  when: pve_boot_disk.stdout | trim | length > 0
+
+- name: PVE - finish any half-configured packages (e.g. grub-pc from an earlier failed run)
+  shell: "DEBIAN_FRONTEND=noninteractive dpkg --configure -a"
+
 - name: PVE - full upgrade
   shell: "DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold full-upgrade"
   register: pve_upgrade

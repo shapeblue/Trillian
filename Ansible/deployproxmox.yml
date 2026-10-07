@@ -159,6 +159,15 @@
     - name: Update project - tag Proxmox_Ready
       include: tasks/updateproject.yml project_tag=Proxmox_Ready
 
+    - name: Count Proxmox nodes that completed all steps
+      set_fact:
+        pve_done: "{{ groups['proxmox_hosts'] | map('extract', hostvars) | selectattr('pve_finalized', 'defined') | list | length }}"
+
+    - name: Cluster NOT complete
+      fail:
+        msg: "Proxmox VE cluster '{{ pve_cluster_name }}' is NOT complete: {{ pve_done }} of {{ groups['proxmox_hosts'] | length }} nodes finished. See the failed tasks above."
+      when: pve_done | int < groups['proxmox_hosts'] | length
+
     - name: Summary
       debug:
         msg:

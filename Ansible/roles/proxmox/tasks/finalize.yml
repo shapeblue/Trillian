@@ -31,3 +31,7 @@
 - name: PVE - verify local-lvm is active on this node
   shell: "pvesm status --storage local-lvm | awk 'NR==2 {print $3}' | grep -qx active"
   changed_when: false
+
+- name: PVE - node complete
+  set_fact:
+    pve_finalized: true

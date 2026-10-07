@@ -405,6 +405,16 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Count Proxmox nodes that completed all steps
+      set_fact:
+        pve_done: "{{ groups['proxmox_hosts'] | map('extract', hostvars) | selectattr('pve_finalized', 'defined') | list | length }}"
+      when: (proxmox_standalone | default(false) | bool)
+
+    - name: Standalone Proxmox VE cluster NOT complete
+      debug:
+        msg: "Proxmox VE cluster '{{ pve_cluster_name }}' is NOT complete: {{ pve_done }} of {{ groups['proxmox_hosts'] | length }} nodes finished. See the failed tasks above."
+      when: (proxmox_standalone | default(false) | bool) and (pve_done | int < groups['proxmox_hosts'] | length)
+
     - name: Standalone Proxmox VE cluster summary
       debug:
         msg:
@@ -412,4 +422,4 @@
           - "Web UI: https://{{ hostvars[groups['proxmox_hosts'][0]]['ansible_ssh_host'] }}:8006  (user root, realm Linux PAM)"
           - "Nodes: {{ groups['proxmox_hosts'] | map('extract', hostvars, 'ansible_ssh_host') | join(', ') }}"
           - "Bridges: vmbr0 = management (eth0), vmbr1 = VLAN-aware trunk (eth1). Storage: local, local-lvm."
-      when: (proxmox_standalone | default(false) | bool)
+      when: (proxmox_standalone | default(false) | bool) and (pve_done | int == groups['proxmox_hosts'] | length)
