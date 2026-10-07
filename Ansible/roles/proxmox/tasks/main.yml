@@ -193,6 +193,14 @@
     } > /etc/resolv.conf
     systemctl disable --now systemd-resolved 2>/dev/null || true
 
+# Proxmox applies a pending /etc/network/interfaces.new over /etc/network/interfaces at boot
+# (that is how its web UI commits network changes). The package installation can leave one
+# behind, generated from the template's original DHCP setup, which would replace our file.
+- name: PVE - remove any pending Proxmox network config (interfaces.new)
+  file:
+    path: /etc/network/interfaces.new
+    state: absent
+
 - name: PVE - /etc/network/interfaces (vmbr0 + vmbr1)
   template:
     src: interfaces.j2
@@ -222,6 +230,10 @@
     sleep: 5
     timeout: 900
   when: pve_interfaces.changed
+
+- name: PVE - verify /etc/network/interfaces is still ours after the reboot
+  shell: "grep -q 'Managed by Trillian (proxmox role)' /etc/network/interfaces"
+  changed_when: false
 
 - name: PVE - verify vmbr0 carries the management IP
   shell: "ip -4 -o addr show dev vmbr0 | grep -q '{{ pve_ip_cidr }}'"
