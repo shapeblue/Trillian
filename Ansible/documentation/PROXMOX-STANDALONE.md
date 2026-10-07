@@ -1,7 +1,8 @@
 # Standalone Proxmox VE cluster
 
-`deployproxmox.yml` builds a Proxmox VE cluster (default 3 nodes) as VMs in the parent cloud,
-**without** a CloudStack environment. The nodes are not added to CloudStack; they are prepared
+Trillian can build a Proxmox VE cluster (default 3 nodes) as VMs in the parent cloud,
+**without** a CloudStack environment - from the normal Jenkins job (`proxmox_standalone=yes`) or
+with `deployproxmox.yml` from a shell. The nodes are not added to CloudStack; they are prepared
 so that they can be added manually later (CloudStack's Proxmox extension, hypervisor type
 External).
 
@@ -24,55 +25,61 @@ the nodes sit on the same management network and VLAN trunk as the KVM hosts of 
 environment. That is what CloudStack's Proxmox extension needs later: Proxmox VMs reach the
 CloudStack virtual routers (which run on KVM hosts) over the trunk.
 
-## Running it
+## Running it from Jenkins (Reference_Trillian)
+
+The normal Trillian job builds the Proxmox cluster when `proxmox_standalone=yes` is passed. In
+that mode the generated inventory contains only the Proxmox nodes; every CloudStack step of
+`deployvms.yml` (management server, database, hypervisors, NFS shares, zone, Marvin, waits)
+has no hosts and is skipped. Builds without the flag are unchanged.
+
+| Field | Value |
+|---|---|
+| `TRILLIAN_BRANCH` | the branch containing this feature |
+| `ANY_OTHER_OPTS` | `proxmox_standalone=yes` plus optional `pve_*` options (table below), space-separated |
+| `PRIMARY_HYPERVISOR`, `KVM_OS`, `MS_OS` | any valid values (required by the form/generate step, not used) |
+| `HYPERVISOR_COUNT`, `MS_COUNT`, storage fields | ignored |
+| `CREATE_ZONE`, `BUILD_MARVIN_VM`, `WAIT_FOR_SYSTEM_VM`, `WAIT_FOR_TEMPLATE` | unchecked |
+| `TESTS` | `None` |
+
+Example `ANY_OTHER_OPTS`: `proxmox_standalone=yes pve_nodes=3 pve_os=d12`
+
+Built this way, the cluster is a normal Trillian environment (registered in the environments
+database, visible in the job history) and is removed with the usual environment cleanup /
+`destroyvms.yml`. It also holds the environment's network leases until it is destroyed.
+
+## Running it from a shell
 
 From the Trillian `Ansible/` directory (the same host and `group_vars/all` used by Trillian builds):
 
 ```
 ansible-playbook deployproxmox.yml -i localhost --extra-vars "env_name=pve-lab-1"
+ansible-playbook destroyproxmox.yml -i hosts_pve-lab-1
 ```
+
+This path is not registered in the environments database - destroy it with `destroyproxmox.yml`.
+
+## Options
 
 | Option | Default | Meaning |
 |---|---|---|
-| `env_name` | required | name of the build (VM names, project, inventory file) |
+| `proxmox_standalone` | `no` | Jenkins path only: build the Proxmox cluster instead of a CloudStack environment |
+| `env_name` | required (shell path) | name of the build; Jenkins sets it automatically |
 | `pve_nodes` | `3` | number of nodes (1-16) |
 | `pve_os` | `d12` | `linux_os` key of a Debian 12 (PVE 8) or Debian 13 (PVE 9) template |
-| `pve_password` | `def_kvm_password` | root / web UI password |
-| `pve_service_offering` | `def_kvm_service_offering` | parent-cloud offering (nested virtualization, like KVM hosts) |
-| `pve_data_disk_offering` | `def_local_storage_disk_offering` | offering of the data disk |
+| `pve_password` | `kvm_password` / `def_kvm_password` | root / web UI password |
+| `pve_service_offering` | KVM host offering | parent-cloud offering (nested virtualization, like KVM hosts) |
+| `pve_data_disk_offering` | local-storage disk offering | offering of the data disk |
 | `pve_data_disk_size` | `100` | data disk size in GB (`local-lvm`) |
 | `pve_cluster_name` | first 15 characters of the env name | Proxmox cluster name (max 15) |
 | `pve_domain` | `pve.lab` | domain for the nodes' FQDNs |
-| `build_project` | `<env>-NestedClouds` | parent-cloud project |
 
 Role defaults (`roles/proxmox/defaults/main.yml`): Proxmox repository and key URLs (override
 with mirrors if needed), interface names, and `pve_data_disk` (empty = detect the unused disk).
 
-The run writes `hosts_<env>`; remove everything with:
-
-```
-ansible-playbook destroyproxmox.yml -i hosts_<env>
-```
-
-This is not registered in the Trillian environments database (no VLAN or IP leases are needed),
-so environment listing/cleanup jobs do not know about it - destroy it with the playbook above.
-
-### Jenkins
-
-The `Reference_Trillian` job builds CloudStack environments only. For Jenkins, create a separate
-job (copy the source-code and group-vars steps of `Reference_Trillian`) with parameters such as
-`ENV_NAME`, `PVE_NODES`, `PVE_OS`, running:
-
-```
-cd Ansible
-ansible-playbook deployproxmox.yml -i localhost --extra-vars "env_name=${ENV_NAME} pve_nodes=${PVE_NODES} pve_os=${PVE_OS}"
-```
-
-and a matching destroy job running `destroyproxmox.yml -i hosts_${ENV_NAME}`.
-
 ## Build steps
 
-1. Create the project, build the nodes stopped, attach the data disks, start them.
+1. Create the project, build the nodes stopped, attach the data disks, start them
+   (`tasks/buildproxmox.yml`, shared by both paths).
 2. Per node (`roles/proxmox`): hostname and `/etc/hosts` (node name -> management IP, as Proxmox
    requires), chrony (timezone role), Proxmox repository, full upgrade, Proxmox kernel + reboot,
    `proxmox-ve`, Debian kernel and os-prober removed, enterprise repositories removed,
@@ -101,4 +108,5 @@ path on every node.
 * No shared storage, no Ceph.
 * VMs inside Proxmox have no DHCP on the management network (the parent cloud only serves its
   own VMs): use `vmbr1` with lab VLANs, static IPs, or a Proxmox SDN zone with DHCP/SNAT.
-* Not tracked in the Trillian environments database.
+* Shell builds (`deployproxmox.yml`) are not tracked in the Trillian environments database;
+  Jenkins builds are.

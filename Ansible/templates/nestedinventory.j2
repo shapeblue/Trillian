@@ -15,6 +15,52 @@
 #limitations under the License.
 
 
+{% if proxmox_standalone | default(false) | bool %}
+# Standalone Proxmox VE cluster: only Proxmox nodes. The other groups exist but are empty,
+# so every CloudStack step of deployvms.yml is skipped.
+[{{ env_name_clean }}:children]
+local
+proxmox_hosts
+
+[local]
+localhost ansible_connection=local
+
+[proxmox_hosts]
+{% for n in range(1, pve_nodes | default(3) | int + 1) %}
+{{ env_name_clean }}-pve{{ n }} ansible_ssh_host={{ env_name_clean }}-pve{{ n }}-ip ansible_ssh_pass={{ pve_password | default( kvm_password | default( def_kvm_password ) ) }} instance_name={{ env_name_clean }}-pve{{ n }}-instance_name
+{% endfor %}
+
+[hypervisor_hosts:children]
+xenserver_hosts
+kvm_hosts
+esxi_hosts
+
+[mysql_hosts:children]
+mysql_master_host
+mysql_slave_hosts
+
+[cloudstack_manager_hosts:children]
+primary_cs_manager
+secondary_cs_manager
+
+[storage_hosts:children]
+primary_storage_hosts
+primary_storage_hosts_iscsi
+secondary_storage_hosts
+
+[primary_cs_manager]
+[secondary_cs_manager]
+[mysql_master_host]
+[mysql_slave_hosts]
+[vc_hosts]
+[esxi_hosts]
+[xenserver_hosts]
+[kvm_hosts]
+[marvin_host]
+[primary_storage_hosts]
+[primary_storage_hosts_iscsi]
+[secondary_storage_hosts]
+{% else %}
 [{{ env_name_clean }}:children]
 hypervisor_hosts
 local
@@ -145,3 +191,4 @@ secondary_storage_hosts
 
 [secondary_storage_hosts]
 {{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}
+{% endif %}

@@ -14,6 +14,7 @@
 
 # Standalone Proxmox VE cluster (no CloudStack environment, not added to CloudStack).
 #
+# Same build as Reference_Trillian with proxmox_standalone=yes, for running from a shell.
 # Builds <env>-pve1..N in the parent cloud with the same NICs as Trillian's KVM hosts
 # (eth0 = management_network, eth1 = guest_public_network trunk) plus a local data disk,
 # installs Proxmox VE on Trillian's Debian template and forms a Proxmox cluster.
@@ -73,16 +74,6 @@
       set_fact:
         pve_cluster_name: "{{ pve_cluster_name | default(env_name_clean[:15] | regex_replace('^-+', '') | regex_replace('-+$', '')) }}"
 
-    - name: Check the Debian template exists in linux_os and is Debian 12 or 13
-      fail:
-        msg: "pve_os={{ pve_os }} must be a linux_os key for Debian 12 (Proxmox VE 8) or Debian 13 (Proxmox VE 9), e.g. d12 or d13."
-      when: (pve_os not in linux_os) or (linux_os[pve_os].os not in ['debian12', 'debian13'])
-
-    - name: Check node count and cluster name
-      fail:
-        msg: "pve_nodes must be 1-16 and pve_cluster_name ('{{ pve_cluster_name }}') 1-15 characters."
-      when: (pve_nodes | int < 1) or (pve_nodes | int > 16) or (pve_cluster_name | length < 1) or (pve_cluster_name | length > 15)
-
     - name: Capture account name
       shell: cmk listAccounts
       register: acct_retval
@@ -97,60 +88,7 @@
     - name: Set environment uuid
       set_fact: env_uuid="{{ env_uuid_out.stdout }}"
 
-    - name: Show what will be built
-      debug:
-        msg: "Proxmox VE cluster '{{ pve_cluster_name }}': {{ pve_nodes }} x {{ env_name_clean }}-pveN from template '{{ linux_os[pve_os].template }}' in project {{ build_project }}"
-
-    - name: Create project
-      include: tasks/updateproject.yml project_tag=Deploying_VMs
-
-    - name: Build Proxmox nodes (stopped, so the data disk can be attached first)
-      local_action:
-        module: cs_instance
-        name: "{{ env_name_clean }}-pve{{ item }}"
-        service_offering: "{{ pve_service_offering }}"
-        template: "{{ linux_os[pve_os].template }}"
-        hypervisor: "{{ management_vm_hypervisor }}"
-        project: "{{ build_project }}"
-        zone: "{{ build_zone }}"
-        keyboard: "{{ build_keyboard }}"
-        tags:
-          - { key: env_name, value: "{{ env_name_clean }}" }
-          - { key: env_uuid, value: "{{ env_uuid }}" }
-          - { key: env_user, value: "{{ env_user }}" }
-          - { key: role, value: "proxmox" }
-        networks:
-          - "{{ management_network }}"
-          - "{{ guest_public_network }}"
-        state: stopped
-        api_timeout: 120
-      with_sequence: start=1 end={{ pve_nodes }}
-      register: pve_retval
-
-    - name: Add local data disk (becomes Proxmox storage local-lvm)
-      local_action:
-        module: cs_volume
-        project: "{{ build_project }}"
-        zone: "{{ build_zone }}"
-        name: "{{ item.name }}-data"
-        disk_offering: "{{ pve_data_disk_offering }}"
-        size: "{{ pve_data_disk_size }}"
-        vm: "{{ item.name }}"
-        state: attached
-        api_timeout: 120
-      with_items: "{{ pve_retval.results }}"
-
-    - name: Start Proxmox nodes
-      local_action:
-        module: cs_instance
-        name: "{{ item.name }}"
-        project: "{{ build_project }}"
-        zone: "{{ build_zone }}"
-        state: started
-        api_timeout: 120
-      with_items: "{{ pve_retval.results }}"
-
-    - name: Write inventory file
+    - name: Write inventory file (placeholders are replaced with IPs during the build)
       copy:
         dest: "{{ inventory_dir }}/hosts_{{ env_name_clean }}"
         content: |
@@ -159,8 +97,8 @@
           localhost ansible_connection=local
 
           [proxmox_hosts]
-          {% for r in pve_retval.results %}
-          {{ r.name }} ansible_ssh_host={{ r.default_ip }} ansible_ssh_pass={{ pve_password }} instance_name={{ r.instance_name }}
+          {% for n in range(1, pve_nodes | int + 1) %}
+          {{ env_name_clean }}-pve{{ n }} ansible_ssh_host={{ env_name_clean }}-pve{{ n }}-ip ansible_ssh_pass={{ pve_password }} instance_name={{ env_name_clean }}-pve{{ n }}-instance_name
           {% endfor %}
 
           [all:vars]
@@ -171,17 +109,25 @@
           pve_cluster_name={{ pve_cluster_name }}
           pve_domain={{ pve_domain }}
           pve_os={{ pve_os }}
+          ssh_retries={{ def_ssh_retries }}
+          env_timezone={{ def_env_timezone }}
 
     - name: Add nodes to the in-memory inventory
       add_host:
-        name: "{{ item.name }}"
+        name: "{{ env_name_clean }}-pve{{ item }}"
         groups: proxmox_hosts
-        ansible_ssh_host: "{{ item.default_ip }}"
         ansible_ssh_pass: "{{ pve_password }}"
-        instance_name: "{{ item.instance_name }}"
         pve_cluster_name: "{{ pve_cluster_name }}"
         pve_domain: "{{ pve_domain }}"
-      with_items: "{{ pve_retval.results }}"
+        ssh_retries: "{{ def_ssh_retries }}"
+        env_timezone: "{{ def_env_timezone }}"
+      with_sequence: start=1 end={{ pve_nodes }}
+
+    - name: Create project
+      include: tasks/updateproject.yml project_tag=Deploying_VMs
+
+    - name: Build the nodes
+      include: tasks/buildproxmox.yml
 
     - name: Update project - tag Configuring_Proxmox
       include: tasks/updateproject.yml project_tag=Configuring_Proxmox
@@ -189,9 +135,6 @@
 # Per node: wait for SSH, Proxmox VE installation, networking, local storage
 - hosts: proxmox_hosts
   gather_facts: no
-  vars:
-    ssh_retries: "{{ def_ssh_retries }}"
-    env_timezone: "{{ def_env_timezone }}"
   roles:
     - timezone
     - proxmox

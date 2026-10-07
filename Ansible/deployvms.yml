@@ -82,11 +82,15 @@
 
     - name: Build VMs
       include: ./tasks/buildvms_custom_allocator.yml
-      when: use_custom_allocator and (use_external_hv_hosts|bool == false)
+      when: use_custom_allocator and (use_external_hv_hosts|bool == false) and not (proxmox_standalone | default(false) | bool)
 
     - name: Build VMs
       include: ./tasks/buildvms.yml
-      when: (use_custom_allocator|bool == false) and (use_external_hv_hosts|bool == false)
+      when: (use_custom_allocator|bool == false) and (use_external_hv_hosts|bool == false) and not (proxmox_standalone | default(false) | bool)
+
+    - name: Build Proxmox VE nodes (standalone Proxmox cluster)
+      include: ./tasks/buildproxmox.yml
+      when: (proxmox_standalone | default(false) | bool)
 
 #    - name: Add dvfilter
 #      include: ./tasks/add_dvfilter.yml
@@ -95,6 +99,24 @@
     - name: Update project - tag Configuring_MySQL
       include: tasks/updateproject.yml project_tag=Configuring_MySQL
       when: (additional_zone|bool == False) and (additional_pod|bool == False)
+
+# Standalone Proxmox VE cluster (proxmox_standalone=yes; groups['proxmox_hosts'] is empty otherwise)
+- hosts: proxmox_hosts
+  gather_facts: no
+  roles:
+    - timezone
+    - proxmox
+
+- hosts: proxmox_hosts
+  gather_facts: no
+  serial: 1
+  tasks:
+    - include: roles/proxmox/tasks/cluster.yml
+
+- hosts: proxmox_hosts
+  gather_facts: no
+  tasks:
+    - include: roles/proxmox/tasks/finalize.yml
 
 - hosts: mysql_hosts
   gather_facts: no
@@ -247,6 +269,7 @@
   tasks:
   - name: create mavin cfg file
     template: src=advanced-cfg.j2 dest="./{{ env_name_clean }}-advanced-cfg"
+    when: not (proxmox_standalone | default(false) | bool)
 
 ## update status
 
@@ -377,3 +400,16 @@
       - marvin
       - run_smoke_tests
     when: run_smoke_tests
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Standalone Proxmox VE cluster summary
+      debug:
+        msg:
+          - "Proxmox VE cluster '{{ pve_cluster_name }}' is ready."
+          - "Web UI: https://{{ hostvars[groups['proxmox_hosts'][0]]['ansible_ssh_host'] }}:8006  (user root, realm Linux PAM)"
+          - "Nodes: {{ groups['proxmox_hosts'] | map('extract', hostvars, 'ansible_ssh_host') | join(', ') }}"
+          - "Bridges: vmbr0 = management (eth0), vmbr1 = VLAN-aware trunk (eth1). Storage: local, local-lvm."
+      when: (proxmox_standalone | default(false) | bool)
