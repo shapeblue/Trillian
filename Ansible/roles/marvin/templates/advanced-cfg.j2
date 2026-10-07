@@ -111,6 +111,11 @@
 						"url": "rbd://{{ cephpool }}:{{ cephcreds[cephpool] | default('UNDEFINED') }}@{{ cephmonhost }}:6789/{{ cephpool }}",
 						"name": "{{ cephpool }}"}{% if not loop.last %},{% endif %}
 {% endfor %}
+{% elif env_priprot | lower == "sharedmountpoint" %}
+{% for pripool in env_pripools %}			{
+						"url": "SharedMountPoint://localhost{{ env_prismp_path }}{{ env_name_clean }}/{{ pripool }}",
+						"name": "{{ pripool }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
 {% else %}
 {% for pripool in env_pripools %}			{
 						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",

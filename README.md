@@ -125,3 +125,15 @@ What Ansible does with `env_priprot=ceph`:
   with CloudStack when `env_priprot=ceph`.
 + The generated Marvin config (`advanced-cfg.j2`) uses the Ceph RBD pools -
   not the NFS mount points - as `primaryStorages`.
+
+### SharedMountPoint primary storage
+
+`env_priprot=sharedmountpoint` (KVM only) creates the NFS shares on the
+primary storage host exactly as for `nfs`, but does **not** register them as
+NFS pools. Instead the `cloudstack-sharedmountpoint` role mounts each KVM
+share (`<env>-kvm-priN`) via NFS on every KVM host at the same local path,
+`env_prismp_path` (default `/mnt/sharedmp/`, giving
+`/mnt/sharedmp/<env_name_clean>/<pool>`), and the pools are added to
+CloudStack as `SharedMountPoint://localhost/<that path>` primary storage
+(`deployzone.sh.j2`/`addpod.sh.j2`, and `primaryStorages` in the Marvin
+config). `destroyvms.yml` unmounts them before the NFS shares are removed.

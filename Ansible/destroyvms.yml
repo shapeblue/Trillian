@@ -18,10 +18,15 @@
 
     - include_tasks: ./tasks/removeproject.yml
 
+- hosts: kvm_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-sharedmountpoint, storage_action: 'removeprimary', when: ( env_priprot | lower == "sharedmountpoint" ) and not destroy_forced }
+
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( (env_priprot | lower == "nfs") or (env_priprot | lower == "ceph") ) and not destroy_forced }
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: ( (env_priprot | lower == "nfs") or (env_priprot | lower == "ceph") or (env_priprot | lower == "sharedmountpoint") ) and not destroy_forced }
 
 - hosts: primary_storage_hosts_iscsi
   gather_facts: no

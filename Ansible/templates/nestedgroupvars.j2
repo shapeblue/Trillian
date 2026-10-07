@@ -111,6 +111,7 @@ env_ceph_poolsize: "{{ env_ceph_poolsize | default( def_env_ceph_poolsize | defa
 env_sechost: "{{ env_sechost | default( def_env_sechost ) }}"
 env_pripath: "{{ env_pripath | default( def_env_pripath ) }}"
 env_pripath_iscsi: "{{ env_pripath_iscsi | default( def_env_pripath_iscsi ) }}"
+env_prismp_path: "{{ env_prismp_path | default( def_env_prismp_path | default('/mnt/sharedmp/') ) }}"
 env_iscsilunsize: "{{ env_iscsilunsize | default( def_env_iscsilunsize ) }}"
 env_iscsi_target: "{{ env_iscsi_target | default( def_env_iscsi_target ) }}"
 env_secpath: "{{ env_secpath | default( def_env_secpath ) }}"
