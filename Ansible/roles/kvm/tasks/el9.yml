@@ -274,6 +274,19 @@
   tags:
     - kvm
 
+- name: Install openssl and decompression utilities (KVM agent dependencies)
+  dnf:
+    name:
+      - openssl
+      - bzip2
+      - gzip
+      - unzip
+    state: present
+    enablerepo: base
+  tags:
+    - kvm
+    - kvm-agent
+
 - name: Install ceph-common (needed for Ceph RBD volume encryption support)
   dnf: name=ceph-common state=present enablerepo=base
   when: env_priprot | lower == "ceph"
