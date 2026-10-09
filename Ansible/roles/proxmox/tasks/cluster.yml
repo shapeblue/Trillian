@@ -13,7 +13,7 @@
 #limitations under the License.
 
 # Included from deployproxmox.yml in a play with serial: 1 (Proxmox joins one node at a time).
-# The first node creates the cluster; the others join it over SSH (pvecm add --use_ssh).
+# The first node creates the cluster; the others join through its API (pvecm add + root password).
 
 - name: PVE cluster - first node and its address
   set_fact:
@@ -30,36 +30,34 @@
   shell: "pvecm create {{ pve_cluster_name }}"
   when: inventory_hostname == pve_first and pve_member.rc != 0
 
-- name: PVE cluster - root SSH key on the joining node
-  shell: "test -f /root/.ssh/id_rsa || ssh-keygen -q -t rsa -b 4096 -N '' -f /root/.ssh/id_rsa"
+# Join through the first node's API with the root password (Proxmox's standard method). This
+# avoids writing SSH keys into /etc/pve (pmxcfs), which rejects appends and file creation from
+# outside. The password prompt is answered by expect; the password is passed via the environment
+# and never appears on the command line or in the build log.
+- name: PVE cluster - install expect on the joining node
+  shell: "dpkg -s expect >/dev/null 2>&1 || DEBIAN_FRONTEND=noninteractive apt-get install -y expect"
   when: inventory_hostname != pve_first and pve_member.rc != 0
 
-- name: PVE cluster - read the joining node's public key
-  shell: "cat /root/.ssh/id_rsa.pub"
-  register: pve_pubkey
+- name: PVE cluster - join helper script
+  copy:
+    src: "{{ playbook_dir }}/roles/proxmox/files/pve-join.exp"
+    dest: /root/trillian-pve-join.exp
+    owner: root
+    group: root
+    mode: 0700
+  when: inventory_hostname != pve_first and pve_member.rc != 0
+
+- name: PVE cluster - read the first node's certificate fingerprint
+  shell: "openssl x509 -in /etc/pve/local/pve-ssl.pem -noout -fingerprint -sha256 | cut -d= -f2"
+  register: pve_first_fp
+  delegate_to: "{{ pve_first }}"
   changed_when: false
   when: inventory_hostname != pve_first and pve_member.rc != 0
 
-# After 'pvecm create', /root/.ssh/authorized_keys is a symlink into /etc/pve (pmxcfs), which
-# does not support appending (">>" gives "I/O error"). Write the whole file instead.
-- name: PVE cluster - authorize the joining node on the first node
-  shell: |
-    f=$(readlink -f /root/.ssh/authorized_keys)
-    grep -qF '{{ pve_pubkey.stdout }}' "$f" 2>/dev/null && exit 0
-    tmp=$(mktemp)
-    { cat "$f" 2>/dev/null; echo '{{ pve_pubkey.stdout }}'; } > "$tmp"
-    cp "$tmp" "$f"
-    rm -f "$tmp"
-    grep -qF '{{ pve_pubkey.stdout }}' "$f"
-  delegate_to: "{{ pve_first }}"
-  when: inventory_hostname != pve_first and pve_member.rc != 0
-
-- name: PVE cluster - trust the first node's host key
-  shell: "ssh-keygen -F {{ pve_first_ip }} >/dev/null || ssh-keyscan -H {{ pve_first_ip }} >> /root/.ssh/known_hosts"
-  when: inventory_hostname != pve_first and pve_member.rc != 0
-
 - name: PVE cluster - join {{ pve_cluster_name }} via {{ pve_first_ip }}
-  shell: "pvecm add {{ pve_first_ip }} --use_ssh 1"
+  shell: "expect /root/trillian-pve-join.exp pvecm add {{ pve_first_ip }} --fingerprint {{ pve_first_fp.stdout | trim }}"
+  environment:
+    PVE_JOIN_PASSWORD: "{{ hostvars[pve_first]['ansible_ssh_pass'] }}"
   when: inventory_hostname != pve_first and pve_member.rc != 0
 
 - name: PVE cluster - wait until this node is in a quorate cluster

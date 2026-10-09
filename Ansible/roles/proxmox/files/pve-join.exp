@@ -1,0 +1,11 @@
+# Managed by Trillian (proxmox role): answers the root password prompt of "pvecm add".
+# Usage: PVE_JOIN_PASSWORD=... expect pve-join.exp pvecm add <ip> --fingerprint <fp>
+set timeout 600
+spawn {*}$argv
+expect {
+  -re {(?i)password[^:]*:} { send -- "$env(PVE_JOIN_PASSWORD)\r"; exp_continue }
+  -re {(?i)\(yes/no\)} { send -- "yes\r"; exp_continue }
+  eof
+}
+catch wait result
+exit [lindex $result 3]
