@@ -40,8 +40,17 @@
   changed_when: false
   when: inventory_hostname != pve_first and pve_member.rc != 0
 
+# After 'pvecm create', /root/.ssh/authorized_keys is a symlink into /etc/pve (pmxcfs), which
+# does not support appending (">>" gives "I/O error"). Write the whole file instead.
 - name: PVE cluster - authorize the joining node on the first node
-  shell: "grep -qF '{{ pve_pubkey.stdout }}' /root/.ssh/authorized_keys 2>/dev/null || echo '{{ pve_pubkey.stdout }}' >> /root/.ssh/authorized_keys"
+  shell: |
+    f=$(readlink -f /root/.ssh/authorized_keys)
+    grep -qF '{{ pve_pubkey.stdout }}' "$f" 2>/dev/null && exit 0
+    tmp=$(mktemp)
+    { cat "$f" 2>/dev/null; echo '{{ pve_pubkey.stdout }}'; } > "$tmp"
+    cp "$tmp" "$f"
+    rm -f "$tmp"
+    grep -qF '{{ pve_pubkey.stdout }}' "$f"
   delegate_to: "{{ pve_first }}"
   when: inventory_hostname != pve_first and pve_member.rc != 0
 
