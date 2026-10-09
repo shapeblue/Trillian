@@ -1,0 +1,42 @@
+---
+# The Ceph cluster itself (mons/osds) is deployed out-of-band by the
+# "ceph-deployer" Jenkins job before this playbook runs. This role only
+# carves the CloudStack-facing RBD pools out of that cluster and creates a
+# cephx credential scoped to each pool.
+
+- name: Report action
+  debug: msg="Storage action {{ storage_action }}, Ceph RBD pools {{ env_cephpools }} ({{ env_ceph_poolsize }} each) via {{ inventory_hostname }}."
+  run_once: true
+
+- name: Create RBD pools
+  shell: |
+    ceph osd pool create {{ item }}
+    rbd pool init {{ item }}
+    ceph osd pool set-quota {{ item }} max_bytes {{ env_ceph_poolsize }}
+  with_items: "{{ env_cephpools }}"
+  run_once: true
+
+- name: Create a cephx client credential scoped to each pool
+  shell: >
+    ceph auth get-or-create client.{{ item }}
+    mon 'profile rbd'
+    osd 'profile rbd pool={{ item }}'
+    -o /etc/ceph/ceph.client.{{ item }}.keyring
+  with_items: "{{ env_cephpools }}"
+  run_once: true
+
+- name: Read back the cephx secret for each pool
+  shell: "ceph auth print-key client.{{ item }}"
+  with_items: "{{ env_cephpools }}"
+  register: env_cephpool_keys
+  run_once: true
+
+- name: Store pool -> cephx secret mapping for later plays (cloudstack-config, marvin)
+  set_fact:
+    env_cephpool_credentials: "{{ env_cephpool_credentials | default({}) | combine( { item.item: item.stdout } ) }}"
+  with_items: "{{ env_cephpool_keys.results }}"
+  run_once: true
+
+- name: Report Ceph pool credentials created
+  debug: msg="Ceph pools ready{{ ':' }} {{ env_cephpool_credentials.keys() | list }}"
+  run_once: true

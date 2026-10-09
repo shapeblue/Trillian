@@ -104,10 +104,24 @@
 					"clustertype": "CloudManaged",
 {% endif %}
 					"primaryStorages": [
+{% if env_priprot | lower == "ceph" %}
+{% set cephmonhost = hostvars[groups['primary_storage_hosts_ceph'][0]]['ansible_ssh_host'] if groups['primary_storage_hosts_ceph'] | length | int > 0 else "UNDEFINED" %}
+{% set cephcreds = hostvars[groups['primary_storage_hosts_ceph'][0]]['env_cephpool_credentials'] | default({}) %}
+{% for cephpool in env_cephpools %}			{
+						"url": "rbd://{{ cephpool }}:{{ cephcreds[cephpool] | default('UNDEFINED') }}@{{ cephmonhost }}:6789/{{ cephpool }}",
+						"name": "{{ cephpool }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
+{% elif env_priprot | lower == "sharedmountpoint" %}
+{% for pripool in env_pripools %}			{
+						"url": "SharedMountPoint://localhost{{ env_prismp_path }}{{ env_name_clean }}/{{ pripool }}",
+						"name": "{{ pripool }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
+{% else %}
 {% for pripool in env_pripools %}			{
 						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
 						"name": "{{ pripool }}"}{% if not loop.last %},{% endif %}
 {% endfor %}
+{% endif %}
 					]
 				}
 

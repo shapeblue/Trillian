@@ -256,3 +256,15 @@
 
 - include_tasks: ./fix_tests.yml
   when: fixtests
+
+- name: get ipmisim packages location
+  shell: pip show ipmisim | awk '/^Location:/{print $2}'
+  register:
+    ipmisim_dir
+
+- name: Fix ipmisim.py
+  get_url:
+    url: https://raw.githubusercontent.com/shapeblue/ipmisim/a8e56bdff3c8bf10b99aec99d20db57ef99188f1/ipmisim/ipmisim.py
+    dest: "{{ ipmisim_dir.stdout }}/ipmisim/ipmisim.py"
+    mode: 0644
+    force: yes

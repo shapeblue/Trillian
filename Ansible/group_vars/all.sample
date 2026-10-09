@@ -119,8 +119,22 @@ def_env_num_zones: 1
 def_env_use_sec_groups: yes
 def_env_prihost: "<IP_ADDRESS_HERE>"
 def_env_priprot: "nfs"
+# SharedMountPoint primary storage (env_priprot=sharedmountpoint): local path on
+# KVM hosts where the NFS shares are mounted
+def_env_prismp_path: "/mnt/sharedmp/"
 def_env_prihost_iscsi: "<IP_ADDRESS_HERE>"
 def_env_iscsi_target: "<IQN_HERE>"
+# Ceph (RBD) primary storage - nodes normally come from a chained
+# "ceph-deployer" Jenkins job (env vars $CEPH_1/$CEPH_2/$CEPH_3 passed in as
+# env_prihost_ceph1/2/3 extra-vars).
+# SSH into the Ceph nodes reuses def_pri_password (same as the NFS/iSCSI
+# primary storage hosts) rather than a separate Ceph-only credential.
+def_env_prihost_ceph1: "<IP_ADDRESS_HERE>"
+def_env_prihost_ceph2: "<IP_ADDRESS_HERE>"
+def_env_prihost_ceph3: "<IP_ADDRESS_HERE>"
+# Ceph cluster is assumed to be 100GB total; one RBD pool per "pri" (same
+# pool count as NFS/iSCSI primary storage) is carved out of it.
+def_env_ceph_poolsize: "30G"
 def_env_sechost: "<IP_ADDRESS_HERE>"
 def_env_pripath: "/acs/primary/"
 def_env_pripath_iscsi: "/iscsiroot/"

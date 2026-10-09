@@ -117,10 +117,20 @@ cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${Clust
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% elif ('-xs-pri' in pool) and (env_priprot | lower == "iscsi" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' provider='DefaultPrimary' url="{{ env_priprot }}://{% if groups['primary_storage_hosts_iscsi'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ env_iscsi_target }}:{{ env_uuid }}/{{ loop.index0 }}" | tee -i -a ${DEPLOYLOG};
-{% elif '-kvm-pri' in pool %}
+{% elif ('-kvm-pri' in pool) and (env_priprot | lower == "sharedmountpoint" ) %}
+cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' hypervisor='KVM' url="SharedMountPoint://localhost{{ env_prismp_path }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% elif ('-kvm-pri' in pool) and (env_priprot | lower != "ceph" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% endif %}
 {% endfor %}
+{% if env_priprot | lower == "ceph" %}
+{% set cephmonhost = hostvars[groups['primary_storage_hosts_ceph'][0]]['ansible_ssh_host'] if groups['primary_storage_hosts_ceph'] | length | int > 0 else "UNDEFINED" %}
+{% set cephcreds = hostvars[groups['primary_storage_hosts_ceph'][0]]['env_cephpool_credentials'] | default({}) %}
+{% for pool in env_cephpools %}
+WriteOutput "Adding Ceph Primary Storage pool {{ pool }}.";
+cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' provider='DefaultPrimary' url="rbd://{{ pool }}:{{ cephcreds[pool] | default('UNDEFINED') }}@{{ cephmonhost }}:6789/{{ pool }}" | tee -i -a ${DEPLOYLOG};
+{% endfor %}
+{% endif %}
 {% endif %}
 
 WriteOutput "You're done. Good luck!";

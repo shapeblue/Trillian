@@ -104,16 +104,28 @@ env_hv: "other"
 {% endif %}
 env_prihost: "{{ env_prihost | default( def_env_prihost ) }}"
 env_prihost_iscsi: "{{ env_prihost_iscsi | default( def_env_prihost_iscsi ) }}"
+env_prihost_ceph1: "{{ env_prihost_ceph1 | default( def_env_prihost_ceph1 | default('') ) }}"
+env_prihost_ceph2: "{{ env_prihost_ceph2 | default( def_env_prihost_ceph2 | default('') ) }}"
+env_prihost_ceph3: "{{ env_prihost_ceph3 | default( def_env_prihost_ceph3 | default('') ) }}"
+env_ceph_poolsize: "{{ env_ceph_poolsize | default( def_env_ceph_poolsize | default('30G') ) }}"
 env_sechost: "{{ env_sechost | default( def_env_sechost ) }}"
 env_pripath: "{{ env_pripath | default( def_env_pripath ) }}"
 env_pripath_iscsi: "{{ env_pripath_iscsi | default( def_env_pripath_iscsi ) }}"
+env_prismp_path: "{{ env_prismp_path | default( def_env_prismp_path | default('/mnt/sharedmp/') ) }}"
 env_iscsilunsize: "{{ env_iscsilunsize | default( def_env_iscsilunsize ) }}"
 env_iscsi_target: "{{ env_iscsi_target | default( def_env_iscsi_target ) }}"
 env_secpath: "{{ env_secpath | default( def_env_secpath ) }}"
 pri_password: "{{ pri_password | default( def_pri_password ) }}"
 pri_password_iscsi: "{{ pri_password_iscsi | default( def_pri_password_iscsi ) }}"
+pri_password_ceph: "{{ pri_password_ceph | default( pri_password | default( def_pri_password ) ) }}"
 sec_password: "{{ sec_password | default( def_sec_password ) }}"
 env_priprot: "{{ env_priprot | default( def_env_priprot ) }}"
+{% if ( env_priprot | default( def_env_priprot ) | lower ) == "ceph" %}
+env_cephpools:
+{% for n in range(1, pri | int + 1) %}
+  - {{ env_name_clean }}-ceph-pri{{ n }}
+{% endfor %}
+{% endif %}
 {% if pri | int > 0 %}
 env_pripools:
 {% if vmware_ver | lower != "na" %}
