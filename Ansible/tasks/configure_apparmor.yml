@@ -16,6 +16,24 @@
   ignore_errors: yes
   changed_when: false
 
+- name: Create AppArmor local abstractions directory
+  file:
+    path: /etc/apparmor.d/local/abstractions
+    state: directory
+    mode: '0755'
+
+# /etc/pki/libvirt-vnc/* are symlinks to the CloudStack agent certificates,
+# AppArmor checks the symlink targets so qemu must be allowed to read them
+- name: Allow qemu to read CloudStack agent certificates
+  copy:
+    dest: /etc/apparmor.d/local/abstractions/libvirt-qemu
+    content: |
+      # CloudStack agent certificates
+      /etc/cloudstack/agent/cloud.crt r,
+      /etc/cloudstack/agent/cloud.ca.crt r,
+      /etc/cloudstack/agent/cloud.key r,
+    mode: '0644'
+
 - name: Check Apparmor status
   command: aa-status
   failed_when: false
