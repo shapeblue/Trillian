@@ -1,0 +1,13 @@
+---
+# Mount the NFS primary storage shares on the KVM hosts at a common local
+# mount point so they can be registered in CloudStack as SharedMountPoint
+# primary storage pools (instead of NFS pools).
+- name: Mount NFS shares as shared mount points on KVM hosts
+  mount:
+    src: "{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}:{{ env_pripath }}{{ env_name_clean }}/{{ item }}"
+    path: "{{ env_prismp_path }}{{ env_name_clean }}/{{ item }}"
+    fstype: nfs
+    opts: "nolock,vers=3"
+    state: mounted
+  with_items: "{{ env_pripools | default([]) | select('search', '-kvm-pri') | list }}"
+  when: ( storage_action == "addprimary" ) and ( "kvm_hosts" in group_names )

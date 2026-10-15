@@ -451,3 +451,23 @@
   when: ansible_distribution_version is version('20.04','==')
   tags:
     - kvm
+
+- name: Install openssl and decompression utilities (KVM agent dependencies)
+  apt:
+    name:
+      - openssl
+      - bzip2
+      - gzip
+      - unzip
+    state: present
+  tags:
+    - kvm
+    - kvm-agent
+
+- name: Install ceph-common (needed for Ceph RBD volume encryption support)
+  apt:
+    name: ceph-common
+    state: present
+  when: env_priprot | lower == "ceph"
+  tags:
+    - kvm

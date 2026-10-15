@@ -207,6 +207,15 @@
   roles:
     - { role: cloudstack-iscsiluns, storage_action: 'addprimary', when: env_priprot | lower == "iscsi" }
 
+## Configure Ceph (RBD) storage - the Ceph cluster itself is deployed by the
+## "ceph-deployer" Jenkins job before this playbook runs; here we only carve
+## out the RBD pools CloudStack will use.
+
+- hosts: primary_storage_hosts_ceph
+  gather_facts: no
+  roles:
+    - { role: cloudstack-cephstorage, storage_action: 'addprimary', when: env_priprot | lower == "ceph" }
+
 - hosts: esxi_hosts
   gather_facts: no
   vars:
@@ -231,7 +240,17 @@
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-nfsshares, storage_action: 'addprimary', when: env_priprot | lower == "nfs" }
+    # NFS mount points are also created when the primary storage protocol is
+    # Ceph, but in that case they are not registered with CloudStack - only
+    # the Ceph RBD pools are (see cloudstack-config/templates/deployzone.sh.j2).
+    # For SharedMountPoint the NFS shares are mounted on the KVM hosts below.
+    - { role: cloudstack-nfsshares, storage_action: 'addprimary', when: (env_priprot | lower == "nfs") or (env_priprot | lower == "ceph") or (env_priprot | lower == "sharedmountpoint") }
+
+## Mount the NFS shares on KVM hosts for SharedMountPoint primary storage
+- hosts: kvm_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-sharedmountpoint, storage_action: 'addprimary', when: env_priprot | lower == "sharedmountpoint" }
 
 - hosts: secondary_storage_hosts
   gather_facts: no

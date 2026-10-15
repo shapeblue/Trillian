@@ -1,0 +1,4 @@
+---
+- name: Add Ceph primary storage RBD pools
+  include_tasks: ./addpools.yml
+  when: ( storage_action == "addprimary" ) and ( "primary_storage_hosts_ceph" in group_names )
