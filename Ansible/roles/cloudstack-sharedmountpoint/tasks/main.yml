@@ -11,14 +11,3 @@
     state: mounted
   with_items: "{{ env_pripools | default([]) | select('search', '-kvm-pri') | list }}"
   when: ( storage_action == "addprimary" ) and ( "kvm_hosts" in group_names )
-
-- name: Unmount shared mount points on KVM hosts
-  mount:
-    path: "{{ env_prismp_path }}{{ env_name_clean }}/{{ item }}"
-    state: absent
-  with_items: "{{ env_pripools | default([]) | select('search', '-kvm-pri') | list }}"
-  when: ( storage_action == "removeprimary" ) and ( "kvm_hosts" in group_names )
-
-- name: Remove shared mount point folders on KVM hosts
-  file: path="{{ env_prismp_path }}{{ env_name_clean }}" state=absent
-  when: ( storage_action == "removeprimary" ) and ( "kvm_hosts" in group_names )
