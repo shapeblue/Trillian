@@ -276,9 +276,12 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  environment: "{{ cloudstack_env }}"
   tasks:
     - name: update project - tag Configuring_CLVM_Storage
-      include: tasks/updateproject.yml project_tag=Configuring_CLVM_Storage
+      include_tasks: tasks/updateproject.yml
+      vars:
+        project_tag: Configuring_CLVM_Storage
       when: env_use_clvm|bool
 
 - hosts: primary_cs_manager

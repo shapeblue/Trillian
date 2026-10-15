@@ -28,18 +28,18 @@
     - clvm
 
 - name: Work out the KVM hosts in the cluster
-  include: ./cluster_hosts.yml
+  include_tasks: ./cluster_hosts.yml
   tags:
     - clvm
 
 - name: Export the CLVM data disk over iSCSI
-  include: ./target.yml
+  include_tasks: ./target.yml
   when: clvm_part == "target"
   tags:
     - clvm
 
 - name: Configure KVM hosts for the CLVM volume group
-  include: ./host.yml
+  include_tasks: ./host.yml
   when: clvm_part == "host"
   tags:
     - clvm
