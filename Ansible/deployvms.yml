@@ -271,6 +271,26 @@
 
 ## REMOVE WHEN SSVM FIXED
 
+## Configure CLVM storage
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: update project - tag Configuring_CLVM_Storage
+      include: tasks/updateproject.yml project_tag=Configuring_CLVM_Storage
+      when: env_use_clvm|bool
+
+- hosts: primary_cs_manager
+  gather_facts: no
+  roles:
+    - { role: clvm, clvm_part: 'target', when: env_use_clvm|bool }
+
+- hosts: kvm_hosts
+  gather_facts: no
+  roles:
+    - { role: clvm, clvm_part: 'host', when: env_use_clvm|bool }
+
 ## update status
 
 - hosts: localhost

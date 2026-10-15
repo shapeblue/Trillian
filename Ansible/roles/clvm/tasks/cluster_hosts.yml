@@ -1,0 +1,13 @@
+---
+# Sets clvm_cluster_hosts to the KVM hosts of clvm_cluster, in inventory order.
+# Cluster membership comes from cluster_idx, which defaults to cluster 1.
+
+- name: Reset the cluster host list
+  set_fact:
+    clvm_cluster_hosts: []
+
+- name: Collect the KVM hosts in cluster {{ clvm_cluster }}
+  set_fact:
+    clvm_cluster_hosts: "{{ clvm_cluster_hosts + [item] }}"
+  when: ( hostvars[item]['cluster_idx'] | default(1) | int ) == ( clvm_cluster | int )
+  with_items: "{{ groups['kvm_hosts'] }}"

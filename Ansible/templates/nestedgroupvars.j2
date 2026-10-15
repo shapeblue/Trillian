@@ -134,7 +134,7 @@ env_pripools:
 {% endfor %}
 {% endif %}
 {% if kvm_os | lower != "na" %}
-{% for n in range(1,pri | int + 1) %}
+{% for n in range(1,( 1 if clvm_storage else pri | int ) + 1) %}
   - {{ env_name_clean }}-kvm-pri{{ n }}
 {% endfor %}
 {% endif %}
@@ -193,6 +193,11 @@ use_shared_storage: {{ use_shared_storage | default( def_use_shared_storage ) }}
 use_local_storage_systemvms: {{ use_local_storage_systemvms | default( def_use_local_storage_systemvms ) }}
 local_storage_disk_offering: "{{ local_storage_disk_offering | default( def_local_storage_disk_offering ) }}"
 local_storage_disk_size: "{{ local_storage_disk_size | default( def_local_storage_disk_size ) }}"
+{% set clvm_storage = ( env_priprot | default( def_env_priprot ) ) | lower in [ "clvm", "clvm_ng" ] %}
+env_use_clvm: {{ clvm_storage }}
+clvm_vg_prefix: "vg-{{ env_name_clean }}"
+clvm_disk_size: "{{ clvm_disk_size | default( def_clvm_disk_size | default( "50", true ), true ) }}"
+clvm_backing_device: "{{ clvm_backing_device | default( def_clvm_backing_device | default( "/dev/sdb" ) ) }}"
 add_def_user: {{ add_def_user | default( "yes" ) }}
 
 # Management server

@@ -151,6 +151,10 @@
   with_items: "{{mgmtsrv1_retval.results}}"
   when: not additional_zone
 
+- name: Add CLVM data disk to the first management server
+  include: ./add_clvm_disk.yml
+  when: env_use_clvm|bool and (additional_zone|bool == False) and (additional_pod|bool == False)
+
 
 ####################################################################
 # Additional management servers

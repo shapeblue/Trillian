@@ -281,6 +281,18 @@
       fail: msg="iSCSI storage is only implemented for XenServer and VMware"
       when: ( hvtype not in [ "v",  "x", "vmware", "xenserver" ] ) and ( env_priprot is undefined ) and ( def_env_priprot | lower == "iscsi" )
 
+    - name: Check CLVM storage versus hypervisor
+      fail: msg="clvm / clvm_ng storage is only implemented for KVM"
+      when: ( hv | int > 0 ) and ( hvtype not in [ "k", "kvm" ] ) and ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] )
+
+    - name: Check CLVM storage is not used for an additional pod or zone
+      fail: msg="clvm / clvm_ng storage is not supported for an additional pod or zone"
+      when: ( additional_pod or additional_zone ) and ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] )
+
+    - name: Check the CLVM data disk size is a whole number of GB
+      fail: msg="clvm_disk_size must be a whole number of GB, got '{{ clvm_disk_size }}'"
+      when: ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] ) and ( clvm_disk_size | default( "50", true ) | string is not match( "^[1-9][0-9]*$" ) )
+
     - name: Sanitise environment name
       set_fact: env_name_clean={{ env_name | regex_replace('\s+$', '') | regex_replace('^\s+', '') | regex_replace('[^A-Za-z0-9-]', '-') | regex_replace('[-]+', '-') }}
 

@@ -43,6 +43,18 @@
   ignore_errors: yes
   when: not destroy_forced
 
+# The CLVM data disk is exported from the first management server. Remove it explicitly once the
+# VMs are stopped, rather than relying only on the project cleanup below.
+- name: Detach and delete the CLVM data disk
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    name: "{{ groups['primary_cs_manager'][0] }}-clvm-volume"
+    state: absent
+    api_timeout: 120
+  ignore_errors: yes
+  when: ( env_use_clvm | default( false ) | bool ) and ( groups['primary_cs_manager'] | length > 0 ) and ( not destroy_forced )
+
 - name: Destroy hosts in project {{ env_name_clean }}
   local_action:
     module: ngine_io.cloudstack.instance

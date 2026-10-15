@@ -1,0 +1,16 @@
+---
+# Attaches the data disk the first management server exports as CLVM primary storage.
+# Expects mgmtsrv1_retval from the management server build.
+
+- name: Add data disk for CLVM storage
+  local_action:
+    module: cs_volume
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    name: "{{ item.name }}-clvm-volume"
+    disk_offering: "{{ local_storage_disk_offering }}"
+    size: "{{ clvm_disk_size }}"
+    vm: "{{ item.name }}"
+    state: attached
+    api_timeout: 120
+  with_items: "{{ mgmtsrv1_retval.results }}"

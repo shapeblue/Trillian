@@ -1,0 +1,45 @@
+---
+
+#Copyright 2016 ShapeBlue
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+####################################################################
+# CLVM primary storage. Shared LVM (lvmlockd + sanlock) on a LUN that the
+# management server exports from a data disk, one volume group per cluster.
+#
+#   clvm_part: target - run on the management server, exports the data disk
+#   clvm_part: host   - run on the KVM hosts, logs in and creates/starts the VG
+####################################################################
+
+- name: Get OS facts
+  os_facts:
+  tags:
+    - clvm
+
+- name: Work out the KVM hosts in the cluster
+  include: ./cluster_hosts.yml
+  tags:
+    - clvm
+
+- name: Export the CLVM data disk over iSCSI
+  include: ./target.yml
+  when: clvm_part == "target"
+  tags:
+    - clvm
+
+- name: Configure KVM hosts for the CLVM volume group
+  include: ./host.yml
+  when: clvm_part == "host"
+  tags:
+    - clvm

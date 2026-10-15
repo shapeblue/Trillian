@@ -1,0 +1,13 @@
+---
+
+# Cluster (1..N) this CLVM volume group is for. KVM hosts take their own cluster_idx,
+# the management server (which exports the LUN) is run once per cluster.
+clvm_cluster: "{{ cluster_idx | default(1) }}"
+
+clvm_iqn_base: "{{ env_iscsi_target | default('iqn.2016-10.local.trillian') }}"
+clvm_target_iqn: "{{ clvm_iqn_base }}:{{ env_uuid }}-clvm{{ clvm_cluster }}"
+clvm_backstore_name: "{{ env_name_clean }}-clvm{{ clvm_cluster }}"
+clvm_vg_name: "{{ clvm_vg_prefix }}-c{{ clvm_cluster }}"
+clvm_target_ip: "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}"
+clvm_target_port: 3260
+clvm_lun_path: "/dev/disk/by-path/ip-{{ clvm_target_ip }}:{{ clvm_target_port }}-iscsi-{{ clvm_target_iqn }}-lun-0"

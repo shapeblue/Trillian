@@ -1,0 +1,85 @@
+---
+# KVM host side. lvmlockd host_id is the host's position in its own cluster (1..N), as each
+# cluster has its own volume group and so its own sanlock lockspace.
+
+- name: Work out the lvmlockd host id
+  set_fact:
+    clvm_host_id: "{{ clvm_cluster_hosts.index(inventory_hostname) + 1 }}"
+
+- name: Install packages (EL)
+  package: name=iscsi-initiator-utils,lvm2,lvm2-lockd,sanlock state=present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: Install packages (Debian / Ubuntu)
+  package: name=open-iscsi,lvm2,lvm2-lockd,sanlock state=present
+  when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+- name: Set the iSCSI initiator name to the one allowed by the target
+  copy:
+    content: "InitiatorName={{ clvm_iqn_base }}.{{ inventory_hostname }}:{{ env_uuid }}\n"
+    dest: /etc/iscsi/initiatorname.iscsi
+
+- name: Ensure iscsid is enabled and restarted with the new initiator name
+  systemd: name=iscsid state=restarted enabled=yes
+
+# Nested VMs have no hardware watchdog, so use the software one for sanlock
+- name: Load the softdog watchdog
+  shell: "modprobe softdog && echo softdog > /etc/modules-load.d/softdog.conf"
+
+- name: Enable lvmlockd in lvm.conf
+  lineinfile:
+    dest: /etc/lvm/lvm.conf
+    regexp: '^\s*#?\s*use_lvmlockd\s*='
+    line: '        use_lvmlockd = 1'
+    backup: yes
+
+- name: Set the lvmlockd host id
+  template: src=lvmlocal.conf.j2 dest=/etc/lvm/lvmlocal.conf
+
+- name: Ensure wdmd, sanlock and lvmlockd are enabled and started
+  systemd: name={{ item }} state=started enabled=yes
+  with_items:
+    - wdmd
+    - sanlock
+    - lvmlockd
+
+- name: Discover the iSCSI target
+  command: "iscsiadm -m discovery -t sendtargets -p {{ clvm_target_ip }}:{{ clvm_target_port }}"
+  register: clvm_discovery
+  until: clvm_target_iqn in clvm_discovery.stdout
+  retries: 12
+  delay: 5
+
+- name: Check for an existing iSCSI session
+  shell: "iscsiadm -m session || true"
+  register: clvm_sessions
+  changed_when: false
+
+- name: Log in to the iSCSI target
+  command: "iscsiadm -m node -T {{ clvm_target_iqn }} -p {{ clvm_target_ip }}:{{ clvm_target_port }} --login"
+  when: clvm_target_iqn not in clvm_sessions.stdout
+
+- name: Log in to the target at boot
+  command: "iscsiadm -m node -T {{ clvm_target_iqn }} -p {{ clvm_target_ip }}:{{ clvm_target_port }} --op update -n node.startup -v automatic"
+
+- name: Wait for the LUN to appear
+  wait_for:
+    path: "{{ clvm_lun_path }}"
+    timeout: 120
+
+- name: Check whether the volume group exists
+  shell: "pvscan --cache; vgs {{ clvm_vg_name }}"
+  register: clvm_vg_check
+  failed_when: false
+  changed_when: false
+
+- name: Create the shared volume group (first host in the cluster only)
+  command: "vgcreate --shared {{ clvm_vg_name }} {{ clvm_lun_path }}"
+  when: inventory_hostname == clvm_cluster_hosts[0] and clvm_vg_check.rc != 0
+
+- name: Start the lock manager for the volume group on every host
+  shell: "pvscan --cache && vgchange --lock-start {{ clvm_vg_name }}"
+  register: clvm_lock_start
+  until: clvm_lock_start.rc == 0
+  retries: 12
+  delay: 5
