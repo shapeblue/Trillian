@@ -18,11 +18,6 @@
 
     - include_tasks: ./tasks/removeproject.yml
 
-- hosts: kvm_hosts
-  gather_facts: no
-  roles:
-    - { role: cloudstack-sharedmountpoint, storage_action: 'removeprimary', when: ( env_priprot | lower == "sharedmountpoint" ) and not destroy_forced }
-
 - hosts: primary_storage_hosts
   gather_facts: no
   roles:
