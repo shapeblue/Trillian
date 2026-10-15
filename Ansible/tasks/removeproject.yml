@@ -47,7 +47,7 @@
 # VMs are stopped, rather than relying only on the project cleanup below.
 - name: Detach and delete the CLVM data disk
   local_action:
-    module: cs_volume
+    module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     name: "{{ groups['primary_cs_manager'][0] }}-clvm-volume"
     state: absent

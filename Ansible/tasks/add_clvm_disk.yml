@@ -4,7 +4,7 @@
 
 - name: Add data disk for CLVM storage
   local_action:
-    module: cs_volume
+    module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     name: "{{ item.name }}-clvm-volume"
