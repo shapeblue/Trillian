@@ -62,37 +62,37 @@
     state: absent
 
 - name: Configure CentOS VMs for KVM
-  include: ./centos.yml
+  include_tasks: ./centos.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
   tags:
     - kvm
 
 - name: Configure CentOS VMs for KVM
-  include: ./centos8.yml
+  include_tasks: ./centos8.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
   tags:
     - kvm
 
 - name: Configure EL9 or EL10 VMs for KVM
-  include: ./el9.yml
+  include_tasks: ./el9.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 9 )
   tags:
     - kvm
 
 - name: Configure SUSE VMs for KVM
-  include: ./suse.yml
+  include_tasks: ./suse.yml
   when: ansible_distribution == 'SUSE'
   tags:
     - kvm
 
 - name: Configure Ubuntu VMs for KVM
-  include: ./ubuntu.yml
+  include_tasks: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - kvm
 
 - name: Configure Debian VMs for KVM
-  include: ./debian.yml
+  include_tasks: ./debian.yml
   when: ansible_distribution == 'Debian'
   tags:
     - kvm

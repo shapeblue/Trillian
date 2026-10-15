@@ -64,43 +64,43 @@
       ansible_distribution: "SUSE"
   when: ansible_distribution == 'Ubuntu' and result is succeeded
 
-- include: ./centos.yml
+- include_tasks: ./centos.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int < 8 )
   tags:
     - mysql
     - mysqlconf
 
-- include: ./centos8.yml
+- include_tasks: ./centos8.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int == 8 )
   tags:
     - mysql
     - mysqlconf
 
-- include: ./el9.yml
+- include_tasks: ./el9.yml
   when: ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version|int >= 9 )
   tags:
     - mysql
     - mysqlconf
 
-- include: ./suse.yml
+- include_tasks: ./suse.yml
   when: ansible_distribution == 'SUSE'
   tags:
     - mysql
     - mysqlconf
 
-- include: ./ubuntu.yml
+- include_tasks: ./ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
   tags:
     - mysql
     - mysqlconf
 
-- include: ./debian.yml
+- include_tasks: ./debian.yml
   when: ansible_distribution == 'Debian'
   tags:
     - mysql 
     - mysqlconf
 
-- include: ./mysql_replication.yml
+- include_tasks: ./mysql_replication.yml
   when: num_db_hosts | int > 1
   tags:
     - mysql_replication

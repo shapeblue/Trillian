@@ -3,6 +3,9 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  environment: "{{ cloudstack_env }}"
   tasks:
     - name: update Tag project
-      include: tasks/updateproject.yml project_tag={{ tag }}
+      include_tasks: tasks/updateproject.yml
+      vars:
+        project_tag: "{{ tag }}"

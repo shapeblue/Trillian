@@ -23,7 +23,7 @@
   tasks:
     - name: Stop / start VMs
       local_action:
-        module: cs_instance
+        module: ngine_io.cloudstack.instance
         name: "{{ item }}"
         project: "{{ build_project }}"
         state: "{{ stopstartaction }}"

@@ -14,6 +14,8 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 ARGS="(`cat $1`)"
+ARGS=$(echo $ARGS | tr -d "^(" | tr -d ")$")
+
 DBHOST=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBHOST"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBUSER=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBUSER"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`
 DBPASS=`echo $ARGS | tr " " "\n"| awk -F= '$1=="DBPASSWORD"{print $2}'| tr -d '"' | sed -e 's/[[:space:]]*$//'`

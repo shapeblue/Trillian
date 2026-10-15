@@ -37,13 +37,17 @@ class CallbackModule(CallbackBase):
                     print("\n{0}: {1}".format(field, output.replace("\\n","\n")))
 
     def _format_output(self, output):
-        # Strip unicode
-        if type(output) == unicode:
-            output = output.encode('ascii', 'replace')
+        # If output is encoded
+        if isinstance(output, bytes):
+            output = output.decode('utf-8', errors='replace')
 
         # If output is a dict
         if type(output) == dict:
             return json.dumps(output, indent=2)
+
+        # If output is an empty list
+        if type(output) == list and len(output) == 0:
+            return ""
 
         # If output is a list of dicts
         if type(output) == list and type(output[0]) == dict:

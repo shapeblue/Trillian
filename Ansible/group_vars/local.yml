@@ -1,0 +1,12 @@
+cloudstack_ini: "{{ inventory_dir }}/cloudstack.ini"
+
+cloudstack_auth:
+  api_key: "{{ lookup('ini', 'key section=cloudstack file=' ~ cloudstack_ini) }}"
+  api_secret: "{{ lookup('ini', 'secret section=cloudstack file=' ~ cloudstack_ini) }}"
+  api_url: "{{ lookup('ini', 'endpoint section=cloudstack file=' ~ cloudstack_ini) }}"
+
+cloudstack_env:
+  CLOUDSTACK_KEY: "{{ cloudstack_auth.api_key }}"
+  CLOUDSTACK_SECRET: "{{ cloudstack_auth.api_secret }}"
+  CLOUDSTACK_ENDPOINT: "{{ cloudstack_auth.api_url }}"
+
