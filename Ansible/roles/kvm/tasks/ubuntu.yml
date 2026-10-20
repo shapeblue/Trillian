@@ -254,9 +254,9 @@
       timeout: 5
     delegate_to: localhost
 
-  - name: work out the OVN controller IP (mgmt2/secondary_cs_manager), unless overridden
+  - name: work out the OVN controller IP (mgmt2 if deployed, else mgmt1), unless overridden
     set_fact:
-      ovn_controller_ip: "{{ hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}"
+      ovn_controller_ip: "{{ hostvars[ovn_controller_host]['ansible_ssh_host'] }}"
     when: not ovn_controller_ip
 
   - name: read the eth1.2000 IP (used as the OVN Geneve encapsulation IP)

@@ -144,7 +144,7 @@ else
 fi
 
 WriteOutput "Attaching OVN extension to physical network ${GuestPhysNetID}";
-cloudmonkey register extension extensionid=${OvnExtID} resourcetype=PhysicalNetwork resourceid=${GuestPhysNetID} "details[0].ovn_nb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_nb_port }}" "details[1].ovn_sb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[groups['secondary_cs_manager'][0]]['ansible_ssh_host'] }}:{{ ovn_sb_port }}" "details[2].ovn_physnet={{ ovn_provider_physnet }}" "details[3].gateway_chassis={% for host in groups['kvm_hosts'] %}{{ host }}:{{ 100 - loop.index0 * 10 }}:system{% if not loop.last %},{% endif %}{% endfor %}" | tee -i -a ${DEPLOYLOG};
+cloudmonkey register extension extensionid=${OvnExtID} resourcetype=PhysicalNetwork resourceid=${GuestPhysNetID} "details[0].ovn_nb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[ovn_controller_host]['ansible_ssh_host'] }}:{{ ovn_nb_port }}" "details[1].ovn_sb_connection=tcp:{{ ovn_controller_ip if ovn_controller_ip else hostvars[ovn_controller_host]['ansible_ssh_host'] }}:{{ ovn_sb_port }}" "details[2].ovn_physnet={{ ovn_provider_physnet }}" "details[3].gateway_chassis={% for host in groups['kvm_hosts'] %}{{ host }}:{{ 100 - loop.index0 * 10 }}:system{% if not loop.last %},{% endif %}{% endfor %}" | tee -i -a ${DEPLOYLOG};
 
 WriteOutput "Enabling OVN network service provider";
 OvnNspID=`cloudmonkey list networkserviceproviders physicalnetworkid=${GuestPhysNetID} name=ovn-extension filter=id | jq -r '.networkserviceprovider[0].id'`;

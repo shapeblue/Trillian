@@ -16,9 +16,11 @@
 
 # OVN central controller.
 #
-# Runs on mgmt2 (the secondary_cs_manager host) so the OVN control plane
-# is kept off the primary CloudStack management server. Ubuntu only for
-# now - this mirrors the "support ubuntu hosts" scope of the OVN work.
+# Runs on the host selected by ovn_controller_host: mgmt2 (the first
+# secondary_cs_manager host) when one is deployed, so the OVN control plane
+# is kept off the primary CloudStack management server, otherwise mgmt1.
+# Ubuntu only for now - this mirrors the "support ubuntu hosts" scope of
+# the OVN work.
 
 - name: gather OS facts
   os_facts:
@@ -28,7 +30,7 @@
     msg: "ovn-controller role currently only supports Ubuntu (found {{ ansible_distribution }})"
   when: ansible_distribution != 'Ubuntu'
 
-- name: work out this controller's own IP (cloudbr0 on mgmt2), unless overridden
+- name: work out this controller's own IP (cloudbr0 on the controller host), unless overridden
   set_fact:
     ovn_controller_ip: "{{ ansible_ssh_host }}"
   when: not ovn_controller_ip

@@ -305,6 +305,9 @@ kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public
 kvm_network_mode: "{{ kvm_network_mode | default( def_kvm_network_mode ) }}"
 kvm_centos_ovsrpm: "{{ kvm_centos_ovsrpm | default( def_kvm_centos_ovsrpm ) }}"
 
+# Inventory host that runs the OVN central controller: mgmt2 when a secondary
+# management server is deployed, otherwise mgmt1.
+ovn_controller_host: "{{ '{{' }} groups['secondary_cs_manager'][0] if (groups['secondary_cs_manager'] | default([]) | length > 0) else groups['primary_cs_manager'][0] {{ '}}' }}"
 ovn_controller_ip: "{{ ovn_controller_ip | default( def_ovn_controller_ip | default('') ) }}"
 ovn_nb_port: "{{ ovn_nb_port | default( def_ovn_nb_port | default(6641) ) }}"
 ovn_sb_port: "{{ ovn_sb_port | default( def_ovn_sb_port | default(6642) ) }}"
