@@ -1,6 +1,7 @@
 ---
-# KVM host side. lvmlockd host_id is the host's position in its own cluster (1..N), as each
-# cluster has its own volume group and so its own sanlock lockspace.
+# KVM host side, once per host: lvmlockd and sanlock setup and the iSCSI login. lvmlockd host_id is
+# the host's position in its own cluster (1..N), as each cluster has its own volume groups and so
+# its own sanlock lockspaces. The volume groups are created by host_pool.yml.
 
 - name: Work out the lvmlockd host id
   set_fact:
@@ -61,25 +62,3 @@
 
 - name: Log in to the target at boot
   command: "iscsiadm -m node -T {{ clvm_target_iqn }} -p {{ clvm_target_ip }}:{{ clvm_target_port }} --op update -n node.startup -v automatic"
-
-- name: Wait for the LUN to appear
-  wait_for:
-    path: "{{ clvm_lun_path }}"
-    timeout: 120
-
-- name: Check whether the volume group exists
-  shell: "pvscan --cache; vgs {{ clvm_vg_name }}"
-  register: clvm_vg_check
-  failed_when: false
-  changed_when: false
-
-- name: Create the shared volume group (first host in the cluster only)
-  command: "vgcreate --shared {{ clvm_vg_name }} {{ clvm_lun_path }}"
-  when: inventory_hostname == clvm_cluster_hosts[0] and clvm_vg_check.rc != 0
-
-- name: Start the lock manager for the volume group on every host
-  shell: "pvscan --cache && vgchange --lock-start {{ clvm_vg_name }}"
-  register: clvm_lock_start
-  until: clvm_lock_start.rc == 0
-  retries: 12
-  delay: 5

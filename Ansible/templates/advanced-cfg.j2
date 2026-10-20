@@ -106,7 +106,7 @@
 					"primaryStorages": [
 {% for pripool in env_pripools %}			{
 {% if env_priprot | lower in [ "clvm", "clvm_ng" ] %}
-						"url": "{{ env_priprot | lower }}://localhost/{{ clvm_vg_prefix }}-c1",
+						"url": "{{ env_priprot | lower }}://localhost/{{ env_clvm_vgs[loop.index0] }}",
 {% else %}
 						"url": "{{ env_priprot }}://{{ env_prihost }}{{ env_pripath }}{{ env_name_clean }}/{{ pripool }}/",
 {% endif %}

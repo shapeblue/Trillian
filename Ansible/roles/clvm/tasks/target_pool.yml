@@ -1,0 +1,35 @@
+---
+# Exports data disk clvm_pool (clvm_pool_device) as the next LUN of the target. Run once per pool
+# with clvm_pool as the loop variable.
+
+# The data disk is hot-attached to the running management server, so rescan every SCSI
+# host for it before looking for the device
+- name: Rescan SCSI hosts for the newly attached data disk
+  shell: "for scan in /sys/class/scsi_host/host*/scan; do echo '- - -' > $scan; done"
+
+- name: Wait for the data disk to appear
+  wait_for:
+    path: "{{ clvm_pool_device }}"
+    timeout: 120
+  register: clvm_disk
+  ignore_errors: yes
+
+- name: Fail if the data disk is missing
+  fail: msg="CLVM data disk {{ clvm_pool_device }} not found on {{ inventory_hostname }} after a SCSI rescan"
+  when: clvm_disk is failed
+
+- name: Read the current target configuration
+  command: targetcli ls /
+  register: clvm_targetcli_state
+  changed_when: false
+
+- name: Create block backstore on the data disk
+  command: "targetcli /backstores/block create name={{ clvm_backstore_name }} dev={{ clvm_pool_device }}"
+  when: clvm_backstore_name not in clvm_targetcli_state.stdout
+
+- name: Map the LUN
+  command: "targetcli /iscsi/{{ clvm_target_iqn }}/tpg1/luns create /backstores/block/{{ clvm_backstore_name }}"
+  when: clvm_backstore_name not in clvm_targetcli_state.stdout
+
+- name: Save the target configuration
+  command: targetcli saveconfig

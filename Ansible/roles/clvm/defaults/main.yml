@@ -6,8 +6,14 @@ clvm_cluster: "{{ cluster_idx | default(1) }}"
 
 clvm_iqn_base: "{{ env_iscsi_target | default('iqn.2016-10.local.trillian') }}"
 clvm_target_iqn: "{{ clvm_iqn_base }}:{{ env_uuid }}-clvm{{ clvm_cluster }}"
-clvm_backstore_name: "{{ env_name_clean }}-clvm{{ clvm_cluster }}"
-clvm_vg_name: "{{ clvm_vg_prefix }}-c{{ clvm_cluster }}"
 clvm_target_ip: "{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }}"
 clvm_target_port: 3260
-clvm_lun_path: "/dev/disk/by-path/ip-{{ clvm_target_ip }}:{{ clvm_target_port }}-iscsi-{{ clvm_target_iqn }}-lun-0"
+
+# One data disk, backstore, LUN and volume group per primary storage pool. The pool number
+# (clvm_pool, 1..N) is the loop variable of the per-pool task files. Disk n is the n-th disk
+# attached after clvm_backing_device, so sdb, sdc, sdd and so on.
+clvm_pool_count: "{{ env_clvm_vgs | length }}"
+clvm_pool_device: "{{ clvm_backing_device[:-1] }}{{ 'abcdefghijklmnopqrstuvwxyz'[ 'abcdefghijklmnopqrstuvwxyz'.index( clvm_backing_device[-1] ) + clvm_pool | int - 1 ] }}"
+clvm_backstore_name: "{{ env_name_clean }}-clvm{{ clvm_cluster }}-p{{ clvm_pool }}"
+clvm_vg_name: "{{ env_clvm_vgs[ clvm_pool | int - 1 ] }}"
+clvm_lun_path: "/dev/disk/by-path/ip-{{ clvm_target_ip }}:{{ clvm_target_port }}-iscsi-{{ clvm_target_iqn }}-lun-{{ clvm_pool | int - 1 }}"

@@ -1,6 +1,7 @@
 ---
-# Exports clvm_backing_device (the data disk attached to the management server) as
-# a LUN, with an ACL for each KVM host in the cluster.
+# Sets up the iSCSI target and the ACLs for the KVM hosts in the cluster. The data disks are
+# exported as LUNs of this one target by target_pool.yml. A LUN created later is mapped to the
+# existing ACLs by targetcli (auto_add_mapped_luns).
 
 - name: Install targetcli (EL)
   package: name=targetcli state=present
@@ -18,30 +19,10 @@
   systemd: name=rtslib-fb-targetctl state=started enabled=yes
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
 
-# The data disk is hot-attached to the running management server, so rescan every SCSI
-# host for it before looking for the device
-- name: Rescan SCSI hosts for the newly attached data disk
-  shell: "for scan in /sys/class/scsi_host/host*/scan; do echo '- - -' > $scan; done"
-
-- name: Wait for the data disk to appear
-  wait_for:
-    path: "{{ clvm_backing_device }}"
-    timeout: 120
-  register: clvm_disk
-  ignore_errors: yes
-
-- name: Fail if the data disk is missing
-  fail: msg="CLVM data disk {{ clvm_backing_device }} not found on {{ inventory_hostname }} after a SCSI rescan"
-  when: clvm_disk is failed
-
 - name: Read the current target configuration
   command: targetcli ls /
   register: clvm_targetcli_state
   changed_when: false
-
-- name: Create block backstore on the data disk
-  command: "targetcli /backstores/block create name={{ clvm_backstore_name }} dev={{ clvm_backing_device }}"
-  when: clvm_backstore_name not in clvm_targetcli_state.stdout
 
 - name: Create iSCSI target
   command: "targetcli /iscsi create {{ clvm_target_iqn }}"
@@ -50,17 +31,10 @@
 - name: Configure the target portal group
   command: "targetcli /iscsi/{{ clvm_target_iqn }}/tpg1 set attribute authentication=0 generate_node_acls=0 demo_mode_write_protect=0"
 
-- name: Map the LUN
-  command: "targetcli /iscsi/{{ clvm_target_iqn }}/tpg1/luns create /backstores/block/{{ clvm_backstore_name }}"
-  when: clvm_backstore_name not in clvm_targetcli_state.stdout
-
 - name: Allow each KVM host in the cluster to log in
   command: "targetcli /iscsi/{{ clvm_target_iqn }}/tpg1/acls create {{ clvm_iqn_base }}.{{ item }}:{{ env_uuid }}"
   when: ( clvm_iqn_base ~ '.' ~ item ~ ':' ~ env_uuid ) not in clvm_targetcli_state.stdout
   with_items: "{{ clvm_cluster_hosts }}"
-
-- name: Save the target configuration
-  command: targetcli saveconfig
 
 - name: Open the iSCSI port if firewalld is running
   shell: "systemctl is-active firewalld && firewall-cmd --permanent --add-port={{ clvm_target_port }}/tcp && firewall-cmd --reload || true"

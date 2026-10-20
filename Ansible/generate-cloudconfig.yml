@@ -289,6 +289,10 @@
       fail: msg="clvm / clvm_ng storage is not supported for an additional pod or zone"
       when: ( additional_pod or additional_zone ) and ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] )
 
+    - name: Check the CLVM pool count can be backed by data disks
+      fail: msg="clvm / clvm_ng storage needs between 1 and 25 primary storage pools (one data disk each), got pri={{ pri }}"
+      when: ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] ) and ( ( pri | int < 1 ) or ( pri | int > 25 ) )
+
     - name: Check the CLVM data disk size is a whole number of GB
       fail: msg="clvm_disk_size must be a whole number of GB, got '{{ clvm_disk_size }}'"
       when: ( env_priprot | default( def_env_priprot ) | lower in [ "clvm", "clvm_ng" ] ) and ( clvm_disk_size | default( "50", true ) | string is not match( "^[1-9][0-9]*$" ) )

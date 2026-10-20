@@ -257,7 +257,7 @@ cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${Clust
 {% elif ('-kvm-pri' in pool) and (env_priprot | lower == "sharedmountpoint" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' hypervisor='KVM' url="SharedMountPoint://localhost{{ env_prismp_path }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% elif ('-kvm-pri' in pool) and (env_priprot | lower in [ 'clvm', 'clvm_ng' ]) %}
-cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot | lower }}://localhost/{{ clvm_vg_prefix }}-c1" | tee -i -a ${DEPLOYLOG};
+cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot | lower }}://localhost/{{ env_clvm_vgs[loop.index0] }}" | tee -i -a ${DEPLOYLOG};
 {% elif ('-kvm-pri' in pool) and (env_priprot | lower != "ceph" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% endif %}

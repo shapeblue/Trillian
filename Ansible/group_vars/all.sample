@@ -161,8 +161,9 @@ def_use_shared_storage: yes
 def_use_local_storage_systemvms: no
 def_local_storage_disk_offering: "Custom"
 def_local_storage_disk_size: "80"
-# CLVM primary storage (env_priprot clvm / clvm_ng): size in GB of the data disk attached to the
-# management server and the device it appears as there
+# CLVM primary storage (env_priprot clvm / clvm_ng): one data disk is attached to the management
+# server for each primary storage pool (pri). Size in GB of each data disk and the device the
+# first one appears as there; the next ones follow it (sdb, sdc, ...)
 def_clvm_disk_size: "50"
 def_clvm_backing_device: "/dev/sdb"
 def_use_s3: no

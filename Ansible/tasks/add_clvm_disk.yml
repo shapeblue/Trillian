@@ -1,16 +1,20 @@
 ---
-# Attaches the data disk the first management server exports as CLVM primary storage.
+# Attaches the data disks the first management server exports as CLVM primary storage, one per
+# primary storage pool (see env_clvm_vgs). Disks are attached one at a time, in pool order, as
+# the clvm role maps the n-th disk to the n-th pool.
 # Expects mgmtsrv1_retval from the management server build.
 
-- name: Add data disk for CLVM storage
+- name: Add data disks for CLVM storage
   local_action:
     module: ngine_io.cloudstack.volume
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
-    name: "{{ item.name }}-clvm-volume"
+    name: "{{ item.0.name }}-clvm-volume{{ item.1 }}"
     disk_offering: "{{ local_storage_disk_offering }}"
     size: "{{ clvm_disk_size }}"
-    vm: "{{ item.name }}"
+    vm: "{{ item.0.name }}"
     state: attached
     api_timeout: 120
-  with_items: "{{ mgmtsrv1_retval.results }}"
+  with_nested:
+    - "{{ mgmtsrv1_retval.results }}"
+    - "{{ range( 1, env_clvm_vgs | length + 1 ) | list }}"

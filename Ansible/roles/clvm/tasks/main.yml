@@ -15,11 +15,12 @@
 #limitations under the License.
 
 ####################################################################
-# CLVM primary storage. Shared LVM (lvmlockd + sanlock) on a LUN that the
-# management server exports from a data disk, one volume group per cluster.
+# CLVM primary storage. Shared LVM (lvmlockd + sanlock) on LUNs that the management server
+# exports from data disks over one iSCSI target: one data disk, LUN and volume group per
+# primary storage pool (env_clvm_vgs).
 #
-#   clvm_part: target - run on the management server, exports the data disk
-#   clvm_part: host   - run on the KVM hosts, logs in and creates/starts the VG
+#   clvm_part: target - run on the management server, exports the data disks
+#   clvm_part: host   - run on the KVM hosts, logs in and creates/starts the VGs
 ####################################################################
 
 - name: Get OS facts
@@ -32,14 +33,32 @@
   tags:
     - clvm
 
-- name: Export the CLVM data disk over iSCSI
+- name: Set up the CLVM iSCSI target
   include_tasks: ./target.yml
   when: clvm_part == "target"
   tags:
     - clvm
 
-- name: Configure KVM hosts for the CLVM volume group
+- name: Export each CLVM data disk as a LUN
+  include_tasks: ./target_pool.yml
+  loop: "{{ range( 1, clvm_pool_count | int + 1 ) | list }}"
+  loop_control:
+    loop_var: clvm_pool
+  when: clvm_part == "target"
+  tags:
+    - clvm
+
+- name: Configure KVM hosts for CLVM and log in to the target
   include_tasks: ./host.yml
+  when: clvm_part == "host"
+  tags:
+    - clvm
+
+- name: Create and start the CLVM volume group for each pool
+  include_tasks: ./host_pool.yml
+  loop: "{{ range( 1, clvm_pool_count | int + 1 ) | list }}"
+  loop_control:
+    loop_var: clvm_pool
   when: clvm_part == "host"
   tags:
     - clvm

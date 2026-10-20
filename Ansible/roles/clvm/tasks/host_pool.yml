@@ -1,0 +1,25 @@
+---
+# Creates (first host in the cluster only) and starts the shared volume group on LUN clvm_pool.
+# Run once per pool with clvm_pool as the loop variable, after host.yml has logged in.
+
+- name: Wait for the LUN to appear
+  wait_for:
+    path: "{{ clvm_lun_path }}"
+    timeout: 120
+
+- name: Check whether the volume group exists
+  shell: "pvscan --cache; vgs {{ clvm_vg_name }}"
+  register: clvm_vg_check
+  failed_when: false
+  changed_when: false
+
+- name: Create the shared volume group (first host in the cluster only)
+  command: "vgcreate --shared {{ clvm_vg_name }} {{ clvm_lun_path }}"
+  when: inventory_hostname == clvm_cluster_hosts[0] and clvm_vg_check.rc != 0
+
+- name: Start the lock manager for the volume group on every host
+  shell: "pvscan --cache && vgchange --lock-start {{ clvm_vg_name }}"
+  register: clvm_lock_start
+  until: clvm_lock_start.rc == 0
+  retries: 12
+  delay: 5
