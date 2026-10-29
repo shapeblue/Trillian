@@ -267,7 +267,7 @@
   tasks:
     - name: pre-upload templates
       include_tasks: ./tasks/builtintemplate_hack.yml
-      when: "additional_pod|bool == false"
+      when: (additional_pod|bool == false) and (env_numversion is version('24','<'))
 
 ## REMOVE WHEN SSVM FIXED
 
