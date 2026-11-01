@@ -350,6 +350,26 @@ else
   note "lab-hosts: skipped, the bundle has no scripts/smoke-lab-hosts.sh"
 fi
 [ $PREPARE = 1 ] && step lab-prepare "$CLI" lab -env "$ENVF" -prepare -o "$RES/lab-prepare.yaml"
+
+# A guest lab -prepare has just started has no power state until its host's
+# agent reports it, up to a minute or two later. The smoke's baseline must not
+# be recorded before that, or the first scenario finds the row changed after
+# its restore and stops the run.
+if command -v mysql >/dev/null; then
+  log "waiting for every running guest's power state to be reported"
+  unsettled=""
+  for _ in $(seq 1 30); do
+    unsettled=$(MYSQL_PWD=$TRILLIAN_DB_ROOT_PASSWORD mysql -h "$TRILLIAN_DB_HOST" -uroot -N -B cloud -e \
+      "select group_concat(name) from vm_instance where removed is null and state = 'Running' and (power_state is null or power_state <> 'PowerOn' or power_host is null or power_host <> host_id)" 2>/dev/null)
+    [ "$unsettled" = NULL ] && { unsettled=""; break; }
+    sleep 10
+  done
+  [ -z "$unsettled" ] || note "power state still not reported after 5 minutes for: $unsettled"
+else
+  log "no mysql client; waiting 2 minutes for the guests' power state to be reported"
+  sleep 120
+fi
+
 step lab "$CLI" lab -env "$ENVF" -o "$RES/lab.yaml"
 lab_rc=$?
 
