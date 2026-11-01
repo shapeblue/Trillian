@@ -146,6 +146,23 @@
 
   tasks:
 
+# product profile (products/<product>.yml), passed last by Jenkins as --extra-vars @products/<product>.yml
+
+    - name: Load the product profile
+      include_vars:
+        file: "{{ playbook_dir }}/products/{{ product }}.yml"
+        name: product_profile
+      when: ( product | default('') ) != ""
+
+    - name: Check the product profile has no placeholders left
+      fail: msg="products/{{ product }}.yml still has CHANGEME values; fill them in from the live group_vars/all"
+      when: product_profile is defined and ( product_profile | string ).find('CHANGEME') != -1
+
+    - name: Check the product profile was applied
+      fail: msg="product={{ product }}, but {{ item.key }} is '{{ lookup('vars', item.key, default='unset') }}' where the profile says '{{ item.value }}'. Pass the profile last, after the job's own extra vars - --extra-vars @products/{{ product }}.yml"
+      when: product_profile is defined and ( lookup('vars', item.key, default='unset') | string ) != ( item.value | string )
+      with_dict: "{{ product_profile | default({}) }}"
+
 # check incoming args
 
     - name: Check env_dotted_version

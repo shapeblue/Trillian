@@ -151,6 +151,28 @@ build commands are in the script's header. With `kvm_clusters`:
 env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2:p1-el,<u24 code>:1:p1-ubuntu,<debian12 code>:1:p1-debian,<suse15 code>:1:p1-suse pri=1 sec=1 env_accounts=all build_marvin=yes post_deploy_script=remediate-smoke-setup.sh post_deploy_wait=yes
 ```
 
+### Product profiles (`products/<product>.yml`)
+
+A profile fixes everything a product's test lab needs, so the job takes one
+choice instead of a dozen settings. Jenkins passes it last, after the job's own
+extra vars, so its values win over the job's parameters; the environment name
+and CloudStack version still come from the job:
+
+```
+PRODUCT_OPTS=""
+[ -n "$PRODUCT" ] && [ "$PRODUCT" != "none" ] && PRODUCT_OPTS="--extra-vars @products/${PRODUCT}.yml"
+ansible-playbook generate-cloudconfig.yml -i localhost --extra-vars '<job vars>' $PRODUCT_OPTS
+ansible-playbook deployvms.yml -i ./hosts_<env> --extra-vars '<job vars>' $PRODUCT_OPTS
+```
+
+`generate-cloudconfig.yml` refuses a profile that still has `CHANGEME` values,
+and a build where `product` is set but the profile was not passed last (a job
+value overriding one of the profile's).
+
++ `products/remediate.yml`: the remediate apply-smoke lab (`kvm_clusters` with
+  OL9 x2, Ubuntu 24.04, Debian 12 and openSUSE Leap 15.6, the Marvin VM, and
+  `remediate-smoke-setup.sh` run at the end of the build).
+
 #### Some example --extra-args:
 
 * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`

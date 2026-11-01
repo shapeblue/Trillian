@@ -1,0 +1,47 @@
+# Trillian product profile: remediate
+#
+# The lab the remediate apply smoke needs (remediate:
+# docs/internal/apply-smoke.md, section 7): one management server, two
+# Oracle Linux 9 KVM hosts in one cluster and one cluster each of Ubuntu
+# 24.04, Debian 12 and openSUSE Leap 15.6, the Marvin VM, and the smoke run
+# on it at the end of the build (post_deploy_scripts/remediate-smoke-setup.sh).
+#
+# Jenkins passes it last, after the job's own extra vars, so these values win
+# over the job's parameters (hypervisor count, KVM OS, Marvin and so on):
+#
+#   ansible-playbook generate-cloudconfig.yml ... --extra-vars '<job vars>' --extra-vars @products/remediate.yml
+#
+# The environment name and the CloudStack version still come from the job.
+# Values are quoted strings so a check can compare them with the job's own.
+#
+# CHANGEME: the four OS codes are keys of linux_os in the live group_vars/all.
+# generate-cloudconfig.yml refuses this profile while any CHANGEME is left.
+
+product: "remediate"
+
+# Management server: 8 GB holds the management, usage and MySQL heaps
+mgmt: "1"
+db: "0"
+mgmt_os: "CHANGEME_ol9"
+# mgmtsrv_service_offering: "<parent cloud offering with 4 vCPU / 8 GB>"
+
+# KVM: one cluster per distribution (cluster names are what env.yaml's lab section will say)
+hvtype: "k"
+hv: "5"
+kvm_os: "CHANGEME_ol9"
+kvm_clusters: "CHANGEME_ol9:2:p1-el,CHANGEME_ubuntu2404:1:p1-ubuntu,CHANGEME_debian12:1:p1-debian,CHANGEME_opensuse156:1:p1-suse"
+kvm_clusters_pool_scope: "first"
+
+# Storage: one shared NFS primary pool (on the EL cluster) and one secondary
+pri: "1"
+sec: "1"
+
+# The Marvin VM runs the smoke; Marvin's own tests stay off so nothing else touches the lab
+build_marvin: "yes"
+run_smoke_tests: "no"
+run_component_tests: "no"
+
+post_deploy_script: "remediate-smoke-setup.sh"
+post_deploy_script_args: ""
+post_deploy_wait: "yes"
+post_deploy_timeout: "21600"
