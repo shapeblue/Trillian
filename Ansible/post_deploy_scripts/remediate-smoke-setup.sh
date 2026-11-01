@@ -36,6 +36,8 @@
 #   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/remediate-cli ./cmd/remediate-cli
 #   tar czf remediate-smoke-<version>.tar.gz bin/remediate-cli runbooks catalogue \
 #       supported-versions.yaml scripts/smoke-lab-hosts.sh
+#   (on macOS: COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata czf ..., or the
+#   Apple file attributes come along and GNU tar warns about each file)
 #   then on the staging server, in its web root's remediate/ directory:
 #   ln -sfn remediate-smoke-<version>.tar.gz remediate-smoke-latest.tar.gz
 #
@@ -189,7 +191,9 @@ fi
 log "fetching $BUNDLE_URL"
 curl -fsSL --retry 3 -o "$DIR/bundle.tar.gz" "$BUNDLE_URL" || die "could not download $BUNDLE_URL"
 rm -rf "$REL" && mkdir -p "$REL"
-tar -xzf "$DIR/bundle.tar.gz" -C "$REL" || die "could not unpack the bundle"
+tar_quiet=""
+tar --version 2>/dev/null | grep -q GNU && tar_quiet="--warning=no-unknown-keyword"
+tar $tar_quiet -xzf "$DIR/bundle.tar.gz" -C "$REL" || die "could not unpack the bundle"
 idx=$(find "$REL" -maxdepth 3 -path '*/catalogue/index.yaml' | head -1)
 [ -n "$idx" ] || die "the bundle has no catalogue/index.yaml"
 REL=$(cd "$(dirname "$idx")/.." && pwd)
