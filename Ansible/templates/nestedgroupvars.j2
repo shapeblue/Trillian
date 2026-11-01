@@ -458,6 +458,13 @@ marvin_test_categories:
 {% endfor %}
 {% endif %}
 
+# Post-deploy hook: a script run on the Marvin VM once the environment is built
+# (deployvms.yml). A file name under post_deploy_scripts/ or an http(s) URL.
+post_deploy_script: {{ ( post_deploy_script | default('') ) | to_json }}
+post_deploy_script_args: {{ ( post_deploy_script_args | default('') ) | to_json }}
+post_deploy_wait: {{ post_deploy_wait | default("no") }}
+post_deploy_timeout: {{ post_deploy_timeout | default(21600) }}
+
 # SSL
 ssl_systemvm: "{{ ssl_systemvm | default ( def_ssl_systemvm ) }}"
 ssl_mgmt: "{{ ssl_mgmt | default ( def_ssl_mgmt ) }}"

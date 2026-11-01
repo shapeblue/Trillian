@@ -113,6 +113,44 @@ in a single environment, in one pod:
 env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2,<u24 code>:1,<debian12 code>:1,<suse15 code>:1 pri=1 sec=1 env_accounts=all
 ```
 
+### Running a script on the Marvin VM after the build (`post_deploy_script`)
+
+With `build_marvin=yes`, `deployvms.yml` can finish by running a script of
+your own on the Marvin VM, the way it queues the Marvin tests:
+
++ `post_deploy_script`: a file name in `Ansible/post_deploy_scripts/`, or an
+  `http(s)://` URL to download it from.
++ `post_deploy_script_args`: arguments passed to it, as shell words.
++ `post_deploy_wait`: `no` (default) queues the script with `at` and the build
+  finishes; `yes` runs it within the build and fails the build when it exits
+  non-zero, printing the end of its log.
++ `post_deploy_timeout`: seconds before the script is killed (default 21600).
+
+The script runs as root in `/marvin/post-deploy/`, with
+`trillian-env.sh` sourced first: `TRILLIAN_API_URL`, `TRILLIAN_API_KEY` and
+`TRILLIAN_SECRET_KEY` (the admin keys), `TRILLIAN_MGMT_IPS`,
+`TRILLIAN_KVM_IPS` and their root passwords, `TRILLIAN_DB_HOST` with the
+MySQL root and cloud passwords, `TRILLIAN_STAGING_SERVER`, the environment
+name, UUID and CloudStack version. Its output goes to `<script>.log` and its
+exit code to `<script>.exit`; `/marvin/post-deploy/run.sh` runs it again.
+Marvin tests queued in the same build run against the lab at the same time.
+
+#### Remediate apply smoke
+
+`post_deploy_scripts/remediate-smoke-setup.sh` prepares the environment for the
+remediate apply smoke and runs it. It downloads a remediate bundle from the
+staging server (`http://<stagingserverip>/remediate/remediate-smoke-latest.tar.gz`,
+or `--version <v>` for `remediate-smoke-<v>.tar.gz`), so no git checkout or
+credentials are needed. It installs its own SSH key on the management servers
+and KVM hosts, waits for the zone, works out the `lab` section from the KVM
+clusters, writes `env.yaml`, runs `lab -prepare`, then `smoke`. Results are in
+`/marvin/remediate/results/latest/` on the Marvin VM. Options and the bundle
+build commands are in the script's header. With `kvm_clusters`:
+
+```
+env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2:p1-el,<u24 code>:1:p1-ubuntu,<debian12 code>:1:p1-debian,<suse15 code>:1:p1-suse pri=1 sec=1 env_accounts=all build_marvin=yes post_deploy_script=remediate-smoke-setup.sh post_deploy_wait=yes
+```
+
 #### Some example --extra-args:
 
 * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`

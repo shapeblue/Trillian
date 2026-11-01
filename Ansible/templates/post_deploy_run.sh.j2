@@ -1,0 +1,11 @@
+#!/bin/bash
+# Written by Trillian (deployvms.yml). Runs the post-deploy script with the
+# environment's details, logging next to it; the exit code lands in <script>.exit.
+# Re-run by hand with: {{ post_deploy_dir }}/run.sh
+cd {{ post_deploy_dir }} || exit 1
+. ./trillian-env.sh
+rm -f ./{{ post_deploy_name }}.exit
+timeout {{ post_deploy_timeout | default(21600) }} ./{{ post_deploy_name }} {{ post_deploy_script_args | default("") }} > ./{{ post_deploy_name }}.log 2>&1
+rc=$?
+echo $rc > ./{{ post_deploy_name }}.exit
+exit $rc

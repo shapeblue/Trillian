@@ -1,0 +1,33 @@
+# Written by Trillian (deployvms.yml) for the post-deploy script; run.sh sources
+# it. It holds the environment's credentials: keep it to root (mode 0600).
+{% set mgmt1 = hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] %}
+{% if groups['mysql_master_host'] | length > 0 %}
+{% set dbhost = hostvars[groups['mysql_master_host'][0]]['ansible_ssh_host'] %}
+{% else %}
+{% set dbhost = mgmt1 %}
+{% endif %}
+export TRILLIAN_ENV_NAME={{ env_name_clean | quote }}
+export TRILLIAN_ENV_UUID={{ env_uuid | quote }}
+export TRILLIAN_CS_VERSION={{ ( env_cs_numeric_version | default( env_numversion ) ) | quote }}
+export TRILLIAN_HYPERVISOR={{ env_hv | quote }}
+
+# Staging server (tools, templates and builds Trillian downloads)
+export TRILLIAN_STAGING_SERVER={{ stagingserverip | default( stagingserverurl | default('') ) | quote }}
+
+# CloudStack API, as the admin user Trillian seeds keys for
+export TRILLIAN_API_URL={{ ( 'http://' ~ mgmt1 ~ ':8080/client/api' ) | quote }}
+export TRILLIAN_API_KEY={{ cm_apikey | quote }}
+export TRILLIAN_SECRET_KEY={{ cm_secretkey | quote }}
+
+# Management servers (root SSH by password)
+export TRILLIAN_MGMT_IPS="{% for h in groups['cloudstack_manager_hosts'] %}{{ hostvars[h]['ansible_ssh_host'] }}{{ ' ' if not loop.last else '' }}{% endfor %}"
+export TRILLIAN_MGMT_PASSWORD={{ mgmtsrv_password | quote }}
+
+# Database (root is granted from anywhere by the mysql role)
+export TRILLIAN_DB_HOST={{ dbhost | quote }}
+export TRILLIAN_DB_ROOT_PASSWORD={{ mysql_root_password | quote }}
+export TRILLIAN_DB_CLOUD_PASSWORD={{ mysql_cloud_password | quote }}
+
+# KVM hosts (root SSH by password)
+export TRILLIAN_KVM_IPS="{% for h in groups['kvm_hosts'] %}{{ hostvars[h]['ansible_ssh_host'] }}{{ ' ' if not loop.last else '' }}{% endfor %}"
+export TRILLIAN_KVM_PASSWORD={{ kvm_password | quote }}

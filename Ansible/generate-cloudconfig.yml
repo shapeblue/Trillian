@@ -383,6 +383,23 @@
       set_fact: build_marvin="{{ def_build_marvin }}"
       when: build_marvin is undefined
 
+    - name: post_deploy_script runs on the Marvin VM
+      fail: msg="post_deploy_script runs on the Marvin VM; set build_marvin=yes"
+      when: ( post_deploy_script | default('') ) != "" and not ( build_marvin | bool )
+
+    - name: Look for the post-deploy script in post_deploy_scripts/
+      stat: path="{{ playbook_dir }}/post_deploy_scripts/{{ post_deploy_script }}"
+      register: post_deploy_script_stat
+      when: ( post_deploy_script | default('') ) != "" and post_deploy_script[:7] != 'http://' and post_deploy_script[:8] != 'https://'
+
+    - name: Check the post-deploy script exists
+      fail: msg="post_deploy_script {{ post_deploy_script }} is neither an http(s) URL nor a file in post_deploy_scripts/"
+      when: post_deploy_script_stat.stat is defined and not post_deploy_script_stat.stat.exists
+
+    - name: Warn when Marvin tests and a post-deploy script share the lab
+      debug: msg="WARNING - Marvin tests and post_deploy_script will both run against this environment at the same time"
+      when: ( post_deploy_script | default('') ) != "" and ( ( run_smoke_tests | bool ) or ( run_component_tests | bool ) )
+
     - name: set use_hipchat flag
       set_fact: use_hipchat="{{ def_use_hipchat }}"
       when: use_hipchat is undefined

@@ -358,6 +358,62 @@
       tags:
         - migrate_databases
 
+## Post-deploy script on the Marvin VM (post_deploy_script)
+
+- hosts: marvin_host
+  gather_facts: no
+  vars:
+    post_deploy_dir: /marvin/post-deploy
+    post_deploy_name: "{{ post_deploy_script | default('') | basename }}"
+    post_deploy_is_url: "{{ ( post_deploy_script | default('') )[:7] == 'http://' or ( post_deploy_script | default('') )[:8] == 'https://' }}"
+  tasks:
+    - block:
+      - name: Create the post-deploy directory
+        file: path="{{ post_deploy_dir }}" state=directory mode=0700
+
+      - name: Fetch the post-deploy script
+        get_url: url="{{ post_deploy_script }}" dest="{{ post_deploy_dir }}/{{ post_deploy_name }}" mode=0700 force=yes validate_certs=no
+        when: post_deploy_is_url | bool
+
+      - name: Copy the post-deploy script from post_deploy_scripts/
+        copy: src="{{ playbook_dir }}/post_deploy_scripts/{{ post_deploy_script }}" dest="{{ post_deploy_dir }}/{{ post_deploy_name }}" mode=0700
+        when: not ( post_deploy_is_url | bool )
+
+      - name: Write the environment details for the script
+        template: src="{{ playbook_dir }}/templates/post_deploy_env.sh.j2" dest="{{ post_deploy_dir }}/trillian-env.sh" mode=0600
+
+      - name: Write the runner
+        template: src="{{ playbook_dir }}/templates/post_deploy_run.sh.j2" dest="{{ post_deploy_dir }}/run.sh" mode=0700
+
+      - name: Queue the post-deploy script
+        shell: "echo {{ post_deploy_dir }}/run.sh | at now + 1 min"
+        when: not ( post_deploy_wait | default(false) | bool )
+
+      - name: Run the post-deploy script and wait for it
+        shell: "{{ post_deploy_dir }}/run.sh"
+        async: 86400
+        poll: 60
+        register: post_deploy_result
+        ignore_errors: true
+        when: post_deploy_wait | default(false) | bool
+
+      - name: Read the end of the post-deploy log
+        shell: "tail -n 80 {{ post_deploy_dir }}/{{ post_deploy_name }}.log"
+        register: post_deploy_log
+        ignore_errors: true
+        when: post_deploy_wait | default(false) | bool
+
+      - debug: msg="{{ post_deploy_log.stdout_lines | default([]) }}"
+        when: post_deploy_wait | default(false) | bool
+
+      - name: Fail when the post-deploy script failed
+        fail: msg="{{ post_deploy_script }} exited {{ post_deploy_result.rc | default('unknown') }}; full log in {{ post_deploy_dir }}/{{ post_deploy_name }}.log on the Marvin VM"
+        when: ( post_deploy_wait | default(false) | bool ) and ( post_deploy_result.rc | default(1) ) != 0
+
+      when: ( post_deploy_script | default('') ) != "" and ( additional_pod | bool == False )
+      tags:
+        - post_deploy
+
 ## Run Marvin Tests
 
 - hosts: marvin_host
