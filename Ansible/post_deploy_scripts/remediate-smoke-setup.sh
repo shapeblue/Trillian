@@ -5,7 +5,7 @@
 # Runs on the Marvin VM through Trillian's post-deploy hook:
 #
 #   build_marvin=yes post_deploy_script=remediate-smoke-setup.sh
-#   post_deploy_script_args="--version 0.1.0"          optional; default latest
+#   post_deploy_script_args=--version=0.1.0            optional; default latest
 #
 # The hook writes /marvin/post-deploy/trillian-env.sh (API URL and keys, DB,
 # management and KVM host addresses and passwords) and sources it first. To run
@@ -16,7 +16,10 @@
 #
 # Options:
 #   --version V         bundle remediate-smoke-V.tar.gz from the staging server
-#                       (default: remediate-smoke-latest.tar.gz)
+#                       (default: remediate-smoke-latest.tar.gz, or the newest
+#                       remediate-smoke-<v>.tar.gz listed there when it is missing)
+#                       Every option also takes the --opt=value form, which needs
+#                       no spaces (Jenkins ANY_OTHER_OPTS splits on spaces).
 #   --bundle URL        any other bundle URL (or REMEDIATE_BUNDLE_URL)
 #   --no-smoke          prepare and check the lab, do not run the smoke
 #   --only LIST         smoke -only LIST (comma separated runbooks)
@@ -66,6 +69,7 @@ WAIT_MIN=90
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --*=*) set -- "${1%%=*}" "${1#*=}" "${@:2}"; continue ;;
     --version) VERSION=$2; shift 2 ;;
     --bundle) BUNDLE_URL=$2; shift 2 ;;
     --no-smoke) SMOKE=0; shift ;;
@@ -89,7 +93,8 @@ for v in TRILLIAN_API_URL TRILLIAN_API_KEY TRILLIAN_SECRET_KEY TRILLIAN_DB_HOST 
 done
 if [ -z "$BUNDLE_URL" ]; then
   [ -n "${TRILLIAN_STAGING_SERVER:-}" ] || die "no staging server in trillian-env.sh: pass --bundle <url>"
-  BUNDLE_URL="http://$TRILLIAN_STAGING_SERVER/remediate/remediate-smoke-$VERSION.tar.gz"
+  BUNDLE_BASE="http://$TRILLIAN_STAGING_SERVER/remediate"
+  BUNDLE_URL="$BUNDLE_BASE/remediate-smoke-$VERSION.tar.gz"
 fi
 for c in curl tar python3 ssh ssh-keygen ssh-keyscan ssh-copy-id ssh-agent sshpass timeout; do
   command -v "$c" >/dev/null || die "$c is not installed on this VM"
@@ -172,6 +177,15 @@ PY
 ################################################################################
 # 1. The bundle
 REL="$DIR/release"
+if [ "$VERSION" = latest ] && [ -n "${BUNDLE_BASE:-}" ] && ! curl -fsIL -o /dev/null "$BUNDLE_URL"; then
+  # No remediate-smoke-latest.tar.gz: take the newest versioned bundle in the listing
+  newest=$(curl -fsSL "$BUNDLE_BASE/" | grep -o 'remediate-smoke-[0-9][A-Za-z0-9._+-]*\.tar\.gz' \
+           | sed 's/^remediate-smoke-//; s/\.tar\.gz$//' | sort -uV \
+           | awk '/-/ { pre = $0; next } { rel = $0 } END { print (rel != "" ? rel : pre) }')
+  [ -n "$newest" ] || die "no $BUNDLE_URL and no remediate-smoke-<version>.tar.gz listed in $BUNDLE_BASE/"
+  log "no remediate-smoke-latest.tar.gz; using the newest listed, $newest"
+  BUNDLE_URL="$BUNDLE_BASE/remediate-smoke-$newest.tar.gz"
+fi
 log "fetching $BUNDLE_URL"
 curl -fsSL --retry 3 -o "$DIR/bundle.tar.gz" "$BUNDLE_URL" || die "could not download $BUNDLE_URL"
 rm -rf "$REL" && mkdir -p "$REL"

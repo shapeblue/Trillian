@@ -140,7 +140,8 @@ Marvin tests queued in the same build run against the lab at the same time.
 `post_deploy_scripts/remediate-smoke-setup.sh` prepares the environment for the
 remediate apply smoke and runs it. It downloads a remediate bundle from the
 staging server (`http://<stagingserverip>/remediate/remediate-smoke-latest.tar.gz`,
-or `--version <v>` for `remediate-smoke-<v>.tar.gz`), so no git checkout or
+else the newest `remediate-smoke-<v>.tar.gz` listed in that directory, or
+`post_deploy_script_args=--version=<v>` for a given one), so no git checkout or
 credentials are needed. It installs its own SSH key on the management servers
 and KVM hosts, waits for the zone, works out the `lab` section from the KVM
 clusters, writes `env.yaml`, runs `lab -prepare`, then `smoke`. Results are in
