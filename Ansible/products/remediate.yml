@@ -14,22 +14,21 @@
 # The environment name and the CloudStack version still come from the job.
 # Values are quoted strings so a check can compare them with the job's own.
 #
-# CHANGEME: the four OS codes are keys of linux_os in the live group_vars/all.
-# generate-cloudconfig.yml refuses this profile while any CHANGEME is left.
+# The OS codes are keys of linux_os in group_vars/all.
 
 product: "remediate"
 
 # Management server: 8 GB holds the management, usage and MySQL heaps
 mgmt: "1"
 db: "0"
-mgmt_os: "CHANGEME_ol9"
+mgmt_os: "ol9"
 # mgmtsrv_service_offering: "<parent cloud offering with 4 vCPU / 8 GB>"
 
 # KVM: one cluster per distribution (cluster names are what env.yaml's lab section will say)
 hvtype: "k"
 hv: "5"
-kvm_os: "CHANGEME_ol9"
-kvm_clusters: "CHANGEME_ol9:2:p1-el,CHANGEME_ubuntu2404:1:p1-ubuntu,CHANGEME_debian12:1:p1-debian,CHANGEME_opensuse156:1:p1-suse"
+kvm_os: "ol9"
+kvm_clusters: "ol9:2:p1-el,u24:1:p1-ubuntu,d12:1:p1-debian,s15:1:p1-suse"
 kvm_clusters_pool_scope: "first"
 
 # Storage: one shared NFS primary pool (on the EL cluster) and one secondary

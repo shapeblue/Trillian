@@ -110,7 +110,7 @@ in a single environment, in one pod:
   `use_external_hv_hosts`, or by `upgrade_env.yaml`.
 
 ```
-env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2,<u24 code>:1,<debian12 code>:1,<suse15 code>:1 pri=1 sec=1 env_accounts=all
+env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=ol9 hvtype=k hv=5 kvm_clusters=ol9:2,u24:1,d12:1,s15:1 pri=1 sec=1 env_accounts=all
 ```
 
 ### Running a script on the Marvin VM after the build (`post_deploy_script`)
@@ -148,7 +148,7 @@ clusters, writes `env.yaml`, runs `lab -prepare`, then `smoke`. Results are in
 build commands are in the script's header. With `kvm_clusters`:
 
 ```
-env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2:p1-el,<u24 code>:1:p1-ubuntu,<debian12 code>:1:p1-debian,<suse15 code>:1:p1-suse pri=1 sec=1 env_accounts=all build_marvin=yes post_deploy_script=remediate-smoke-setup.sh post_deploy_wait=yes
+env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=ol9 hvtype=k hv=5 kvm_clusters=ol9:2:p1-el,u24:1:p1-ubuntu,d12:1:p1-debian,s15:1:p1-suse pri=1 sec=1 env_accounts=all build_marvin=yes post_deploy_script=remediate-smoke-setup.sh post_deploy_wait=yes
 ```
 
 ### Product profiles (`products/<product>.yml`)
