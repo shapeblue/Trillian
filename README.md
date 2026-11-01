@@ -137,16 +137,19 @@ Marvin tests queued in the same build run against the lab at the same time.
 
 #### Remediate apply smoke
 
-`post_deploy_scripts/remediate-smoke-setup.sh` prepares the environment for the
-remediate apply smoke and runs it. It downloads a remediate bundle from the
-staging server (`http://<stagingserverip>/remediate/remediate-smoke-latest.tar.gz`,
+`post_deploy_scripts/remediate-smoke-setup.sh` runs the remediate apply smoke
+on the environment. It downloads the remediate smoke bundle from the staging
+server (`http://<stagingserverip>/remediate/remediate-smoke-latest.tar.gz`,
 else the newest `remediate-smoke-<v>.tar.gz` listed in that directory, or
 `post_deploy_script_args=--version=<v>` for a given one), so no git checkout or
-credentials are needed. It installs its own SSH key on the management servers
-and KVM hosts, waits for the zone, works out the `lab` section from the KVM
-clusters, writes `env.yaml`, runs `lab -prepare`, then `smoke`. Results are in
-`/marvin/remediate/results/latest/` on the Marvin VM. Options and the bundle
-build commands are in the script's header. With `kvm_clusters`:
+credentials are needed, and hands over to the bundle's
+`scripts/trillian-smoke.sh`. That script lives in the remediate repository with
+the CLI and runbooks it drives (built with `make smoke-bundle` there): it
+installs its own SSH key on the management servers and KVM hosts, waits for
+the zone, works out the `lab` section from the KVM clusters, writes
+`env.yaml`, runs `lab -prepare`, then `smoke`. Results are in
+`/marvin/remediate/results/latest/` on the Marvin VM. Options are in both
+scripts' headers. With `kvm_clusters`:
 
 ```
 env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=ol9 hvtype=k hv=5 kvm_clusters=ol9:2:p1-el,u24:1:p1-ubuntu,d12:1:p1-debian,s15:1:p1-suse pri=1 sec=1 env_accounts=all build_marvin=yes post_deploy_script=remediate-smoke-setup.sh post_deploy_wait=yes
