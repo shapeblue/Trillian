@@ -86,6 +86,33 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `wait_till_setup`: only return once system VMs are running. (default is no)
 
 
+### Multiple KVM clusters with different distros (`kvm_clusters`)
+
+CloudStack only accepts hosts of one OS family per KVM cluster, so testing
+several KVM distros needs one cluster per distro. `kvm_clusters` builds them
+in a single environment, in one pod:
+
++ `kvm_clusters`: comma separated `<kvm_os>:<hosts>[:<cluster name>]`, e.g.
+  `ol9:2,u24:1,d12:1,s15:1`. Each `<kvm_os>` is a `linux_os` key from the
+  `all` file. The default cluster name is `p1-c<N>-<kvm_os>`. Hosts are named
+  `<env>-kvm1..N` in the order given (above: kvm1-2 OL9, kvm3 Ubuntu, kvm4
+  Debian, kvm5 SUSE). Each host is built from its own distro's template and
+  gets its own distro's package repo and Java.
++ `hv` must equal the total number of hosts (5 above). `hvtype=k`. `kvm_os`
+  defaults to the first entry's distro.
++ `kvm_clusters_pool_scope`: `first` (default) attaches the primary pools to
+  the first cluster only, so system VMs and shared-storage guests run there;
+  `zone` makes them zone-wide so every cluster mounts them.
++ When the distros differ, the KVM repo must come from `rooturl_kvm` or
+  `rooturl_cloudstack` (or the default root); a single `baseurl_kvm` or
+  `baseurl_cloudstack` URL cannot serve every distro and is refused.
++ Not supported with `additional_pod`, `additional_zone`,
+  `use_external_hv_hosts`, or by `upgrade_env.yaml`.
+
+```
+env_name=remediate env_dotted_version=4.22.1.0 mgmt_os=<ol9 code> hvtype=k hv=5 kvm_clusters=<ol9 code>:2,<u24 code>:1,<debian12 code>:1,<suse15 code>:1 pri=1 sec=1 env_accounts=all
+```
+
 #### Some example --extra-args:
 
 * `env_name=ccs-xs-13-patest env_version=cs45 mgmt=1 hvtype=x hv=2 xs_ver=xs65sp1 env_accounts=all pri=1 build_marvin=true mgmt_os=6`

@@ -15,6 +15,17 @@
 #limitations under the License.
 
 
+- name: Apply this host's distro settings (kvm_clusters)
+  set_fact:
+    kvm_os: "{{ kvm_host_settings[inventory_hostname].kvm_os }}"
+    kvm_template: "{{ kvm_host_settings[inventory_hostname].kvm_template }}"
+    baseurl_kvm: "{{ kvm_host_settings[inventory_hostname].baseurl_kvm }}"
+    baseurl_kvm_suffix: "{{ kvm_host_settings[inventory_hostname].baseurl_kvm_suffix }}"
+    kvm_java_path: "{{ kvm_host_settings[inventory_hostname].kvm_java_path }}"
+  when: kvm_host_settings is defined and inventory_hostname in kvm_host_settings
+  tags:
+    - kvm
+
 - name: wait for VM to be alive
   shell: "ping {{ ansible_ssh_host }} -c 1"
   register: pong

@@ -214,6 +214,21 @@ then
 fi
 if  [ "{{ kvm_os | lower }}" != "na" ];
 then
+{% if kvm_cluster_layout is defined %}
+{% for cluster in kvm_cluster_layout %}
+{% set cidx = loop.index %}
+  WriteOutput "Adding KVM cluster {{ cluster.name }} ({{ cluster.os }})."
+  ClusterID_KVM_{{ cidx }}=`cloudmonkey add cluster zoneid=${ZoneID} hypervisor='KVM' clustertype='CloudManaged' podid=${PodID} clustername="{{ cluster.name }}"  | jq -r '.cluster[] | .id'`;
+  if [ "{{ env_zone_addhosts }}" == "true" ];
+  then
+    {% for host in cluster.hosts %}
+    WriteOutput "Adding KVM host {{ host }} to cluster {{ cluster.name }}.";
+    cloudmonkey add host zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM_{{ cidx }}} hypervisor='KVM' password="{{ kvm_password }}" username="{{ kvm_username }}" url="http://{{ hostvars[host]['ansible_ssh_host'] }}" | tee -i -a ${DEPLOYLOG};
+    {% endfor %}
+  fi
+{% endfor %}
+  ClusterID_KVM=${ClusterID_KVM_1}
+{% else %}
   WriteOutput "Adding KVM cluster."
   ClusterID_KVM=`cloudmonkey add cluster zoneid=${ZoneID} hypervisor='KVM' clustertype='CloudManaged' podid=${PodID} clustername="p1-c$NEXTCLUSTER"  | jq -r '.cluster[] | .id'`;
   if [ "{{ env_zone_addhosts }}" == "true" ];
@@ -224,6 +239,7 @@ then
     cloudmonkey add host zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} hypervisor='KVM' password="{{ kvm_password }}" username="{{ kvm_username }}" url="http://{{ hostvars[host]['ansible_ssh_host'] }}" | tee -i -a ${DEPLOYLOG};
     {% endfor %}
   fi
+{% endif %}
 fi
 
 if [ "{{ env_zone_addhosts }}" == "true" ];
@@ -254,6 +270,8 @@ cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${Clust
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% elif ('-xs-pri' in pool) and (env_priprot | lower == "iscsi" ) %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_XS} name='{{ pool }}' scope='cluster' provider='DefaultPrimary' url="{{ env_priprot }}://{% if groups['primary_storage_hosts_iscsi'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}/{{ env_iscsi_target }}:{{ env_uuid }}/{{ loop.index0 }}" | tee -i -a ${DEPLOYLOG};
+{% elif ('-kvm-pri' in pool) and (kvm_cluster_layout is defined) and (kvm_clusters_pool_scope | default('first') == 'zone') %}
+cloudmonkey create storagepool zoneid=${ZoneID} hypervisor='KVM' name='{{ pool }}' scope='zone' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% elif '-kvm-pri' in pool %}
 cloudmonkey create storagepool zoneid=${ZoneID} podid=${PodID} clusterid=${ClusterID_KVM} name='{{ pool }}' scope='cluster' url="{{ env_priprot }}://{% if groups['primary_storage_hosts'] | length | int > 0 %}{{ hostvars[groups['primary_storage_hosts'][0]]['ansible_ssh_host'] }}{% else %}UNDEFINED{% endif %}{{ env_pripath }}{{ env_name_clean }}/{{ pool }}" | tee -i -a ${DEPLOYLOG};
 {% endif %}

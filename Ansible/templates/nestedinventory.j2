@@ -111,7 +111,15 @@ ansible_python_interpreter=/usr/bin/python3
 
 [kvm_hosts]
 {% if kvm_os | lower != "na" %}
-{% if not use_external_hv_hosts %}
+{% if kvm_cluster_specs is defined %}
+{# kvm_clusters: hosts are numbered kvm1..kvmN across clusters, in kvm_clusters order #}
+{% for spec in kvm_cluster_specs %}
+{% set first = kvm_cluster_specs[:loop.index0] | map(attribute='count') | map('int') | sum %}
+{% for n in range(first + 1, first + (spec.count | int) + 1) %}
+{{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name kvm_cluster={{ spec.name }}{{ ' ansible_python_interpreter=/usr/bin/python3' if spec.os | lower in [ 'u18', 's15' ] else '' }}
+{% endfor %}
+{% endfor %}
+{% elif not use_external_hv_hosts %}
 {% for n in range(1,hv | int + 1) %}
 {{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name
 {% endfor %}
@@ -122,7 +130,7 @@ ansible_python_interpreter=/usr/bin/python3
 {% endfor %}
 {% endif %}
 {% endif %}
-{% if kvm_os | lower == "u18" or kvm_os | lower == "s15" %}
+{% if kvm_cluster_specs is not defined and ( kvm_os | lower == "u18" or kvm_os | lower == "s15" ) %}
 [kvm_hosts:vars]
 ansible_python_interpreter=/usr/bin/python3
 {% endif %}

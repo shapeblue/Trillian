@@ -14,6 +14,10 @@
       fail: msg="upgrade_baseurl_kvm is required as there are KVM hosts present"
       when: upgrade_baseurl_kvm is undefined and ( groups['kvm_hosts']|length > 0 ) and upgrade_rooturl is undefined
     
+    - name: Refuse environments built with kvm_clusters
+      fail: msg="Upgrading an environment built with kvm_clusters (mixed KVM distros) is not supported yet, as the KVM upgrade uses a single repo URL for every host"
+      when: kvm_cluster_layout is defined
+
     - name: Check upgrade version is specified
       fail: msg="upgrade version is required"
       when: upgrade_cloudstack_ver is undefined

@@ -321,6 +321,55 @@ kvm_java_ver: "{{ kvmjava }}"
 {% endif %}
 kvm_java_path: "{{ kvmjavapath }}"
 
+{% if kvm_cluster_specs is defined %}
+# Multiple KVM clusters (kvm_clusters). One cluster per entry; each host gets the
+# template, repo and Java of its own distro through kvm_host_settings, which the
+# kvm role and buildvms apply per host over the env-wide values above.
+# kvm_clusters_pool_scope: first = primary pools on the first cluster only,
+# zone = zone-wide pools every cluster mounts.
+kvm_clusters_pool_scope: "{{ kvm_clusters_pool_scope | default( 'first' ) }}"
+kvm_cluster_layout:
+{% for spec in kvm_cluster_specs %}
+{% set first = kvm_cluster_specs[:loop.index0] | map(attribute='count') | map('int') | sum %}
+  - name: "{{ spec.name }}"
+    os: "{{ spec.os }}"
+    hosts:
+{% for n in range(first + 1, first + (spec.count | int) + 1) %}
+      - "{{ env_name_clean }}-kvm{{ n }}"
+{% endfor %}
+{% endfor %}
+kvm_host_settings:
+{% for spec in kvm_cluster_specs %}
+{% set first = kvm_cluster_specs[:loop.index0] | map(attribute='count') | map('int') | sum %}
+{% set ostype = linux_os[spec.os].os_type %}
+{% if rooturl_kvm is defined %}
+{% set hosturl = rooturl_kvm~ostype~"/"~env_repo_version_var~"/" %}
+{% elif baseurl_kvm is defined %}
+{% set hosturl = baseurl_kvm %}
+{% elif rooturl_cloudstack is defined %}
+{% set hosturl = rooturl_cloudstack~ostype~"/"~env_repo_version_var~"/" %}
+{% elif baseurl_cloudstack is defined %}
+{% set hosturl = baseurl_cloudstack %}
+{% else %}
+{% set hosturl = def_rooturl_cloudstack~ostype~"/"~env_repo_version_var~"/" %}
+{% endif %}
+{% if kvm_java_path is defined %}
+{% set hostjavapath = kvm_java_path %}
+{% else %}
+{% set hostjavapath = java_paths[linux_os[spec.os].os][kvmjava] %}
+{% endif %}
+{% for n in range(first + 1, first + (spec.count | int) + 1) %}
+  {{ env_name_clean }}-kvm{{ n }}:
+    kvm_os: "{{ spec.os }}"
+    kvm_cluster: "{{ spec.name }}"
+    kvm_template: "{{ linux_os[spec.os].template }}"
+    baseurl_kvm: "{{ hosturl }}"
+    baseurl_kvm_suffix: "{{ ostype }}/"
+    kvm_java_path: "{{ hostjavapath }}"
+{% endfor %}
+{% endfor %}
+
+{% endif %}
 # XS
 {% if xs_ver is undefined %}{% set xs_ver = "na" %}{% endif %}
 xs_ver: "{{ xs_ver }}"

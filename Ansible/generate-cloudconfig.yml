@@ -173,6 +173,56 @@
       fail: msg="Incorrect hypervisor type specified - {{ hvtype }}"
       when:  ( hvtype not in [ "v",  "x", "k", "kvm", "vmware", "xenserver" ] ) and ( hv | int > 0 )
 
+# kvm_clusters: several KVM clusters, one distro each, e.g. "ol9:2,u24:1,d12:1,s15:1".
+# Each entry is <kvm_os code>:<number of hosts>[:<cluster name>]; the default
+# cluster name is p1-c<N>-<kvm_os code>. hv must equal the total number of hosts.
+
+    - name: Parse kvm_clusters
+      set_fact:
+        kvm_cluster_specs: "{{ kvm_cluster_specs | default([]) + [ { 'os': (item.split(':')[0] | trim), 'count': ((item.split(':') + ['1'])[1] | trim | int), 'name': (((item.split(':') + ['', ''])[2] | trim) or ('p1-c' ~ ((kvm_cluster_specs | default([]) | length) + 1) ~ '-' ~ (item.split(':')[0] | trim))) } ] }}"
+      with_items: "{{ kvm_clusters.split(',') }}"
+      when: kvm_clusters is defined and kvm_clusters | trim != ""
+
+    - debug: msg="{{ kvm_cluster_specs }}"
+      when: kvm_cluster_specs is defined
+
+    - name: kvm_clusters requires a KVM environment
+      fail: msg="kvm_clusters is only supported with hvtype=k"
+      when: kvm_cluster_specs is defined and hvtype not in [ "k", "kvm" ]
+
+    - name: kvm_clusters is not supported with additional pods/zones or external hosts
+      fail: msg="kvm_clusters cannot be combined with additional_pod, additional_zone or use_external_hv_hosts"
+      when: kvm_cluster_specs is defined and ( (additional_pod | default(false) | bool) or (additional_zone | default(false) | bool) or (use_external_hv_hosts | default(def_use_external_hv_hosts) | bool) )
+
+    - name: Check kvm_clusters entries
+      fail: msg="kvm_clusters entry '{{ item.os }}:{{ item.count }}:{{ item.name }}' is invalid. The OS must be a linux_os key other than custom/na, the host count at least 1, and the cluster name only letters, digits, '.', '_' and '-'"
+      when: kvm_cluster_specs is defined and ( item.count | int < 1 or item.os not in linux_os or item.os | lower in [ "custom", "na" ] or linux_os[item.os].os == "custom" or not ( item.name | regex_search('^[A-Za-z0-9_.-]+$') ) )
+      with_items: "{{ kvm_cluster_specs | default([]) }}"
+
+    - name: Check kvm_clusters_pool_scope
+      fail: msg="kvm_clusters_pool_scope must be 'first' or 'zone'"
+      when: kvm_cluster_specs is defined and ( kvm_clusters_pool_scope | default('first') ) not in [ "first", "zone" ]
+
+    - name: Check kvm_clusters names are unique
+      fail: msg="kvm_clusters cluster names must be unique"
+      when: kvm_cluster_specs is defined and ( kvm_cluster_specs | map(attribute='name') | unique | list | length ) != ( kvm_cluster_specs | length )
+
+    - name: Check hv matches kvm_clusters
+      fail: msg="hv={{ hv }} but kvm_clusters defines {{ kvm_cluster_specs | map(attribute='count') | map('int') | sum }} hosts. Set hv to that number"
+      when: kvm_cluster_specs is defined and ( hv | int ) != ( kvm_cluster_specs | map(attribute='count') | map('int') | sum )
+
+    - name: Check the KVM repo can be resolved per distro
+      fail: msg="kvm_clusters mixes distros, so the KVM repo must come from rooturl_kvm or rooturl_cloudstack (a single baseurl_kvm/baseurl_cloudstack cannot serve every distro)"
+      when: >
+        kvm_cluster_specs is defined and
+        ( kvm_cluster_specs | map(attribute='os') | map('extract', linux_os) | map(attribute='os_type') | unique | list | length ) > 1 and
+        rooturl_kvm is not defined and
+        ( baseurl_kvm is defined or ( rooturl_cloudstack is not defined and baseurl_cloudstack is defined ) )
+
+    - name: Default kvm_os to the first kvm_clusters distro
+      set_fact: kvm_os="{{ kvm_cluster_specs[0].os }}"
+      when: kvm_cluster_specs is defined and kvm_os is undefined
+
     - name: Ensure xs_ver is specified when hypervisor is x
       fail: msg="xs_ver required when hypervisor is XenServer (x)"
       when: ( hvtype in [ "x", "xenserver" ] ) and ( xs_ver is undefined )
@@ -270,6 +320,14 @@
       fail:
         msg: "Combination of OS and CloudStack version does not have a Java version specified in 'all' file"
       when: ("java_paths" in "{{ java_paths[mgmt_os_name][java_ver] }}")
+
+    - name: Check that java version is specified for every kvm_clusters OS
+      fail:
+        msg: "No Java path for {{ item.os }} ({{ linux_os[item.os].os }}) and Java {{ kvm_java_ver | default(java_ver) }} in 'all' file"
+      when: >
+        kvm_java_path is not defined and
+        ( linux_os[item.os].os not in java_paths or ( kvm_java_ver | default(java_ver) ) not in java_paths[linux_os[item.os].os] )
+      with_items: "{{ kvm_cluster_specs | default([]) }}"
 
       # -phew
 
