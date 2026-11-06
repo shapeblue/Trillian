@@ -1,0 +1,17 @@
+# Managed by Trillian (VXLAN/EVPN)
+# Adds this host's management IP as a /32 on lo so the CloudStack EVPN VXLAN
+# script (which takes the VTEP address from lo) uses it as the local VTEP.
+[Unit]
+Description=Trillian EVPN VTEP address {{ evpn_vtep_ip }}/32 on lo
+Wants=network-online.target
+After=network-online.target
+Before=frr.service cloudstack-agent.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart={{ evpn_ip_bin | default('/usr/sbin/ip') }} addr replace {{ evpn_vtep_ip }}/32 dev lo
+ExecStop={{ evpn_ip_bin | default('/usr/sbin/ip') }} addr del {{ evpn_vtep_ip }}/32 dev lo
+
+[Install]
+WantedBy=multi-user.target

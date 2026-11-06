@@ -205,6 +205,70 @@
     - "{{kvm_retval.results}}"
   when: use_external_hv_hosts|bool == false and hypervisors_on_same_host|bool == true
 
+####################################################################
+# EVPN public gateway (evpn_public_vxlan)
+# Built like the KVM hosts: created stopped, then started in the same cluster (or on the
+# same parent host when hypervisors_on_same_host) chosen by the custom allocator.
+#
+- name: build EVPN public gateway VM (do not start)
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ evpn_gw_service_offering if (evpn_gw_service_offering | default('') | length > 0) else kvm_service_offering }}"
+    template: "{{ evpn_gw_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    tags:
+      - { key: env_name, value: "{{ env_name_clean }}" }
+      - { key: env_uuid, value: "{{ env_uuid }}" }
+      - { key: env_user, value: "{{ env_user }}" }
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+    state: stopped
+    api_timeout: 120
+  with_items: "{{ groups['evpn_gateway_hosts'] | default([]) }}"
+  register: evpngw_retval
+
+- name: Update inventory file with EVPN gateway IP addresses
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-ip'
+    replace='{{ item.default_ip }}'
+    backup=no
+  with_items: "{{ evpngw_retval.results | default([]) }}"
+  when: item.name is defined
+
+- name: Update inventory file with EVPN gateway instance names
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.name }}-instance_name'
+    replace='{{ item.instance_name }}'
+    backup=no
+  with_items: "{{ evpngw_retval.results | default([]) }}"
+  when: item.name is defined
+
+- name: Update in memory inventory with EVPN gateway IP addresses
+  add_host:
+    name={{ item.name }}
+    groups="evpn_gateway_hosts"
+    ansible_ssh_host={{ item.default_ip }}
+    instance_name={{ item.instance_name }}
+  with_items: "{{ evpngw_retval.results | default([]) }}"
+  when: item.name is defined
+
+- name: Start EVPN gateway VM
+  shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
+  with_items: "{{ evpngw_retval.results | default([]) }}"
+  when: item.id is defined and hypervisors_on_same_host|bool == false
+
+- name: Start EVPN gateway VM on the same parent host
+  shell: "cmk startVirtualMachine id={{ item.id }} hostid={{ allocator_host_id }}"
+  with_items: "{{ evpngw_retval.results | default([]) }}"
+  when: item.id is defined and hypervisors_on_same_host|bool == true
+
 
 ####################################################################
 # XenServer hosts

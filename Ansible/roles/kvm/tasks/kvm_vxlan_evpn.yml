@@ -1,0 +1,243 @@
+---
+
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# KVM VXLAN guest isolation with BGP-EVPN (FRR) - phase 1.
+#
+# Design:
+#  - VTEP address = the host's management IP (on {{ kvm_vxlan_guest_label }}), also added as a /32
+#    on 'lo' so the stock CloudStack EVPN script (which reads the VTEP from 'lo') works unmodified.
+#  - iBGP full mesh (l2vpn evpn only) between the KVM hosts of this environment.
+#  - The agent uses the EVPN script via the /usr/share/modifyvxlan.sh override, which the agent's
+#    script lookup finds before the packaged multicast script (CloudStack 4.19+). The packaged
+#    modifyvxlan-evpn.sh is used when present (4.21+), otherwise Trillian's vendored copy.
+#
+# Included from the OS task files (el9.yml, centos8.yml, ubuntu.yml, suse.yml) when
+# kvm_evpn_enabled is true, i.e. guest and/or public traffic uses VXLAN.
+# OS-specific parts live in kvm_vxlan_evpn_install_<family>.yml and kvm_vxlan_evpn_firewall_<family>.yml.
+
+# Note: no 'setup'/fact gathering here. Trillian's Ansible version cannot gather facts on
+# EL9 (Python 3.9: platform.dist() was removed), so values are read with plain commands.
+
+- name: EVPN - OS family for the OS-specific parts (FRR install, firewall)
+  set_fact:
+    evpn_os_family: "{{ 'el' if ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] else (ansible_distribution | lower) }}"
+
+- name: EVPN - read VTEP address from the underlay bridge
+  shell: "ip -4 -o addr show scope global dev {{ kvm_vxlan_guest_label }} | awk 'NR==1 {print $4}' | cut -d/ -f1"
+  register: evpn_vtep_ip_out
+  changed_when: false
+
+- name: EVPN - read underlay MTU
+  command: "cat /sys/class/net/{{ kvm_vxlan_guest_label }}/mtu"
+  register: evpn_mtu_out
+  changed_when: false
+
+- name: EVPN - set VTEP facts
+  set_fact:
+    evpn_vtep_ip: "{{ evpn_vtep_ip_out.stdout | trim }}"
+    evpn_underlay_mtu_actual: "{{ evpn_mtu_out.stdout | trim }}"
+
+- name: EVPN - check a VTEP address was found
+  fail:
+    msg: "No global IPv4 address found on {{ kvm_vxlan_guest_label }}; cannot determine the VTEP address."
+  when: evpn_vtep_ip | length == 0
+
+- name: EVPN - check the underlay MTU was applied
+  fail:
+    msg: >-
+      {{ kvm_vxlan_guest_label }} has MTU {{ evpn_underlay_mtu_actual }} but kvm_underlay_mtu is
+      {{ kvm_underlay_mtu }}. VXLAN needs at least 1550 on the underlay.
+  when: evpn_underlay_mtu_actual | int < kvm_underlay_mtu | int
+
+# ---------------------------------------------------------------------------
+# VTEP /32 on loopback (same IP as the management bridge)
+# ---------------------------------------------------------------------------
+
+- name: EVPN - locate the ip binary (path differs between distributions)
+  shell: "for p in /usr/sbin/ip /sbin/ip /usr/bin/ip /bin/ip; do [ -x $p ] && echo $p && break; done"
+  register: evpn_ip_bin_out
+  changed_when: false
+
+- name: EVPN - set ip binary path
+  set_fact:
+    evpn_ip_bin: "{{ evpn_ip_bin_out.stdout | trim if (evpn_ip_bin_out.stdout | trim | length > 0) else '/usr/sbin/ip' }}"
+
+- name: EVPN - install systemd unit that puts the VTEP address on lo
+  template:
+    src: trillian-evpn-vtep.service.j2
+    dest: /etc/systemd/system/trillian-evpn-vtep.service
+    owner: root
+    group: root
+    mode: 0644
+  register: evpn_vtep_unit
+
+- name: EVPN - enable and start VTEP unit
+  systemd:
+    name: trillian-evpn-vtep.service
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+  when: evpn_vtep_unit.changed
+
+- name: EVPN - ensure VTEP unit is running
+  systemd:
+    name: trillian-evpn-vtep.service
+    enabled: yes
+    state: started
+
+- name: EVPN - verify VTEP address on lo
+  shell: "ip -4 -o addr show scope global dev lo | grep -qw '{{ evpn_vtep_ip }}/32'"
+  changed_when: false
+
+- name: EVPN - verify traffic to the other VTEPs leaves via {{ kvm_vxlan_guest_label }} (not lo)
+  shell: "ip route get {{ hostvars[item]['ansible_ssh_host'] }} | grep -qw 'dev {{ kvm_vxlan_guest_label }}'"
+  changed_when: false
+  with_items: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) }}"
+
+# ---------------------------------------------------------------------------
+# Lock directory used by the EVPN script (/var/run/cloud/vxlan.lock)
+# ---------------------------------------------------------------------------
+
+- name: EVPN - persist lock directory for modifyvxlan scripts
+  copy:
+    dest: /etc/tmpfiles.d/trillian-cloudstack-vxlan.conf
+    content: "d /run/cloud 0755 root root -\n"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: EVPN - create lock directory now
+  command: systemd-tmpfiles --create /etc/tmpfiles.d/trillian-cloudstack-vxlan.conf
+  changed_when: false
+
+# ---------------------------------------------------------------------------
+# FRR
+# ---------------------------------------------------------------------------
+
+- include: ./kvm_vxlan_evpn_install_el.yml
+  when: evpn_os_family == 'el'
+
+- include: ./kvm_vxlan_evpn_install_ubuntu.yml
+  when: evpn_os_family == 'ubuntu'
+
+- include: ./kvm_vxlan_evpn_install_suse.yml
+  when: evpn_os_family == 'suse'
+
+- name: EVPN - enable bgpd
+  lineinfile:
+    path: /etc/frr/daemons
+    regexp: '^bgpd='
+    line: 'bgpd=yes'
+  register: evpn_frr_daemons
+
+- name: EVPN - write FRR configuration (iBGP full mesh, l2vpn evpn)
+  template:
+    src: frr-evpn.conf.j2
+    dest: /etc/frr/frr.conf
+    owner: frr
+    group: frr
+    mode: 0640
+  register: evpn_frr_conf
+
+- name: EVPN - enable and (re)start FRR
+  systemd:
+    name: frr
+    enabled: yes
+    state: restarted
+  when: evpn_frr_daemons.changed or evpn_frr_conf.changed
+
+- name: EVPN - ensure FRR is running
+  systemd:
+    name: frr
+    enabled: yes
+    state: started
+
+# ---------------------------------------------------------------------------
+# Firewall: BGP (tcp/179) and VXLAN (udp/4789, the EVPN script's DSTPORT) are accepted
+# ONLY from this environment's own peers (other KVM hosts + EVPN gateway). The kernel's
+# VXLAN device would otherwise decapsulate packets for a known VNI from any source.
+# ---------------------------------------------------------------------------
+
+- name: EVPN - peer addresses allowed to reach BGP/VXLAN
+  set_fact:
+    evpn_fw_peers: "{{ (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) | difference([inventory_hostname]) | map('extract', hostvars, 'ansible_ssh_host') | list }}"
+
+# firewalld / iptables (+ /etc/sysconfig/iptables): EL and SUSE; ufw or iptables: Ubuntu
+- include: ./kvm_vxlan_evpn_firewall_el.yml
+  when: evpn_os_family in ['el', 'suse']
+
+- include: ./kvm_vxlan_evpn_firewall_ubuntu.yml
+  when: evpn_os_family == 'ubuntu'
+
+# ---------------------------------------------------------------------------
+# CloudStack agent: EVPN VXLAN script via /usr/share/modifyvxlan.sh override
+# ---------------------------------------------------------------------------
+
+- name: EVPN - check for packaged EVPN script (CloudStack 4.21+)
+  stat:
+    path: /usr/share/cloudstack-common/scripts/vm/network/vnet/modifyvxlan-evpn.sh
+  register: evpn_packaged_script
+
+- name: EVPN - link /usr/share/modifyvxlan.sh to packaged EVPN script
+  file:
+    src: /usr/share/cloudstack-common/scripts/vm/network/vnet/modifyvxlan-evpn.sh
+    dest: /usr/share/modifyvxlan.sh
+    state: link
+    force: yes
+  register: evpn_script_link
+  when:
+    - evpn_packaged_script.stat.exists
+    - not (evpn_force_vendored_script | bool)
+
+- name: EVPN - install Trillian's vendored EVPN script as /usr/share/modifyvxlan.sh (CloudStack 4.19/4.20)
+  copy:
+    src: modifyvxlan-evpn.sh
+    dest: /usr/share/modifyvxlan.sh
+    owner: root
+    group: root
+    mode: 0755
+    follow: no
+  register: evpn_script_copy
+  when: (not evpn_packaged_script.stat.exists) or (evpn_force_vendored_script | bool)
+
+- name: EVPN - check whether cloudstack-agent is already running
+  command: systemctl is-active cloudstack-agent
+  register: evpn_agent_active
+  failed_when: false
+  changed_when: false
+
+- name: EVPN - restart cloudstack-agent so it picks up the EVPN script
+  systemd:
+    name: cloudstack-agent
+    state: restarted
+  when:
+    - evpn_agent_active.stdout == "active"
+    - evpn_script_link.changed or evpn_script_copy.changed
+
+# ---------------------------------------------------------------------------
+# Verify BGP sessions to all other KVM hosts (and the EVPN gateway, if any) of this environment
+# (linear strategy: FRR has been started on every host before this runs)
+# ---------------------------------------------------------------------------
+
+- name: EVPN - wait for BGP sessions to all peers
+  shell: >-
+    vtysh -c 'show bgp neighbors json' 2>/dev/null |
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(sum(1 for v in d.values() if isinstance(v, dict) and v.get('bgpState') == 'Established'))"
+  register: evpn_bgp_established
+  changed_when: false
+  failed_when: false
+  until: evpn_bgp_established.stdout | default('0') | trim | int >= ( groups['kvm_hosts'] | length - 1 + (groups['evpn_gateway_hosts'] | default([]) | length) )
+  retries: 30
+  delay: 10
+  when: ( groups['kvm_hosts'] | length - 1 + (groups['evpn_gateway_hosts'] | default([]) | length) ) > 0

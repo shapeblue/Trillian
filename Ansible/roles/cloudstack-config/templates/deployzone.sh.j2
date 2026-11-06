@@ -5,6 +5,25 @@
 
 ################################################################################
 # Vars / constants
+{% if kvm_vxlan_evpn | default(false) | bool %}
+{%   set kvm_zone_guest_label = kvm_vxlan_guest_label %}
+{%   set _podvlans = env_podvlans | string | trim %}
+{%   set _vlan_start = _podvlans.split('-')[0] | int %}
+{%   set _vlan_end = _podvlans.split('-')[-1] | int %}
+{%   set kvm_zone_vni_range = (vxlan_vni_base | int + _vlan_start) ~ '-' ~ (vxlan_vni_base | int + _vlan_end) %}
+{% else %}
+{%   set kvm_zone_guest_label = kvm_guest_network_label %}
+{% endif %}
+{% if evpn_public_vxlan | default(false) | bool %}
+{%   set kvm_zone_public_vxlan = true %}
+{%   set kvm_zone_public_label = kvm_vxlan_guest_label %}
+{%   set kvm_zone_public_vni = evpn_public_vni if (evpn_public_vni | default('') | string | length > 0) else (vxlan_vni_base | int + env_pubvlan | int) %}
+{%   set kvm_zone_public_vlan = 'vxlan://' ~ kvm_zone_public_vni %}
+{% else %}
+{%   set kvm_zone_public_vxlan = false %}
+{%   set kvm_zone_public_label = kvm_public_network_label %}
+{%   set kvm_zone_public_vlan = env_pubvlan %}
+{% endif %}
 DEPLOYLOG="/tmp/{{ env_name_clean }}-deployzone.log";
 SECGROUP=`echo "{{ env_zone_secgroups }}" | grep -Ei 'yes|true'`
 if [[ -n $SECGROUP ]]; then
@@ -54,11 +73,33 @@ then
   WriteOutput "Zone created with ID ${ZoneID}.";
   WriteOutput "Creating physical network - Management.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Mgmt' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+{% if (kvm_vxlan_evpn | default(false) | bool) or (evpn_public_vxlan | default(false) | bool) %}
+{% if kvm_zone_public_vxlan %}
+  WriteOutput "Creating Physical Network - Public (VXLAN, public VNI {{ kvm_zone_public_vni }}).";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Public' isolationmethods='VXLAN' | tee -i -a ${DEPLOYLOG};
+{% else %}
+  WriteOutput "Creating Physical Network - Public (VLAN).";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Public' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+{% endif %}
+{% if kvm_vxlan_evpn | default(false) | bool %}
+  WriteOutput "Creating Physical Network - Guest (VXLAN).";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest VXLAN' isolationmethods='VXLAN' | tee -i -a ${DEPLOYLOG};
+  PhysNetGuestName="Physical Network Guest VXLAN"
+{% else %}
+  WriteOutput "Creating Physical Network - Guest (VLAN).";
+  cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
+  PhysNetGuestName="Physical Network Guest"
+{% endif %}
+  PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
+  PhysNetPubID=`cloudmonkey list physicalnetworks name="Physical Network Public" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
+  PhysNetGuestID=`cloudmonkey list physicalnetworks name="${PhysNetGuestName}" zoneid=${ZoneID} | jq -r --arg N "${PhysNetGuestName}" '.physicalnetwork[] | select(.name == $N) | .id'`;
+{% else %}
   WriteOutput "Creating Physical Network - Guest / Public.";
   cloudmonkey create physicalnetwork zoneid=${ZoneID} name='Physical Network Guest Public' isolationmethods='VLAN' | tee -i -a ${DEPLOYLOG};
   PhysNetMgmtID=`cloudmonkey list physicalnetworks name="Physical Network Mgmt" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
   PhysNetPubID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
   PhysNetGuestID=`cloudmonkey list physicalnetworks name="Physical Network Guest Public" zoneid=${ZoneID} | jq -r '.physicalnetwork[] | .id'`;
+{% endif %}
   WriteOutput "Physical network - Management created with ID = ${PhysNetMgmtID}";
   WriteOutput "Physical network - Public created with ID = ${PhysNetPubID}";
   WriteOutput "Physical network - Guest created with ID = ${PhysNetGuestID}";
@@ -66,12 +107,12 @@ then
   WriteOutput "Adding Traffic Type - Public (Advanced Network).";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_zone_public_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_zone_public_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
   {% else %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }}' kvmnetworklabel='{{ kvm_public_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetPubID} traffictype='Public' xennetworklabel='{{ xs_public_network_label }}' vmwarenetworklabel='{{ esxi_public_network_label }}' kvmnetworklabel='{{ kvm_zone_public_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
   {% else %}
   WriteOutput "Skipping public network - advanced zone with security groups.";
@@ -79,12 +120,12 @@ then
   WriteOutput "Adding Traffic Type - Guest (Advanced Network)";
   {% if env_numversion | version_compare('4.2','>') %}
   {% if esxi_use_dvswitch %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_dvs_network_label }},,vmwaredvs' kvmnetworklabel='{{ kvm_zone_guest_label }}' | tee -i -a ${DEPLOYLOG};
   {% else %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }},,vmwaresvs' kvmnetworklabel='{{ kvm_zone_guest_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
   {% else %}
-  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_guest_network_label }}' | tee -i -a ${DEPLOYLOG};
+  cloudmonkey add traffictype physicalnetworkid=${PhysNetGuestID} traffictype='Guest' xennetworklabel='{{ xs_guest_network_label }}' vmwarenetworklabel='{{ esxi_guest_network_label }}' kvmnetworklabel='{{ kvm_zone_guest_label }}' | tee -i -a ${DEPLOYLOG};
   {% endif %}
 else
   WriteOutput "Creating basic zone - {{ env_name_clean }}";
@@ -153,9 +194,14 @@ then
   else
     WriteOutput "Configuring zone without security groups.";
     WriteOutput "Creating public range.";
-    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ env_pubvlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
+    cloudmonkey create vlaniprange zoneid=${ZoneID} vlan="{{ kvm_zone_public_vlan }}" gateway="{{ env_pubgw }}" netmask="{{ env_pubmask }}" startip="{{ env_pubstartip }}" endip="{{ env_pubendip }}" forvirtualnetwork="true" | tee -i -a ${DEPLOYLOG};
     WriteOutput "Creating Guest VLAN range."
+{% if kvm_vxlan_evpn | default(false) | bool %}
+    WriteOutput "Creating Guest VNI range {{ kvm_zone_vni_range }} (from leased VLANs {{ env_podvlans }} + base {{ vxlan_vni_base }}).";
+    cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ kvm_zone_vni_range }}" | tee -i -a ${DEPLOYLOG};
+{% else %}
     cloudmonkey update physicalnetwork id=${PhysNetGuestID} vlan="{{ env_podvlans }}" | tee -i -a ${DEPLOYLOG};
+{% endif %}
   fi
 else
   NetProvArrayBasVR=`cloudmonkey list networkserviceproviders name=virtualrouter physicalnetworkid=${PhysNetMgmtID} | jq -r '.networkserviceprovider[] | .id'`;

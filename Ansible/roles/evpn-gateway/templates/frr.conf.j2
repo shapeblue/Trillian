@@ -1,0 +1,25 @@
+! Managed by Trillian (evpn-gateway) - changes will be overwritten
+! EVPN public gateway of {{ env_name_clean }}: iBGP (l2vpn evpn) to every KVM host
+frr defaults datacenter
+hostname {{ inventory_hostname }}
+log syslog informational
+service integrated-vtysh-config
+!
+router bgp {{ evpn_bgp_asn }}
+ bgp router-id {{ evpn_vtep_ip }}
+ no bgp default ipv4-unicast
+ neighbor EVPN peer-group
+ neighbor EVPN remote-as {{ evpn_bgp_asn }}
+ neighbor EVPN update-source {{ evpn_vtep_ip }}
+{% for peer in (groups['kvm_hosts'] + (groups['evpn_gateway_hosts'] | default([]))) if peer != inventory_hostname %}
+ neighbor {{ hostvars[peer]['ansible_ssh_host'] }} peer-group EVPN
+ neighbor {{ hostvars[peer]['ansible_ssh_host'] }} description {{ peer }}
+{% endfor %}
+ !
+ address-family l2vpn evpn
+  neighbor EVPN activate
+  advertise-all-vni
+ exit-address-family
+!
+line vty
+!
