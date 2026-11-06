@@ -227,12 +227,15 @@ run_start_time="$(date -u +%s)"
 counter=1
 PASSES=0
 # FIXME: make separate list of `dangerous` tests and those that may be run in parallel
-FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm)
+FILES=$(ls $TESTDIR/test_*py | grep -v test_host_maintenance | grep -v test_hostha_kvm | grep -v test_ms_maintenance_and_safe_shutdown)
 if [ -f $TESTDIR/test_host_maintenance.py ]; then
     FILES="$FILES $TESTDIR/test_host_maintenance.py"
 fi
 if [ -f $TESTDIR/test_hostha_kvm.py ]; then
     FILES="$FILES $TESTDIR/test_hostha_kvm.py"
+fi
+if [ -f $TESTDIR/test_ms_maintenance_and_safe_shutdown.py ]; then
+    FILES="$FILES $TESTDIR/test_ms_maintenance_and_safe_shutdown.py"
 fi
 for file in $FILES; do
 
