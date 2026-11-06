@@ -28,13 +28,7 @@
 - name: Ensure sshpass is installed
   dnf: name=sshpass state=present
 
-- name: Put SELinux in permissive mode, logging actions that would be blocked.
-  selinux:
-    policy: targeted
-    state: permissive
-
-- name: set live selinux
-  command: setenforce permissive
+- include: ../../../tasks/configure_selinux.yml
 
 - name: sync time with mgmt server
   shell: date --set=`sshpass -p 'P@ssword123' ssh -o StrictHostKeyChecking=no root@{{ hostvars[groups['primary_cs_manager'][0]]['ansible_ssh_host'] }} 'date --iso-8601=seconds'`

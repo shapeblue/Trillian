@@ -1,0 +1,9 @@
+---
+- name: Configure libvirt security driver to none
+  lineinfile:
+    dest: /etc/libvirt/qemu.conf
+    regexp: '^\s*security_driver\s*='
+    line: 'security_driver = "none"'
+    state: present
+  when: ansible_distribution in ["SUSE", "Ubuntu", "Debian", "CentOS", "Red Hat Enterprise Linux"]
+  ignore_errors: true
