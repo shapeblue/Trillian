@@ -16,11 +16,11 @@
   tags:
     - kvm
 
-- include: upgrade_centos_kvm.yaml
+- include_tasks: upgrade_centos_kvm.yaml
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 
-- include: upgrade_ubuntu_kvm.yaml
+- include_tasks: upgrade_ubuntu_kvm.yaml
   when: ansible_distribution == 'Ubuntu'
 
-- include: upgrade_debian_kvm.yaml
+- include_tasks: upgrade_debian_kvm.yaml
   when: ansible_distribution == 'Debian'

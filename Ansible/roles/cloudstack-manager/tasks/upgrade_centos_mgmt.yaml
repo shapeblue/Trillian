@@ -50,7 +50,7 @@
 
 
 - name: Perform any additional pre-restart upgrade steps
-  include: additional_pre-restart_upgrade_steps.yaml
+  include_tasks: additional_pre-restart_upgrade_steps.yaml
   vars: 
     old_cs_minor_version: "{{ env_cs_minor_version }}"
   run_once: yes
@@ -64,5 +64,5 @@
     - cloudstack-usage
 
 - name: Perform any additional post-restart upgrade steps
-  include: additional_post-restart_upgrade_steps.yaml
+  include_tasks: additional_post-restart_upgrade_steps.yaml
 
