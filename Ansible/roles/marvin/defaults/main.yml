@@ -1,0 +1,4 @@
+---
+# nose -a tags=... value. Comma-separated tags are ANDed by nose (a test must carry all of them).
+# Advanced zone with security groups uses the sg tag; everything else uses the zone type.
+marvin_zone_tags: "{{ 'sg' if ((env_zone_secgroups | default('false') | bool) and (env_zonetype | default('advanced') | lower == 'advanced')) else (env_zonetype | default('advanced') | lower) }}"

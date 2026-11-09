@@ -194,7 +194,7 @@ while getopts "TESTTYPE:LOGDIR:TMP_JSON_DIR:TESTTRIES:TESTDIR:MARVIN_CONFIG:ENV_
          set_arg_val HYPERVISOR ${OPTARG} "{{ env_hv }}"
        ;;
        ZONE_TYPE)
-	 set_arg_val ZONE_TYPE ${OPTARG} "{{ env_zonetype | lower }}"
+	 set_arg_val ZONE_TYPE ${OPTARG} "{{ marvin_zone_tags }}"
        ;;
        MARVIN_HOST)
          set_arg_val MARVIN_HOST ${OPTARG} "{{ hostvars[groups['marvin_host'][0]]['ansible_ssh_host'] }}"
