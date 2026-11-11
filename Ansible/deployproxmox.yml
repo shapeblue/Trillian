@@ -135,6 +135,20 @@
 # Per node: wait for SSH, Proxmox VE installation, networking, local storage
 - hosts: proxmox_hosts
   gather_facts: no
+  pre_tasks:
+    # Trillian's Ansible imports 'pipes' in every module; Python 3.13 (Debian 13 / Proxmox VE 9)
+    # removed it. Old Ansible only uses pipes.quote, which is shlex.quote. 'raw' needs no Python
+    # on the node, so this works before any regular module runs.
+    - name: Proxmox - wait for SSH
+      local_action: wait_for host="{{ ansible_ssh_host }}" port=22 search_regex=OpenSSH delay=10 timeout=900
+
+    - name: Proxmox - provide the removed 'pipes' module on Python 3.13+ (Debian 13)
+      raw: "python3 -c 'import pipes' 2>/dev/null || echo 'from shlex import quote' > /usr/lib/python3/dist-packages/pipes.py; python3 -c 'import pipes; pipes.quote'"
+      register: pve_pipes
+      until: pve_pipes.rc == 0
+      retries: 10
+      delay: 15
+
   roles:
     - timezone
     - proxmox
