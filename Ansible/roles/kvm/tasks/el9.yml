@@ -282,8 +282,20 @@
     - kvm
     - kvm-agent
 
+- name: Add upstream Ceph (Tentacle 20.2.2) repo - ceph-common isn't in the EL base/AppStream repos
+  yum_repository:
+    name: ceph
+    description: "Ceph Tentacle 20.2.2 for EL{{ ansible_distribution_major_version }} - $basearch"
+    baseurl: "https://eu.ceph.com/rpm-20.2.2/el{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: https://eu.ceph.com/keys/release.asc
+    gpgcheck: yes
+    enabled: yes
+  when: env_priprot | lower == "ceph"
+  tags:
+    - kvm
+
 - name: Install ceph-common (needed for Ceph RBD volume encryption support)
-  dnf: name=ceph-common state=present enablerepo=base
+  dnf: name=ceph-common state=present
   when: env_priprot | lower == "ceph"
   tags:
     - kvm
