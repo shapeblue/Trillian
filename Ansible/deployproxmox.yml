@@ -28,6 +28,7 @@
 #   pve_service_offering      parent-cloud offering (default: def_kvm_service_offering)
 #   pve_data_disk_offering    disk offering of the local VM-disk volume (default: def_local_storage_disk_offering)
 #   pve_data_disk_size        size in GB of that volume (default 100); becomes storage "local-lvm"
+#   pve_root_disk_size        minimum root disk in GB (default 32); applied only if the template is smaller
 #   pve_cluster_name          Proxmox cluster name, max 15 chars (default: derived from env_name)
 #   pve_domain                DNS domain used for the nodes' FQDNs (default pve.lab)
 #   build_project             parent-cloud project (default <env_name>-NestedClouds)
@@ -60,6 +61,7 @@
         pve_service_offering: "{{ pve_service_offering | default(def_kvm_service_offering) }}"
         pve_data_disk_offering: "{{ pve_data_disk_offering | default(def_local_storage_disk_offering) }}"
         pve_data_disk_size: "{{ pve_data_disk_size | default(100) }}"
+        pve_root_disk_size: "{{ pve_root_disk_size | default(32) }}"
         pve_domain: "{{ pve_domain | default('pve.lab') }}"
         build_project: "{{ build_project | default(env_name_clean ~ '-NestedClouds') }}"
         build_zone: "{{ build_zone | default(def_build_zone) }}"

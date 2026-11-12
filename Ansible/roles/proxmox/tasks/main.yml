@@ -61,6 +61,37 @@
   when: pve_ip_cidr | length == 0 or pve_gateway | length == 0 or pve_dns | length == 0
 
 # ---------------------------------------------------------------------------
+# Root filesystem: use the whole (possibly enlarged) root disk; Proxmox needs several GB
+# ---------------------------------------------------------------------------
+
+- name: PVE - grow the root partition and filesystem to the full disk
+  shell: |
+    src=$(findmnt -no SOURCE /)
+    disk=/dev/$(lsblk -no PKNAME "$src" | head -1)
+    part=$(cat /sys/class/block/$(basename "$src")/partition 2>/dev/null)
+    [ -n "$part" ] || exit 0          # root is not a plain partition: leave it alone
+    command -v growpart >/dev/null || { DEBIAN_FRONTEND=noninteractive apt-get update && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -y cloud-guest-utils; }
+    growpart "$disk" "$part" || true   # exit 1 = already at full size
+    case "$(findmnt -no FSTYPE /)" in
+      ext4|ext3) resize2fs "$src" ;;
+      xfs) xfs_growfs / ;;
+    esac
+    df -h / | tail -1
+  register: pve_rootfs
+
+- name: PVE - check free space on / (at least {{ pve_min_root_free_gb }} GB)
+  shell: "test $(df --output=avail -BG / | tail -1 | tr -dc 0-9) -ge {{ pve_min_root_free_gb }}"
+  register: pve_free
+  changed_when: false
+  failed_when: false
+
+- name: PVE - not enough space on /
+  fail:
+    msg: "Only {{ pve_rootfs.stdout_lines[-1] | default('?') }} on / of {{ inventory_hostname }}; Proxmox needs at least {{ pve_min_root_free_gb }} GB free. Rebuild with a bigger pve_root_disk_size (default 32), or check that the parent cloud applied it."
+  when: pve_free.rc != 0
+
+# ---------------------------------------------------------------------------
 # Hostname: Proxmox requires the node name to resolve to its real IP, not loopback
 # ---------------------------------------------------------------------------
 

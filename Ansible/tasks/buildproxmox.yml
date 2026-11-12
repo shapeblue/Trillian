@@ -31,6 +31,23 @@
   debug:
     msg: "Proxmox VE cluster '{{ pve_cluster_name }}': {{ groups['proxmox_hosts'] | join(', ') }} from template '{{ linux_os[pve_os].template }}' in project {{ build_project }}"
 
+# Proxmox needs several GB on / (kernel + firmware alone ~1.7 GB). Small cloud-image templates
+# (e.g. Debian 13 genericcloud, ~3 GB) are too small, so request a bigger root disk - but only when
+# the template is smaller than pve_root_disk_size: CloudStack rejects a size below the template's.
+- name: Proxmox - root disk size of the template
+  shell: "cmk list templates templatefilter=executable name='{{ linux_os[pve_os].template }}' filter=size | jq -r '[.template[]?.size] | max // 0'"
+  register: pve_tmpl_size
+  changed_when: false
+  failed_when: false
+
+- name: Proxmox - decide whether to enlarge the root disk
+  set_fact:
+    pve_root_resize: "{{ (pve_tmpl_size.stdout | default('0') | trim | int) < (pve_root_disk_size | int * 1073741824) }}"
+
+- name: Proxmox - root disk
+  debug:
+    msg: "Template root disk {{ ((pve_tmpl_size.stdout | default('0') | trim | int) / 1073741824) | round(1) }} GB; {{ 'requesting ' ~ pve_root_disk_size ~ ' GB' if pve_root_resize | bool else 'keeping the template size' }}"
+
 - name: Proxmox - build nodes (stopped, so the data disk can be attached first)
   local_action:
     module: cs_instance
@@ -41,6 +58,7 @@
     project: "{{ build_project }}"
     zone: "{{ build_zone }}"
     keyboard: "{{ build_keyboard }}"
+    root_disk_size: "{{ pve_root_disk_size | int if (pve_root_resize | bool) else omit }}"
     tags:
       - { key: env_name, value: "{{ env_name_clean }}" }
       - { key: env_uuid, value: "{{ env_uuid }}" }

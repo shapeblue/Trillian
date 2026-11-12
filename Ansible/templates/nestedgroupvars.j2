@@ -453,5 +453,6 @@ pve_password: "{{ pve_password | default( kvm_password | default( def_kvm_passwo
 pve_service_offering: "{{ pve_service_offering | default( kvm_service_offering | default( def_kvm_service_offering ) ) }}"
 pve_data_disk_offering: "{{ pve_data_disk_offering | default( local_storage_disk_offering | default( def_local_storage_disk_offering ) ) }}"
 pve_data_disk_size: {{ pve_data_disk_size | default( 100 ) }}
+pve_root_disk_size: {{ pve_root_disk_size | default( 32 ) }}
 pve_cluster_name: "{{ pve_cluster_name | default( env_name_clean[:15] | regex_replace('^-+', '') | regex_replace('-+$', '') ) }}"
 pve_domain: "{{ pve_domain | default( "pve.lab" ) }}"

@@ -25,3 +25,6 @@ pve_trunk_if: "eth1"     # guest_public_network trunk -> vmbr1 (VLAN-aware, no I
 # Local VM-disk storage on the data disk: VG "pve", thin pool "data", storage "local-lvm"
 # (the same names a Proxmox ISO installation uses). Empty = detect the unused disk.
 pve_data_disk: ""
+
+# Free space required on / before installing Proxmox (kernel, firmware, proxmox-ve)
+pve_min_root_free_gb: 8
