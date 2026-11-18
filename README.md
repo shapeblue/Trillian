@@ -78,7 +78,7 @@ for more examples see the [Wiki](https://github.com/shapeblue/Trillian/wiki)
 + `env_xs_template`: parent cloud nested XenServer HV template (overrides `xs_template`)
 + `env_vc_template`: parent cloud nested VirtualCentre template (overrides `vc_template`)
 + `env_esxi_template`: parent cloud nested ESXi HV template (overrides `esxi_template`)
-+ `env_builtin_template`: name of a `builtin_templates` set defined in groupvars/all (sofia/all). The set replaces the URL, name, display text, guest OS (`guestos`) and optional template details (`details`) of the listed built-in template rows (4 = KVM, 5 = XenServer, 7 = VMware), e.g. to replace the CentOS built-in templates up to 4.23 or the Debian 13 ones from 24.0. Default: the built-in templates as set in groupvars/all.
++ `env_builtin_template`: name of a `builtin_templates` set defined in groupvars/all (sofia/all). The set replaces the URL, name, display text, guest OS (`guestos`) and optional template details (`details`) and user data (`userdata`, base64 encoded, linked to the template at deploy time) of the listed built-in template rows (4 = KVM, 5 = XenServer, 7 = VMware), e.g. to replace the CentOS built-in templates up to 4.23 or the Debian 13 ones from 24.0. Default: the built-in templates as set in groupvars/all.
 
 If an `env_*_template` is not given, the legacy `*_template` variable is used, and if that is not given either, the template defined for the OS or version in groupvars/all (sofia/all) is used.
 + `baseurl_cloudstack`: URL for CloudStack build repository

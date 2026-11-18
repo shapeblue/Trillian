@@ -919,9 +919,15 @@ local_builtin_templates:
 # Each entry: id = vm_template id (4 = KVM qcow2, 5 = XenServer vhd, 7 = VMware ova);
 # url = image to download (same format as the row); name = template name (also used as display text);
 # guestos = guest OS display name; checksum = optional, blank skips checksum verification;
-# details = optional template details (name/value).
+# details = optional template details (name/value);
+# userdata = optional cloud-init content, base64 encoded; it is registered and linked to the template by the deploy (cloudmonkey);
+# userdata_policy = optional, ALLOWOVERRIDE (default), APPEND or DENYOVERRIDE.
 builtin_templates:
   debian13:
     - {id: "4", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs.qcow2", name: "Debian 13 (64-bit) genericcloud (KVM)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: []}
     - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs-xen.vhd.bz2", name: "Debian 13 (64-bit) genericcloud (XenServer)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: []}
     - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs.ova", name: "Debian 13 (64-bit) genericcloud (vSphere)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: [{name: "nicAdapter", value: "Vmxnet3"}, {name: "rootDiskController", value: "pvscsi"}]}
+  # SUSE Linux Enterprise Server 15 (64-bit), KVM only (qcow2). Rows 5 and 7 are not listed, so they keep their URL.
+  # guestos must be an existing guest OS name in that CloudStack (other SUSE names, e.g. "Other SUSE Linux(64-bit)", also exist).
+  suse15:
+    - {id: "4", url: "http://10.0.3.122/LabTemplates/SLES4SAP/SLES4SAP-15-SP7-v3.qcow2", name: "SUSE Linux Enterprise Server 15 (64-bit) (KVM)", guestos: "SUSE Linux Enterprise Server 15 (64-bit)", checksum: "", details: [], userdata: "I2Nsb3VkLWNvbmZpZwpzc2hfcHdhdXRoOiB0cnVlCmRpc2FibGVfcm9vdDogZmFsc2UK"}

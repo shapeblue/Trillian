@@ -1,0 +1,62 @@
+---
+
+# Link the user data of the built-in templates in env_builtin_template to their templates.
+# A row of the set can have "userdata" (cloud-init content, base64 encoded) and optionally "userdata_policy"
+# (ALLOWOVERRIDE, APPEND or DENYOVERRIDE, default ALLOWOVERRIDE).
+# cloudmonkey on the primary management server registers the user data (registerUserData, which takes the
+# base64 content as it is) and links it to the template (linkUserDataToTemplate).
+# The record is named after the environment, the set, the row and a hash of its content, so a re-run
+# finds the record again (listUserData) and does not register it twice.
+
+- name: Wait for the management server API before linking user data
+  shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
+  register: result
+  until: result.stdout.find("unable to verify user") != -1
+  retries: 48
+  changed_when: false
+
+- name: Register the user data of the built-in templates in env_builtin_template
+  shell: |
+    set -o pipefail
+    USERDATA_NAME='{{ env_name_clean }}-{{ env_builtin_template }}-{{ item.id }}-{{ item.userdata | hash('sha256') | truncate(12, True, '') }}'
+    USERDATA_VALUE='{{ item.userdata }}'
+    USERDATA_ID=$(cloudmonkey listUserData listall=true name="$USERDATA_NAME" | jq -r '.userdata[0].id // empty')
+    if [ -z "$USERDATA_ID" ]; then
+      REGISTERED=$(cloudmonkey registerUserData name="$USERDATA_NAME" userdata="$USERDATA_VALUE") || { echo "$REGISTERED" >&2; exit 1; }
+      USERDATA_ID=$(cloudmonkey listUserData listall=true name="$USERDATA_NAME" | jq -r '.userdata[0].id // empty')
+    fi
+    if [ -z "$USERDATA_ID" ]; then
+      echo "user data $USERDATA_NAME is not registered" >&2
+      exit 1
+    fi
+    echo "$USERDATA_ID"
+  args:
+    executable: /bin/bash
+  loop: "{{ (builtin_templates | default({})).get(env_builtin_template | default('na'), []) | selectattr('userdata', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.id }}"
+  register: userdata_result
+
+- name: Link the user data to the built-in templates in env_builtin_template
+  shell: |
+    set -o pipefail
+    TEMPLATE_NAME='{{ item.item.name }}'
+    USERDATA_ID='{{ item.stdout }}'
+    POLICY='{{ item.item.userdata_policy | default('allowoverride') }}'
+    TEMPLATE_ID=$(cloudmonkey listTemplates templatefilter=all listall=true name="$TEMPLATE_NAME" | jq -r '.template[0].id // empty')
+    if [ -z "$USERDATA_ID" ] || [ -z "$TEMPLATE_ID" ]; then
+      echo "user data or template not found for $TEMPLATE_NAME" >&2
+      exit 1
+    fi
+    cloudmonkey linkUserDataToTemplate templateid="$TEMPLATE_ID" userdataid="$USERDATA_ID" userdatapolicy="$POLICY" > /dev/null
+    LINKED=$(cloudmonkey listTemplates templatefilter=all listall=true id="$TEMPLATE_ID" | jq -r '.template[0].userdataid // empty')
+    if [ "$LINKED" != "$USERDATA_ID" ]; then
+      echo "user data $USERDATA_ID is not linked to $TEMPLATE_NAME" >&2
+      exit 1
+    fi
+    echo "linked user data $USERDATA_ID to $TEMPLATE_NAME ($POLICY)"
+  args:
+    executable: /bin/bash
+  loop: "{{ userdata_result.results }}"
+  loop_control:
+    label: "{{ item.item.id }}"

@@ -141,6 +141,14 @@
     - { role: cloudstack-manager, when: (additional_zone|bool == False) and (additional_pod|bool == False) }
     - { role: cloudmonkey, when: (additional_zone|bool == False) and (additional_pod|bool == False) }
 
+## Link the user data of the built-in templates in env_builtin_template (cloudmonkey, see builtin_template_userdata.yml)
+
+- hosts: primary_cs_manager
+  gather_facts: no
+  tasks:
+    - include_tasks: ./roles/cloudstack-manager/tasks/builtin_template_userdata.yml
+      when: (env_builtin_template | default('na') != 'na') and (additional_zone|bool == False) and (additional_pod|bool == False)
+
 ## update status
 
 - hosts: localhost
