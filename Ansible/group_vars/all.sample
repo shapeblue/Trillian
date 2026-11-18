@@ -913,3 +913,15 @@ local_builtin_templates:
   - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos56-x86_64.vhd.bz2"} #CentOS 5.6(64-bit) no GUI (XenServer)
   - {id: "6", url: "http://<IP_ADDRESS_HERE>/builtin_templates/centos6_4_64bit.vhd.bz2"} #CentOS 6.4(64-bit) GUI (Hyperv)
   - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/CentOS5.3-x86_64.ova"} #CentOS 5.3(64-bit) no GUI (vSphere)
+
+# Built-in template sets, selected with env_builtin_template=<name> when generating the environment.
+# Only the BUILTIN rows listed in a set are changed; the other rows keep the URL from local_builtin_templates.
+# Each entry: id = vm_template id (4 = KVM qcow2, 5 = XenServer vhd, 7 = VMware ova);
+# url = image to download (same format as the row); name = template name (also used as display text);
+# guestos = guest OS display name; checksum = optional, blank skips checksum verification;
+# details = optional template details (name/value).
+builtin_templates:
+  debian13:
+    - {id: "4", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs.qcow2", name: "Debian 13 (64-bit) genericcloud (KVM)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: []}
+    - {id: "5", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs-xen.vhd.bz2", name: "Debian 13 (64-bit) genericcloud (XenServer)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: []}
+    - {id: "7", url: "http://<IP_ADDRESS_HERE>/builtin_templates/debian-13-genericcloud-amd64-20261026-2643-acs.ova", name: "Debian 13 (64-bit) genericcloud (vSphere)", guestos: "Debian GNU/Linux 12 (64-bit)", checksum: "", details: [{name: "nicAdapter", value: "Vmxnet3"}, {name: "rootDiskController", value: "pvscsi"}]}

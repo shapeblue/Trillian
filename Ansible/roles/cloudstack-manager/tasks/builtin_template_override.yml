@@ -1,0 +1,33 @@
+---
+
+# Override the BUILTIN templates (cloud.vm_template rows) with the set named by env_builtin_template.
+# A set is defined in builtin_templates in groupvars/all, with one entry per BUILTIN row:
+#   id:       vm_template id of the row (4 = KVM, 5 = XenServer, 7 = VMware)
+#   url:      image to download, in the format of the row (QCOW2, VHD or OVA)
+#   name:     template name, also used as the display text
+#   guestos:  guest OS display name, e.g. "Debian GNU/Linux 12 (64-bit)"
+#   checksum: optional, blank skips checksum verification
+#   details:  optional list of template details, each with name and value
+# Rows that are not in the set keep their own URL. This runs after the local_builtin_templates
+# overwrite in preconfig_globalsettings.yml, so the set wins for the rows it lists.
+
+- name: Select the built-in template rows of env_builtin_template
+  set_fact:
+    builtin_override_rows: "{{ (builtin_templates | default({})).get(env_builtin_template | default('na'), []) }}"
+  when: ("primary_cs_manager" in group_names)
+  tags:
+    - "global_settings"
+
+- name: Override built-in template url, name, display text, guest OS and checksum
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET url='{{ item.url }}', name='{{ item.name }}', display_text='{{ item.name }}', checksum='{{ item.checksum | default('', true) }}', guest_os_id=(SELECT id FROM cloud.guest_os WHERE display_name='{{ item.guestos }}' AND removed IS NULL LIMIT 1) WHERE id='{{ item.id }}' AND type='BUILTIN';"
+  loop: "{{ builtin_override_rows }}"
+  when: ("primary_cs_manager" in group_names)
+  tags:
+    - "global_settings"
+
+- name: Set the template details of the built-in templates in env_builtin_template
+  acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="DELETE FROM cloud.vm_template_details WHERE template_id='{{ item.0.id }}' AND name='{{ item.1.name }}'; INSERT INTO cloud.vm_template_details (template_id, name, value) SELECT id, '{{ item.1.name }}', '{{ item.1.value }}' FROM cloud.vm_template WHERE id='{{ item.0.id }}' AND type='BUILTIN';"
+  loop: "{{ builtin_override_rows | subelements('details', skip_missing=True) }}"
+  when: ("primary_cs_manager" in group_names)
+  tags:
+    - "global_settings"

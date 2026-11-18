@@ -83,6 +83,12 @@
 #   esxi_template: parent cloud nested ESXi HV template
 #   vc_service_offering: parent cloud nested VC instances service offering
 #   vc_template: parent cloud nested VirtualCentre template
+#   env_mgmtsrv_template: parent cloud template for the management server build (overrides mgmtsrv_template)
+#   env_kvm_template: parent cloud nested KVM HV template (overrides kvm_template)
+#   env_xs_template: parent cloud nested XenServer HV template (overrides xs_template)
+#   env_vc_template: parent cloud nested VirtualCentre template (overrides vc_template)
+#   env_esxi_template: parent cloud nested ESXi HV template (overrides esxi_template)
+#   env_builtin_template: name of a builtin_templates set in groupvars/all, overrides the built-in templates (default: as in groupvars/all)
 #   baseurl_cloudstack: URL for CloudStack build repository
 #   env_db_name: environments database name
 #   env_db_ip: environments database IP address
@@ -232,6 +238,10 @@
     - name: Check that vmware_ver is recognised
       fail: msg="vmware_ver {{ vmware_ver }} is not recognised"
       when: vmware_ver not in def_vmware_templates
+
+    - name: Check that env_builtin_template is defined in builtin_templates
+      fail: msg="env_builtin_template {{ env_builtin_template }} is not defined in builtin_templates (groupvars/all)"
+      when: (env_builtin_template is defined) and (env_builtin_template != "na") and (env_builtin_template not in (builtin_templates | default({})))
 
 # messy but necessary check.
 

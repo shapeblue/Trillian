@@ -1,5 +1,9 @@
 ---
 
+- name: Find the built-in templates overridden by env_builtin_template (these are not pre-uploaded)
+  set_fact:
+    builtin_override_ids: "{{ (builtin_templates | default({})).get(env_builtin_template | default('na'), []) | map(attribute='id') | map('string') | list }}"
+
 - name: Report hv counts before template hack
   debug: msg="HV count is {{ num_xen_hosts }} XS, {{ num_kvm_hosts }} KVM, {{ num_esxi_hosts }} ESXi"
 
@@ -8,7 +12,7 @@
     path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/5"
     state: directory
     mode: 0755
-  when: num_xen_hosts | int > 0
+  when: (num_xen_hosts | int > 0) and ('5' not in builtin_override_ids)
 
 - name: copy template and properties.template files
   get_url:
@@ -17,14 +21,14 @@
   with_items:
     - "b418e433-4ecd-3a1d-a90e-183157a165d5.vhd"
     - "template.properties"
-  when: num_xen_hosts | int > 0
+  when: (num_xen_hosts | int > 0) and ('5' not in builtin_override_ids)
 
 - name: create builtin kvm template_dir
   file:
     path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/4"
     state: directory
     mode: 0755
-  when: num_kvm_hosts | int > 0
+  when: (num_kvm_hosts | int > 0) and ('4' not in builtin_override_ids)
 
 - name: copy template and properties.template files
   get_url:
@@ -33,14 +37,14 @@
   with_items:
     - "0c364cce-8288-3a92-9234-4ffde372aec7.qcow2"
     - "template.properties"
-  when: num_kvm_hosts | int > 0
+  when: (num_kvm_hosts | int > 0) and ('4' not in builtin_override_ids)
 
 - name: create builtin esxi template_dir
   file:
     path: "/acs/secondary/{{ env_name_clean }}/{{ env_name_clean }}-sec1/template/tmpl/1/7"
     state: directory
     mode: 0755
-  when: num_esxi_hosts | int > 0
+  when: (num_esxi_hosts | int > 0) and ('7' not in builtin_override_ids)
 
 - name: copy template and properties.template files
   get_url:
@@ -55,4 +59,4 @@
     - "centos53-x64.ova"
     - "centos53-x64.ova.meta"
     - "template.properties"
-  when: num_esxi_hosts | int > 0
+  when: (num_esxi_hosts | int > 0) and ('7' not in builtin_override_ids)

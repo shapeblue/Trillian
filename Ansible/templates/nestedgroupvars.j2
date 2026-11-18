@@ -181,6 +181,10 @@ env_zone_systemplate_str:
 {% if env_zone_systemplate is undefined %}{% set env_zone_systemplate = "na" %}{% endif %}
 env_zone_systemplate: "{{ env_zone_systemplate }}"
 
+# Built-in template set (name of a builtin_templates entry in groupvars/all), na = keep the built-in templates from groupvars/all
+{% if env_builtin_template is undefined %}{% set env_builtin_template = "na" %}{% endif %}
+env_builtin_template: "{{ env_builtin_template }}"
+
 wait_till_setup: {{ wait_till_setup | default( def_wait_till_setup ) }}
 build_marvin: {{ build_marvin | default( def_build_marvin ) }}
 wait_for_template: {{ wait_for_template | default( "no" ) }}
@@ -200,7 +204,7 @@ env_num_pods: {{ env_num_pods | default( def_env_num_pods ) }}
 env_num_zones: {{ env_num_zones | default( def_env_num_zones ) }}
 env_mgmtos: "{{ linux_os[mgmt_os].os }}"
 mgmtsrv_service_offering: "{{ mgmtsrv_service_offering | default( def_mgmtsrv_service_offering ) }}"
-mgmtsrv_template: "{{ mgmtsrv_template | default( linux_os[mgmt_os].template ) }}"
+mgmtsrv_template: "{{ env_mgmtsrv_template | default( mgmtsrv_template | default( linux_os[mgmt_os].template ) ) }}"
 mgmtsrv_username: "{{ mgmtsrv_username | default( def_mgmtsrv_username ) }}"
 mgmtsrv_password: "{{ mgmtsrv_password | default( def_mgmtsrv_password ) }}"
 use_custom_browser_title: {{ use_custom_browser_title | default( def_use_custom_browser_title ) }}
@@ -298,7 +302,7 @@ cloudstack_agent_package: "cloudstack-agent-{{ env_cs_numeric_version }}"
 {% endif %}
 {% endif %}
 
-kvm_template: "{{ kvm_template | default( linux_os[kvm_os].template ) }}"
+kvm_template: "{{ env_kvm_template | default( kvm_template | default( linux_os[kvm_os].template ) ) }}"
 kvm_mgmt_network_label: "{{ kvm_mgmt_network_label | default( def_kvm_mgmt_network_label ) }}"
 kvm_guest_network_label: "{{ kvm_guest_network_label | default( def_kvm_guest_network_label ) }}"
 kvm_public_network_label: "{{ kvm_public_network_label | default( def_kvm_public_network_label ) }}"
@@ -336,7 +340,7 @@ kvm_java_path: "{{ kvmjavapath }}"
 xs_ver: "{{ xs_ver }}"
 xen_ver: {{ xen_ver | default( def_xenserver_templates[xs_ver].xen_ver ) }}
 xs_service_offering: "{{ xs_service_offering | default( def_xs_service_offering ) }}"
-xs_template: "{{ xs_template | default( def_xenserver_templates[xs_ver].xs_template ) }}"
+xs_template: "{{ env_xs_template | default( xs_template | default( def_xenserver_templates[xs_ver].xs_template ) ) }}"
 xs_mgmt_network_nic: "{{ xs_mgmt_network_nic | default( def_xs_mgmt_network_nic ) }}"
 xs_mgmt_network_label: "{{ xs_mgmt_network_label | default( def_xs_mgmt_network_label ) }}"
 xs_guest_network_nic: "{{ xs_guest_network_nic | default( def_xs_guest_network_nic ) }}"
@@ -354,8 +358,8 @@ xs_license_edition: "{{ xs_license_edition | default( def_xs_license_edition ) }
 {% if vmware_ver is undefined %}{% set vmware_ver = "na" %}{% endif %}
 vmware: "{{ vmware_ver }}"  ##-- LEGACY REMOVE SOONEST
 vmware_ver: "{{ vmware_ver }}"
-esxi_template: "{{ esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) }}"
-vc_template: "{{ vc_template | default( def_vmware_templates[vmware_ver].vc_template ) }}"
+esxi_template: "{{ env_esxi_template | default( esxi_template | default( def_vmware_templates[vmware_ver].esxi_template ) ) }}"
+vc_template: "{{ env_vc_template | default( vc_template | default( def_vmware_templates[vmware_ver].vc_template ) ) }}"
 esxi_service_offering: "{{ esxi_service_offering | default( def_esxi_service_offering ) }}"
 vc_service_offering: "{{ vc_service_offering | default( def_vc_service_offering ) }}"
 vc_nested_service_offering: "{{ vc_nested_service_offering | default ( def_vc_nested_service_offering ) }}"
