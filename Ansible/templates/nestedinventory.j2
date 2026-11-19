@@ -48,17 +48,17 @@ ansible_python_interpreter=/usr/bin/python3
 
 [primary_cs_manager]
 {% if additional_zone | bool or additional_pod | bool %}
-{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ region_mgmt_ip }} ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }}
+{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ region_mgmt_ip }} ansible_ssh_pass={{ env_mgmtsrv_password | default( mgmtsrv_password | default( def_mgmtsrv_password ) ) }}
 {% else %}
 {% if mgmt | int > 0 %}
-{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ env_name_clean }}-mgmt1-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }} instance_name={{ env_name_clean }}-mgmt1-instance_name
+{{ env_name_clean }}-mgmt1 ansible_ssh_host={{ env_name_clean }}-mgmt1-ip ansible_ssh_pass={{ env_mgmtsrv_password | default( mgmtsrv_password | default( def_mgmtsrv_password ) ) }} instance_name={{ env_name_clean }}-mgmt1-instance_name
 {% endif %}
 {% endif %}
 
 [secondary_cs_manager]
 {% if mgmt | int > 1 and not ( (additional_zone | bool) or (additional_pod | bool) ) %}
 {% for n in range(2,mgmt | int + 1) %}
-{{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ mgmtsrv_password | default( def_mgmtsrv_password ) }} instance_name={{ env_name_clean }}-mgmt{{ n }}-instance_name
+{{ env_name_clean }}-mgmt{{ n }} ansible_ssh_host={{ env_name_clean }}-mgmt{{ n }}-ip ansible_ssh_pass={{ env_mgmtsrv_password | default( mgmtsrv_password | default( def_mgmtsrv_password ) ) }} instance_name={{ env_name_clean }}-mgmt{{ n }}-instance_name
 {% endfor %}
 {% endif %}
 
@@ -83,12 +83,12 @@ ansible_python_interpreter=/usr/bin/python3
 {% if vmware_ver | lower != "na" %}
 {% if not use_external_hv_hosts %}
 {% for n in range(1,hv | int + 1) %}
-{{ env_name_clean }}-esxi{{ n }} ansible_ssh_host={{ env_name_clean }}-esxi{{ n }}-ip ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }} instance_name={{ env_name_clean }}-esxi{{ n }}-instance_name
+{{ env_name_clean }}-esxi{{ n }} ansible_ssh_host={{ env_name_clean }}-esxi{{ n }}-ip ansible_ssh_pass={{ env_esxi_password | default( vmware_esxi_password | default( def_vmware_esxi_password ) ) }} instance_name={{ env_name_clean }}-esxi{{ n }}-instance_name
 {% endfor %}
 {% else %}
 {% set iplist = hviplist.split(',') %}
 {% for ip in iplist %}
-{{ env_name_clean }}-esxi{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ vmware_esxi_password | default( def_vmware_esxi_password ) }}
+{{ env_name_clean }}-esxi{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ env_esxi_password | default( vmware_esxi_password | default( def_vmware_esxi_password ) ) }}
 {% endfor %}
 {% endif %}
 {% endif %}
@@ -97,12 +97,12 @@ ansible_python_interpreter=/usr/bin/python3
 {% if xs_ver | lower != "na" %}
 {% if use_external_hv_hosts == false %}
 {% for n in range(1,hv | int + 1) %}
-{{ env_name_clean }}-xs{{ n }} ansible_ssh_host={{ env_name_clean }}-xs{{ n }}-ip ansible_ssh_pass={{ xs_password | default( def_xs_password ) }} instance_name={{ env_name_clean }}-xs{{ n }}-instance_name
+{{ env_name_clean }}-xs{{ n }} ansible_ssh_host={{ env_name_clean }}-xs{{ n }}-ip ansible_ssh_pass={{ env_xs_password | default( xs_password | default( def_xs_password ) ) }} instance_name={{ env_name_clean }}-xs{{ n }}-instance_name
 {% endfor %}
 {% else %}
 {% set iplist = hviplist.split(',') %}
 {% for ip in iplist %}
-{{ env_name_clean }}-xs{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ xs_password | default( def_xs_password ) }}
+{{ env_name_clean }}-xs{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ env_xs_password | default( xs_password | default( def_xs_password ) ) }}
 {% endfor %}
 {% endif %}
 {% endif %}
@@ -111,12 +111,12 @@ ansible_python_interpreter=/usr/bin/python3
 {% if kvm_os | lower != "na" %}
 {% if not use_external_hv_hosts %}
 {% for n in range(1,hv | int + 1) %}
-{{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name
+{{ env_name_clean }}-kvm{{ n }} ansible_ssh_host={{ env_name_clean }}-kvm{{ n }}-ip ansible_ssh_pass={{ env_kvm_password | default( kvm_password | default( def_kvm_password ) ) }} instance_name={{ env_name_clean }}-kvm{{ n }}-instance_name
 {% endfor %}
 {% else %}
 {% set iplist = hviplist.split(',') %}
 {% for ip in iplist %}
-{{ env_name_clean }}-kvm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ kvm_password | default( def_kvm_password ) }}
+{{ env_name_clean }}-kvm{{ loop.index }} ansible_ssh_host={{ ip }} ansible_ssh_pass={{ env_kvm_password | default( kvm_password | default( def_kvm_password ) ) }}
 {% endfor %}
 {% endif %}
 {% endif %}

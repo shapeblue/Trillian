@@ -88,6 +88,11 @@
 #   env_xs_template: parent cloud nested XenServer HV template (overrides xs_template)
 #   env_vc_template: parent cloud nested VirtualCentre template (overrides vc_template)
 #   env_esxi_template: parent cloud nested ESXi HV template (overrides esxi_template)
+#   env_mgmtsrv_password: management server password (overrides mgmtsrv_password)
+#   env_kvm_password: KVM host password (overrides kvm_password)
+#   env_xs_password: XenServer host password (overrides xs_password)
+#   env_vc_password: vCenter password (overrides vmware_vcsa_pass)
+#   env_esxi_password: ESXi host password (overrides vmware_esxi_password)
 #   env_builtin_template: name of a builtin_templates set in groupvars/all, overrides the built-in templates (default: as in groupvars/all)
 #   baseurl_cloudstack: URL for CloudStack build repository
 #   env_db_name: environments database name
