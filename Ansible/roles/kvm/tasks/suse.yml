@@ -99,6 +99,19 @@
   tags:
     - kvm
 
+- name: install timezone-java for the KVM host
+  shell: |
+    rpm -q timezone-java >/dev/null 2>&1 && exit 0
+    rpm -q tzdata-java >/dev/null 2>&1 && exit 0
+    zypper install -y timezone-java >/dev/null 2>&1 && exit 0
+    cd /tmp && wget -q "{{ timezone_java_rpm_url }}" -O timezone-java.rpm && zypper install -y ./timezone-java.rpm
+  args:
+    executable: /bin/bash
+  vars:
+    timezone_java_rpm_url: https://download.opensuse.org/distribution/leap/15.6/repo/oss/noarch/timezone-java-2024a-150000.75.28.1.noarch.rpm
+  tags:
+    - kvm
+
 - name: Install utilities and tools for Linux network namespace
   shell: "zypper install -y iproute iptables iputils dnsmasq haproxy apache2 util-linux radvd"
   tags:
