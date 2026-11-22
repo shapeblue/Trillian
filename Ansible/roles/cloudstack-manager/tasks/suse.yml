@@ -44,8 +44,20 @@
 - name: Ensure CA Certs are latest
   shell: "zypper install -y ca-certificates"
 
-- name: install rng-tools to get entropy
+- name: install haveged to get entropy
   shell: "zypper install -y haveged"
+
+# cloudstack-management requires rng-tools. It is not in the enabled SUSE repositories, so when zypper
+# cannot install it, install the openSUSE Leap 15.6 package directly (as done manually on mgmt1).
+- name: install rng-tools to get entropy
+  shell: |
+    rpm -q rng-tools >/dev/null 2>&1 && exit 0
+    zypper install -y rng-tools >/dev/null 2>&1 && exit 0
+    cd /tmp && wget -q "{{ rng_tools_rpm_url }}" -O rng-tools.rpm && rpm -ivh rng-tools.rpm
+  args:
+    executable: /bin/bash
+  vars:
+    rng_tools_rpm_url: https://download.opensuse.org/distribution/leap/15.6/repo/oss/x86_64/rng-tools-5-bp156.3.7.x86_64.rpm
 
 - name: determine number of db hosts
   set_fact: num_xen_hosts="{{ groups['xenserver_hosts'] | length }}"
