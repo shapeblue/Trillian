@@ -59,6 +59,19 @@
   vars:
     rng_tools_rpm_url: https://download.opensuse.org/distribution/leap/15.6/repo/oss/x86_64/rng-tools-5-bp156.3.7.x86_64.rpm
 
+# cloudstack-management requires (tzdata-java or timezone-java). Neither is in the enabled SUSE repositories
+# on SLES 15.7, so when zypper cannot install it, install the openSUSE Leap 15.6 timezone-java package directly.
+- name: install timezone-java for the management server
+  shell: |
+    rpm -q timezone-java >/dev/null 2>&1 && exit 0
+    rpm -q tzdata-java >/dev/null 2>&1 && exit 0
+    zypper install -y timezone-java >/dev/null 2>&1 && exit 0
+    cd /tmp && wget -q "{{ timezone_java_rpm_url }}" -O timezone-java.rpm && zypper install -y ./timezone-java.rpm
+  args:
+    executable: /bin/bash
+  vars:
+    timezone_java_rpm_url: https://download.opensuse.org/distribution/leap/15.6/repo/oss/noarch/timezone-java-2024a-150000.75.28.1.noarch.rpm
+
 - name: determine number of db hosts
   set_fact: num_xen_hosts="{{ groups['xenserver_hosts'] | length }}"
 
