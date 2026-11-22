@@ -20,14 +20,14 @@
 
 - name: Override built-in template url, name, display text, guest OS and checksum
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="UPDATE cloud.vm_template SET url='{{ item.url }}', name='{{ item.name }}', display_text='{{ item.name }}', checksum='{{ item.checksum | default('', true) }}', guest_os_id=(SELECT id FROM cloud.guest_os WHERE display_name='{{ item.guestos }}' AND removed IS NULL LIMIT 1) WHERE id='{{ item.id }}' AND type='BUILTIN';"
-  loop: "{{ builtin_override_rows }}"
+  loop: "{{ builtin_override_rows | default([]) }}"
   when: ("primary_cs_manager" in group_names)
   tags:
     - "global_settings"
 
 - name: Set the template details of the built-in templates in env_builtin_template
   acs_mysql_update: DBHOST="{{ mysql_master_ip }}" DBUSER="cloud" DBPASS={{ mysql_cloud_password }} MYSQL_STATEMENT="DELETE FROM cloud.vm_template_details WHERE template_id='{{ item.0.id }}' AND name='{{ item.1.name }}'; INSERT INTO cloud.vm_template_details (template_id, name, value) SELECT id, '{{ item.1.name }}', '{{ item.1.value }}' FROM cloud.vm_template WHERE id='{{ item.0.id }}' AND type='BUILTIN';"
-  loop: "{{ builtin_override_rows | subelements('details', skip_missing=True) }}"
+  loop: "{{ builtin_override_rows | default([]) | subelements('details', skip_missing=True) }}"
   when: ("primary_cs_manager" in group_names)
   tags:
     - "global_settings"
