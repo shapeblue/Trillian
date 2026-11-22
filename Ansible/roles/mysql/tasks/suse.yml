@@ -1,5 +1,7 @@
 ---
 
+- include_tasks: ../../../tasks/mount_sles_media.yml
+
 #Copyright 2016-2021 ShapeBlue
 #
 #Licensed under the Apache License, Version 2.0 (the "License");

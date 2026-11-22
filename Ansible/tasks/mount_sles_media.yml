@@ -1,0 +1,24 @@
+---
+
+# Mount the SLES install media (/dev/sr0) on /mnt/sles so packages can be installed from it,
+# and keep the mount in /etc/fstab so it is restored after a reboot.
+# Mount errors are ignored (nofail), so hosts without the media still continue.
+
+- name: Create the mount point of the SLES install media
+  shell: "mkdir -p /mnt/sles"
+
+- name: Mount the SLES install media before installing packages (kept in fstab)
+  mount:
+    name: /mnt/sles
+    src: /dev/sr0
+    fstype: iso9660
+    opts: ro,auto,nofail
+    state: mounted
+  ignore_errors: yes
+
+- name: Add the SLES install media to /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: "^/dev/sr0\\s+/mnt/sles\\s"
+    line: "/dev/sr0 /mnt/sles iso9660 ro,auto,nofail 0 0"
+    state: present
