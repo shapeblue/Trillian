@@ -1,0 +1,154 @@
+---
+
+# SUSE Best Practices - SAP HANA on KVM (SLES 15 SP7), section 3, applied to the KVM host.
+# Same settings as cloudstack-setup.sh (configure mode). The version checks of section 2.3 are
+# check-only in that script and are not repeated here.
+# Set kvm_sbp_tuning: false to skip this file. Set sbp_hugepages to override the hugepage count
+# (default: 92% of RAM in GiB, as in section 3.4.6).
+# SR-IOV (3.2.2) is off by default in the script, so it is not configured here.
+
+- name: Define the SAP HANA kernel boot options (SBP 3.4.5)
+  set_fact:
+    sbp_grub_params:
+      - "intremap=no_x2apic_optout"
+      - "intel_idle.max_cstate=0"
+      - "processor.max_cstate=0"
+      - "intel_iommu=on"
+      - "iommu=pt"
+      - "transparent_hugepage=never"
+      - "default_hugepagesz=1GB"
+      - "hugepagesz=1GB"
+      - "numa_balancing=disable"
+      - "kvm_intel.ple_gap=0"
+      - "kvm_intel.ple_window=0"
+      - "mitigations=auto"
+      - "kvm.nx_huge_pages=off"
+      - "security=apparmor"
+  tags:
+    - kvm
+
+- name: Install the KVM hypervisor patterns (SBP 3.1)
+  shell: "zypper --non-interactive install -t pattern kvm_server kvm_tools"
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Install hwloc (SBP 3.1)
+  shell: "zypper install -y hwloc"
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Install and start vhostmd (SBP 3.4.1)
+  shell: "zypper install -y vhostmd"
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Enable and start vhostmd (SBP 3.4.1)
+  service:
+    name: vhostmd
+    state: started
+    enabled: yes
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Install tuned (SBP 3.4.2)
+  shell: "zypper install -y tuned"
+  tags:
+    - kvm
+
+- name: Enable and start tuned (SBP 3.4.2)
+  service:
+    name: tuned
+    state: started
+    enabled: yes
+  tags:
+    - kvm
+
+- name: Set the tuned profile to virtual-host (SBP 3.4.2)
+  shell: "tuned-adm profile virtual-host"
+  changed_when: false
+  tags:
+    - kvm
+
+- name: Disable irqbalance (SBP 3.4.3)
+  service:
+    name: irqbalance
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Turn KSM off and unmerge pages (SBP 3.4.4)
+  shell: "if [ -f /sys/kernel/mm/ksm/run ]; then echo 2 > /sys/kernel/mm/ksm/run; fi"
+  changed_when: false
+  tags:
+    - kvm
+
+- name: Stop and disable ksm and ksmtuned (SBP 3.4.4)
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  loop:
+    - ksm
+    - ksmtuned
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Merge the SAP HANA kernel boot options into /etc/default/grub (SBP 3.4.5 and 3.4.6)
+  shell: |
+    python3 - <<'PY'
+    import json, os, re, shutil, time
+    path = "/etc/default/grub"
+    params = json.loads('''{{ sbp_grub_params | to_json }}''')
+    override = "{{ sbp_hugepages | default('') }}"
+    if override:
+        hugepages = override
+    else:
+        with open("/proc/meminfo") as f:
+            total_kb = int(re.search(r"MemTotal:\s+(\d+)", f.read()).group(1))
+        hugepages = str((total_kb // 1024 // 1024) * 92 // 100)
+    params.append("hugepages=" + hugepages)
+    with open(path) as f:
+        text = f.read()
+    m = re.search(r'^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"$', text, re.M)
+    if not m:
+        print("NO_GRUB_LINE")
+        raise SystemExit(0)
+    tokens = m.group(1).split()
+    new_keys = set(p.split("=")[0] for p in params)
+    kept = [t for t in tokens if t.split("=")[0] not in new_keys]
+    new_value = " ".join(kept + params)
+    if new_value == m.group(1):
+        print("UNCHANGED")
+    else:
+        shutil.copy(path, path + ".bak." + str(int(time.time())))
+        text = text[:m.start()] + 'GRUB_CMDLINE_LINUX_DEFAULT="' + new_value + '"' + text[m.end():]
+        with open(path, "w") as f:
+            f.write(text)
+        print("CHANGED")
+    PY
+  args:
+    executable: /bin/bash
+  register: grub_merge
+  changed_when: "'CHANGED' in grub_merge.stdout"
+  tags:
+    - kvm
+
+- name: Regenerate the GRUB configuration (update-bootloader)
+  shell: "update-bootloader"
+  when: "'CHANGED' in grub_merge.stdout"
+  tags:
+    - kvm
+
+- name: Note that a reboot is needed for the kernel boot options
+  debug:
+    msg: "Kernel boot options changed on {{ inventory_hostname }}: reboot the KVM host for them to take effect"
+  when: "'CHANGED' in grub_merge.stdout"
+  tags:
+    - kvm
