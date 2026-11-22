@@ -3,7 +3,7 @@
 # SUSE Best Practices - SAP HANA on KVM (SLES 15 SP7), section 3, applied to the KVM host.
 # Same settings as cloudstack-setup.sh (configure mode). The version checks of section 2.3 are
 # check-only in that script and are not repeated here.
-# Set kvm_sbp_tuning: false to skip this file. Set sbp_hugepages to override the hugepage count
+# Off by default. Set kvm_sbp_tuning: true to apply this file. Set sbp_hugepages to override the hugepage count
 # (default: 92% of RAM in GiB, as in section 3.4.6).
 # SR-IOV (3.2.2) is off by default in the script, so it is not configured here.
 

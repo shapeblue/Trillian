@@ -68,7 +68,20 @@
 # Don't really need suse for phy hosts
 
 - name: Install basic utilities and tools - all versions
-  shell: "zypper install -y bind-utils openssh pciutils telnet tcpdump traceroute nano iftop rpcbind parted vim"
+  shell: "zypper install -y {{ item }}"
+  loop:
+    - bind-utils
+    - openssh
+    - pciutils
+    - telnet
+    - tcpdump
+    - traceroute
+    - nano
+    - iftop
+    - rpcbind
+    - parted
+    - vim
+  ignore_errors: yes
   tags:
     - kvm
 
@@ -226,4 +239,4 @@
   when: authkeys_present.stat.exists == True
 
 - include_tasks: ./suse-sbp.yml
-  when: kvm_sbp_tuning | default(true) | bool
+  when: kvm_sbp_tuning | default(false) | bool
