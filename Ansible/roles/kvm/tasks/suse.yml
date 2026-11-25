@@ -265,5 +265,7 @@
   shell: "sed -i 's/^.*\\(ssh-rsa .*$\\)/\\1/' /root/.ssh/authorized_keys"
   when: authkeys_present.stat.exists == True
 
+- include_tasks: ./suse-cloudstack-host.yml
+
 - include_tasks: ./suse-sbp.yml
   when: kvm_sbp_tuning | default(false) | bool

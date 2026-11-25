@@ -1,0 +1,75 @@
+---
+
+# KVM host settings for CloudStack on SUSE, from the kvm-host configure steps of cloudstack-setup.sh.
+# Not covered here: firewalld (the script keeps it running, this role disables it on purpose),
+# the hostname entry in /etc/hosts, and the SUSE Best Practices version checks (check-only in the script).
+
+- name: Install the base KVM packages for the CloudStack agent
+  shell: "zypper install -y qemu libvirt bridge-utils"
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Install the NFS and iSCSI storage clients
+  shell: "zypper install -y nfs-client open-iscsi"
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Enable and start iscsid
+  service:
+    name: iscsid
+    state: started
+    enabled: yes
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Add NTP servers to chrony
+  lineinfile:
+    path: /etc/chrony.conf
+    regexp: "^server {{ item }}"
+    line: "server {{ item }} iburst"
+    state: present
+  loop:
+    - 0.pool.ntp.org
+    - 1.pool.ntp.org
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Enable and start chronyd
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Set complain mode for the libvirt AppArmor profiles (the script's choice; configure_apparmor.yml enforces them)
+  shell: "for p in /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper; do [ -f $p ] && aa-complain $p; done; true"
+  changed_when: false
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Define JAVA_DEBUG for the CloudStack agent (silences the systemd warning)
+  lineinfile:
+    path: /etc/default/cloudstack-agent
+    regexp: "^JAVA_DEBUG="
+    line: 'JAVA_DEBUG=""'
+    create: no
+    state: present
+  ignore_errors: yes
+  tags:
+    - kvm
+
+- name: Enable and start the CloudStack agent
+  service:
+    name: cloudstack-agent
+    state: started
+    enabled: yes
+  ignore_errors: yes
+  tags:
+    - kvm
