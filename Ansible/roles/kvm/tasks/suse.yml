@@ -91,7 +91,8 @@
   shell: |
     rpm -q rng-tools >/dev/null 2>&1 && exit 0
     zypper install -y rng-tools >/dev/null 2>&1 && exit 0
-    cd /tmp && wget -q "{{ rng_tools_rpm_url }}" -O rng-tools.rpm && rpm -ivh rng-tools.rpm
+    # The openSUSE RPM is signed with a key the SLES hosts do not have; skip the signature check for this one package only
+    cd /tmp && wget -q "{{ rng_tools_rpm_url }}" -O rng-tools.rpm && zypper --no-gpg-checks install -y ./rng-tools.rpm
   args:
     executable: /bin/bash
   vars:
@@ -104,7 +105,8 @@
     rpm -q timezone-java >/dev/null 2>&1 && exit 0
     rpm -q tzdata-java >/dev/null 2>&1 && exit 0
     zypper install -y timezone-java >/dev/null 2>&1 && exit 0
-    cd /tmp && wget -q "{{ timezone_java_rpm_url }}" -O timezone-java.rpm && zypper install -y ./timezone-java.rpm
+    # The openSUSE RPM is signed with a key the SLES hosts do not have; skip the signature check for this one package only
+    cd /tmp && wget -q "{{ timezone_java_rpm_url }}" -O timezone-java.rpm && zypper --no-gpg-checks install -y ./timezone-java.rpm
   args:
     executable: /bin/bash
   vars:
