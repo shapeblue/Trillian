@@ -35,8 +35,18 @@
     - mysql
     - mysqlconf
 
-- name: Ensure selinux and mysql python bindings are installed (Ansible requirement)
-  shell: "zypper install -y python3-PyMySQL python3-mysql-connector-python"
+# The Ansible mysql_* modules (secure_mysql.yml) need a MySQL driver. python3-mysqlclient
+# (MySQLdb) is in the SLES ServerApps media; PyMySQL is not in any SLES repo.
+- name: Install the MySQL python driver (python3-mysqlclient from the SLES ServerApps media)
+  shell: "zypper install -y python3-mysqlclient"
+  ignore_errors: yes
+  tags:
+    - mysql
+    - mysqlconf
+
+- name: Fall back to pip for the MySQL python driver when zypper has no package for it
+  shell: "python3 -c 'import MySQLdb' 2>/dev/null || (zypper install -y python3-pip && python3 -m pip install mysqlclient)"
+  ignore_errors: yes
   tags:
     - mysql
     - mysqlconf
