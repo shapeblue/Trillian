@@ -236,6 +236,13 @@
   with_items: "{{kvm_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
+# Attach the ISO to the KVM host VMs before they are started
+- include_tasks: ./tasks/attach_iso.yml
+  vars:
+    attach_iso_group: kvm_hosts
+    attach_iso_image: "{{ env_hv_iso | default('') }}"
+  when: use_external_hv_hosts|bool == false
+
 - name: Start KVM hosts
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
@@ -325,6 +332,13 @@
   with_items: "{{xs_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
 
+# Attach the ISO to the XenServer host VMs before they are started
+- include_tasks: ./tasks/attach_iso.yml
+  vars:
+    attach_iso_group: xenserver_hosts
+    attach_iso_image: "{{ env_hv_iso | default('') }}"
+  when: use_external_hv_hosts|bool == false
+
 - name: Start XenServer hosts
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
   with_items:
@@ -413,6 +427,13 @@
     api_timeout: 120
   with_items: "{{esxi_retval.results}}"
   when: use_local_storage and (use_external_hv_hosts|bool == false)
+
+# Attach the ISO to the ESXi host VMs before they are started
+- include_tasks: ./tasks/attach_iso.yml
+  vars:
+    attach_iso_group: esxi_hosts
+    attach_iso_image: "{{ env_hv_iso | default('') }}"
+  when: use_external_hv_hosts|bool == false
 
 - name: Start ESXi hosts
   shell: "cmk startVirtualMachine id={{ item.id }} clusterid={{ allocator_cluster_id }}"
@@ -666,6 +687,12 @@
   with_items: "{{mgmtsrv1_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
 
+# Attach the management ISO to the first management server VM before it is started
+- include_tasks: ./tasks/attach_iso.yml
+  vars:
+    attach_iso_group: primary_cs_manager
+    attach_iso_image: "{{ env_mgmt_iso | default('') }}"
+
 - name: Start Management Server VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
   with_items:
@@ -733,6 +760,12 @@
     instance_name={{ item.instance_name }}
   with_items: "{{mgmtsrvs_retval.results}}"
   when: (additional_zone|bool == False) and (additional_pod|bool == False)
+
+# Attach the management ISO to the additional management server VMs before they are started
+- include_tasks: ./tasks/attach_iso.yml
+  vars:
+    attach_iso_group: secondary_cs_manager
+    attach_iso_image: "{{ env_mgmt_iso | default('') }}"
 
 - name: Start Additional Management Servers VM
   shell: "cmk startVirtualMachine id={{ item.id }}"

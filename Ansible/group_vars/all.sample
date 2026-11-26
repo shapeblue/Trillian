@@ -97,6 +97,8 @@ sec: 1
 def_build_marvin: no
 wait_till_setup: no
 def_api_retries: 25
+def_env_mgmt_iso: ""
+def_env_hv_iso: ""
 def_sysvms_running_retries: 250
 def_sysvms_up_retries: 100
 def_builin_template_retries: 400
