@@ -257,11 +257,13 @@
   vars:
     attach_iso_group: primary_cs_manager
     attach_iso_image: "{{ env_mgmt_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
 
 - include_tasks: ./tasks/attach_iso.yml
   vars:
     attach_iso_group: secondary_cs_manager
     attach_iso_image: "{{ env_mgmt_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
 
 ####################################################################
 # First DB server
@@ -435,6 +437,7 @@
   vars:
     attach_iso_group: kvm_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start KVM hosts
@@ -532,6 +535,7 @@
   vars:
     attach_iso_group: xenserver_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start XenServer hosts
@@ -627,6 +631,7 @@
   vars:
     attach_iso_group: esxi_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start ESXi hosts

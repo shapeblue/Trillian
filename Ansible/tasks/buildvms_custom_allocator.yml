@@ -241,6 +241,7 @@
   vars:
     attach_iso_group: kvm_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start KVM hosts
@@ -337,6 +338,7 @@
   vars:
     attach_iso_group: xenserver_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start XenServer hosts
@@ -433,6 +435,7 @@
   vars:
     attach_iso_group: esxi_hosts
     attach_iso_image: "{{ env_hv_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
   when: use_external_hv_hosts|bool == false
 
 - name: Start ESXi hosts
@@ -692,6 +695,7 @@
   vars:
     attach_iso_group: primary_cs_manager
     attach_iso_image: "{{ env_mgmt_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
 
 - name: Start Management Server VM
   shell: "cmk startVirtualMachine id={{ item.id }}"
@@ -766,6 +770,7 @@
   vars:
     attach_iso_group: secondary_cs_manager
     attach_iso_image: "{{ env_mgmt_iso | default('') }}"
+    attach_iso_projectid: "{{ projectid.stdout | default(-1) }}"
 
 - name: Start Additional Management Servers VM
   shell: "cmk startVirtualMachine id={{ item.id }}"

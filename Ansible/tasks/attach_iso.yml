@@ -5,14 +5,15 @@
 # Variables:
 #   attach_iso_group  inventory group of the VMs (e.g. primary_cs_manager, kvm_hosts)
 #   attach_iso_image  exact name of an ISO already registered in CloudStack (empty = skip)
+#   attach_iso_projectid  project ID to search the VMs in (-1 = all projects, the default); ISOs are always searched with projectid=-1
 # The ISO is attached with cmk (attachIso). This only uses the CloudStack API, so the VM
 # does not need to be running or reachable. A failure is ignored, so the deployment continues.
 
 - name: Attach {{ attach_iso_image }} to the {{ attach_iso_group }} VMs
   shell: |
-    ISO_ID=$(cmk list isos isofilter=all listall=true | jq -r --arg n "{{ attach_iso_image }}" '.iso[]? | select(.name == $n) | .id' | head -1)
+    ISO_ID=$(cmk list isos isofilter=all listall=true projectid=-1 | jq -r --arg n "{{ attach_iso_image }}" '.iso[]? | select(.name == $n) | .id' | head -1)
     if [ -z "$ISO_ID" ]; then echo "ISO {{ attach_iso_image }} not found"; exit 1; fi
-    VM_ID=$(cmk list virtualmachines listall=true | jq -r --arg n "{{ item }}" '.virtualmachine[]? | select(.name == $n) | .id' | head -1)
+    VM_ID=$(cmk list virtualmachines listall=true projectid={{ attach_iso_projectid | default(-1) }} | jq -r --arg n "{{ item }}" '.virtualmachine[]? | select(.name == $n) | .id' | head -1)
     if [ -z "$VM_ID" ]; then echo "VM {{ item }} not found"; exit 1; fi
     cmk attach iso id=$ISO_ID virtualmachineid=$VM_ID
   loop: "{{ groups[attach_iso_group] | default([]) }}"
