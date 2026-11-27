@@ -136,6 +136,7 @@
     name=firewalld
     state=stopped
     enabled=no
+  when: use_firewalld|bool == False
 
 - name: Check if AMD processors
   shell: "sed -ne '/^flags/s/^.*: //p' /proc/cpuinfo | egrep -q '(vmx)'"
