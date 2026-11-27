@@ -42,6 +42,13 @@
     name: br_netfilter
     state: present
 
+# Load br_netfilter at every boot; the modprobe task above only loads it for the current boot
+- name: Persist the bridge netfilter module across reboots
+  copy:
+    dest: /etc/modules-load.d/cloudstack-br_netfilter.conf
+    content: "br_netfilter\n"
+    mode: "0644"
+
 - name: Stop bridged traffic being filtered by iptables (CloudStack bridge sysctl)
   copy:
     dest: /etc/sysctl.d/99-cloudstack-bridge.conf
@@ -219,6 +226,17 @@
 - name: Mask virtqemu sockets
   shell: systemctl mask virtqemud.socket virtqemud-ro.socket virtqemud-admin.socket virtqemud virtnetworkd virtstoraged
 
+# Masking does not stop a socket that is already listening, so stop the modular daemon sockets and services
+# that conflict with the legacy libvirtd used by cloudstack-agent
+- name: Stop and mask the modular libvirt sockets that conflict with libvirtd
+  shell: |
+    systemctl stop virtnodedevd.socket virtsecretd.socket virtnwfilterd.socket virtnodedevd virtsecretd virtnwfilterd || true
+    systemctl mask virtnodedevd.socket virtnodedevd-ro.socket virtnodedevd-admin.socket virtsecretd.socket virtsecretd-ro.socket virtsecretd-admin.socket virtnwfilterd.socket virtnwfilterd-ro.socket virtnwfilterd-admin.socket
+  changed_when: false
+  tags:
+    - kvm
+    - kvm-agent
+
 - name: Enable libvirtd service on reboot
   shell: systemctl enable --now libvirtd
   tags:
@@ -231,6 +249,7 @@
     - "22"
     - "1798"
     - "16509"
+    - "16514"
     - "5900:6100"
     - "49152:49216"
   when: not use_firewalld
@@ -244,6 +263,7 @@
     - "22"
     - "1798"
     - "16509"
+    - "16514"
     - "5900-6100"
     - "49152-49216"
   when: use_firewalld

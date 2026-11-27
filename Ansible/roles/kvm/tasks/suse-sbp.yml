@@ -88,6 +88,15 @@
   tags:
     - kvm
 
+# Writing /sys/kernel/mm/ksm/run only lasts until the next reboot; this sets it again at boot
+- name: Keep KSM off and unmerged across reboots (SBP 3.4.4)
+  copy:
+    dest: /etc/tmpfiles.d/ksm-sbp.conf
+    content: "w /sys/kernel/mm/ksm/run - - - - 2\n"
+    mode: "0644"
+  tags:
+    - kvm
+
 - name: Stop and disable ksm and ksmtuned (SBP 3.4.4)
   service:
     name: "{{ item }}"
