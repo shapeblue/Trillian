@@ -1,0 +1,17 @@
+---
+
+# Add this SUSE host's FQDN and short name to /etc/hosts, so that `hostname` resolves locally
+# (the cloudstack-setup.sh check reports a warning otherwise). Only runs when the FQDN has a domain part.
+
+- name: Get the FQDN of this host
+  shell: hostname -f
+  register: suse_host_fqdn
+  changed_when: false
+  failed_when: false
+
+- name: Add the host FQDN and short name to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: '\s{{ suse_host_fqdn.stdout }}(\s|$)'
+    line: "{{ ansible_default_ipv4.address }} {{ suse_host_fqdn.stdout }} {{ ansible_hostname }}"
+  when: suse_host_fqdn.stdout is defined and '.' in suse_host_fqdn.stdout

@@ -19,6 +19,8 @@
 - debug:
     msg: "SUSE Specific KVM host Build"
 
+- include_tasks: ../../../tasks/suse_hosts_entry.yml
+
 - name: Ensure selinux python bindings are installed (Ansible requirement)
   shell: "zypper install -y python3-selinux"
   tags:
@@ -199,6 +201,15 @@
 - include_tasks: ../../../tasks/configure_libvirt_security.yml
 
 - include_tasks: ../../../tasks/configure_apparmor.yml
+  tags:
+    - kvm
+
+# configure_apparmor.yml sets enforce mode, which blocks the agent's snapshot and disk scripts on SUSE.
+# Complain mode keeps the profiles loaded and logs denials instead.
+- name: Put the libvirt AppArmor profiles in complain mode (SUSE)
+  shell: aa-complain /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
+  ignore_errors: yes
+  changed_when: false
   tags:
     - kvm
 

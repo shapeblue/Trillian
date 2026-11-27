@@ -2,11 +2,26 @@
 
 # KVM host settings for CloudStack on SUSE, from the kvm-host configure steps of cloudstack-setup.sh.
 # Not covered here: firewalld (the script keeps it running, this role disables it on purpose),
-# the hostname entry in /etc/hosts, and the SUSE Best Practices version checks (check-only in the script).
+# and the SUSE Best Practices version checks (check-only in the script).
 
 - name: Install the base KVM packages for the CloudStack agent
-  shell: "zypper install -y qemu libvirt bridge-utils"
+  shell: "zypper install -y qemu libvirt"
   ignore_errors: yes
+  tags:
+    - kvm
+
+# bridge-utils is not in the enabled SUSE repositories. Install it separately so a missing package does not
+# stop qemu and libvirt from installing; when zypper cannot install it, use the openSUSE Leap 15.6 package.
+- name: install bridge-utils for the KVM host
+  shell: |
+    rpm -q bridge-utils >/dev/null 2>&1 && exit 0
+    zypper install -y bridge-utils >/dev/null 2>&1 && exit 0
+    # The openSUSE RPM is signed with a key the SLES hosts do not have; skip the signature check for this one package only
+    cd /tmp && wget -q "{{ bridge_utils_rpm_url }}" -O bridge-utils.rpm && zypper --no-gpg-checks install -y ./bridge-utils.rpm
+  args:
+    executable: /bin/bash
+  vars:
+    bridge_utils_rpm_url: https://download.opensuse.org/distribution/leap/15.6/repo/oss/x86_64/bridge-utils-1.6-1.33.x86_64.rpm
   tags:
     - kvm
 

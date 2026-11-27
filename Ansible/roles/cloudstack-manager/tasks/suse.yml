@@ -25,6 +25,15 @@
 
 - include_tasks: ../../../tasks/configure_apparmor.yml
 
+- include_tasks: ../../../tasks/suse_hosts_entry.yml
+
+- name: Start firewalld when it is used for the management server ports
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: use_firewalld|bool
+
 - name: Allow connections on management server required ports with firewall
   shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent"
   with_items:
@@ -34,6 +43,12 @@
     - "8250"
     - "8443"
     - "9090"
+  ignore_errors: yes
+
+# --permanent rules are only loaded into the running firewall by a reload
+- name: Reload firewalld so the management server ports are active
+  shell: firewall-cmd --reload
+  when: use_firewalld|bool
   ignore_errors: yes
 
 - name: Stop firewalld SUSE
