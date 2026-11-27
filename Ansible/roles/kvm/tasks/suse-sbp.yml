@@ -155,9 +155,16 @@
   tags:
     - kvm
 
-- name: Note that a reboot is needed for the kernel boot options
-  debug:
-    msg: "Kernel boot options changed on {{ inventory_hostname }}: reboot the KVM host for them to take effect"
+- name: Reboot the KVM host so the SAP HANA kernel boot options take effect
+  shell: sleep 2 && /sbin/reboot
+  async: 1
+  poll: 0
+  when: "'CHANGED' in grub_merge.stdout"
+  tags:
+    - kvm
+
+- name: Wait for the KVM host to come back after the reboot
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" delay=60 timeout={{ ssh_retries }} connect_timeout=5
   when: "'CHANGED' in grub_merge.stdout"
   tags:
     - kvm
